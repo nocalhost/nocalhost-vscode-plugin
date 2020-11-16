@@ -1,23 +1,109 @@
 {
-  "name": "nocalhost-vscode-plugin",
+	"name": "nocalhost-vscode-plugin",
 	"displayName": "nocalhost-vscode-plugin",
 	"description": "",
 	"version": "0.0.1",
 	"engines": {
-		"vscode": "^1.50.0"
+		"vscode": "^1.31.0"
 	},
 	"categories": [
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:nocalhost-vscode-plugin.helloWorld"
+		"onCommand:showInputBox",
+		"onCommand:getApplicationList",
+		"onCommand:deployApp",
+		"onCommand:useApplication",
+		"onView:application"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"icon": "images/coding-logo.png",
+					"id": "NocalhostView",
+					"title": "Nocalhost"
+				}
+			]
+		},
+		"views": {
+			"NocalhostView": [
+				{
+					"id": "application",
+					"name": "application"
+				},
+				{
+					"id": "workloads",
+					"name": "workloads"
+				}
+			]
+		},
+		"menus": {
+			"view/title": [
+				{
+					"command": "refreshApplication",
+					"when": "view == application",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "deployApp",
+					"when": "view == application && viewItem == app-notDeployed",
+					"group": "inline"
+				},
+				{
+					"command": "startDebug",
+					"when": "view == workloads && viewItem == debug",
+					"group": "navigation"
+				},
+				{
+					"command": "endDebug",
+					"when": "view == workloads && viewItem == debug",
+					"group": "navigation"
+				},
+				{
+					"command": "useApplication",
+					"when": "view == application",
+					"group": "navigation"
+				}
+			]
+		},
 		"commands": [
 			{
-				"command": "nocalhost-vscode-plugin.helloWorld",
-				"title": "Hello World"
+				"command": "showInputBox",
+				"title": "showInputBox"
+			},
+			{
+				"command": "getApplicationList",
+				"title": "getApplicationList"
+			},
+			{
+				"command": "refreshApplication",
+				"title": "refresh",
+				"icon": "images/refresh.svg"
+			},
+			{
+				"command": "deployApp",
+				"title": "deployApp",
+				"icon": "images/refresh.svg"
+			},
+			{
+				"command": "useApplication",
+				"title": "Use Application"
+			},
+			{
+				"command": "getWordloadList",
+				"title": "getWordloadList"
+			},
+			{
+				"command": "startDebug",
+				"title": "start debug"
+			},
+			{
+				"command": "endDebug",
+				"title": "end debug"
 			}
 		]
 	},
@@ -30,16 +116,21 @@
 		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.50.0",
 		"@types/glob": "^7.1.3",
 		"@types/mocha": "^8.0.0",
 		"@types/node": "^14.0.27",
-		"eslint": "^7.6.0",
+		"@types/shelljs": "^0.8.8",
+		"@types/vscode": "^1.50.0",
 		"@typescript-eslint/eslint-plugin": "^3.8.0",
 		"@typescript-eslint/parser": "^3.8.0",
+		"eslint": "^7.6.0",
 		"glob": "^7.1.6",
 		"mocha": "^8.1.3",
 		"typescript": "^4.0.2",
 		"vscode-test": "^1.4.0"
+	},
+	"dependencies": {
+		"axios": "^0.21.0",
+		"shelljs": "^0.8.4"
 	}
 }
