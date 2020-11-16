@@ -45,7 +45,7 @@ export default class NocalhostAppProvider implements vscode.TreeDataProvider<Noc
       case NodeType.nologin:
         item = {
           label: element.label,
-          command: { command: 'showInputBox', title: 'showInputBox'},
+          command: { command: 'showLogin', title: 'showLogin'},
         };
         break;
       case NodeType.app:
@@ -59,7 +59,7 @@ export default class NocalhostAppProvider implements vscode.TreeDataProvider<Noc
       default:
         item = {
           label: element.label,
-          command: { command: 'showInputBox', title: 'showInputBox'},
+          command: { command: 'showLogin', title: 'showLogin'},
           collapsibleState: vscode.TreeItemCollapsibleState.None
         };
         break;

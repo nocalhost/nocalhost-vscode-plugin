@@ -11,6 +11,7 @@ import { CURRENT_KUBECONFIG_FULLPATH, KUBE_CONFIG_DIR, NH_CONFIG_DIR } from './c
 import * as nhctl from './ctl/nhctl';
 import host from './host';
 import { clearInterval } from 'timers';
+import * as webPage from './webviews';
 
 let _refreshWorkload: NodeJS.Timeout, _refreshApp: NodeJS.Timeout;
 
@@ -33,6 +34,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	const appName = process.env.appName || 'app';
 
 	let subs = [
+		// register welcome page
+		vscode.commands.registerCommand('showWelcomePage', () =>  {
+			webPage.showWelcome();
+		}),
 		vscode.commands.registerCommand('startDebug', (node: WorkloadNode) => {
 			nhctl.debug(host,appName, node.label);
 			vscode.window.showInformationMessage('startDebug: ' + JSON.stringify(node));
@@ -41,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			nhctl.endDebug(host, appName, node.label, namespace);
 			vscode.window.showInformationMessage('endDebug');
 		}),
-		vscode.commands.registerCommand('showInputBox', showLogin),
+		vscode.commands.registerCommand('showLogin', showLogin),
 		
 		vscode.commands.registerCommand('getApplicationList', () => appTreeProvider.refresh()),
 		vscode.commands.registerCommand('refreshApplication', () => appTreeProvider.refresh()),
@@ -66,6 +71,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(...subs);
 	_refreshApp = host.timer('refreshApplication', []);
 	_refreshWorkload = host.timer('refreshWorkLoad', []);
+	vscode.commands.executeCommand('showWelcomePage');
 }
 
 // this method is called when your extension is deactivated
@@ -79,5 +85,5 @@ async function init() {
 	fileStore.mkdir(KUBE_CONFIG_DIR);
 	fileStore.initConfig();
 
-	await tryToLogin();
+	await tryToLogin().catch(() => {});
 }

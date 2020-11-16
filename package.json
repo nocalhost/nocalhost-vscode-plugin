@@ -10,7 +10,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:showInputBox",
+		"onCommand:showLogin",
 		"onCommand:getApplicationList",
 		"onCommand:deployApp",
 		"onCommand:useApplication",
@@ -72,8 +72,12 @@
 		},
 		"commands": [
 			{
-				"command": "showInputBox",
-				"title": "showInputBox"
+				"command": "showWelcomePage",
+				"title": "welcome"
+			},
+			{
+				"command": "showLogin",
+				"title": "showLogin"
 			},
 			{
 				"command": "getApplicationList",
