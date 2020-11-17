@@ -21,17 +21,8 @@ export function install(host: Host, gitUrl: string) {
   return new Promise((resolve: (value: any) => void, reject) => {
     
     const proc = spawn('git', ['clone', 'https://github.com/nocalhost/bookinfo.git']);
-    proc.stdout.on('data', function (data) {
-      console.log('un stdout: ' + data);
-    });
-
-    proc.on('close', () => {
-      resolve('good');
-    });
-
-    proc.on('error', (err) => {
-      reject(err);
-    });
+    proc.stdout.pipe(process.stdout);
+    proc.stderr.pipe(process.stderr);
 
   
     // const rl = readline.createInterface({
