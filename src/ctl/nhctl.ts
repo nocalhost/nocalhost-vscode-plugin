@@ -7,13 +7,53 @@ import * as fileStore from '../store/fileStore';
 import { CURRENT_KUBECONFIG_FULLPATH } from '../constants';
 import { spawn } from 'child_process';
 import * as readline from 'readline';
+import { RSA_X931_PADDING } from 'constants';
 
-export async function install(host: Host, gitUrl: string) {
+export function install(host: Host, gitUrl: string) {
   if (!checkNhctl()) {
     return;
   }
 
-  host.invokeInNewTerminal(`nhctl install -u ${gitUrl}  --force`, 'nhctl');
+  // 改成 child_process 拉取代码
+  // host.invokeInNewTerminal(`nhctl install -u ${gitUrl}  --force`, 'nhctl'); // can not check proccess exit
+  const installCommand = nhctlCommand(`install -u ${gitUrl}  --force`);
+  
+  return new Promise((resolve: (value: any) => void, reject) => {
+    
+    const proc = spawn('git', ['clone', 'https://github.com/nocalhost/bookinfo.git']);
+    proc.stdout.on('data', function (data) {
+      console.log('un stdout: ' + data);
+    });
+
+    proc.on('close', () => {
+      resolve('good');
+    });
+
+    proc.on('error', (err) => {
+      reject(err);
+    });
+
+  
+    // const rl = readline.createInterface({
+    //   input: proc.stdout,
+    //   output: proc.stdin
+    // });
+
+    // const _timeoutId = setTimeout(() => {
+    //   proc.kill();
+    //   vscode.window.showErrorMessage('install error. please check to log');
+    //   reject('install timeout');
+    // }, 1000 * 10);
+  
+    // rl.on('line', (line) => {
+    //   host.log(line, true);
+    //   if (line.indexOf('Forwarding from') >= 0) {
+    //     clearTimeout(_timeoutId);
+    //     resolve(() => proc.kill());
+    //   }
+    // });
+  });
+  // 递归获取当前终端的状态
 }
 
 export async function debug(host: Host, appName: string, workloadName: string) {
@@ -21,7 +61,7 @@ export async function debug(host: Host, appName: string, workloadName: string) {
     return;
   }
 
-  const namespace = process.env.namespace || 'plugin-01';
+  const namespace = process.env.namespace || 'plugin-02';
 
   host.log('replace image ...', true);
   vscode.window.showInformationMessage('replacing image ...');
@@ -38,19 +78,21 @@ export async function debug(host: Host, appName: string, workloadName: string) {
 
   host.log('sync file ...', true);
   vscode.window.showInformationMessage('sysc file ...');
-  await syncFile(host, appName, workloadName,namespace);
+  await syncFile(host, appName, workloadName); // localhost dir
   host.log('sync file end', true);
   host.log('', true);
+  // open workload container TODO: pause: wait xinxin finish
+  // host.invokeInNewTerminal("echo helloworld", 'container');
 }
 
 async function replaceImage(host: Host, appName: string, workLoadName: string, namespace?: string) {
-  const replaceImageCommand = nhctlCommand(`dev start ${appName} -d ${workLoadName} ${namespace ? `-n ${namespace}`: ' '}`);
+  const replaceImageCommand = nhctlCommand(`dev start ${appName} -d ${workLoadName}`);
   await execAsync(host, replaceImageCommand, [], undefined, true);
 }
 
 function startPortForward(host: Host, appName: string, workloadName: string, namespace?: string) {
 
-  const portForwardCommand = nhctlCommand(`port-forward ${appName} -d ${workloadName} ${namespace ? `-n ${namespace}`: ' '}`);
+  const portForwardCommand = nhctlCommand(`port-forward ${appName} -d ${workloadName} `);
 
   return new Promise((resolve: (value: any) => void, reject) => {
     
@@ -78,15 +120,15 @@ function startPortForward(host: Host, appName: string, workloadName: string, nam
     });
   });
 }
-async function syncFile(host: Host, appName: string, workloadName: string, namespace?: string) {
+async function syncFile(host: Host, appName: string, workloadName: string, localDir = '/home/coding') {
 
-  const syncFileCommand = nhctlCommand(`sync ${appName} -d ${workloadName}`);
+  const syncFileCommand = nhctlCommand(`sync ${appName} -d ${workloadName} -l ${localDir}`);
 
   await execAsync(host, syncFileCommand, [], undefined, true);
 }
 
 export async function endDebug(host: Host, appName: string, workLoadName: string, namespace?: string) {
-  const end = nhctlCommand(`dev end ${appName} -d ${workLoadName} ${namespace ? `-n ${namespace}`: ' '}`);
+  const end = nhctlCommand(`dev end ${appName} -d ${workLoadName} `);
   await execAsync(host, end, [], undefined, true);
   // destroy some service
   host.disposeDebug();
@@ -94,8 +136,6 @@ export async function endDebug(host: Host, appName: string, workLoadName: string
 
 function nhctlCommand(baseCommand: string) {
   const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-
-  console.log('command: ', `nhctl ${baseCommand} --kubeconfig ${kubeconfig}`);
   
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfig}`;
 }

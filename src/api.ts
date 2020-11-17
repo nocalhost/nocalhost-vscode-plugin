@@ -77,28 +77,35 @@ interface ApplicationInfo {
   id: number;
   context: string;
   status: number;
+  devSpaceStatus: number;
 }
 
-interface KubeConfigInfo {
+interface DevSpaceInfo {
   id: number,
   application_id: number,
   cluster_id: number,
   cpu: number,
   kubeconfig: string,
   memory: number,
-  user_id: number
+  user_id: number,
+  status: number,
 }
 
 export async function getApplication() {
   const response = await axios.get('/v1/application');
   const res = response.data as ResponseData;
   const applications = res.data as ApplicationInfo[];
+  for(let i=0;i<applications.length;i++) {
+    const app = applications[i];
+    const devInfo = await getDevSpace(app.id + '');
+    app.devSpaceStatus = (devInfo && devInfo.status) || 0;
+  }
   return applications;
 }
 
-export async function getKubeConfig(appId: string) {
+export async function getDevSpace(appId: string) {
   const response = await axios.get(`/v1/application/${appId}/dev_space`);
   const res = response.data as ResponseData;
-  const kubeInfo = res.data as KubeConfigInfo;
+  const kubeInfo = res.data as DevSpaceInfo;
   return kubeInfo;
 }

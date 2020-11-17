@@ -133,6 +133,7 @@
 	},
 	"dependencies": {
 		"axios": "^0.21.0",
-		"shelljs": "^0.8.4"
+		"shelljs": "^0.8.4",
+		"yaml": "^1.10.0"
 	}
 }

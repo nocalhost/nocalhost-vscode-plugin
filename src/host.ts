@@ -29,6 +29,7 @@ export class Host {
   invokeInNewTerminal(command: string, name?: string, replace?: boolean) {
     this.newTerminal = vscode.window.createTerminal(name);
     this.newTerminal.show();
+    this.newTerminal
     this.newTerminal.sendText(command);
   }
 

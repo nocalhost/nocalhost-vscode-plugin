@@ -10,7 +10,7 @@ import * as nhctl from './ctl/nhctl';
 import host from './host';
 import { clearInterval } from 'timers';
 import * as webPage from './webviews';
-import { KubernetesResourceNode } from './nodes/nodeType';
+import { AppNode, KubernetesResourceNode } from './nodes/nodeType';
 
 let _refreshApp: NodeJS.Timeout;
 // this method is called when your extension is activated
@@ -27,7 +27,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 
-	const namespace = process.env.namespace || 'plugin-01';
+	const namespace = process.env.namespace || 'plugin-02';
 	const appName = process.env.appName || 'app';
 
 	let subs = [
@@ -55,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			await nhctl.install(host, `${appNode.info.url} ${appName} -n ${namespace}  --kubeconfig ${kubePath}`); // TODO: MODIFY APPNAME
 			vscode.window.showInformationMessage('deploying app');
 		}),
-		vscode.commands.registerCommand('useApplication', (appNode: KubernetesResourceNode) => {
+		vscode.commands.registerCommand('useApplication', (appNode: AppNode) => {
 			application.useApplication(appNode);
 			vscode.window.showInformationMessage('select app');
 		}),

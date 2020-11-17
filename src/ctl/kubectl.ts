@@ -12,7 +12,7 @@ export async function exec(host: Host, command: string, isLog?: boolean) {
   }
 
   const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-  const res = await execAsync(host, `kubectl ${command} -n plugin-01 --kubeconfig ${kubeconfig} `, [], undefined, isLog);
+  const res = await execAsync(host, `kubectl ${command} --kubeconfig ${kubeconfig} `, [], undefined, isLog);
 
   if (res.code === 0) {
     return res.stdout;

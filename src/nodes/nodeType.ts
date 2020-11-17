@@ -67,11 +67,13 @@ export class AppNode implements BaseNocalhostNode {
   public label: string;
   public id: number;
   public status: number;
+  public devSpaceStatus: number;
   public info?: any;
-  constructor(label: string, id: number, status: number, info?: any) {
+  constructor(label: string, id: number, status: number, devSpaceStatus: number, info?: any) {
     this.label = label;
     this.id = id;
     this.status = status;
+    this.devSpaceStatus = devSpaceStatus;
     this.info = info;
   }
   getChildren(parent?: BaseNocalhostNode): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
@@ -80,7 +82,7 @@ export class AppNode implements BaseNocalhostNode {
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     this.customLabel();
     const treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = `application-${!this.status ? 'deployed': 'notDeployed'}`;
+    treeItem.contextValue = `application-${this.devSpaceStatus === 1 ? 'deployed': 'notDeployed'}`;
     return treeItem;
   }
 
@@ -114,7 +116,7 @@ export class AppFolderNode extends NocalhostFolderNode {
         obj.name = jsonObj['application_name'];
       }
     
-      return new AppNode(obj.name || `app${app.id}`, app.id, app.status, {url: obj.url});
+      return new AppNode(obj.name || `app${app.id}`, app.id, app.status, app.devSpaceStatus ,{url: obj.url});
     });
 
     return result;
