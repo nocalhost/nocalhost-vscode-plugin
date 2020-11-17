@@ -14,7 +14,7 @@
 		"onCommand:getApplicationList",
 		"onCommand:deployApp",
 		"onCommand:useApplication",
-		"onView:application"
+		"onView:Nocalhost"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -30,12 +30,8 @@
 		"views": {
 			"NocalhostView": [
 				{
-					"id": "application",
-					"name": "application"
-				},
-				{
-					"id": "workloads",
-					"name": "workloads"
+					"id": "Nocalhost",
+					"name": "Nocalhost"
 				}
 			]
 		},
@@ -43,29 +39,29 @@
 			"view/title": [
 				{
 					"command": "refreshApplication",
-					"when": "view == application",
+					"when": "view == Nocalhost",
 					"group": "navigation"
 				}
 			],
 			"view/item/context": [
 				{
 					"command": "deployApp",
-					"when": "view == application && viewItem == app-notDeployed",
+					"when": "viewItem =~ /^application-notDeployed/i",
 					"group": "inline"
 				},
 				{
 					"command": "startDebug",
-					"when": "view == workloads && viewItem == debug",
-					"group": "navigation"
+					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+					"group": "0"
 				},
 				{
 					"command": "endDebug",
-					"when": "view == workloads && viewItem == debug",
-					"group": "navigation"
+					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+					"group": "1"
 				},
 				{
 					"command": "useApplication",
-					"when": "view == application",
+					"when": "viewItem =~ /^application/i",
 					"group": "navigation"
 				}
 			]
@@ -103,11 +99,13 @@
 			},
 			{
 				"command": "startDebug",
-				"title": "start debug"
+				"title": "start debug",
+				"category": "debug"
 			},
 			{
 				"command": "endDebug",
-				"title": "end debug"
+				"title": "end debug",
+				"category": "debug"
 			}
 		]
 	},

@@ -15,7 +15,6 @@ export function showWelcome() {
   // Handle messages from the webview
   welcomePanel.webview.onDidReceiveMessage(
     message => {
-      vscode.window.showErrorMessage(message.text);
       switch (message.command) {
         case 'login':
           vscode.commands.executeCommand('showLogin');

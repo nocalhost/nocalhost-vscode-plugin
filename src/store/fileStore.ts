@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { DEFAULT_KUBE_CONFIG_FULLPATH, USER_CONFIG_FULLPATH } from '../constants';
+import { CURRENT_KUBECONFIG_FULLPATH, DEFAULT_KUBE_CONFIG_FULLPATH, USER_CONFIG_FULLPATH } from '../constants';
 
 export function mkdir(fullPath: string) {
   const isExist = fs.existsSync(fullPath);

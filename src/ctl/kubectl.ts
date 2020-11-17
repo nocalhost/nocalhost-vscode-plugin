@@ -31,6 +31,11 @@ export async function loadResource(host: Host, kind: string, name: string) {
   return result;
 }
 
+export async function getResourceObj(host: Host, kind: string, name: string) {
+  const result = await exec(host, `get ${kind} ${name} -o json`);
+  return result;
+}
+
 function checkKubectl() {
   const res = shell.which('kubectl');
   if (res.code === 0) {

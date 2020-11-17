@@ -24,8 +24,12 @@ export class Host {
     this.newTerminal.sendText(command);
   }
 
-  log(msg: string) {
-    this.outputChannel.append(msg);
+  log(msg: string, line?: boolean) {
+    if (line) {
+      this.outputChannel.appendLine(msg);
+    } else {
+      this.outputChannel.append(msg);
+    }
     this.outputChannel.show();
   }
 

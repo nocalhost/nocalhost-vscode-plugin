@@ -1,8 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import NocalhostAppProvider, { AppNode } from './appProvider';
-import WorkLoadProvider, {WorkloadNode} from './workloadProvider';
+import NocalhostAppProvider from './appProvider';
 import showLogin, { tryToLogin } from './commands/login';
 // import {deployApp} from './commands/application';
 import * as fileStore from './store/fileStore';
@@ -12,9 +11,9 @@ import * as nhctl from './ctl/nhctl';
 import host from './host';
 import { clearInterval } from 'timers';
 import * as webPage from './webviews';
+import { KubernetesResourceNode } from './nodes/nodeType';
 
-let _refreshWorkload: NodeJS.Timeout, _refreshApp: NodeJS.Timeout;
-
+let _refreshApp: NodeJS.Timeout;
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
@@ -25,7 +24,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "nocalhost-vscode-plugin" is now active!');
 
 	let appTreeProvider = new NocalhostAppProvider();
-	let workLoadProvider = new WorkLoadProvider(host);
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -38,46 +36,38 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('showWelcomePage', () =>  {
 			webPage.showWelcome();
 		}),
-		vscode.commands.registerCommand('startDebug', (node: WorkloadNode) => {
-			nhctl.debug(host,appName, node.label);
+		vscode.commands.registerCommand('startDebug', (node: KubernetesResourceNode) => {
+			nhctl.debug(host, appName, node.name);
 			vscode.window.showInformationMessage('startDebug: ' + JSON.stringify(node));
 		}),
-		vscode.commands.registerCommand('endDebug', (node: WorkloadNode) => {
-			nhctl.endDebug(host, appName, node.label, namespace);
+		vscode.commands.registerCommand('endDebug', (node: KubernetesResourceNode) => {
+			nhctl.endDebug(host, appName, node.name, namespace);
 			vscode.window.showInformationMessage('endDebug');
 		}),
 		vscode.commands.registerCommand('showLogin', showLogin),
 		
 		vscode.commands.registerCommand('getApplicationList', () => appTreeProvider.refresh()),
 		vscode.commands.registerCommand('refreshApplication', () => appTreeProvider.refresh()),
-		vscode.commands.registerCommand('refreshWorkLoad', () => {
-			workLoadProvider.refresh();
-		}),
-		vscode.commands.registerCommand('deployApp', async (appNode: AppNode) => {
-			// TODO: if has deployed return
+		vscode.commands.registerCommand('deployApp', async (appNode: KubernetesResourceNode) => {
 			const kubePath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
 			await nhctl.install(host, `${appNode.info.url} ${appName} -n ${namespace}  --kubeconfig ${kubePath}`); // TODO: MODIFY APPNAME
-			// vscode.commands.executeCommand('refreshWorkLoad');
 			vscode.window.showInformationMessage('deploying app');
 		}),
-		vscode.commands.registerCommand('useApplication', (appNode: AppNode) => {
+		vscode.commands.registerCommand('useApplication', (appNode: KubernetesResourceNode) => {
 			application.useApplication(appNode);
 			vscode.window.showInformationMessage('select app');
 		}),
-		vscode.window.registerTreeDataProvider('application', appTreeProvider),
-		vscode.window.registerTreeDataProvider('workloads', workLoadProvider)
+		vscode.window.registerTreeDataProvider('Nocalhost', appTreeProvider),
 	];
 
 	context.subscriptions.push(...subs);
 	_refreshApp = host.timer('refreshApplication', []);
-	_refreshWorkload = host.timer('refreshWorkLoad', []);
 	vscode.commands.executeCommand('showWelcomePage');
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
 	clearInterval(_refreshApp);
-	clearInterval(_refreshWorkload);
 }
 
 async function init() {

@@ -26,18 +26,21 @@ export async function debug(host: Host, appName: string, workloadName: string) {
 
   let disposes = [];
 
-  host.log('replace image ...\n');
+  host.log('replace image ...', true);
   await replaceImage(host, appName, workloadName,namespace);
-  host.log('replace image end\n\n');
+  host.log('replace image end', true);
+  host.log('', true);
 
-  host.log('port forward ...\n');
+  host.log('port forward ...', true);
   const portForwardDispose = await startPortForward(host, appName, workloadName, namespace);
   disposes.push(portForwardDispose);
-  host.log('port forward end \n\n');
+  host.log('port forward end', true);
+  host.log('', true);
 
-  host.log('sync file ...\n');
+  host.log('sync file ...', true);
   await syncFile(host, appName, workloadName,namespace);
-  host.log('sync file end\n');
+  host.log('sync file end', true);
+  host.log('', true);
 
 
   return disposes;
@@ -51,23 +54,12 @@ async function replaceImage(host: Host, appName: string, workLoadName: string, n
 function startPortForward(host: Host, appName: string, workloadName: string, namespace?: string) {
 
   const portForwardCommand = nhctlCommand(`port-forward ${appName} -d ${workloadName} ${namespace ? `-n ${namespace}`: ' '}`);
-  // host.invokeInNewTerminal(portForwardCommand, 'port-forward');
-
-  // return new Promise((res, rej) => {
-  //   setTimeout(() => {
-  //     res();
-  //   }, 2000);
-  // });
 
   return new Promise((resolve, reject) => {
-
-    const args = portForwardCommand.split(' ');
     
     const proc = spawn(portForwardCommand, [], {
       shell: true
     });
-
-    // proc.on('message')
   
     const rl = readline.createInterface({
       input: proc.stdout,
@@ -76,41 +68,26 @@ function startPortForward(host: Host, appName: string, workloadName: string, nam
 
     const _timeoutId = setTimeout(() => {
       proc.kill();
+      vscode.window.showErrorMessage('port forward error. please check to log');
       reject('forward timeout');
     }, 1000 * 5);
   
     rl.on('line', (line) => {
+      host.log(line, true);
       if (line.indexOf('Forwarding from') >= 0) {
         clearTimeout(_timeoutId);
         resolve(() => proc.kill());
       }
-      host.log("line: " + line);
     });
   });
 }
+async function syncFile(host: Host, appName: string, workloadName: string, namespace?: string) {
 
-function syncFile(host: Host, appName: string, workloadName: string, namespace?: string) {
+  const syncFileCommand = nhctlCommand(`sync ${appName} -d ${workloadName}`);
 
-  const portForwardCommand = nhctlCommand(`sync ${appName} -d ${workloadName}`);
+  // host.invokeInNewTerminal(syncFileCommand, 'syscFile');
 
-  host.invokeInNewTerminal(portForwardCommand, 'syscFile');
-
-  return new Promise((res, rej) => {
-      setTimeout(() => {
-        res();
-      }, 3000);
-    });
-  // const portFordward = execAsyncInNhctl(host, portForwardCommand, true);
-  // return new Promise((res, rej) => {
-  //   const errorCallback = () => {
-  //     portFordward.dispose();
-  //     rej('timeout');
-  //   };
-  //   const _timeoutId = timeout(2000, errorCallback);
-  //   portFordward.process.stdout?.on("data", (chunk) => {
-  //     console.log('chunk: ', chunk.toString());
-  //   });
-  // });
+  await execAsync(host, syncFileCommand, [], undefined, true);
 }
 
 export async function endDebug(host: Host, appName: string, workLoadName: string, namespace?: string) {
