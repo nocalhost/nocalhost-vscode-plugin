@@ -5,6 +5,18 @@ export class Host {
   private terminal = vscode.window.createTerminal('nhctl');
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('nhctl');
   private newTerminal!: vscode.Terminal | null;
+  private debugDisposes: Array<() => any> = [];
+
+  public pushDebugDispose(dispose: () => any) {
+    this.debugDisposes.push(dispose);
+  }
+
+  public disposeDebug() {
+    this.debugDisposes.map((dispose) => {
+      dispose();
+    });
+  }
+
   getOutputChannel() {
     return this.outputChannel;
   }
@@ -15,10 +27,6 @@ export class Host {
   }
 
   invokeInNewTerminal(command: string, name?: string, replace?: boolean) {
-    // let terminal;
-    // if (replace) {
-      
-    // }
     this.newTerminal = vscode.window.createTerminal(name);
     this.newTerminal.show();
     this.newTerminal.sendText(command);

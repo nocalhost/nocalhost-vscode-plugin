@@ -3,7 +3,6 @@
 import * as vscode from 'vscode';
 import NocalhostAppProvider from './appProvider';
 import showLogin, { tryToLogin } from './commands/login';
-// import {deployApp} from './commands/application';
 import * as fileStore from './store/fileStore';
 import application from './commands/application';
 import { CURRENT_KUBECONFIG_FULLPATH, KUBE_CONFIG_DIR, NH_CONFIG_DIR } from './constants';
@@ -36,13 +35,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('showWelcomePage', () =>  {
 			webPage.showWelcome();
 		}),
-		vscode.commands.registerCommand('startDebug', (node: KubernetesResourceNode) => {
-			nhctl.debug(host, appName, node.name);
-			vscode.window.showInformationMessage('startDebug: ' + JSON.stringify(node));
+		vscode.commands.registerCommand('startDebug', async (node: KubernetesResourceNode) => {
+			
+			vscode.window.showInformationMessage('starting debug');
+			await nhctl.debug(host, appName, node.name);
+			vscode.window.showInformationMessage('started debug');
 		}),
-		vscode.commands.registerCommand('endDebug', (node: KubernetesResourceNode) => {
-			nhctl.endDebug(host, appName, node.name, namespace);
-			vscode.window.showInformationMessage('endDebug');
+		vscode.commands.registerCommand('endDebug', async (node: KubernetesResourceNode) => {
+			vscode.window.showInformationMessage('ending debug');
+			await nhctl.endDebug(host, appName, node.name, namespace);
+			vscode.window.showInformationMessage('ended debug');
 		}),
 		vscode.commands.registerCommand('showLogin', showLogin),
 		

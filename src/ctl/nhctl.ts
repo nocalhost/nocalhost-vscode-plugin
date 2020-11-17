@@ -5,9 +5,8 @@ import * as shell from 'shelljs';
 import { Host } from '../host';
 import * as fileStore from '../store/fileStore';
 import { CURRENT_KUBECONFIG_FULLPATH } from '../constants';
-import { ChildProcess, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import * as readline from 'readline';
-import { resolve } from 'path';
 
 export async function install(host: Host, gitUrl: string) {
   if (!checkNhctl()) {
@@ -24,26 +23,24 @@ export async function debug(host: Host, appName: string, workloadName: string) {
 
   const namespace = process.env.namespace || 'plugin-01';
 
-  let disposes = [];
-
   host.log('replace image ...', true);
+  vscode.window.showInformationMessage('replacing image ...');
   await replaceImage(host, appName, workloadName,namespace);
   host.log('replace image end', true);
   host.log('', true);
 
   host.log('port forward ...', true);
+  vscode.window.showInformationMessage('port forwarding ...');
   const portForwardDispose = await startPortForward(host, appName, workloadName, namespace);
-  disposes.push(portForwardDispose);
+  host.pushDebugDispose(portForwardDispose);
   host.log('port forward end', true);
   host.log('', true);
 
   host.log('sync file ...', true);
+  vscode.window.showInformationMessage('sysc file ...');
   await syncFile(host, appName, workloadName,namespace);
   host.log('sync file end', true);
   host.log('', true);
-
-
-  return disposes;
 }
 
 async function replaceImage(host: Host, appName: string, workLoadName: string, namespace?: string) {
@@ -55,7 +52,7 @@ function startPortForward(host: Host, appName: string, workloadName: string, nam
 
   const portForwardCommand = nhctlCommand(`port-forward ${appName} -d ${workloadName} ${namespace ? `-n ${namespace}`: ' '}`);
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: (value: any) => void, reject) => {
     
     const proc = spawn(portForwardCommand, [], {
       shell: true
@@ -85,14 +82,14 @@ async function syncFile(host: Host, appName: string, workloadName: string, names
 
   const syncFileCommand = nhctlCommand(`sync ${appName} -d ${workloadName}`);
 
-  // host.invokeInNewTerminal(syncFileCommand, 'syscFile');
-
   await execAsync(host, syncFileCommand, [], undefined, true);
 }
 
 export async function endDebug(host: Host, appName: string, workLoadName: string, namespace?: string) {
   const end = nhctlCommand(`dev end ${appName} -d ${workLoadName} ${namespace ? `-n ${namespace}`: ' '}`);
   await execAsync(host, end, [], undefined, true);
+  // destroy some service
+  host.disposeDebug();
 }
 
 function nhctlCommand(baseCommand: string) {
@@ -102,8 +99,6 @@ function nhctlCommand(baseCommand: string) {
   
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfig}`;
 }
-
-// function 
 
 function checkNhctl() {
   const res = shell.which('nhctl');
