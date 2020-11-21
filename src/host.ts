@@ -1,3 +1,4 @@
+import { open } from 'fs';
 import * as vscode from 'vscode';
 import nocalhostState from './state';
 
@@ -5,15 +6,42 @@ export class Host {
   private terminal = vscode.window.createTerminal('nhctl');
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('nhctl');
   private newTerminal!: vscode.Terminal | null;
-  private debugDisposes: Array<() => any> = [];
+  private debugDisposes: Array<{dispose: () => any}> = [];
 
-  public pushDebugDispose(dispose: () => any) {
-    this.debugDisposes.push(dispose);
+  public pushDebugDispose(item: {dispose: () => any}) {
+    this.debugDisposes.push(item);
   }
 
   public disposeDebug() {
-    this.debugDisposes.map((dispose) => {
-      dispose();
+    this.debugDisposes.map((item) => {
+      if (item) {
+        item.dispose();
+      }
+    });
+  }
+
+  showInformationMessage(msg: string, ...items: string[]) {
+    return vscode.window.showInformationMessage(msg, ...items);
+  }
+
+  showErrorMessage(msg: string) {
+    return vscode.window.showErrorMessage(msg);
+  }
+
+  showWarnMessage(msg: string) {
+    return vscode.window.showWarningMessage(msg);
+  }
+
+  showOpenDialog(options: vscode.OpenDialogOptions) {
+    return vscode.window.showOpenDialog(options);
+  }
+
+  showSelectFolderDialog(title: string) {
+    return this.showOpenDialog({
+      canSelectFolders: true,
+      canSelectFiles: false,
+      canSelectMany: false,
+      title: title
     });
   }
 
@@ -29,8 +57,9 @@ export class Host {
   invokeInNewTerminal(command: string, name?: string, replace?: boolean) {
     this.newTerminal = vscode.window.createTerminal(name);
     this.newTerminal.show();
-    this.newTerminal
     this.newTerminal.sendText(command);
+
+    return this.newTerminal;
   }
 
   log(msg: string, line?: boolean) {

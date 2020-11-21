@@ -1,4 +1,4 @@
-import { ChildProcess } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import * as shell from 'shelljs';
 import { Host } from '../host';
 
@@ -41,5 +41,28 @@ export async function execAsync(host: Host, command: string, opts: any, callback
     if (callback) {
       callback(proc);
     }
+  });
+}
+
+export async function execChildProcessAsync(host: Host, command: string, args: Array<any>, isLog?: boolean) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(command, args, {shell: true});
+    let errorStr = '';
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(errorStr);
+      }
+    });
+    
+    proc.stdout.on('data', function (data) {
+      host.log('' + data, true);
+    });
+    
+    proc.stderr.on('data', function (data) {
+      errorStr = data + '';
+      host.log('' + data, true);
+    });
   });
 }

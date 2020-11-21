@@ -15,6 +15,7 @@ export const JWT = 'jwt';
 
 // APP
 export const SELECTED_APP_ID = 'selectedApp';
+// export const 
 
 // CURRENT_KUBECONFIG_FULLPATH
 export const CURRENT_KUBECONFIG_FULLPATH = 'currentKubeconfigFullpath';

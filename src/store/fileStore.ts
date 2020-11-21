@@ -29,9 +29,6 @@ function store(config: any) {
 }
 
 export function get(key: string) {
-  if (key === 'currentKubeconfigFullpath') {
-    return '~/.kube/config';
-  }
   const config = getAllConfig();
   return config[key];
 }

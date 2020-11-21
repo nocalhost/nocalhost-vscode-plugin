@@ -77,35 +77,39 @@ interface ApplicationInfo {
   id: number;
   context: string;
   status: number;
-  devSpaceStatus: number;
+  installStatus: number;
+  kubeconfig: string;
+  cpu: number;
+  memory: number;
+  namespace: string;
+  clusterId: number;
+  devspaceId: number;
 }
 
-interface DevSpaceInfo {
-  id: number,
-  application_id: number,
-  cluster_id: number,
-  cpu: number,
-  kubeconfig: string,
-  memory: number,
-  user_id: number,
-  status: number,
-}
 
 export async function getApplication() {
-  const response = await axios.get('/v1/application');
+  const response = await axios.get('/v1/plugin/applications');
   const res = response.data as ResponseData;
-  const applications = res.data as ApplicationInfo[];
+  const applications = res.data;
+  const result = new Array<ApplicationInfo>();
   for(let i=0;i<applications.length;i++) {
-    const app = applications[i];
-    const devInfo = await getDevSpace(app.id + '');
-    app.devSpaceStatus = (devInfo && devInfo.status) || 0;
+    const app: ApplicationInfo = {
+      id: applications[i].id,
+      context: applications[i].context,
+      status: applications[i].status,
+      installStatus: applications[i]['install_status'],
+      kubeconfig: applications[i].kubeconfig,
+      cpu: applications[i].cpu,
+      memory: applications[i].memory,
+      namespace: applications[i].namespace,
+      clusterId: applications[i]['cluster_id'],
+      devspaceId: applications[i]['devspace_id']
+    };
+    result.push(app);
   }
-  return applications;
+  return result;
 }
 
-export async function getDevSpace(appId: string) {
-  const response = await axios.get(`/v1/application/${appId}/dev_space`);
-  const res = response.data as ResponseData;
-  const kubeInfo = res.data as DevSpaceInfo;
-  return kubeInfo;
+export async function updateAppInstallStatus(appId: number, devSpaceId: number, status: number) {
+  return axios.put(`/v1/application/${appId}/dev_space/${devSpaceId}/plugin_sync`, { status });
 }

@@ -3,6 +3,7 @@ import { getApplication } from '../api';
 import { SELECTED_APP_ID } from '../constants';
 import { getResourceList } from '../ctl/kubectl';
 import host from '../host';
+import state from '../state';
 import * as fileStore from '../store/fileStore';
 import { APP, APP_FOLDER, CRON_JOB, CRON_JOBS_FOLDER, DAEMON_SET, DAEMON_SET_FOLDER, DEPLOYMENT, DEPLOYMENT_FOLDER, JOB, JOBS_FOLDER, KUBERNETE_FOLDER_RESOURCE, KUBERNETE_RESOURCE, LOGIN, NETWORK_FOLDER, POD, PODS_FOLDER, ROOT, SERVICE, SERVICE_FOLDER, STATEFUL_SET, STATEFUL_SET_FOLDER, WORKLOAD_FOLDER } from './nodeContants';
 import { List } from './resourceType';
@@ -35,7 +36,6 @@ abstract class NocalhostFolderNode implements BaseNocalhostNode {
   abstract getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
 }
 
-
 export abstract class WorkloadSubFolderNode extends NocalhostFolderNode {}
 
 export abstract class KubernetesResourceNode implements BaseNocalhostNode {
@@ -47,8 +47,14 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
   getChildren(parent?: BaseNocalhostNode): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
     return Promise.resolve([]);
   }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  getTreeItem(): vscode.TreeItem {
     let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
+    treeItem.label = `${this.label} (${this.info && JSON.stringify(this.info.status)})`;
+    treeItem.command={
+      command: 'Nocalhost.loadResource',
+      title: 'loadResource',
+      arguments: [this]
+    };
     return treeItem;
   }
 }
@@ -66,14 +72,18 @@ export class AppNode implements BaseNocalhostNode {
   public type = APP;
   public label: string;
   public id: number;
+  public devSpaceId: number;
   public status: number;
-  public devSpaceStatus: number;
+  public installStatus: number;
+  public kubeConfig: string;
   public info?: any;
-  constructor(label: string, id: number, status: number, devSpaceStatus: number, info?: any) {
+  constructor(label: string, id: number, devSpaceId: number, status: number, installStatus: number, kubeConfig: string, info?: any) {
     this.label = label;
     this.id = id;
+    this.devSpaceId = devSpaceId;
     this.status = status;
-    this.devSpaceStatus = devSpaceStatus;
+    this.installStatus = installStatus;
+    this.kubeConfig = kubeConfig;
     this.info = info;
   }
   getChildren(parent?: BaseNocalhostNode): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
@@ -82,18 +92,22 @@ export class AppNode implements BaseNocalhostNode {
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     this.customLabel();
     const treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = `application-${this.devSpaceStatus === 1 ? 'deployed': 'notDeployed'}`;
+    treeItem.contextValue = `application-${this.installStatus === 1 ? 'installed': 'notInstalled'}`;
+    treeItem.command={
+      command: 'Nocalhost.loadResource',
+      title: 'loadResource',
+      arguments: [this]
+    };
     return treeItem;
   }
 
   private customLabel() {
     const selectAppId = fileStore.get(SELECTED_APP_ID);
     const isSelected = selectAppId === this.id;
-    const status = fileStore.get(`app_${this.id}_status`) || false;
     if (isSelected) {
       this.label = `* ${this.label}`;
     }
-    if (status) {
+    if (this.installStatus) {
       this.label = `${this.label} (deployed)`;
     }
   }
@@ -116,14 +130,13 @@ export class AppFolderNode extends NocalhostFolderNode {
         obj.name = jsonObj['application_name'];
       }
     
-      return new AppNode(obj.name || `app${app.id}`, app.id, app.status, app.devSpaceStatus ,{url: obj.url});
+      return new AppNode(obj.name || `app${app.id}`, app.id, app.devspaceId, app.status, app.installStatus, app.kubeconfig, {url: obj.url});
     });
 
     return result;
   }
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.Collapsed);
-    treeItem.command = { command: 'showLogin', title: 'showLogin'};
     return treeItem;
   }
 }
@@ -236,62 +249,57 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   }
 }
 
-export class Deployment extends KubernetesResourceNode {
+export abstract class ControllerResourceNode extends KubernetesResourceNode {
+  getTreeItem(): vscode.TreeItem {
+    let treeItem = super.getTreeItem();
+    const appId = fileStore.get(SELECTED_APP_ID);
+    const isDebug = state.get(`${appId}_${this.name}_debug`);
+    if (isDebug) {
+      treeItem.label = `(Debugging) ${treeItem.label || this.label}`;
+    }
+    treeItem.contextValue = `workload-${this.resourceType}`;
+    return treeItem;
+  }
+}
+
+export class Deployment extends ControllerResourceNode {
   
   public type = DEPLOYMENT;
-  public resourceType = 'Deployment';
+  public resourceType = 'deployment';
   constructor(public label: string, public name: string, public info?: any) {
     super();
     this.label = label;
     this.info = info;
     this.name = name;
   }
-
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = "workload-deployment";
-    return treeItem;
-  }
-
 }
 
-export class StatefulSet extends KubernetesResourceNode {
+export class StatefulSet extends ControllerResourceNode {
   
   public type = STATEFUL_SET;
-  public resourceType = 'StatefulSet';
+  public resourceType = 'statefulSet';
   constructor(public label: string, public name: string, public info?: any) {
     super();
     this.label = label;
     this.info = info;
     this.name = name;
   }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = "workload-statefulSet";
-    return treeItem;
-  }
 }
 
 
-export class DaemonSet extends KubernetesResourceNode {
+export class DaemonSet extends ControllerResourceNode {
   
   public type = DAEMON_SET;
-  public resourceType = 'DaemonSet';
+  public resourceType = 'daemonSet';
   constructor(public label: string, public name: string, public info?: any) {
     super();
     this.label = label;
     this.info = info;
     this.name = name;
   }
-
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = "workload-daemonSet";
-    return treeItem;
-  }
 }
 
-export class Job extends KubernetesResourceNode {
+export class Job extends ControllerResourceNode {
   
   public type = JOB;
   public resourceType = 'job';
@@ -301,14 +309,9 @@ export class Job extends KubernetesResourceNode {
     this.info = info;
     this.name = name;
   }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = "workload-job";
-    return treeItem;
-  }
 }
 
-export class CronJob extends KubernetesResourceNode {
+export class CronJob extends ControllerResourceNode {
   public type = CRON_JOB;
   public resourceType = 'cronJob';
   constructor(public label: string, public name: string, public info?: any) {
@@ -316,11 +319,6 @@ export class CronJob extends KubernetesResourceNode {
     this.label = label;
     this.info = info;
     this.name = name;
-  }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = "workload-cronJob";
-    return treeItem;
   }
 }
 
