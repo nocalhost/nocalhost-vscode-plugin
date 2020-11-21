@@ -37,7 +37,7 @@ export function install(host: Host, appName: string, gitUrl: string) {
 export async function uninstall(host: Host, appName: string) {
   const uninstallCommand = nhctlCommand(`uninstall ${appName}`);
   host.log(`[cmd] ${uninstallCommand}`, true);
-  await execChildProcessAsync(host, uninstallCommand, [], true);
+  await execChildProcessAsync(host, uninstallCommand, []);
 }
 
 export async function replaceImage(host: Host, appName: string, workLoadName: string) {
@@ -82,14 +82,14 @@ export async function syncFile(host: Host, appName: string, workloadName: string
 
   host.log(`[cmd] ${syncFileCommand}`, true);
 
-  await execChildProcessAsync(host, syncFileCommand, [], true);
+  await execChildProcessAsync(host, syncFileCommand, []);
 }
 
 export async function endDebug(host: Host, appName: string, workLoadName: string, namespace?: string) {
   const end = nhctlCommand(`dev end ${appName} -d ${workLoadName} `);
   host.log(`[cmd] ${end}`, true);
   host.disposeDebug();
-  await execChildProcessAsync(host, end, [], true);
+  await execChildProcessAsync(host, end, []);
 }
 
 export async function loadResource(host: Host, appName: string) {

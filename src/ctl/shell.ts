@@ -44,7 +44,7 @@ export async function execAsync(host: Host, command: string, opts: any, callback
   });
 }
 
-export async function execChildProcessAsync(host: Host, command: string, args: Array<any>, isLog?: boolean) {
+export async function execChildProcessAsync(host: Host, command: string, args: Array<any>) {
   return new Promise((resolve, reject) => {
     const proc = spawn(command, args, {shell: true});
     let errorStr = '';
