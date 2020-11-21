@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { tryToLogin } from './commands/login';
 import state from './state';
 
-axios.defaults.baseURL = 'http://10.94.97.54:8080';
+axios.defaults.baseURL = 'http://129.226.14.191';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 let jwt = '';
