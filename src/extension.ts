@@ -68,7 +68,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			if (node instanceof KubernetesResourceNode) {
 				const kind = node.resourceType;
 				const name = node.name;
-				const uri = vscode.Uri.parse(`Nocalhost://k8s/${kind}/${name}.yaml`);
+				const uri = vscode.Uri.parse(`Nocalhost://k8s/loadResource/${kind}/${name}.yaml`);
 				let doc = await vscode.workspace.openTextDocument(uri);
 				await vscode.window.showTextDocument(doc, { preview: false });
 			} else if (node instanceof AppNode) {
@@ -77,6 +77,17 @@ export async function activate(context: vscode.ExtensionContext) {
 				let doc = await vscode.workspace.openTextDocument(uri);
 				await vscode.window.showTextDocument(doc, { preview: false });
 			}
+		}),
+		registerCommand('Nocalhost.log', false, async (node: KubernetesResourceNode) => {
+			const kind = node.resourceType;
+			const name = node.name;
+			const appId = fileStore.get(SELECTED_APP_ID);
+			await nocalhostService.log(host, appId, kind, name);
+		}),
+		registerCommand('Nocalhost.portForward', false, async (node: KubernetesResourceNode) => {
+			const kind = node.resourceType;
+			const name = node.name;
+			await nocalhostService.portForward(host, kind, name);
 		}),
 		registerCommand('Nocalhost.exec', true, async (node: KubernetesResourceNode) => {
 			const appId = fileStore.get(SELECTED_APP_ID);

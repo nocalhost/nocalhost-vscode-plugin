@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as kubectl from './ctl/kubectl';
 import * as nhctl from './ctl/nhctl';
+import * as shell from './ctl/shell';
 import host from './host';
 
 export default class NocalhostDocumentProvider implements vscode.TextDocumentContentProvider {
@@ -19,7 +20,7 @@ export default class NocalhostDocumentProvider implements vscode.TextDocumentCon
           / \ /                        \
           urn:example:animal:ferret:nose
 
-        Nocalhost://k8s/deployments/name
+        Nocalhost://k8s/loadResource/deployments/name
      */
     let result: vscode.ProviderResult<string>;
 
@@ -30,11 +31,24 @@ export default class NocalhostDocumentProvider implements vscode.TextDocumentCon
     switch (authority) {
       case 'k8s': {
         const paths = uri.path.split('/');
-        const kind = paths[1];
-        const names = paths[2].split('.');
-        const name = names[0];
-        const output = names[1];
-        result = await kubectl.loadResource(host, kind, name, output);
+        const type = paths[1];
+        if (type === 'loadResource') {
+          const kind = paths[2];
+          const names = paths[3].split('.');
+          const name = names[0];
+          const output = names[1];
+          result = await kubectl.loadResource(host, kind, name, output);
+        } else if(type === 'log') {
+          // Nocalhost://k8s/log/pod/container
+          const podName = paths[2];
+          const constainerName = paths[3];
+          const shellObj = await shell.execAsync(host, `kubectl logs ${podName} -c ${constainerName}`, []);
+          if (shellObj.code === 0) {
+            result = shellObj.stdout;
+          } else {
+            result = shellObj.stderr;
+          }
+        }
         break;
       }
         

@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { updateAppInstallStatus } from '../api';
 import { PodResource, Resource } from '../nodes/resourceType';
 import state from '../state';
-import { SELECTED_APP_ID } from '../constants';
+import { CURRENT_KUBECONFIG_FULLPATH, KUBE_CONFIG_DIR, SELECTED_APP_ID } from '../constants';
 import  * as fileStore from '../store/fileStore';
 
 interface NocalhostConfig {
@@ -93,6 +93,40 @@ class NocalhostService {
     vscode.commands.executeCommand('refreshApplication');
   }
 
+  async log(host: Host, appId: number, type: string, workloadName: string) {
+    const resArr = await kubectl.getControllerPod(host, type, workloadName);
+    if (resArr && resArr.length <= 0) {
+      host.showErrorMessage('Not found pod');
+      return;
+    }
+    const podNameArr = (resArr as Array<Resource>).map((res) => {
+      return res.metadata.name;
+    });
+    let podName: string | undefined = podNameArr[0];
+    if (podNameArr.length > 1) {
+      podName = await vscode.window.showQuickPick(podNameArr);
+    }
+    if (!podName) {
+      return;
+    }
+    const podStr = await kubectl.loadResource(host, 'pod', podName, 'json');
+    const pod = JSON.parse(podStr as string) as PodResource;
+    const containerNameArr = pod.spec.containers.map((c) => {
+      return c.name;
+    });
+    let containerName: string | undefined = containerNameArr[0];
+    if (containerNameArr.length > 1) {
+      containerName = await vscode.window.showQuickPick(containerNameArr);
+    }
+    if(!containerName) {
+      return;
+    }
+
+    const uri = vscode.Uri.parse(`Nocalhost://k8s/log/${podName}/${containerName}`);
+    let doc = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(doc, { preview: false });
+  }
+
   async uninstall(host:Host, appId: number, devSpaceId: number) {
     host.log('uninstalling app ...', true);
     host.showInformationMessage('uninstalling app ...');
@@ -129,7 +163,6 @@ class NocalhostService {
 
     await this.exec(host, appName, type, workloadName);
 
-    // TODO: open source code
     const isGo = await host.showInformationMessage('go to open source code ' + '', 'GO');
     if (isGo === 'GO') {
       const nocalhostConfig = await this.getNocalhostConfig();
@@ -147,7 +180,6 @@ class NocalhostService {
       }
     }
   }
-
 
   private async getNocalhostConfig() {
     const appId = fileStore.get(SELECTED_APP_ID);;
@@ -184,14 +216,14 @@ class NocalhostService {
       return;
     }
     const podName = (resArr as Array<Resource>)[0].metadata.name;
-    const command = `kubectl exec -it ${podName} -c nocalhost-dev -- /bin/sh`;
+    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
+    const command = `kubectl exec -it ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -- /bin/sh`;
     const terminalDisposed = host.invokeInNewTerminal(command);
     host.pushDebugDispose(terminalDisposed);
     host.log('open container end', true);
     host.log('', true);
   }
 
-  
   /**
    * exec
    * @param host 
@@ -228,7 +260,38 @@ class NocalhostService {
     if(!containerName) {
       return;
     }
-    const command = `kubectl exec -it ${podName} -c ${containerName} -- /bin/sh`;
+    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
+    const command = `kubectl exec -it ${podName} -c ${containerName} --kubeconfig ${kubeconfigPath} -- /bin/sh`;
+    const terminalDisposed = host.invokeInNewTerminal(command);
+    host.pushDebugDispose(terminalDisposed);
+    host.log('open container end', true);
+    host.log('', true);
+  }
+
+  async portForward(host: Host, type: string, workloadName: string) {
+    const resArr = await kubectl.getControllerPod(host, type, workloadName);
+    if (resArr && resArr.length <= 0) {
+      host.showErrorMessage('Not found pod');
+      return;
+    }
+    const podNameArr = (resArr as Array<Resource>).map((res) => {
+      return res.metadata.name;
+    });
+    let podName: string | undefined = podNameArr[0];
+    if (podNameArr.length > 1) {
+      podName = await vscode.window.showQuickPick(podNameArr);
+    }
+    if (!podName) {
+      return;
+    }
+    let portMap: string|undefined = "";
+    portMap = await vscode.window.showInputBox({placeHolder: 'eg: 1234:1234'});
+    if (!portMap) {
+      return;
+    }
+    // kubeconfig
+    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
+    const command = `kubectl port-forward ${podName} ${portMap} --kubeconfig ${kubeconfigPath}`;
     const terminalDisposed = host.invokeInNewTerminal(command);
     host.pushDebugDispose(terminalDisposed);
     host.log('open container end', true);
