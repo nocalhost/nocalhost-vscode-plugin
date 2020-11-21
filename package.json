@@ -72,6 +72,16 @@
 					"group": "1"
 				},
 				{
+					"command": "Nocalhost.log",
+					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+					"group": "1"
+				},
+				{
+					"command": "Nocalhost.portForward",
+					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+					"group": "1"
+				},
+				{
 					"command": "useApplication",
 					"when": "viewItem =~ /^application/i",
 					"group": "navigation"
@@ -133,6 +143,14 @@
 			{
 				"command": "Nocalhost.loadResource",
 				"title": "loadResource"
+			},
+			{
+				"command": "Nocalhost.log",
+				"title": "log"
+			},
+			{
+				"command": "Nocalhost.portForward",
+				"title": "port-forward"
 			}
 		]
 	},
