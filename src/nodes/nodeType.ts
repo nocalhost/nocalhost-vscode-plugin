@@ -7,6 +7,7 @@ import state from '../state';
 import * as fileStore from '../store/fileStore';
 import { APP, APP_FOLDER, CRON_JOB, CRON_JOBS_FOLDER, DAEMON_SET, DAEMON_SET_FOLDER, DEPLOYMENT, DEPLOYMENT_FOLDER, JOB, JOBS_FOLDER, KUBERNETE_FOLDER_RESOURCE, KUBERNETE_RESOURCE, LOGIN, NETWORK_FOLDER, POD, PODS_FOLDER, ROOT, SERVICE, SERVICE_FOLDER, STATEFUL_SET, STATEFUL_SET_FOLDER, WORKLOAD_FOLDER } from './nodeContants';
 import { List } from './resourceType';
+import application from '../commands/application';
 
 export interface BaseNocalhostNode {
   label: string;
@@ -132,6 +133,11 @@ export class AppFolderNode extends NocalhostFolderNode {
     
       return new AppNode(obj.name || `app${app.id}`, app.id, app.devspaceId, app.status, app.installStatus, app.kubeconfig, {url: obj.url});
     });
+
+    const appId = fileStore.get(SELECTED_APP_ID);
+    if (!appId) {
+      application.useApplication(result[0]);
+    }
 
     return result;
   }

@@ -20,6 +20,10 @@ export class Host {
     });
   }
 
+  public showInputBox(options: vscode.InputBoxOptions) {
+    return vscode.window.showInputBox(options);
+  }
+
   showInformationMessage(msg: string, ...items: string[]) {
     return vscode.window.showInformationMessage(msg, ...items);
   }

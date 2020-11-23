@@ -84,7 +84,6 @@ class NocalhostService {
   }
   async install(host: Host, appId: number, devSpaceId: number, gitUrl: string) {
     host.log('installing app ...', true);
-    host.showInformationMessage('replacing image ...');
     await nhctl.install(host, `${appId}`, gitUrl);
     await updateAppInstallStatus(appId, devSpaceId, 1);
     await this.cloneAppAllSource(host, `${appId}`);

@@ -18,6 +18,7 @@ interface RegisterUserInfo {
 interface LoginInfo {
   email: string;
   password: string;
+  from?: 'plugin';
 }
 
 interface ResponseData {
@@ -54,18 +55,10 @@ function setAuth(jwt: string) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${jwt}`;
 }
 
-export function register(userInfo: RegisterUserInfo) {
-  // axios.post()
-}
-
-// bussiness --> commands
-// first try to login
-// show login UI dialog
-
 export async function login(loginInfo: LoginInfo) {
+  loginInfo.from = 'plugin';
   const response = (await axios.post('/v1/login', loginInfo)).data as ResponseData;
   if (response.data && response.data.token ) {
-    // setAuth(response.data.jwt);
     jwt = response.data.token;
     return true;
   }
