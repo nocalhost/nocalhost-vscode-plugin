@@ -127,12 +127,11 @@ export function deactivate() {
 }
 
 export function checkCtl(name: string) {
-  const res = shell.which(name);
-  if (res.code === 0) {
+	const res = shell.which(name);
+  if (res && res.code === 0) {
     return true;
-  }
-
-  throw new Error(`not found ${name}`);
+	}
+	throw new Error(`not found ${name}`);
 }
 
 async function init() {
