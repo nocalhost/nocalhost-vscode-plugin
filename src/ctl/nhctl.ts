@@ -85,7 +85,7 @@ export async function syncFile(host: Host, appName: string, workloadName: string
   await execChildProcessAsync(host, syncFileCommand, []);
 }
 
-export async function endDebug(host: Host, appName: string, workLoadName: string, namespace?: string) {
+export async function exitDevSpace(host: Host, appName: string, workLoadName: string, namespace?: string) {
   const end = nhctlCommand(`dev end ${appName} -d ${workLoadName} `);
   host.log(`[cmd] ${end}`, true);
   host.disposeDebug();

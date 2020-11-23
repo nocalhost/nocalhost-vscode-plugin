@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import NocalhostAppProvider from './appProvider';
-import showLogin, { checkLogin, tryToLogin } from './commands/login';
+import showLogin, { tryToLogin } from './commands/login';
 import * as fileStore from './store/fileStore';
 import application from './commands/application';
 import { EMAIL, KUBE_CONFIG_DIR, NH_CONFIG_DIR, PASSWORD, SELECTED_APP_ID } from './constants';
@@ -29,18 +29,21 @@ export async function activate(context: vscode.ExtensionContext) {
 			webPage.showWelcome();
 		}),
 
-		registerCommand('startDebug', true, async (node: KubernetesResourceNode) => {
+		registerCommand('Nocalhost.entryDevSpace', true, async (node: KubernetesResourceNode) => {
+			if (!node) {
+				return;
+			}
 			// get app name
 			const appId = fileStore.get(SELECTED_APP_ID);
 			if (!appId) {
 				throw new Error('you must select one app');
 			}
-			await nocalhostService.startDebug(host, appId, node.resourceType, node.name);
+			await nocalhostService.entryDevSpace(host, appId, node.resourceType, node.name);
 		}),
-		registerCommand('endDebug', true, async (node: KubernetesResourceNode) => {
+		registerCommand('Nocalhost.exitDevSpace', true, async (node: KubernetesResourceNode) => {
 			// get app name
 			const appId = fileStore.get(SELECTED_APP_ID);
-			await nocalhostService.endDebug(host, appId , node.name);
+			await nocalhostService.exitDevSpace(host, appId , node.name);
 		}),
 		registerCommand('showLogin', false, showLogin),
 
@@ -59,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		registerCommand('Nocahost.uninstallApp',true, async (appNode: AppNode) => {
 			await nocalhostService.uninstall(host, appNode.id, appNode.devSpaceId);
 		}),
-		registerCommand('useApplication',true, (appNode: AppNode) => {
+		registerCommand('useApplication',true, async (appNode: AppNode) => {
 			application.useApplication(appNode);
 		}),
 		vscode.window.registerTreeDataProvider('Nocalhost', appTreeProvider),
@@ -99,21 +102,24 @@ export async function activate(context: vscode.ExtensionContext) {
 	_refreshApp = host.timer('refreshApplication', []);
 	vscode.commands.executeCommand('showWelcomePage');
 }
+
 function registerCommand(command: string, isLock: boolean, callback: any) {
-	return vscode.commands.registerCommand(command, async (...args: any[]) => {
+	const dispose = vscode.commands.registerCommand(command, async (...args: any[]) => {
 		if (isLock) {
 			if (state.isRunning()) {
 				host.showWarnMessage('A task is running, please try again later');
 				return;
 			}
 			state.setRunning(true);
-			await callback(...args).finally(() => {
+			Promise.resolve(callback(...args)).finally(() => {
 				state.setRunning(false);
 			});
 		} else {
 			callback(...args);
 		}
 	});
+
+	return dispose;
 }
 
 export function deactivate() {

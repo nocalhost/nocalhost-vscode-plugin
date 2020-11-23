@@ -86,7 +86,7 @@ class NocalhostService {
     host.log('installing app ...', true);
     await nhctl.install(host, `${appId}`, gitUrl);
     await updateAppInstallStatus(appId, devSpaceId, 1);
-    await this.cloneAppAllSource(host, `${appId}`);
+    // await this.cloneAppAllSource(host, `${appId}`);
     host.log('installed app', true);
 
     vscode.commands.executeCommand('refreshApplication');
@@ -137,7 +137,7 @@ class NocalhostService {
     vscode.commands.executeCommand('refreshApplication');
   }
 
-  async startDebug(host: Host, appName: string, type: string, workloadName: string) {
+  async entryDevSpace(host: Host, appName: string, type: string, workloadName: string) {
     host.log('replace image ...', true);
     host.showInformationMessage('replacing image ...');
     await nhctl.replaceImage(host, appName, workloadName);
@@ -173,7 +173,8 @@ class NocalhostService {
         }
       });
       if (dir) {
-        shell.execAsync(host, `code ${dir}`, false);
+        const uri = vscode.Uri.file(dir);
+        vscode.commands.executeCommand('vscode.openFolder', uri, { forceReuseWindow: true });
       } else {
         host.showErrorMessage('Not found the source code');
       }
@@ -188,25 +189,25 @@ class NocalhostService {
     return config;
   }
 
-  async endDebug(host: Host, appName: string, workLoadName: string) {
-    host.showInformationMessage('ending Debug ...');
-    host.log('ending Debug ...', true);
-    await nhctl.endDebug(host, appName, workLoadName);
-    host.showInformationMessage('ended Debug');
-    host.log('ended Debug', true);
-    state.delete(`${appName}_${workLoadName}_debug`);
+  async exitDevSpace(host: Host, appName: string, workLoadName: string) {
+    host.showInformationMessage('ending devSpace ...');
+    host.log('ending devSpace ...', true);
+    await nhctl.exitDevSpace(host, appName, workLoadName);
+    host.showInformationMessage('ended devSpace');
+    host.log('ended devSpace', true);
+    state.delete(`${appName}_${workLoadName}_devSpace`);
   }
 
   async exec(host: Host, appName: string, type: string, workloadName: string) {
-    const isDebug = state.get(`${appName}_${workloadName}_debug`);
-    if (isDebug) {
-      await this.openDebugExec(host, type, workloadName);
+    const isdevSpace = state.get(`${appName}_${workloadName}_devSpace`);
+    if (isdevSpace) {
+      await this.opendevSpaceExec(host, type, workloadName);
     } else {
       await this.openExec(host, type, workloadName);
     }
   }
 
-  async openDebugExec(host: Host, type: string, workloadName: string) {
+  async opendevSpaceExec(host: Host, type: string, workloadName: string) {
     host.log('open container ...', true);
     host.showInformationMessage('open container ...');
     const resArr = await kubectl.getControllerPod(host, type, workloadName);
