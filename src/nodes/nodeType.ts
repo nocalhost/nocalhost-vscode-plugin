@@ -136,7 +136,7 @@ export class AppFolderNode extends NocalhostFolderNode {
 
     const appId = fileStore.get(SELECTED_APP_ID);
     if (!appId) {
-      application.useApplication(result[0]);
+      await application.useApplication(result[0]);
     }
 
     return result;
