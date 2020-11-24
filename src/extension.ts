@@ -104,6 +104,10 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 function registerCommand(command: string, isLock: boolean, callback: any) {
+	checkCtl('nhctl');
+	checkCtl('kubectl');
+	checkCtl('git');
+	checkCtl('mutagen');
 	const dispose = vscode.commands.registerCommand(command, async (...args: any[]) => {
 		if (isLock) {
 			if (state.isRunning()) {
@@ -135,10 +139,6 @@ export function checkCtl(name: string) {
 }
 
 async function init() {
-	checkCtl('nhctl');
-	checkCtl('kubectl');
-	checkCtl('git');
-	checkCtl('mutagen');
 	fileStore.mkdir(NH_CONFIG_DIR);
 	fileStore.mkdir(KUBE_CONFIG_DIR);
 	fileStore.initConfig();
