@@ -1,15 +1,5 @@
-import { ChildProcess, spawn } from 'child_process';
-import * as shell from 'shelljs';
-import { Host } from '../host';
-
-
-export function exec(host: Host, command: string, isLog?: boolean) {
-  const res = shell.exec(command);
-  if (isLog) {
-    appendToNocalhostChannel(host, res.code, res.stdout, res.stderr);
-  }
-  
-}
+import { spawn } from 'child_process';
+import host, { Host } from '../host';
 
 function appendToNocalhostChannel(host: Host, code: number, stdout: string, stderr: string) {
   if (code === 0) {
@@ -25,23 +15,23 @@ interface ShellResult {
   stderr: string;
 }
 
-export async function execAsync(host: Host, command: string, opts: any, callback?: (proc: ChildProcess) => void, isLog?: boolean) {
-  host.log(`[cmd loadResource] ${command}`, true);
-  return new Promise<ShellResult>((resolve) => {
-    const proc = shell.exec(command, opts, (code, stdout, stderr) => {
-      if (isLog) {
-        appendToNocalhostChannel(host, code, stdout, stderr);
-      }
-      resolve({
-        code,
-        stdout,
-        stderr
-      });
+export async function execAsync(command: string, args: Array<any>): Promise<ShellResult> {
+  host.log(`[cmd] ${command}`,true);
+  return new Promise((resolve, reject) => {
+    const proc = spawn(command, args, {shell: true});
+    let stdout = '';
+    let stderr = '';
+    proc.on('close', (code) => {
+      resolve({stdout, stderr, code});
     });
-
-    if (callback) {
-      callback(proc);
-    }
+    
+    proc.stdout.on('data', function (data) {
+      stdout += data;
+    });
+    
+    proc.stderr.on('data', function (data) {
+      stderr += data;
+    });
   });
 }
 

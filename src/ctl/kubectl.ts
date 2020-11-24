@@ -7,13 +7,13 @@ import { CURRENT_KUBECONFIG_FULLPATH } from '../constants';
 import { Host } from '../host';
 import { ControllerResource, List } from '../nodes/resourceType';
 
-export async function exec(host: Host, command: string, isLog?: boolean) {
+export async function exec(command: string) {
   if (!checkKubectl()) {
     return;
   }
 
   const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-  const res = await execAsync(host, `kubectl ${command} --kubeconfig ${kubeconfig} `, [], undefined, isLog);
+  const res = await execAsync(`kubectl ${command} --kubeconfig ${kubeconfig} `, []);
 
   if (res.code === 0) {
     return res.stdout;
@@ -35,17 +35,17 @@ export async function getResourceList(host: Host, kind:string, label?: string) {
   args.push('-o', 'json');
 
   const command = getKubectlCommand(args);
-  const result = await exec(host, command);
+  const result = await exec(command);
   return result;
 }
 
 export async function loadResource(host: Host, kind: string, name: string, outputType = 'yaml') {
-  const result = await exec(host, `get ${kind} ${name} -o ${outputType}`);
+  const result = await exec(`get ${kind} ${name} -o ${outputType}`);
   return result;
 }
 
 export async function getResourceObj(host: Host, kind: string, name: string) {
-  const result = await exec(host, `get ${kind} ${name} -o json`);
+  const result = await exec(`get ${kind} ${name} -o json`);
   return result;
 }
 

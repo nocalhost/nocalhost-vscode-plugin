@@ -43,7 +43,7 @@ export async function uninstall(host: Host, appName: string) {
 export async function replaceImage(host: Host, appName: string, workLoadName: string) {
   const replaceImageCommand = nhctlCommand(`dev start ${appName} -d ${workLoadName}`);
   host.log(`[cmd] ${replaceImageCommand}`, true);
-  await execAsync(host, replaceImageCommand, [], undefined, true);
+  await execAsync(replaceImageCommand, []);
 }
 
 export function startPortForward(host: Host, appName: string, workloadName: string) {
@@ -95,7 +95,7 @@ export async function exitDevSpace(host: Host, appName: string, workLoadName: st
 export async function loadResource(host: Host, appName: string) {
   const describeCommand = nhctlCommand(`describe ${appName}`);
   host.log(`[cmd] ${describeCommand}`, true);
-  const result = await execAsync(host, describeCommand, [], undefined, false);
+  const result = await execAsync(describeCommand, []);
   return result.stdout;
 }
 

@@ -42,7 +42,7 @@ export default class NocalhostDocumentProvider implements vscode.TextDocumentCon
           // Nocalhost://k8s/log/pod/container
           const podName = paths[2];
           const constainerName = paths[3];
-          const shellObj = await shell.execAsync(host, `kubectl logs ${podName} -c ${constainerName}`, []);
+          const shellObj = await shell.execAsync(`kubectl logs ${podName} -c ${constainerName}`, []);
           if (shellObj.code === 0) {
             result = shellObj.stdout;
           } else {
