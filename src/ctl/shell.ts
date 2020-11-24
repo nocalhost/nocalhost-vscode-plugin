@@ -26,6 +26,7 @@ interface ShellResult {
 }
 
 export async function execAsync(host: Host, command: string, opts: any, callback?: (proc: ChildProcess) => void, isLog?: boolean) {
+  host.log(`[cmd loadResource] ${command}`, true);
   return new Promise<ShellResult>((resolve) => {
     const proc = shell.exec(command, opts, (code, stdout, stderr) => {
       if (isLog) {
