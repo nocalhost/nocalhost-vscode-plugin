@@ -142,7 +142,7 @@ export class AppFolderNode extends NocalhostFolderNode {
     return result;
   }
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.Collapsed);
+    let treeItem = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.Expanded);
     return treeItem;
   }
 }

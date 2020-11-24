@@ -2,10 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import NocalhostAppProvider from './appProvider';
-import showLogin, { tryToLogin } from './commands/login';
+import showLogin from './commands/login';
 import * as fileStore from './store/fileStore';
 import application from './commands/application';
-import { EMAIL, KUBE_CONFIG_DIR, NH_CONFIG_DIR, PASSWORD, SELECTED_APP_NAME } from './constants';
+import { JWT, KUBE_CONFIG_DIR, NH_CONFIG_DIR, SELECTED_APP_NAME } from './constants';
 import host from './host';
 import { clearInterval } from 'timers';
 import * as webPage from './webviews';
@@ -48,8 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		registerCommand('showLogin', false, showLogin),
 
 		registerCommand('Nocalhost.signout', false, () => {
-			fileStore.remove(EMAIL);
-			fileStore.remove(PASSWORD);
+			fileStore.remove(JWT);
 			state.setLogin(false);
 			appTreeProvider.refresh();
 		}),
@@ -142,6 +141,4 @@ async function init() {
 	fileStore.mkdir(NH_CONFIG_DIR);
 	fileStore.mkdir(KUBE_CONFIG_DIR);
 	fileStore.initConfig();
-
-	await tryToLogin().catch(() => {});
 }

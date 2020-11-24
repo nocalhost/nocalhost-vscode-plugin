@@ -1,13 +1,12 @@
 import { AxiosResponse } from 'axios';
 import axios from 'axios';
 import * as vscode from 'vscode';
-import { tryToLogin } from './commands/login';
 import state from './state';
+import * as fileStore from './store/fileStore';
+import { JWT } from './constants';
 
 axios.defaults.baseURL = 'http://129.226.14.191';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
-
-let jwt = '';
 
 interface RegisterUserInfo {
   email: string;
@@ -28,6 +27,7 @@ interface ResponseData {
 }
 
 axios.interceptors.request.use( function (config) {
+  const jwt = fileStore.get(JWT);
   config.headers['Authorization'] = `Bearer ${jwt}`;
 
   return config;
@@ -35,11 +35,9 @@ axios.interceptors.request.use( function (config) {
 
 axios.interceptors.response.use(async function (response: AxiosResponse<ResponseData>) {
   const res = response.data;
-  if (res.code === 20103) {
-    await tryToLogin();
-  } else if (res.code === 20111) {
+  if ([20103, 20111].includes(res.code)) {
     state.setLogin(false);
-    vscode.commands.executeCommand('getApplicationList');
+    vscode.commands.executeCommand('refreshApplication');
   }
   if (res.code !== 0) {
     return Promise.reject(res);
@@ -51,16 +49,13 @@ axios.interceptors.response.use(async function (response: AxiosResponse<Response
   return Promise.reject(error);
 });
 
-function setAuth(jwt: string) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${jwt}`;
-}
-
 export async function login(loginInfo: LoginInfo) {
   loginInfo.from = 'plugin';
   const response = (await axios.post('/v1/login', loginInfo)).data as ResponseData;
   if (response.data && response.data.token ) {
-    jwt = response.data.token;
-    return true;
+    const jwt = response.data.token;
+    fileStore.set(JWT, jwt);
+    return jwt;
   }
 
   throw new Error('login fail');
