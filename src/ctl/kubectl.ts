@@ -13,7 +13,7 @@ export async function exec(command: string) {
   }
 
   const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-  const res = await execAsync(`kubectl ${command} --kubeconfig ${kubeconfig} `, []);
+  const res = await execAsync(`kubectl ${command} --kubeconfig ${kubeconfig}`, []);
 
   if (res.code === 0) {
     return res.stdout;

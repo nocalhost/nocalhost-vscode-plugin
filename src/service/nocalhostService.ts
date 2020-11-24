@@ -1,6 +1,5 @@
 import * as nhctl from '../ctl/nhctl';
 import * as kubectl from '../ctl/kubectl';
-import * as shell from '../ctl/shell';
 import git from '../ctl/git';
 import { Host } from '../host';
 import * as fileUtil from '../utils/fileUtil';
@@ -49,6 +48,29 @@ interface NocalhostConfig {
 const NHCTL_DIR = path.resolve(os.homedir(), '.nhctl');
 
 class NocalhostService {
+
+  private async getGitUrl(appName: string, workloadName: string) {
+    const config = await this.getAppConfig(appName);
+    const arr = config.svcConfigs;
+    for (let i = 0; i < arr.length; i++) {
+      const { gitUrl, name } = arr[i];
+      if (name === workloadName) {
+        return gitUrl;
+      }
+    }
+  }
+
+  private async getAppConfig(appName: string) {
+    const configPath = path.resolve(NHCTL_DIR, 'application', appName, '.nocalhost' , 'config.yaml');
+    const config = (await fileUtil.readYaml(configPath)) as NocalhostConfig;
+
+    return config;
+  }
+
+  private async writeConfig(appName: string, config: NocalhostConfig) {
+    const configPath = path.resolve(NHCTL_DIR, 'application', appName, '.nocalhost' , 'config.yaml');
+    await fileUtil.writeYaml(configPath, config);
+  }
 
   private async cloneAppAllSource(host: Host, appName: string) {
     const isClone = await host.showInformationMessage('Do you want to clone the code?', 'confirm', 'cancel');
@@ -137,7 +159,92 @@ class NocalhostService {
     vscode.commands.executeCommand('refreshApplication');
   }
 
+  private async cloneCode(host: Host, appName: string, workloadName: string) {
+    const key = `${appName}_${workloadName}_directory`;
+    let destDir: string | undefined;
+    const nocalhostConfig = await this.getNocalhostConfig();
+    let gitUrl = await this.getGitUrl(appName, workloadName);
+    if (!gitUrl) {
+      gitUrl = await host.showInputBox({placeHolder: 'please input your git url'});
+    }
+    if (gitUrl) {
+      const saveUris = await host.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        title: 'select save directory',
+      });
+      if (saveUris) {
+        destDir = path.resolve(saveUris[0].fsPath, workloadName);
+        await git.clone(host, gitUrl, [destDir]);
+        fileStore.set(key, destDir);
+        nocalhostConfig.svcConfigs.forEach(conf => {
+          if (conf.name === workloadName) {
+            conf.localWorkDir = destDir as string;
+            return;
+          }
+        });
+        this.writeConfig(appName, nocalhostConfig);
+      }
+    }
+    return destDir;
+  }
+
   async entryDevSpace(host: Host, appName: string, type: string, workloadName: string) {
+    const key = `${appName}_${workloadName}_directory`;
+    let directory = fileStore.get(key);
+    const currentUri = vscode.workspace.rootPath;
+    if (!directory) {
+      const result = await host.showInformationMessage('current directory is not the directory of devSpace?', 'clone source', 'open source directory');
+      if (result === 'clone source') {
+        await this.cloneCode(host, appName, workloadName);
+      } else if (result === 'open source directory') {
+        const uris = await host.showOpenDialog({
+          canSelectFiles: false,
+          canSelectFolders: true,
+          canSelectMany: false
+        });
+        if (uris) {
+          fileStore.set(key, uris[0].fsPath);
+          vscode.commands.executeCommand('vscode.openFolder', uris[0], { forceReuseWindow: true });
+          return;
+        }
+      }
+    }
+    // fresh config
+    directory = fileStore.get(key);
+    if (currentUri !== directory) {
+      const result = await host.showInformationMessage('current directory is not the directory of devSpace. open source directory', 'select other directory', 'open source directory', 'cancel');
+      if (result === 'select other directory') {
+        const uris = await host.showOpenDialog({
+          canSelectFiles: false,
+          canSelectFolders: true,
+          canSelectMany: false
+        });
+        if (uris) {
+          fileStore.set(key, uris[0].fsPath);
+          vscode.commands.executeCommand('vscode.openFolder', uris[0], { forceReuseWindow: true });
+          return;
+        }
+      } else if(result === 'open source directory'){
+        const uri = vscode.Uri.file(directory);
+        vscode.commands.executeCommand('vscode.openFolder', uri, { forceReuseWindow: true });
+        return;
+      }
+    }
+
+    // fresh config
+    directory = fileStore.get(key);
+    const nocalhostConfig = await this.getNocalhostConfig();
+    nocalhostConfig.svcConfigs.map((config) => {
+      if (config.name === workloadName) {
+        config.sync.push(directory);
+        return;
+      }
+    });
+
+    await this.writeConfig(appName, nocalhostConfig);
+    
     host.log('replace image ...', true);
     host.showInformationMessage('replacing image ...');
     await nhctl.replaceImage(host, appName, workloadName);
@@ -161,24 +268,6 @@ class NocalhostService {
     state.set(`${appName}_${workloadName}_debug`, true);
 
     await this.exec(host, appName, type, workloadName);
-
-    const isGo = await host.showInformationMessage('go to open source code ' + '', 'GO');
-    if (isGo === 'GO') {
-      const nocalhostConfig = await this.getNocalhostConfig();
-      let dir = '';
-      nocalhostConfig.svcConfigs.forEach(conf => {
-        if (conf.name === workloadName) {
-          dir = conf.localWorkDir;
-          return;
-        }
-      });
-      if (dir) {
-        const uri = vscode.Uri.file(dir);
-        vscode.commands.executeCommand('vscode.openFolder', uri, { forceReuseWindow: true });
-      } else {
-        host.showErrorMessage('Not found the source code');
-      }
-    }
   }
 
   private async getNocalhostConfig() {
