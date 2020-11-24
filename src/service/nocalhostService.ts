@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { updateAppInstallStatus } from '../api';
 import { PodResource, Resource } from '../nodes/resourceType';
 import state from '../state';
-import { CURRENT_KUBECONFIG_FULLPATH, KUBE_CONFIG_DIR, SELECTED_APP_ID } from '../constants';
+import { CURRENT_KUBECONFIG_FULLPATH, KUBE_CONFIG_DIR, SELECTED_APP_NAME } from '../constants';
 import  * as fileStore from '../store/fileStore';
 
 interface NocalhostConfig {
@@ -82,9 +82,9 @@ class NocalhostService {
     }
     host.log('end clone source', true);
   }
-  async install(host: Host, appId: number, devSpaceId: number, gitUrl: string) {
+  async install(host: Host, appName: string, appId: number, devSpaceId: number, gitUrl: string) {
     host.log('installing app ...', true);
-    await nhctl.install(host, `${appId}`, gitUrl);
+    await nhctl.install(host, appName, gitUrl);
     await updateAppInstallStatus(appId, devSpaceId, 1);
     // await this.cloneAppAllSource(host, `${appId}`);
     host.log('installed app', true);
@@ -126,10 +126,10 @@ class NocalhostService {
     await vscode.window.showTextDocument(doc, { preview: false });
   }
 
-  async uninstall(host:Host, appId: number, devSpaceId: number) {
+  async uninstall(host:Host, appName: string, appId: number, devSpaceId: number) {
     host.log('uninstalling app ...', true);
     host.showInformationMessage('uninstalling app ...');
-    await nhctl.uninstall(host, `${appId}`);
+    await nhctl.uninstall(host, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     host.log('uninstalled app', true);
     host.showInformationMessage('uninstalled app ...');
@@ -182,8 +182,8 @@ class NocalhostService {
   }
 
   private async getNocalhostConfig() {
-    const appId = fileStore.get(SELECTED_APP_ID);;
-    const configPath = path.resolve(NHCTL_DIR, 'application', `${appId}`, '.nocalhost' , 'config.yaml');
+    const appName = fileStore.get(SELECTED_APP_NAME);;
+    const configPath = path.resolve(NHCTL_DIR, 'application', appName, '.nocalhost' , 'config.yaml');
     const config = (await fileUtil.readYaml(configPath)) as NocalhostConfig;
 
     return config;

@@ -14,7 +14,7 @@ export const PASSWORD = 'password';
 export const JWT = 'jwt';
 
 // APP
-export const SELECTED_APP_ID = 'selectedApp';
+export const SELECTED_APP_NAME = 'selectedApp';
 // export const 
 
 // CURRENT_KUBECONFIG_FULLPATH

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getApplication } from '../api';
-import { SELECTED_APP_ID } from '../constants';
+import { SELECTED_APP_NAME } from '../constants';
 import { getResourceList } from '../ctl/kubectl';
 import host from '../host';
 import state from '../state';
@@ -103,8 +103,8 @@ export class AppNode implements BaseNocalhostNode {
   }
 
   private customLabel() {
-    const selectAppId = fileStore.get(SELECTED_APP_ID);
-    const isSelected = selectAppId === this.id;
+    const selectAppName = fileStore.get(SELECTED_APP_NAME);
+    const isSelected = selectAppName === this.info.name;
     if (isSelected) {
       this.label = `* ${this.label}`;
     }
@@ -131,11 +131,11 @@ export class AppFolderNode extends NocalhostFolderNode {
         obj.name = jsonObj['application_name'];
       }
     
-      return new AppNode(obj.name || `app${app.id}`, app.id, app.devspaceId, app.status, app.installStatus, app.kubeconfig, {url: obj.url});
+      return new AppNode(obj.name || `app${app.id}`, app.id, app.devspaceId, app.status, app.installStatus, app.kubeconfig, obj);
     });
 
-    const appId = fileStore.get(SELECTED_APP_ID);
-    if (!appId) {
+    const appName = fileStore.get(SELECTED_APP_NAME);
+    if (!appName) {
       await application.useApplication(result[0]);
     }
 
@@ -258,8 +258,8 @@ export class DeploymentFolder extends KubernetesResourceFolder {
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
   getTreeItem(): vscode.TreeItem {
     let treeItem = super.getTreeItem();
-    const appId = fileStore.get(SELECTED_APP_ID);
-    const isDebug = state.get(`${appId}_${this.name}_debug`);
+    const appName = fileStore.get(SELECTED_APP_NAME);
+    const isDebug = state.get(`${appName}_${this.name}_debug`);
     if (isDebug) {
       treeItem.label = `(Debugging) ${treeItem.label || this.label}`;
     }

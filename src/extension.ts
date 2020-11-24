@@ -5,7 +5,7 @@ import NocalhostAppProvider from './appProvider';
 import showLogin, { tryToLogin } from './commands/login';
 import * as fileStore from './store/fileStore';
 import application from './commands/application';
-import { EMAIL, KUBE_CONFIG_DIR, NH_CONFIG_DIR, PASSWORD, SELECTED_APP_ID } from './constants';
+import { EMAIL, KUBE_CONFIG_DIR, NH_CONFIG_DIR, PASSWORD, SELECTED_APP_NAME } from './constants';
 import host from './host';
 import { clearInterval } from 'timers';
 import * as webPage from './webviews';
@@ -34,16 +34,16 @@ export async function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 			// get app name
-			const appId = fileStore.get(SELECTED_APP_ID);
-			if (!appId) {
+			const appName = fileStore.get(SELECTED_APP_NAME);
+			if (!appName) {
 				throw new Error('you must select one app');
 			}
-			await nocalhostService.entryDevSpace(host, appId, node.resourceType, node.name);
+			await nocalhostService.entryDevSpace(host, appName, node.resourceType, node.name);
 		}),
 		registerCommand('Nocalhost.exitDevSpace', true, async (node: KubernetesResourceNode) => {
 			// get app name
-			const appId = fileStore.get(SELECTED_APP_ID);
-			await nocalhostService.exitDevSpace(host, appId , node.name);
+			const appName = fileStore.get(SELECTED_APP_NAME);
+			await nocalhostService.exitDevSpace(host, appName , node.name);
 		}),
 		registerCommand('showLogin', false, showLogin),
 
@@ -57,10 +57,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		registerCommand('getApplicationList', false, () => appTreeProvider.refresh()),
 		registerCommand('refreshApplication', false, () => appTreeProvider.refresh()),
 		registerCommand('Nocahost.installApp', true, async (appNode: AppNode) => {
-			await nocalhostService.install(host, appNode.id, appNode.devSpaceId, appNode.info.url);
+			await nocalhostService.install(host, appNode.info.name, appNode.id, appNode.devSpaceId, appNode.info.url);
 		}),
 		registerCommand('Nocahost.uninstallApp',true, async (appNode: AppNode) => {
-			await nocalhostService.uninstall(host, appNode.id, appNode.devSpaceId);
+			await nocalhostService.uninstall(host, appNode.info.name, appNode.id, appNode.devSpaceId);
 		}),
 		registerCommand('useApplication',true, async (appNode: AppNode) => {
 			application.useApplication(appNode);
@@ -84,8 +84,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		registerCommand('Nocalhost.log', false, async (node: KubernetesResourceNode) => {
 			const kind = node.resourceType;
 			const name = node.name;
-			const appId = fileStore.get(SELECTED_APP_ID);
-			await nocalhostService.log(host, appId, kind, name);
+			const appName = fileStore.get(SELECTED_APP_NAME);
+			await nocalhostService.log(host, appName, kind, name);
 		}),
 		registerCommand('Nocalhost.portForward', false, async (node: KubernetesResourceNode) => {
 			const kind = node.resourceType;
@@ -93,8 +93,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			await nocalhostService.portForward(host, kind, name);
 		}),
 		registerCommand('Nocalhost.exec', true, async (node: KubernetesResourceNode) => {
-			const appId = fileStore.get(SELECTED_APP_ID);
-			await nocalhostService.exec(host, appId , node.resourceType, node.name);
+			const appName = fileStore.get(SELECTED_APP_NAME);
+			await nocalhostService.exec(host, appName , node.resourceType, node.name);
 		})
 	];
 
