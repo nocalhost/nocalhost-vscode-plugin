@@ -308,33 +308,55 @@ class NocalhostService {
 
     await this.writeConfig(appName, nocalhostConfig);
 
-    host.log("replace image ...", true);
-    host.showInformationMessage("replacing image ...");
-    await nhctl.replaceImage(host, appName, workloadName);
-    host.log("replace image end", true);
-    host.log("", true);
+    await vscode.window.withProgress(
+      {
+        title: "launching devspace",
+        location: vscode.ProgressLocation.Notification,
+        cancellable: false,
+      },
+      async (progress) => {
+        host.getOutputChannel().show(true);
+        progress.report({
+          message: "replacing image",
+          increment: 0,
+        });
+        host.log("replace image ...", true);
+        await nhctl.replaceImage(host, appName, workloadName);
+        host.log("replace image end", true);
+        host.log("", true);
 
-    host.log("port forward ...", true);
-    host.showInformationMessage("port forwarding ...");
-    const portForwardDispose = await nhctl.startPortForward(
-      host,
-      appName,
-      workloadName
+        progress.report({
+          message: "port forwarding",
+          increment: 33,
+        });
+        host.log("port forward ...", true);
+        const portForwardDispose = await nhctl.startPortForward(
+          host,
+          appName,
+          workloadName
+        );
+        host.pushDebugDispose(portForwardDispose);
+        host.log("port forward end", true);
+        host.log("", true);
+
+        progress.report({
+          message: "syncing file",
+          increment: 66,
+        });
+        host.log("sync file ...", true);
+        await nhctl.syncFile(host, appName, workloadName);
+        host.log("sync file end", true);
+        host.log("", true);
+        progress.report({
+          message: "launched successful",
+          increment: 100,
+        });
+
+        state.set(`${appName}_${workloadName}_devSpace`, true);
+
+        await this.exec(host, appName, type, workloadName);
+      }
     );
-    host.pushDebugDispose(portForwardDispose);
-    host.log("port forward end", true);
-    host.log("", true);
-
-    host.log("sync file ...", true);
-    host.showInformationMessage("sysc file ...");
-    await nhctl.syncFile(host, appName, workloadName);
-    host.log("sync file end", true);
-    host.log("", true);
-
-    // record debug state
-    state.set(`${appName}_${workloadName}_debug`, true);
-
-    await this.exec(host, appName, type, workloadName);
   }
 
   private async getNocalhostConfig() {
@@ -352,6 +374,7 @@ class NocalhostService {
   }
 
   async exitDevSpace(host: Host, appName: string, workLoadName: string) {
+    host.getOutputChannel().show(true);
     host.showInformationMessage("ending devSpace ...");
     host.log("ending devSpace ...", true);
     await nhctl.exitDevSpace(host, appName, workLoadName);
