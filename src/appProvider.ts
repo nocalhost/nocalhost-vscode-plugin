@@ -26,7 +26,6 @@ export default class NocalhostAppProvider
     let result: vscode.ProviderResult<BaseNocalhostNode[]> = [];
     if (!isLogin) {
       result = [new LoginNode()];
-
       return Promise.resolve(result);
     }
 

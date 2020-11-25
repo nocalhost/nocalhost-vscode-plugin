@@ -7,11 +7,11 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import * as fileStore from "../store/fileStore";
-import { AppNode } from "../nodes/nodeType";
+import { AppNode, AppSubFolderNode } from "../nodes/nodeType";
 
 class Application {
   // get kubeconfig of app
-  public async setKubeConfig(appNode: AppNode) {
+  public async setKubeConfig(appNode: AppSubFolderNode) {
     const currentKubeConfigFullpath = path.resolve(
       KUBE_CONFIG_DIR,
       `${appNode.id}_${appNode.devSpaceId}_config`
@@ -20,7 +20,7 @@ class Application {
     fileStore.set(CURRENT_KUBECONFIG_FULLPATH, currentKubeConfigFullpath);
   }
 
-  public async useApplication(appNode: AppNode) {
+  public async useApplication(appNode: AppSubFolderNode) {
     fileStore.set(SELECTED_APP_NAME, appNode.info.name);
     await this.setKubeConfig(appNode);
     vscode.commands.executeCommand("refreshApplication");

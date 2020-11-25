@@ -111,9 +111,47 @@ export abstract class KubernetesResourceFolder extends WorkloadSubFolderNode {
   }
 }
 
-export class AppNode implements BaseNocalhostNode {
-  public type = APP;
+export class AppFolderNode extends NocalhostFolderNode {
+  public label: string = "Applications";
+  public type = APP_FOLDER;
+  async getChildren(parent?: BaseNocalhostNode): Promise<AppSubFolderNode[]> {
+    const res = await getApplication();
+    const result = res.map((app) => {
+      let context = app.context;
+      let obj: {
+        url?: string;
+        name?: string;
+      } = {};
+      if (context) {
+        let jsonObj = JSON.parse(context);
+        obj.url = jsonObj["application_url"];
+        obj.name = jsonObj["application_name"];
+      }
+      return new AppSubFolderNode(
+        obj.name || `app${app.id}`,
+        app.id,
+        app.devspaceId,
+        app.status,
+        app.installStatus,
+        app.kubeconfig,
+        obj
+      );
+    });
+    return result;
+  }
+
+  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    let treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.Collapsed
+    );
+    return treeItem;
+  }
+}
+
+export class AppSubFolderNode extends NocalhostFolderNode {
   public label: string;
+  public type = APP_SUB_FOLDER;
   public id: number;
   public devSpaceId: number;
   public status: number;
@@ -129,6 +167,7 @@ export class AppNode implements BaseNocalhostNode {
     kubeConfig: string,
     info?: any
   ) {
+    super();
     this.label = label;
     this.id = id;
     this.devSpaceId = devSpaceId;
@@ -137,17 +176,20 @@ export class AppNode implements BaseNocalhostNode {
     this.kubeConfig = kubeConfig;
     this.info = info;
   }
+  private children = ["Workloads", "Networks"];
   getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    return Promise.resolve([]);
+    return Promise.resolve(this.children.map((type) => this.createChild(type)));
   }
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    this.customLabel();
-    const treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.None
-    );
+    const appName = fileStore.get(SELECTED_APP_NAME);
+    const collapsisbleState: vscode.TreeItemCollapsibleState =
+      appName === this.label
+        ? vscode.TreeItemCollapsibleState.Expanded
+        : vscode.TreeItemCollapsibleState.Collapsed;
+    this.customLabel(appName);
+    const treeItem = new vscode.TreeItem(this.label, collapsisbleState);
     treeItem.contextValue = `application-${
       this.installStatus === 1 ? "installed" : "notInstalled"
     }`;
@@ -159,95 +201,14 @@ export class AppNode implements BaseNocalhostNode {
     return treeItem;
   }
 
-  private customLabel() {
-    const selectAppName = fileStore.get(SELECTED_APP_NAME);
-    const isSelected = selectAppName === this.info.name;
+  private customLabel(appName: string) {
+    const isSelected = appName === this.info.name;
     if (isSelected) {
       this.label = `* ${this.label}`;
     }
     if (this.installStatus) {
       this.label = `${this.label} (deployed)`;
     }
-  }
-}
-
-export class AppFolderNode extends NocalhostFolderNode {
-  public label: string = "Applications";
-  public type = APP_FOLDER;
-  async getChildren(parent?: BaseNocalhostNode): Promise<AppSubFolderNode[]> {
-    const res = await getApplication();
-    // TODO: res.kubeconfig 为空，无法拿到下一级的数据
-    const result = res.map((app) => {
-      let context = app.context;
-      let label: string = "";
-      if (context) {
-        let jsonObj = JSON.parse(context);
-        label = jsonObj.application_name;
-      }
-      return new AppSubFolderNode(label);
-    });
-
-    const appName = fileStore.get(SELECTED_APP_NAME);
-    console.log(222, appName, result);
-    // if (!appName) {
-    //   await application.useApplication(result[0]);
-    // }
-
-    return result;
-
-    // const res = await getApplication();
-    // const result = res.map(app => {
-    //   let context = app.context;
-    //   let obj: {
-    //     url?: string;
-    //     name?: string;
-    //   } = {};
-    //   if (context) {
-    //     let jsonObj = JSON.parse(context);
-    //     obj.url = jsonObj['application_url'];
-    //     obj.name = jsonObj['application_name'];
-    //   }
-
-    //   return new AppNode(obj.name || `app${app.id}`, app.id, app.devspaceId, app.status, app.installStatus, app.kubeconfig, obj);
-    // });
-
-    // const appName = fileStore.get(SELECTED_APP_NAME);
-    // if (!appName) {
-    //   await application.useApplication(result[0]);
-    // }
-
-    // return result;
-  }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.Collapsed
-    );
-    return treeItem;
-  }
-
-  onDidExpandElement() {}
-}
-
-export class AppSubFolderNode extends NocalhostFolderNode {
-  public label: string = "";
-  public type = APP_SUB_FOLDER;
-  private children = ["Workloads", "Networks"];
-  constructor(label: string) {
-    super();
-    this.label = label;
-  }
-  getChildren(
-    parent?: BaseNocalhostNode
-  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    return Promise.resolve(this.children.map((type) => this.createChild(type)));
-  }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.Collapsed
-    );
-    return treeItem;
   }
 
   createChild(type: string) {

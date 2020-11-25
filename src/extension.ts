@@ -14,7 +14,7 @@ import {
 import host from "./host";
 import { clearInterval } from "timers";
 import * as webPage from "./webviews";
-import { AppNode, KubernetesResourceNode } from "./nodes/nodeType";
+import { AppSubFolderNode, KubernetesResourceNode } from "./nodes/nodeType";
 import nocalhostService from "./service/nocalhostService";
 import NocalhostTextDocumentProvider from "./textDocumentProvider";
 import * as shell from "shelljs";
@@ -76,26 +76,38 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand("refreshApplication", false, () =>
       appTreeProvider.refresh()
     ),
-    registerCommand("Nocahost.installApp", true, async (appNode: AppNode) => {
-      await nocalhostService.install(
-        host,
-        appNode.info.name,
-        appNode.id,
-        appNode.devSpaceId,
-        appNode.info.url
-      );
-    }),
-    registerCommand("Nocahost.uninstallApp", true, async (appNode: AppNode) => {
-      await nocalhostService.uninstall(
-        host,
-        appNode.info.name,
-        appNode.id,
-        appNode.devSpaceId
-      );
-    }),
-    registerCommand("useApplication", true, async (appNode: AppNode) => {
-      application.useApplication(appNode);
-    }),
+    registerCommand(
+      "Nocahost.installApp",
+      true,
+      async (appNode: AppSubFolderNode) => {
+        await nocalhostService.install(
+          host,
+          appNode.info.name,
+          appNode.id,
+          appNode.devSpaceId,
+          appNode.info.url
+        );
+      }
+    ),
+    registerCommand(
+      "Nocahost.uninstallApp",
+      true,
+      async (appNode: AppSubFolderNode) => {
+        await nocalhostService.uninstall(
+          host,
+          appNode.info.name,
+          appNode.id,
+          appNode.devSpaceId
+        );
+      }
+    ),
+    registerCommand(
+      "useApplication",
+      true,
+      async (appNode: AppSubFolderNode) => {
+        application.useApplication(appNode);
+      }
+    ),
     vscode.window.registerTreeDataProvider("Nocalhost", appTreeProvider),
     vscode.workspace.registerTextDocumentContentProvider(
       "Nocalhost",
@@ -104,7 +116,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand(
       "Nocalhost.loadResource",
       false,
-      async (node: KubernetesResourceNode | AppNode) => {
+      async (node: KubernetesResourceNode | AppSubFolderNode) => {
         if (node instanceof KubernetesResourceNode) {
           const kind = node.resourceType;
           const name = node.name;
@@ -113,7 +125,7 @@ export async function activate(context: vscode.ExtensionContext) {
           );
           let doc = await vscode.workspace.openTextDocument(uri);
           await vscode.window.showTextDocument(doc, { preview: false });
-        } else if (node instanceof AppNode) {
+        } else if (node instanceof AppSubFolderNode) {
           const name = node.info.name;
           const uri = vscode.Uri.parse(`Nocalhost://nh/${name}.yaml`);
           let doc = await vscode.workspace.openTextDocument(uri);
