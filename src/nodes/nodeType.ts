@@ -8,6 +8,7 @@ import * as fileStore from "../store/fileStore";
 import {
   APP,
   APP_FOLDER,
+  APP_SUB_FOLDER,
   CRON_JOB,
   CRON_JOBS_FOLDER,
   DAEMON_SET,
@@ -173,46 +174,95 @@ export class AppNode implements BaseNocalhostNode {
 export class AppFolderNode extends NocalhostFolderNode {
   public label: string = "Applications";
   public type = APP_FOLDER;
-  async getChildren(
-    parent?: BaseNocalhostNode
-  ): Promise<AppNode[] | null | undefined> {
+  async getChildren(parent?: BaseNocalhostNode): Promise<AppSubFolderNode[]> {
     const res = await getApplication();
+    // TODO: res.kubeconfig 为空，无法拿到下一级的数据
     const result = res.map((app) => {
       let context = app.context;
-      let obj: {
-        url?: string;
-        name?: string;
-      } = {};
+      let label: string = "";
       if (context) {
         let jsonObj = JSON.parse(context);
-        obj.url = jsonObj["application_url"];
-        obj.name = jsonObj["application_name"];
+        label = jsonObj.application_name;
       }
-
-      return new AppNode(
-        obj.name || `app${app.id}`,
-        app.id,
-        app.devspaceId,
-        app.status,
-        app.installStatus,
-        app.kubeconfig,
-        obj
-      );
+      return new AppSubFolderNode(label);
     });
 
     const appName = fileStore.get(SELECTED_APP_NAME);
-    if (!appName) {
-      await application.useApplication(result[0]);
-    }
+    console.log(222, appName, result);
+    // if (!appName) {
+    //   await application.useApplication(result[0]);
+    // }
 
     return result;
+
+    // const res = await getApplication();
+    // const result = res.map(app => {
+    //   let context = app.context;
+    //   let obj: {
+    //     url?: string;
+    //     name?: string;
+    //   } = {};
+    //   if (context) {
+    //     let jsonObj = JSON.parse(context);
+    //     obj.url = jsonObj['application_url'];
+    //     obj.name = jsonObj['application_name'];
+    //   }
+
+    //   return new AppNode(obj.name || `app${app.id}`, app.id, app.devspaceId, app.status, app.installStatus, app.kubeconfig, obj);
+    // });
+
+    // const appName = fileStore.get(SELECTED_APP_NAME);
+    // if (!appName) {
+    //   await application.useApplication(result[0]);
+    // }
+
+    // return result;
   }
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(
       this.label,
-      vscode.TreeItemCollapsibleState.Expanded
+      vscode.TreeItemCollapsibleState.Collapsed
     );
     return treeItem;
+  }
+
+  onDidExpandElement() {}
+}
+
+export class AppSubFolderNode extends NocalhostFolderNode {
+  public label: string = "";
+  public type = APP_SUB_FOLDER;
+  private children = ["Workloads", "Networks"];
+  constructor(label: string) {
+    super();
+    this.label = label;
+  }
+  getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
+    return Promise.resolve(this.children.map((type) => this.createChild(type)));
+  }
+  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    let treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.Collapsed
+    );
+    return treeItem;
+  }
+
+  createChild(type: string) {
+    let node: WorkloadFolderNode | NetworkFolderNode;
+    switch (type) {
+      case "Workloads":
+        node = new WorkloadFolderNode();
+        break;
+      case "Networks":
+        node = new NetworkFolderNode();
+        break;
+      default:
+        throw new Error("not implement the resource");
+    }
+    return node;
   }
 }
 
@@ -275,7 +325,6 @@ export class ServiceFolder extends KubernetesResourceFolder {
     const result: Service[] = list.items.map(
       (item) => new Service(item.metadata.name, item.metadata.name, item)
     );
-
     return result;
   }
 }
@@ -512,7 +561,7 @@ export class PodFolder extends KubernetesResourceFolder {
 export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
-  private children = ["Applications", "Workloads", "Networks"];
+  private children = ["Applications"];
   getChildren(): Promise<vscode.ProviderResult<NocalhostFolderNode[]>> {
     return Promise.resolve(this.children.map((type) => this.createChild(type)));
   }
@@ -525,12 +574,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     switch (type) {
       case "Applications":
         folderNode = new AppFolderNode();
-        break;
-      case "Workloads":
-        folderNode = new WorkloadFolderNode();
-        break;
-      case "Networks":
-        folderNode = new NetworkFolderNode();
         break;
       default:
         folderNode = new AppFolderNode();

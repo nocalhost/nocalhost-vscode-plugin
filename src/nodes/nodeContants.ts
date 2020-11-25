@@ -4,6 +4,7 @@ export const ROOT = "NOCALHOST";
 
 export const APP = "APP";
 export const APP_FOLDER = "APP_FOLDER";
+export const APP_SUB_FOLDER = "APP_SUB_FOLDER";
 
 export const NETWORK_FOLDER = "NETWORK_FOLDER";
 export const SERVICE_FOLDER = "SERVICE_FOLDER";
