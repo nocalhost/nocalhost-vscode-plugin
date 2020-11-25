@@ -8,12 +8,6 @@ import { JWT } from "./constants";
 axios.defaults.baseURL = "http://129.226.14.191";
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
-interface RegisterUserInfo {
-  email: string;
-  password: string;
-  confirm_password: string;
-}
-
 interface LoginInfo {
   email: string;
   password: string;
