@@ -74,7 +74,6 @@ export class Host {
     } else {
       this.outputChannel.append(msg);
     }
-    this.outputChannel.show();
   }
 
   dispose() {

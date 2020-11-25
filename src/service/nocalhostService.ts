@@ -141,7 +141,6 @@ class NocalhostService {
     host.log("installing app ...", true);
     await nhctl.install(host, appName, gitUrl);
     await updateAppInstallStatus(appId, devSpaceId, 1);
-    // await this.cloneAppAllSource(host, `${appId}`);
     host.log("installed app", true);
 
     vscode.commands.executeCommand("refreshApplication");
@@ -257,10 +256,12 @@ class NocalhostService {
         });
         if (uris) {
           fileStore.set(key, uris[0].fsPath);
-          vscode.commands.executeCommand("vscode.openFolder", uris[0], {
-            forceReuseWindow: true,
-          });
-          return;
+          if (currentUri !== uris[0].fsPath) {
+            vscode.commands.executeCommand("vscode.openFolder", uris[0], {
+              forceReuseWindow: true,
+            });
+            return;
+          }
         }
       }
     }

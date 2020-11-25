@@ -182,6 +182,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(...subs);
   _refreshApp = host.timer("refreshApplication", []);
   vscode.commands.executeCommand("showWelcomePage");
+  host.getOutputChannel().show(true);
 }
 
 function registerCommand(command: string, isLock: boolean, callback: any) {
