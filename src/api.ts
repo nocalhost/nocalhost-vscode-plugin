@@ -5,7 +5,6 @@ import state from "./state";
 import * as fileStore from "./store/fileStore";
 import { BASE_URL, JWT } from "./constants";
 
-axios.defaults.baseURL = "http://10.94.97.54:8080";
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
 interface LoginInfo {
