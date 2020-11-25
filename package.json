@@ -11,7 +11,8 @@
   ],
   "activationEvents": [
     "onView:Nocalhost",
-    "onCommand:Nocalhost.signout"
+    "onCommand:Nocalhost.signout",
+    "onCommand:Nocalhost.switchEndPoint"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -41,6 +42,11 @@
         },
         {
           "command": "Nocalhost.signout",
+          "when": "view == Nocalhost",
+          "group": "overflow"
+        },
+        {
+          "command": "Nocalhost.switchEndPoint",
           "when": "view == Nocalhost",
           "group": "navigation"
         }
@@ -94,8 +100,14 @@
         "title": "welcome"
       },
       {
-        "command": "showLogin",
-        "title": "showLogin"
+        "command": "Nocalhost.switchEndPoint",
+        "title": "Switch Endpoint",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "Nocalhost.signin",
+        "title": "Sign in",
+        "icon": "$(sign-in)"
       },
       {
         "command": "getApplicationList",
@@ -103,12 +115,13 @@
       },
       {
         "command": "refreshApplication",
-        "title": "refresh",
-        "icon": "images/refresh.svg"
+        "title": "Refresh",
+        "icon": "$(refresh)"
       },
       {
         "command": "Nocalhost.signout",
-        "title": "signout"
+        "title": "Sign out",
+        "icon": "$(sign-out)"
       },
       {
         "command": "Nocahost.installApp",

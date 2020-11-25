@@ -6,6 +6,7 @@ import showLogin from "./commands/login";
 import * as fileStore from "./store/fileStore";
 import application from "./commands/application";
 import {
+  BASE_URL,
   JWT,
   KUBE_CONFIG_DIR,
   NH_CONFIG_DIR,
@@ -62,13 +63,24 @@ export async function activate(context: vscode.ExtensionContext) {
         await nocalhostService.exitDevSpace(host, appName, node.name);
       }
     ),
-    registerCommand("showLogin", false, showLogin),
+    registerCommand("Nocalhost.switchEndPoint", false, async () => {
+      // switch endpoint
+      const url = await host.showInputBox({
+        placeHolder: "input your api server url",
+      });
+      if (url) {
+        fileStore.set(BASE_URL, url);
+        host.showInformationMessage("configured api server");
+        vscode.commands.executeCommand("refreshApplication");
+      }
+    }),
 
     registerCommand("Nocalhost.signout", false, () => {
       fileStore.remove(JWT);
       state.setLogin(false);
       appTreeProvider.refresh();
     }),
+    registerCommand("Nocalhost.signin", false, showLogin),
 
     registerCommand("getApplicationList", false, () =>
       appTreeProvider.refresh()
