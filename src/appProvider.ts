@@ -1,12 +1,21 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
-import nocalhostState from './state';
-import { BaseNocalhostNode, LoginNode, NocalhostRootNode } from './nodes/nodeType';
+import nocalhostState from "./state";
+import {
+  BaseNocalhostNode,
+  LoginNode,
+  NocalhostRootNode,
+} from "./nodes/nodeType";
 
-export default class NocalhostAppProvider implements vscode.TreeDataProvider<BaseNocalhostNode> {
-  private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<BaseNocalhostNode | undefined>();
+export default class NocalhostAppProvider
+  implements vscode.TreeDataProvider<BaseNocalhostNode> {
+  private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
+    BaseNocalhostNode | undefined
+  >();
   onDidChangeTreeData = this.onDidChangeTreeDataEventEmitter.event;
-  getTreeItem(element: BaseNocalhostNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  getTreeItem(
+    element: BaseNocalhostNode
+  ): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let item: vscode.TreeItem | Thenable<vscode.TreeItem>;
     item = element.getTreeItem();
     return item;
@@ -17,7 +26,7 @@ export default class NocalhostAppProvider implements vscode.TreeDataProvider<Bas
     let result: vscode.ProviderResult<BaseNocalhostNode[]> = [];
     if (!isLogin) {
       result = [new LoginNode()];
-      
+
       return Promise.resolve(result);
     }
 
@@ -28,7 +37,6 @@ export default class NocalhostAppProvider implements vscode.TreeDataProvider<Bas
     }
 
     return result;
-
   }
 
   refresh() {

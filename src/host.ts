@@ -1,14 +1,16 @@
-import { open } from 'fs';
-import * as vscode from 'vscode';
-import nocalhostState from './state';
+import { open } from "fs";
+import * as vscode from "vscode";
+import nocalhostState from "./state";
 
 export class Host {
-  private terminal = vscode.window.createTerminal('nhctl');
-  private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('nhctl');
+  private terminal = vscode.window.createTerminal("nhctl");
+  private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
+    "nhctl"
+  );
   private newTerminal!: vscode.Terminal | null;
-  private debugDisposes: Array<{dispose: () => any}> = [];
+  private debugDisposes: Array<{ dispose: () => any }> = [];
 
-  public pushDebugDispose(item: {dispose: () => any}) {
+  public pushDebugDispose(item: { dispose: () => any }) {
     this.debugDisposes.push(item);
   }
 
@@ -45,7 +47,7 @@ export class Host {
       canSelectFolders: true,
       canSelectFiles: false,
       canSelectMany: false,
-      title: title
+      title: title,
     });
   }
 
@@ -80,7 +82,7 @@ export class Host {
     this.outputChannel.dispose();
   }
 
-  timer(command: string, args: [],  timeDuring?: number) {
+  timer(command: string, args: [], timeDuring?: number) {
     return setInterval(() => {
       const islogin = nocalhostState.isLogin();
       if (islogin) {

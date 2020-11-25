@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as yaml from 'yaml';
+import * as fs from "fs";
+import * as yaml from "yaml";
 
 export async function readYaml(filePath: string) {
   const data = await readFile(filePath);
@@ -15,7 +15,7 @@ export async function writeYaml(filePath: string, yamlObj: any) {
 export function readFile(fliePath: string): Promise<string> {
   accessFile(fliePath);
   return new Promise((resolve, reject) => {
-    fs.readFile(fliePath, {encoding: 'utf-8'}, (err, data) => {
+    fs.readFile(fliePath, { encoding: "utf-8" }, (err, data) => {
       if (err) {
         reject(err);
       }
@@ -27,7 +27,7 @@ export function readFile(fliePath: string): Promise<string> {
 export async function writeFile(filePath: string, data: string) {
   await accessFile(filePath);
   return new Promise((resolve, reject) => {
-    fs.writeFile(filePath, data, { encoding:'utf-8' }, (err) =>  {
+    fs.writeFile(filePath, data, { encoding: "utf-8" }, (err) => {
       if (err) {
         reject(err);
       }

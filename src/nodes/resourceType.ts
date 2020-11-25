@@ -1,31 +1,33 @@
-import { Resolver } from "dns"
+import { Resolver } from "dns";
 
 export interface List {
-  apiVersion: string,
-  items: Array<Resource>,
-  kind: string
+  apiVersion: string;
+  items: Array<Resource>;
+  kind: string;
 }
 
 export interface Status {
-  lastTransitionTime: string
-  lastUpdateTime: string
-  message: string
-  reason: string
-  status: string
-  type: string
+  lastTransitionTime: string;
+  lastUpdateTime: string;
+  message: string;
+  reason: string;
+  status: string;
+  type: string;
 }
 
 export interface Resource {
-  apiVersion: string,
-  items: [],
-  kind: string,
+  apiVersion: string;
+  items: [];
+  kind: string;
   metadata: {
     name: string;
     [value: string]: any;
-  },
-  status: string | {
-    conditions: Array<Status>
-  }
+  };
+  status:
+    | string
+    | {
+        conditions: Array<Status>;
+      };
 }
 
 export interface ControllerResource extends Resource {
@@ -36,17 +38,17 @@ export interface ControllerResource extends Resource {
   };
   spec: {
     selector: {
-      matchLabels: {[value: string]: string};
+      matchLabels: { [value: string]: string };
       [value: string]: any;
-    },
+    };
     [value: string]: any;
-  }
+  };
 }
 
 export interface PodResource extends Resource {
   spec: {
     containers: Array<{
       name: string;
-    }>
-  }
+    }>;
+  };
 }

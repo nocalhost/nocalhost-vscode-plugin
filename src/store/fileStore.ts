@@ -1,5 +1,9 @@
-import * as fs from 'fs';
-import { CURRENT_KUBECONFIG_FULLPATH, DEFAULT_KUBE_CONFIG_FULLPATH, USER_CONFIG_FULLPATH } from '../constants';
+import * as fs from "fs";
+import {
+  CURRENT_KUBECONFIG_FULLPATH,
+  DEFAULT_KUBE_CONFIG_FULLPATH,
+  USER_CONFIG_FULLPATH,
+} from "../constants";
 
 export function mkdir(fullPath: string) {
   const isExist = fs.existsSync(fullPath);
@@ -13,9 +17,12 @@ export function initConfig() {
   const isExist = fs.existsSync(USER_CONFIG_FULLPATH);
   if (!isExist) {
     const defaultConfig = {
-      currentKubeConfig: DEFAULT_KUBE_CONFIG_FULLPATH
+      currentKubeConfig: DEFAULT_KUBE_CONFIG_FULLPATH,
     };
-    fs.writeFileSync(USER_CONFIG_FULLPATH, JSON.stringify(defaultConfig, null, 2));
+    fs.writeFileSync(
+      USER_CONFIG_FULLPATH,
+      JSON.stringify(defaultConfig, null, 2)
+    );
   }
 }
 
@@ -45,4 +52,3 @@ export function remove(key: string) {
   delete config[key];
   store(config);
 }
-

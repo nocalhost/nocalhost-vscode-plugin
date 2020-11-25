@@ -1,185 +1,195 @@
 {
-	"name": "nocalhost",
-	"displayName": "nocalhost-vscode-plugin",
-	"description": "",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.31.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onView:Nocalhost",
-		"onCommand:Nocalhost.signout"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"icon": "images/coding-logo.png",
-					"id": "NocalhostView",
-					"title": "Nocalhost"
-				}
-			]
-		},
-		"views": {
-			"NocalhostView": [
-				{
-					"id": "Nocalhost",
-					"name": "Nocalhost"
-				}
-			]
-		},
-		"menus": {
-			"view/title": [
-				{
-					"command": "refreshApplication",
-					"when": "view == Nocalhost",
-					"group": "navigation"
-				},
-				{
-					"command": "Nocalhost.signout",
-					"when": "view == Nocalhost",
-					"group": "navigation"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "Nocahost.installApp",
-					"when": "viewItem =~ /^application-notInstalled/i",
-					"group": "inline"
-				},
-				{
-					"command": "Nocahost.uninstallApp",
-					"when": "viewItem =~ /^application-installed/i",
-					"group": "inline"
-				},
-				{
-					"command": "Nocalhost.entryDevSpace",
-					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
-					"group": "0"
-				},
-				{
-					"command": "Nocalhost.exitDevSpace",
-					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
-					"group": "0"
-				},
-				{
-					"command": "Nocalhost.exec",
-					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet)/i",
-					"group": "1"
-				},
-				{
-					"command": "Nocalhost.log",
-					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
-					"group": "1"
-				},
-				{
-					"command": "Nocalhost.portForward",
-					"when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
-					"group": "1"
-				},
-				{
-					"command": "useApplication",
-					"when": "viewItem =~ /^application/i",
-					"group": "navigation"
-				}
-			]
-		},
-		"commands": [
-			{
-				"command": "showWelcomePage",
-				"title": "welcome"
-			},
-			{
-				"command": "showLogin",
-				"title": "showLogin"
-			},
-			{
-				"command": "getApplicationList",
-				"title": "getApplicationList"
-			},
-			{
-				"command": "refreshApplication",
-				"title": "refresh",
-				"icon": "images/refresh.svg"
-			},
-			{
-				"command": "Nocalhost.signout",
-				"title": "signout"
-			},
-			{
-				"command": "Nocahost.installApp",
-				"title": "install"
-			},
-			{
-				"command": "Nocahost.uninstallApp",
-				"title": "uninstall"
-			},
-			{
-				"command": "useApplication",
-				"title": "Use Application"
-			},
-			{
-				"command": "getWordloadList",
-				"title": "getWordloadList"
-			},
-			{
-				"command": "Nocalhost.entryDevSpace",
-				"title": "entry devSpace",
-				"category": "devSpace"
-			},
-			{
-				"command": "Nocalhost.exitDevSpace",
-				"title": "exit devSpace",
-				"category": "devSpace"
-			},
-			{
-				"command": "Nocalhost.exec",
-				"title": "exec"
-			},
-			{
-				"command": "Nocalhost.loadResource",
-				"title": "loadResource"
-			},
-			{
-				"command": "Nocalhost.log",
-				"title": "log"
-			},
-			{
-				"command": "Nocalhost.portForward",
-				"title": "port-forward"
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "yarn run compile",
-		"compile": "tsc -p ./",
-		"lint": "eslint src --ext ts",
-		"watch": "tsc -watch -p ./",
-		"pretest": "yarn run compile && yarn run lint",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/glob": "^7.1.3",
-		"@types/mocha": "^8.0.0",
-		"@types/node": "^14.0.27",
-		"@types/shelljs": "^0.8.8",
-		"@types/vscode": "^1.31.0",
-		"@typescript-eslint/eslint-plugin": "^3.8.0",
-		"@typescript-eslint/parser": "^3.8.0",
-		"eslint": "^7.6.0",
-		"glob": "^7.1.6",
-		"mocha": "^8.1.3",
-		"typescript": "^4.0.2",
-		"vscode-test": "^1.4.0"
-	},
-	"dependencies": {
-		"axios": "^0.21.0",
-		"shelljs": "^0.8.4",
-		"yaml": "^1.10.0"
-	},
-	"publisher": "nocalhost"
+  "name": "nocalhost",
+  "displayName": "nocalhost-vscode-plugin",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.31.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:Nocalhost",
+    "onCommand:Nocalhost.signout"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "icon": "images/coding-logo.png",
+          "id": "NocalhostView",
+          "title": "Nocalhost"
+        }
+      ]
+    },
+    "views": {
+      "NocalhostView": [
+        {
+          "id": "Nocalhost",
+          "name": "Nocalhost"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "refreshApplication",
+          "when": "view == Nocalhost",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.signout",
+          "when": "view == Nocalhost",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "Nocahost.installApp",
+          "when": "viewItem =~ /^application-notInstalled/i",
+          "group": "inline"
+        },
+        {
+          "command": "Nocahost.uninstallApp",
+          "when": "viewItem =~ /^application-installed/i",
+          "group": "inline"
+        },
+        {
+          "command": "Nocalhost.entryDevSpace",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "group": "0"
+        },
+        {
+          "command": "Nocalhost.exitDevSpace",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "group": "0"
+        },
+        {
+          "command": "Nocalhost.exec",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet)/i",
+          "group": "1"
+        },
+        {
+          "command": "Nocalhost.log",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "group": "1"
+        },
+        {
+          "command": "Nocalhost.portForward",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "group": "1"
+        },
+        {
+          "command": "useApplication",
+          "when": "viewItem =~ /^application/i",
+          "group": "navigation"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "showWelcomePage",
+        "title": "welcome"
+      },
+      {
+        "command": "showLogin",
+        "title": "showLogin"
+      },
+      {
+        "command": "getApplicationList",
+        "title": "getApplicationList"
+      },
+      {
+        "command": "refreshApplication",
+        "title": "refresh",
+        "icon": "images/refresh.svg"
+      },
+      {
+        "command": "Nocalhost.signout",
+        "title": "signout"
+      },
+      {
+        "command": "Nocahost.installApp",
+        "title": "install"
+      },
+      {
+        "command": "Nocahost.uninstallApp",
+        "title": "uninstall"
+      },
+      {
+        "command": "useApplication",
+        "title": "Use Application"
+      },
+      {
+        "command": "getWordloadList",
+        "title": "getWordloadList"
+      },
+      {
+        "command": "Nocalhost.entryDevSpace",
+        "title": "entry devSpace",
+        "category": "devSpace"
+      },
+      {
+        "command": "Nocalhost.exitDevSpace",
+        "title": "exit devSpace",
+        "category": "devSpace"
+      },
+      {
+        "command": "Nocalhost.exec",
+        "title": "exec"
+      },
+      {
+        "command": "Nocalhost.loadResource",
+        "title": "loadResource"
+      },
+      {
+        "command": "Nocalhost.log",
+        "title": "log"
+      },
+      {
+        "command": "Nocalhost.portForward",
+        "title": "port-forward"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
+    "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "node ./out/test/runTest.js"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run prettier && npm run lint"
+    }
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.0",
+    "@types/node": "^14.0.27",
+    "@types/shelljs": "^0.8.8",
+    "@types/vscode": "^1.31.0",
+    "@typescript-eslint/eslint-plugin": "^3.8.0",
+    "@typescript-eslint/parser": "^3.8.0",
+    "eslint": "^7.6.0",
+    "glob": "^7.1.6",
+    "husky": "^4.3.0",
+    "mocha": "^8.1.3",
+    "onchange": "^7.1.0",
+    "prettier": "^2.2.0",
+    "typescript": "^4.0.2",
+    "vscode-test": "^1.4.0"
+  },
+  "dependencies": {
+    "axios": "^0.21.0",
+    "shelljs": "^0.8.4",
+    "yaml": "^1.10.0"
+  },
+  "publisher": "nocalhost"
 }
