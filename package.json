@@ -169,9 +169,9 @@
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./tsconfig.extension.json",
     "lint": "eslint src --ext ts",
-    "watch": "tsc -watch -p ./",
+    "watch": "tsc -watch -p ./tsconfig.extension.json",
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
     "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
     "pretest": "yarn run compile && yarn run lint",

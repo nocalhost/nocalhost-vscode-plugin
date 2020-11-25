@@ -7,7 +7,7 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import * as fileStore from "../store/fileStore";
-import { AppNode, AppSubFolderNode } from "../nodes/nodeType";
+import { AppSubFolderNode } from "../nodes/nodeType";
 
 class Application {
   // get kubeconfig of app

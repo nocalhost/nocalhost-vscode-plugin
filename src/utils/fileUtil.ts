@@ -31,7 +31,7 @@ export async function writeFile(filePath: string, data: string) {
       if (err) {
         reject(err);
       }
-      resolve();
+      resolve(null);
     });
   });
 }
@@ -42,7 +42,7 @@ export function accessFile(filePath: string) {
       if (err) {
         reject(err);
       }
-      resolve();
+      resolve(null);
     });
   });
 }

@@ -17,7 +17,7 @@ export function install(host: Host, appName: string, gitUrl: string) {
     let errorStr = "";
     proc.on("close", (code) => {
       if (code === 0) {
-        resolve();
+        resolve(null);
       } else {
         reject(errorStr);
       }
