@@ -55,7 +55,7 @@ export class LoginNode implements BaseNocalhostNode {
       this.label,
       vscode.TreeItemCollapsibleState.None
     );
-    treeItem.command = { command: "showLogin", title: "showLogin" };
+    treeItem.command = { command: "Nocalhost.signin", title: "Sign in" };
     return treeItem;
   }
 }

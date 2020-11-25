@@ -3,7 +3,7 @@ import axios from "axios";
 import * as vscode from "vscode";
 import state from "./state";
 import * as fileStore from "./store/fileStore";
-import { JWT } from "./constants";
+import { BASE_URL, JWT } from "./constants";
 
 axios.defaults.baseURL = "http://10.94.97.54:8080";
 axios.defaults.headers.post["Content-Type"] = "application/json";
@@ -22,6 +22,10 @@ interface ResponseData {
 
 axios.interceptors.request.use(function (config) {
   const jwt = fileStore.get(JWT);
+  config.baseURL = fileStore.get(BASE_URL);
+  if (!config.baseURL) {
+    throw new Error("please config your api server");
+  }
   config.headers["Authorization"] = `Bearer ${jwt}`;
 
   return config;

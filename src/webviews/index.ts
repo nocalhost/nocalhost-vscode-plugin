@@ -25,7 +25,7 @@ export function showWelcome() {
     (message) => {
       switch (message.command) {
         case "login":
-          vscode.commands.executeCommand("showLogin");
+          vscode.commands.executeCommand("Nocalhost.signin");
           return;
       }
     },
