@@ -364,9 +364,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   getTreeItem(): vscode.TreeItem {
     let treeItem = super.getTreeItem();
     const appName = fileStore.get(SELECTED_APP_NAME);
-    const isDebug = state.get(`${appName}_${this.name}_debug`);
+    const isDebug = state.get(`${appName}_${this.name}_devSpace`);
     if (isDebug) {
-      treeItem.label = `(Debugging) ${treeItem.label || this.label}`;
+      treeItem.label = `(Launching) ${treeItem.label || this.label}`;
     }
     treeItem.contextValue = `workload-${this.resourceType}`;
     return treeItem;
