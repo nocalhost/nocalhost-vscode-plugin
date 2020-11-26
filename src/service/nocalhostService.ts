@@ -87,50 +87,6 @@ class NocalhostService {
     await fileUtil.writeYaml(configPath, config);
   }
 
-  private async cloneAppAllSource(host: Host, appName: string) {
-    const isClone = await host.showInformationMessage(
-      "Do you want to clone the code?",
-      "confirm",
-      "cancel"
-    );
-    if (isClone === "cancel") {
-      return;
-    }
-    host.log("start clone source ...", true);
-    const configPath = path.resolve(
-      NHCTL_DIR,
-      "application",
-      appName,
-      ".nocalhost",
-      "config.yaml"
-    );
-    const config = (await fileUtil.readYaml(configPath)) as NocalhostConfig;
-    const dir = await host.showSelectFolderDialog(
-      "please select directory of saving source code"
-    );
-    let dirPath: string;
-    if (dir) {
-      dirPath = (dir as vscode.Uri[])[0].fsPath;
-      // replace localWorkDir
-      config.svcConfigs.map((item) => {
-        item.localWorkDir = path.resolve(dirPath, item.name);
-        item.sync = [path.resolve(dirPath, item.name)];
-      });
-      await fileUtil.writeYaml(configPath, config);
-    }
-    const arr = config.svcConfigs;
-    for (let i = 0; i < arr.length; i++) {
-      const { gitUrl, localWorkDir } = arr[i];
-      if (gitUrl) {
-        const isExist = await fileUtil.isExist(localWorkDir);
-        if (isExist) {
-          continue;
-        }
-        await git.clone(host, gitUrl, [localWorkDir]);
-      }
-    }
-    host.log("end clone source", true);
-  }
   async install(
     host: Host,
     appName: string,
@@ -301,7 +257,12 @@ class NocalhostService {
     const nocalhostConfig = await this.getNocalhostConfig();
     nocalhostConfig.svcConfigs.map((config) => {
       if (config.name === workloadName) {
-        config.sync.push(directory);
+        if (!config.sync) {
+          config.sync = [];
+        }
+        if (!config.sync.includes(directory)) {
+          config.sync.push(directory);
+        }
         return;
       }
     });
