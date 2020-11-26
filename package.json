@@ -171,9 +171,8 @@
   },
   "scripts": {
     "start:renderer": "rollup -c rollup.renderer.js -w",
-    "build:renderer": "cross-env NODE_ENV=production rollup -c rollup.renderer.js",
     "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./tsconfig.extension.json",
+    "compile": "tsc -p ./tsconfig.extension.json && cross-env NODE_ENV=production rollup -c rollup.renderer.js",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./tsconfig.extension.json",
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
