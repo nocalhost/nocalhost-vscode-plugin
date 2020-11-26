@@ -43531,7 +43531,7 @@
 
   var ActionType;
   (function (ActionType) {
-    ActionType["Redirect"] = "redirect";
+    ActionType["redirect"] = "redirect";
   })(ActionType || (ActionType = {}));
 
   /*! *****************************************************************************
@@ -43570,7 +43570,7 @@
 
   var reducer = function (state, action) {
     switch (action.type) {
-      case ActionType.Redirect:
+      case ActionType.redirect:
         return redirect(state, action);
       default:
         return state;

@@ -4,7 +4,7 @@ import { redirect } from "./redirect";
 
 const reducer = (state: IStoreState, action: Actions) => {
   switch (action.type) {
-    case ActionType.Redirect:
+    case ActionType.redirect:
       return redirect(state, action as IRedirect);
     default:
       return state;

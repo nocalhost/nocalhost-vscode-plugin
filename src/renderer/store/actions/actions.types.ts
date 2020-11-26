@@ -1,9 +1,9 @@
 export enum ActionType {
-  Redirect = "redirect",
+  redirect = "redirect",
 }
 
 export interface IRedirect {
-  type: ActionType.Redirect;
+  type: ActionType.redirect;
   payload: { uri: string };
 }
 
