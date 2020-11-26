@@ -112,43 +112,43 @@ export abstract class KubernetesResourceFolder extends WorkloadSubFolderNode {
   }
 }
 
-export class AppFolderNode extends NocalhostFolderNode {
-  public label: string = "Applications";
-  public type = APP_FOLDER;
-  async getChildren(parent?: BaseNocalhostNode): Promise<AppSubFolderNode[]> {
-    const res = await getApplication();
-    const result = res.map((app) => {
-      let context = app.context;
-      let obj: {
-        url?: string;
-        name?: string;
-      } = {};
-      if (context) {
-        let jsonObj = JSON.parse(context);
-        obj.url = jsonObj["application_url"];
-        obj.name = jsonObj["application_name"];
-      }
-      return new AppSubFolderNode(
-        obj.name || `app${app.id}`,
-        app.id,
-        app.devspaceId,
-        app.status,
-        app.installStatus,
-        app.kubeconfig,
-        obj
-      );
-    });
-    return result;
-  }
+// export class AppFolderNode extends NocalhostFolderNode {
+//   public label: string = "Applications";
+//   public type = APP_FOLDER;
+//   async getChildren(parent?: BaseNocalhostNode): Promise<AppSubFolderNode[]> {
+//     const res = await getApplication();
+//     const result = res.map((app) => {
+//       let context = app.context;
+//       let obj: {
+//         url?: string;
+//         name?: string;
+//       } = {};
+//       if (context) {
+//         let jsonObj = JSON.parse(context);
+//         obj.url = jsonObj["application_url"];
+//         obj.name = jsonObj["application_name"];
+//       }
+//       return new AppSubFolderNode(
+//         obj.name || `app${app.id}`,
+//         app.id,
+//         app.devspaceId,
+//         app.status,
+//         app.installStatus,
+//         app.kubeconfig,
+//         obj
+//       );
+//     });
+//     return result;
+//   }
 
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.Expanded
-    );
-    return treeItem;
-  }
-}
+//   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+//     let treeItem = new vscode.TreeItem(
+//       this.label,
+//       vscode.TreeItemCollapsibleState.Expanded
+//     );
+//     return treeItem;
+//   }
+// }
 
 export class AppSubFolderNode extends NocalhostFolderNode {
   public label: string;
@@ -527,24 +527,57 @@ export class PodFolder extends KubernetesResourceFolder {
 export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
-  private children = ["Applications"];
-  getChildren(): Promise<vscode.ProviderResult<NocalhostFolderNode[]>> {
-    return Promise.resolve(this.children.map((type) => this.createChild(type)));
+  // private children = ["Applications"];
+  // getChildren(): Promise<vscode.ProviderResult<NocalhostFolderNode[]>> {
+  //   return Promise.resolve(this.children.map((type) => this.createChild(type)));
+  // }
+  // getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  //   return {};
+  // }
+
+  // private createChild(type: string) {
+  //   let folderNode: NocalhostFolderNode;
+  //   switch (type) {
+  //     case "Applications":
+  //       folderNode = new AppFolderNode();
+  //       break;
+  //     default:
+  //       folderNode = new AppFolderNode();
+  //   }
+
+  //   return folderNode;
+  // }
+
+  async getChildren(parent?: BaseNocalhostNode): Promise<AppSubFolderNode[]> {
+    const res = await getApplication();
+    const result = res.map((app) => {
+      let context = app.context;
+      let obj: {
+        url?: string;
+        name?: string;
+      } = {};
+      if (context) {
+        let jsonObj = JSON.parse(context);
+        obj.url = jsonObj["application_url"];
+        obj.name = jsonObj["application_name"];
+      }
+      return new AppSubFolderNode(
+        obj.name || `app${app.id}`,
+        app.id,
+        app.devspaceId,
+        app.status,
+        app.installStatus,
+        app.kubeconfig,
+        obj
+      );
+    });
+    return result;
   }
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    return {};
-  }
-
-  private createChild(type: string) {
-    let folderNode: NocalhostFolderNode;
-    switch (type) {
-      case "Applications":
-        folderNode = new AppFolderNode();
-        break;
-      default:
-        folderNode = new AppFolderNode();
-    }
-
-    return folderNode;
+    let treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.Expanded
+    );
+    return treeItem;
   }
 }
