@@ -33,6 +33,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "Nocalhost",
+        "contents": "Click sign in button to list DevSpaces.\n[Add Server Url](command:Nocalhost.switchEndPoint)\n[Sign In](command:Nocalhost.signin)\n[Click here](https://nocalhost.dev/) for more details"
+      }
+    ],
     "menus": {
       "view/title": [
         {
