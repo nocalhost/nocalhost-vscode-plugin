@@ -14,7 +14,7 @@ import {
 } from "./constants";
 import host from "./host";
 import { clearInterval } from "timers";
-import * as webPage from "./webviews";
+import { showDashboard } from "./webviews";
 import { AppSubFolderNode, KubernetesResourceNode } from "./nodes/nodeType";
 import nocalhostService from "./service/nocalhostService";
 import NocalhostTextDocumentProvider from "./textDocumentProvider";
@@ -30,8 +30,8 @@ export async function activate(context: vscode.ExtensionContext) {
   let nocalhostTextDocumentProvider = new NocalhostTextDocumentProvider();
 
   let subs = [
-    registerCommand("showWelcomePage", false, () => {
-      webPage.showWelcome();
+    registerCommand("showDashboard", false, () => {
+      showDashboard(context);
     }),
 
     registerCommand(
@@ -181,7 +181,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(...subs);
   _refreshApp = host.timer("refreshApplication", []);
-  vscode.commands.executeCommand("showWelcomePage");
+  vscode.commands.executeCommand("showDashboard");
   host.getOutputChannel().show(true);
 }
 
