@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { v4 as uuidv4 } from "uuid";
 import { getApplication } from "../api";
 import { SELECTED_APP_NAME } from "../constants";
 import { getResourceList } from "../ctl/kubectl";
@@ -143,7 +144,7 @@ export class AppFolderNode extends NocalhostFolderNode {
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(
       this.label,
-      vscode.TreeItemCollapsibleState.Collapsed
+      vscode.TreeItemCollapsibleState.Expanded
     );
     return treeItem;
   }
@@ -189,13 +190,19 @@ export class AppSubFolderNode extends NocalhostFolderNode {
         ? vscode.TreeItemCollapsibleState.Expanded
         : vscode.TreeItemCollapsibleState.Collapsed;
     const treeItem = new vscode.TreeItem(this.label, collapsisbleState);
+    treeItem.id = uuidv4();
     this.customUI(treeItem);
-    treeItem.contextValue = `application-${
-      this.installStatus === 1 ? "installed" : "notInstalled"
-    }`;
+    // treeItem.contextValue = `application-${
+    //   this.installStatus === 1 ? "installed" : "notInstalled"
+    // }`;
+    // treeItem.command = {
+    //   command: "Nocalhost.loadResource",
+    //   title: "loadResource",
+    //   arguments: [this],
+    // };
     treeItem.command = {
-      command: "Nocalhost.loadResource",
-      title: "loadResource",
+      command: "useApplication",
+      title: "Use Application",
       arguments: [this],
     };
     return treeItem;

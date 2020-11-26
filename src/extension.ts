@@ -26,10 +26,14 @@ export async function activate(context: vscode.ExtensionContext) {
   await init();
 
   let appTreeProvider = new NocalhostAppProvider();
-
   let nocalhostTextDocumentProvider = new NocalhostTextDocumentProvider();
 
   let subs = [
+    vscode.window.registerTreeDataProvider("Nocalhost", appTreeProvider),
+    vscode.workspace.registerTextDocumentContentProvider(
+      "Nocalhost",
+      nocalhostTextDocumentProvider
+    ),
     registerCommand("showDashboard", false, () => {
       showDashboard(context);
     }),
@@ -119,11 +123,6 @@ export async function activate(context: vscode.ExtensionContext) {
       async (appNode: AppSubFolderNode) => {
         application.useApplication(appNode);
       }
-    ),
-    vscode.window.registerTreeDataProvider("Nocalhost", appTreeProvider),
-    vscode.workspace.registerTextDocumentContentProvider(
-      "Nocalhost",
-      nocalhostTextDocumentProvider
     ),
     registerCommand(
       "Nocalhost.loadResource",
