@@ -96,8 +96,8 @@
     },
     "commands": [
       {
-        "command": "showWelcomePage",
-        "title": "welcome"
+        "command": "showDashboard",
+        "title": "Show Dashboard"
       },
       {
         "command": "Nocalhost.switchEndPoint",

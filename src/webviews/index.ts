@@ -1,27 +1,40 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as path from "path";
 
-export function showWelcome() {
-  const welcomePage = fs.readFileSync(
-    path.resolve(__dirname, "../../static/welcome/index.html"),
-    "utf-8"
-  );
+export function showDashboard(context: vscode.ExtensionContext) {
+  const createWebviewContent = (bundlePath: vscode.Uri): string => {
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>Nocalhost Renderer</title>
+          <meta charset="utf-8" />
+        </head>
+        <body>
+          <div id="root"></div>
+          <script src="${bundlePath}"></script>
+        </body>
+      </html>
+    `;
+  };
 
-  const welcomePanel = vscode.window.createWebviewPanel(
+  const panel = vscode.window.createWebviewPanel(
     "html",
-    "welcome",
+    "Dashbaord",
     vscode.ViewColumn.One,
     {
-      // Enable scripts in the webview
       enableScripts: true,
     }
   );
 
-  welcomePanel.webview.html = welcomePage;
+  const bundleUri: vscode.Uri = vscode.Uri.file(
+    path.join(context.extensionPath, "out/renderer/bundle.js")
+  );
+  const bundlePath: vscode.Uri = panel.webview.asWebviewUri(bundleUri);
+  panel.webview.html = createWebviewContent(bundlePath);
 
   // Handle messages from the webview
-  welcomePanel.webview.onDidReceiveMessage(
+  panel.webview.onDidReceiveMessage(
     (message) => {
       switch (message.command) {
         case "login":
@@ -32,6 +45,4 @@ export function showWelcome() {
     undefined,
     []
   );
-
-  // return welcomePage;
 }

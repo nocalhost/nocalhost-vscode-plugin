@@ -13,7 +13,7 @@ const baseUrl = {
   development: "",
   production: "",
 }[env];
-const destDir = "static/renderer";
+const destDir = "out/renderer";
 
 console.log(`> env: ${env}`);
 
