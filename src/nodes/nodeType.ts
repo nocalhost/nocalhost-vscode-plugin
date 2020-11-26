@@ -188,8 +188,8 @@ export class AppSubFolderNode extends NocalhostFolderNode {
       appName === this.label
         ? vscode.TreeItemCollapsibleState.Expanded
         : vscode.TreeItemCollapsibleState.Collapsed;
-    this.customLabel(appName);
     const treeItem = new vscode.TreeItem(this.label, collapsisbleState);
+    this.customUI(treeItem);
     treeItem.contextValue = `application-${
       this.installStatus === 1 ? "installed" : "notInstalled"
     }`;
@@ -201,13 +201,11 @@ export class AppSubFolderNode extends NocalhostFolderNode {
     return treeItem;
   }
 
-  private customLabel(appName: string) {
-    const isSelected = appName === this.info.name;
-    if (isSelected) {
-      this.label = `* ${this.label}`;
-    }
+  private customUI(treeItem: vscode.TreeItem) {
     if (this.installStatus) {
-      this.label = `${this.label} (deployed)`;
+      treeItem.iconPath = new vscode.ThemeIcon("vm-active");
+    } else {
+      treeItem.iconPath = new vscode.ThemeIcon("vm-outline");
     }
   }
 

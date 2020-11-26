@@ -125,11 +125,13 @@
       },
       {
         "command": "Nocahost.installApp",
-        "title": "install"
+        "title": "Install App",
+        "icon": "$(rocket)"
       },
       {
         "command": "Nocahost.uninstallApp",
-        "title": "uninstall"
+        "title": "Uninstall App",
+        "icon": "$(chrome-close)"
       },
       {
         "command": "useApplication",
