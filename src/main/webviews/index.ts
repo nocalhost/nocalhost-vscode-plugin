@@ -28,7 +28,7 @@ export function showDashboard(context: vscode.ExtensionContext) {
   );
 
   const bundleUri: vscode.Uri = vscode.Uri.file(
-    path.join(context.extensionPath, "dist/renderer/bundle.js")
+    path.join(context.extensionPath, "dist/renderer.js")
   );
   const bundlePath: vscode.Uri = panel.webview.asWebviewUri(bundleUri);
   panel.webview.html = createWebviewContent(bundlePath);
