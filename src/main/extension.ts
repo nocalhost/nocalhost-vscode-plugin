@@ -15,11 +15,17 @@ import {
 import host from "./host";
 import { clearInterval } from "timers";
 import { showDashboard } from "./webviews";
-import { AppSubFolderNode, KubernetesResourceNode } from "./nodes/nodeType";
+import {
+  AppFolderNode,
+  BaseNocalhostNode,
+  KubernetesResourceNode,
+} from "./nodes/nodeType";
 import nocalhostService from "./service/nocalhostService";
 import NocalhostTextDocumentProvider from "./textDocumentProvider";
 import * as shell from "shelljs";
 import state from "./state";
+
+export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
 let _refreshApp: NodeJS.Timeout;
 export async function activate(context: vscode.ExtensionContext) {
@@ -27,9 +33,45 @@ export async function activate(context: vscode.ExtensionContext) {
 
   let appTreeProvider = new NocalhostAppProvider();
   let nocalhostTextDocumentProvider = new NocalhostTextDocumentProvider();
+  appTreeView = vscode.window.createTreeView("Nocalhost", {
+    treeDataProvider: appTreeProvider,
+  });
 
+  appTreeView.onDidCollapseElement(
+    (e: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
+      const node = e.element;
+      state.set(
+        node.getNodeStateId(),
+        vscode.TreeItemCollapsibleState.Collapsed
+      );
+    }
+  );
+
+  appTreeView.onDidExpandElement(
+    async (e: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
+      const node = e.element;
+      state.set(
+        node.getNodeStateId(),
+        vscode.TreeItemCollapsibleState.Expanded
+      );
+      if (node instanceof AppFolderNode) {
+        const others = (await node.getParent(node).getChildren()).filter(
+          (item) => item.id !== node.id
+        );
+        others.map((item) =>
+          state.set(
+            item.getNodeStateId(),
+            vscode.TreeItemCollapsibleState.Collapsed
+          )
+        );
+        vscode.commands.executeCommand("useApplication", node);
+      }
+    }
+  );
   let subs = [
-    vscode.window.registerTreeDataProvider("Nocalhost", appTreeProvider),
+    {
+      dispose: appTreeView.dispose,
+    },
     vscode.workspace.registerTextDocumentContentProvider(
       "Nocalhost",
       nocalhostTextDocumentProvider
@@ -95,7 +137,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand(
       "Nocahost.installApp",
       true,
-      async (appNode: AppSubFolderNode) => {
+      async (appNode: AppFolderNode) => {
         await nocalhostService.install(
           host,
           appNode.info.name,
@@ -108,7 +150,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand(
       "Nocahost.uninstallApp",
       true,
-      async (appNode: AppSubFolderNode) => {
+      async (appNode: AppFolderNode) => {
         await nocalhostService.uninstall(
           host,
           appNode.info.name,
@@ -117,17 +159,13 @@ export async function activate(context: vscode.ExtensionContext) {
         );
       }
     ),
-    registerCommand(
-      "useApplication",
-      true,
-      async (appNode: AppSubFolderNode) => {
-        application.useApplication(appNode);
-      }
-    ),
+    registerCommand("useApplication", true, async (appNode: AppFolderNode) => {
+      await application.useApplication(appNode);
+    }),
     registerCommand(
       "Nocalhost.loadResource",
       false,
-      async (node: KubernetesResourceNode | AppSubFolderNode) => {
+      async (node: KubernetesResourceNode | AppFolderNode) => {
         if (node instanceof KubernetesResourceNode) {
           const kind = node.resourceType;
           const name = node.name;
@@ -136,7 +174,7 @@ export async function activate(context: vscode.ExtensionContext) {
           );
           let doc = await vscode.workspace.openTextDocument(uri);
           await vscode.window.showTextDocument(doc, { preview: false });
-        } else if (node instanceof AppSubFolderNode) {
+        } else if (node instanceof AppFolderNode) {
           const name = node.info.name;
           const uri = vscode.Uri.parse(`Nocalhost://nh/${name}.yaml`);
           let doc = await vscode.workspace.openTextDocument(uri);
