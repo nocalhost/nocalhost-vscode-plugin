@@ -32,7 +32,7 @@ export function getAllConfig() {
 }
 
 function store(config: any) {
-  fs.writeFileSync(USER_CONFIG_FULLPATH, JSON.stringify(config));
+  fs.writeFileSync(USER_CONFIG_FULLPATH, JSON.stringify(config, undefined, 2));
 }
 
 export function get(key: string) {
