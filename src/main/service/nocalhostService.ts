@@ -97,6 +97,7 @@ class NocalhostService {
     host.log("installing app ...", true);
     await nhctl.install(host, appName, gitUrl);
     await updateAppInstallStatus(appId, devSpaceId, 1);
+    fileStore.set(appName, {});
     host.log("installed app", true);
 
     vscode.commands.executeCommand("refreshApplication");
@@ -148,6 +149,7 @@ class NocalhostService {
     host.showInformationMessage("uninstalling app ...");
     await nhctl.uninstall(host, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
+    fileStore.remove(appName);
     host.log("uninstalled app", true);
     host.showInformationMessage("uninstalled app ...");
 
@@ -155,7 +157,7 @@ class NocalhostService {
   }
 
   private async cloneCode(host: Host, appName: string, workloadName: string) {
-    const key = `${appName}_${workloadName}_directory`;
+    const appConfig = fileStore.get(appName);
     let destDir: string | undefined;
     const nocalhostConfig = await this.getNocalhostConfig();
     let gitUrl = await this.getGitUrl(appName, workloadName);
@@ -174,7 +176,10 @@ class NocalhostService {
       if (saveUris) {
         destDir = path.resolve(saveUris[0].fsPath, workloadName);
         await git.clone(host, gitUrl, [destDir]);
-        fileStore.set(key, destDir);
+        const workloadConfig = appConfig[workloadName] || {};
+        workloadConfig["directory"] = destDir;
+        appConfig[workloadName] = workloadConfig;
+        fileStore.set(appName, appConfig);
         nocalhostConfig.svcConfigs.forEach((conf) => {
           if (conf.name === workloadName) {
             conf.localWorkDir = destDir as string;
@@ -193,10 +198,12 @@ class NocalhostService {
     type: string,
     workloadName: string
   ) {
-    const key = `${appName}_${workloadName}_directory`;
-    let directory = fileStore.get(key);
+    let appConfig = fileStore.get(appName);
     const currentUri = vscode.workspace.rootPath;
-    if (!directory) {
+    let workloadConfig = appConfig[workloadName] || {};
+    appConfig[workloadName] = workloadConfig;
+    fileStore.set(appName, appConfig);
+    if (!workloadConfig.directory) {
       const result = await host.showInformationMessage(
         "current directory is not the directory of devSpace?",
         "clone source",
@@ -211,7 +218,8 @@ class NocalhostService {
           canSelectMany: false,
         });
         if (uris) {
-          fileStore.set(key, uris[0].fsPath);
+          workloadConfig.directory = uris[0].fsPath;
+          fileStore.set(appName, appConfig);
           if (currentUri !== uris[0].fsPath) {
             vscode.commands.executeCommand("vscode.openFolder", uris[0], {
               forceReuseWindow: true,
@@ -222,8 +230,9 @@ class NocalhostService {
       }
     }
     // fresh config
-    directory = fileStore.get(key);
-    if (currentUri !== directory) {
+    appConfig = fileStore.get(appName);
+    workloadConfig = appConfig[workloadName];
+    if (currentUri !== workloadConfig.directory) {
       const result = await host.showInformationMessage(
         "current directory is not the directory of devSpace. open source directory",
         "select other directory",
@@ -237,14 +246,15 @@ class NocalhostService {
           canSelectMany: false,
         });
         if (uris) {
-          fileStore.set(key, uris[0].fsPath);
+          workloadConfig["directory"] = uris[0].fsPath;
+          fileStore.set(appName, appConfig);
           vscode.commands.executeCommand("vscode.openFolder", uris[0], {
             forceReuseWindow: true,
           });
           return;
         }
       } else if (result === "open source directory") {
-        const uri = vscode.Uri.file(directory);
+        const uri = vscode.Uri.file(workloadConfig.directory);
         vscode.commands.executeCommand("vscode.openFolder", uri, {
           forceReuseWindow: true,
         });
@@ -253,15 +263,16 @@ class NocalhostService {
     }
 
     // fresh config
-    directory = fileStore.get(key);
+    appConfig = fileStore.get(appName);
+    workloadConfig = appConfig[workloadName];
     const nocalhostConfig = await this.getNocalhostConfig();
     nocalhostConfig.svcConfigs.map((config) => {
       if (config.name === workloadName) {
         if (!config.sync) {
           config.sync = [];
         }
-        if (!config.sync.includes(directory)) {
-          config.sync.push(directory);
+        if (!config.sync.includes(workloadConfig.directory)) {
+          config.sync.push(workloadConfig.directory);
         }
         return;
       }
