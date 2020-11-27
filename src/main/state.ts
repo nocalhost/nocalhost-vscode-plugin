@@ -1,5 +1,6 @@
+import * as vscode from "vscode";
 class State {
-  private login = true;
+  private login = false;
 
   private stateMap = new Map<string, any>();
 
@@ -14,6 +15,7 @@ class State {
   }
 
   setLogin(state: boolean) {
+    vscode.commands.executeCommand("setContext", "login", state);
     this.login = state;
   }
 
