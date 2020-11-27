@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "es6",
+    "target": "es5",
+    "outDir": "../out",
+    "rootDir": "../",
+    "noImplicitAny": true,
+    "jsx": "react",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["../src/renderer"],
+  "exclude": ["../node_modules", "../.vscode-test"]
+}

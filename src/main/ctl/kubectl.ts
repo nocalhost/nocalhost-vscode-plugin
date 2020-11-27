@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-
 import { execAsync } from "./shell";
 import * as shell from "shelljs";
 import * as fileStore from "../store/fileStore";

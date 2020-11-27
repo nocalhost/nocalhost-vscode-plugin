@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-
 import { execAsync, execChildProcessAsync } from "./shell";
 import { Host } from "../host";
 import * as fileStore from "../store/fileStore";

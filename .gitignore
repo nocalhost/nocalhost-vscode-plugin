@@ -1,4 +1,5 @@
-out
+out/
+dist/
 static/renderer/
 node_modules
 .vscode-test/
