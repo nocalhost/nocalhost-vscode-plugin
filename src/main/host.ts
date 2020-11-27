@@ -5,7 +5,7 @@ import nocalhostState from "./state";
 export class Host {
   private terminal = vscode.window.createTerminal("nhctl");
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
-    "nhctl"
+    "Nocalhost"
   );
   private newTerminal!: vscode.Terminal | null;
   private debugDisposes: Array<{ dispose: () => any }> = [];
