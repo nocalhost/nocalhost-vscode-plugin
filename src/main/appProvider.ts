@@ -1,10 +1,6 @@
 import * as vscode from "vscode";
 import nocalhostState from "./state";
-import {
-  BaseNocalhostNode,
-  LoginNode,
-  NocalhostRootNode,
-} from "./nodes/nodeType";
+import { BaseNocalhostNode, NocalhostRootNode } from "./nodes/nodeType";
 
 export default class NocalhostAppProvider
   implements vscode.TreeDataProvider<BaseNocalhostNode> {
@@ -12,9 +8,7 @@ export default class NocalhostAppProvider
     BaseNocalhostNode | undefined
   >();
   onDidChangeTreeData = this.onDidChangeTreeDataEventEmitter.event;
-  getTreeItem(
-    element: BaseNocalhostNode
-  ): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  async getTreeItem(element: BaseNocalhostNode): Promise<vscode.TreeItem> {
     let item: vscode.TreeItem | Thenable<vscode.TreeItem>;
     item = element.getTreeItem();
     return item;
@@ -30,10 +24,15 @@ export default class NocalhostAppProvider
     if (element) {
       result = await element.getChildren();
     } else {
-      result = await new NocalhostRootNode().getChildren();
+      result = await new NocalhostRootNode(null).getChildren();
     }
 
     return result;
+  }
+
+  getParent(element: BaseNocalhostNode): BaseNocalhostNode | null | undefined {
+    const parent = element.getParent();
+    return parent;
   }
 
   refresh() {
