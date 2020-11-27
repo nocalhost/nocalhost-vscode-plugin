@@ -111,11 +111,14 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     registerCommand("Nocalhost.switchEndPoint", false, async () => {
       // switch endpoint
-      const url = await host.showInputBox({
+      const value: string = fileStore.get(BASE_URL);
+      const options: vscode.InputBoxOptions = {
         placeHolder: "input your api server url",
-      });
-      if (url) {
-        fileStore.set(BASE_URL, url);
+        ...(value ? { value } : {}),
+      };
+      const newValue: string = await host.showInputBox(options);
+      if (newValue) {
+        fileStore.set(BASE_URL, newValue);
         host.showInformationMessage("configured api server");
         vscode.commands.executeCommand("refreshApplication");
       }
