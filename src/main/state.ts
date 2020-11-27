@@ -1,3 +1,5 @@
+import * as vscode from "vscode";
+
 class State {
   private login = true;
 
@@ -6,6 +8,11 @@ class State {
   private running = false;
 
   public isLogin() {
+    vscode.commands.executeCommand(
+      "setContext",
+      "Nocalhost:userIsLogined",
+      this.login
+    );
     return this.login;
   }
 

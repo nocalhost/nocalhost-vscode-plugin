@@ -93,8 +93,13 @@ export async function getApplication() {
       clusterId: applications[i]["cluster_id"],
       devspaceId: applications[i]["devspace_id"],
     };
-    result.push(app);
+    // result.push(app);
   }
+  vscode.commands.executeCommand(
+    "setContext",
+    "Nocalhost:appIsEmpty",
+    result.length === 0
+  );
   return result;
 }
 

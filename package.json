@@ -36,7 +36,13 @@
     "viewsWelcome": [
       {
         "view": "Nocalhost",
-        "contents": "Click sign in button to list DevSpaces.\n[Add Server Url](command:Nocalhost.switchEndPoint)\n[Sign In](command:Nocalhost.signin)\n[Click here](https://nocalhost.dev/) for more details"
+        "contents": "Click sign in button to list DevSpaces.\n[Add Server Url](command:Nocalhost.switchEndPoint)\n[Sign In](command:Nocalhost.signin)\n[Click here](https://nocalhost.dev/) for more details",
+        "when": "!Nocalhost:userIsLogined"
+      },
+      {
+        "view": "Nocalhost",
+        "contents": "%noApps.description%",
+        "when": "Nocalhost:userIsLogined"
       }
     ],
     "menus": {
@@ -224,6 +230,7 @@
     "axios": "^0.21.0",
     "shelljs": "^0.8.4",
     "uuid": "^8.3.1",
+    "vscode-nls": "^5.0.0",
     "yaml": "^1.10.0"
   },
   "publisher": "nocalhost"

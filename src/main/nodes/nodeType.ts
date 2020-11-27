@@ -590,17 +590,45 @@ export class PodFolder extends KubernetesResourceFolder {
   }
 }
 
-export class NocalhostRootNode implements BaseNocalhostNode {
-  constructor(public parent: BaseNocalhostNode | null) {}
-  getNodeStateId() {
-    return "Nocalhost";
+export class NocalhostTextNode implements BaseNocalhostNode {
+  public label: string;
+  public type: string = TEXT_NODE;
+  public parent = null;
+  constructor(label: string) {
+    this.label = label;
   }
+  getNodeStateId(): string {
+    return `text-node-${uuidv4()}`;
+  }
+
+  getParent(element: BaseNocalhostNode): BaseNocalhostNode | null | undefined {
+    return this.parent;
+  }
+
+  getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
+    return Promise.resolve([]);
+  }
+
+  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    const treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.None
+    );
+    return treeItem;
+  }
+}
+
+export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
+  constructor(public parent: BaseNocalhostNode | null) {}
 
   getParent(element: BaseNocalhostNode): BaseNocalhostNode | null | undefined {
     return;
   }
+
   async getChildren(parent?: BaseNocalhostNode): Promise<AppFolderNode[]> {
     const res = await getApplication();
     const result = res.map((app) => {
@@ -629,11 +657,16 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     state.set("applicationList", result);
     return result;
   }
+
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(
       this.label,
       vscode.TreeItemCollapsibleState.Expanded
     );
     return treeItem;
+  }
+
+  getNodeStateId() {
+    return "Nocalhost";
   }
 }
