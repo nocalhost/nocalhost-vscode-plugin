@@ -99,8 +99,6 @@ class NocalhostService {
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
     host.log("installed app", true);
-
-    vscode.commands.executeCommand("refreshApplication");
   }
 
   async log(host: Host, appId: number, type: string, workloadName: string) {
