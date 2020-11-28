@@ -86,9 +86,7 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
       this.label,
       vscode.TreeItemCollapsibleState.None
     );
-    treeItem.label = `${this.label} (${
-      this.info && JSON.stringify(this.info.status)
-    })`;
+    treeItem.label = this.label;
     treeItem.command = {
       command: "Nocalhost.loadResource",
       title: "loadResource",
@@ -172,10 +170,13 @@ export class AppFolderNode extends NocalhostFolderNode {
   }
 
   private customUI(treeItem: vscode.TreeItem) {
-    if (this.installStatus) {
+    const installIng = state.get(`${this.label}_installing`);
+    if (this.installStatus === 1) {
       treeItem.iconPath = new vscode.ThemeIcon("vm-active");
-    } else {
+    } else if (this.installStatus === 0 && !installIng) {
       treeItem.iconPath = new vscode.ThemeIcon("vm-outline");
+    } else if (this.installStatus === 0 && installIng) {
+      treeItem.iconPath = new vscode.ThemeIcon("vm-running");
     }
   }
 

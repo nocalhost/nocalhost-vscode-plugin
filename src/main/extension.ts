@@ -141,13 +141,20 @@ export async function activate(context: vscode.ExtensionContext) {
       "Nocahost.installApp",
       true,
       async (appNode: AppFolderNode) => {
-        await nocalhostService.install(
-          host,
-          appNode.info.name,
-          appNode.id,
-          appNode.devSpaceId,
-          appNode.info.url
-        );
+        state.set(`${appNode.label}_installing`, true);
+        vscode.commands.executeCommand("refreshApplication");
+        await nocalhostService
+          .install(
+            host,
+            appNode.info.name,
+            appNode.id,
+            appNode.devSpaceId,
+            appNode.info.url
+          )
+          .finally(() => {
+            state.delete(`${appNode.label}_installing`);
+            vscode.commands.executeCommand("refreshApplication");
+          });
       }
     ),
     registerCommand(

@@ -10,7 +10,7 @@ export default function showLogin() {
         return;
       }
       vscode.window
-        .showInputBox({ placeHolder: "please input password" })
+        .showInputBox({ placeHolder: "please input password", password: true })
         .then((password) => {
           if (!password) {
             return;
