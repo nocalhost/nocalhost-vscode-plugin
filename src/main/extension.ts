@@ -116,7 +116,7 @@ export async function activate(context: vscode.ExtensionContext) {
         placeHolder: "input your api server url",
         ...(value ? { value } : {}),
       };
-      const newValue: string = await host.showInputBox(options);
+      const newValue: string | undefined = await host.showInputBox(options);
       if (newValue) {
         fileStore.set(BASE_URL, newValue);
         host.showInformationMessage("configured api server");
