@@ -222,6 +222,10 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(...subs);
   _refreshApp = host.timer("refreshApplication", []);
   vscode.commands.executeCommand("showDashboard");
+  const jwt = fileStore.get(JWT);
+  if (jwt) {
+    state.setLogin(true);
+  }
   host.getOutputChannel().show(true);
 }
 
