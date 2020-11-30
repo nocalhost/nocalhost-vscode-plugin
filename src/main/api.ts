@@ -3,7 +3,7 @@ import axios from "axios";
 import * as vscode from "vscode";
 import state from "./state";
 import * as fileStore from "./store/fileStore";
-import { BASE_URL, JWT } from "./constants";
+import { BASE_URL, EMAIL, JWT } from "./constants";
 
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
@@ -56,6 +56,7 @@ export async function login(loginInfo: LoginInfo) {
   if (response.data && response.data.token) {
     const jwt = response.data.token;
     fileStore.set(JWT, jwt);
+    fileStore.set(EMAIL, loginInfo.email);
     return jwt;
   }
 

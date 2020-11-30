@@ -3,6 +3,10 @@ import { login } from "../api";
 import state from "../state";
 
 export default function showLogin() {
+  if (state.isLogin()) {
+    vscode.window.showInformationMessage("Logined");
+    return;
+  }
   vscode.window
     .showInputBox({ placeHolder: "please input your email" })
     .then((email) => {

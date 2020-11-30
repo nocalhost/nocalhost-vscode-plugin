@@ -7,6 +7,7 @@ import * as fileStore from "./store/fileStore";
 import application from "./commands/application";
 import {
   BASE_URL,
+  EMAIL,
   JWT,
   KUBE_CONFIG_DIR,
   NH_CONFIG_DIR,
@@ -126,6 +127,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     registerCommand("Nocalhost.signout", false, () => {
       fileStore.remove(JWT);
+      fileStore.remove(EMAIL);
       state.setLogin(false);
       appTreeProvider.refresh();
     }),
