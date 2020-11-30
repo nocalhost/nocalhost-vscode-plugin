@@ -261,7 +261,7 @@ function registerCommand(command: string, isLock: boolean, callback: any) {
           });
       } else {
         if (callback.then) {
-          callback(...args).catch((err) => {
+          callback(...args).catch((err: any) => {
             const errMessage =
               (err.message ? err.message : err) || "internal error";
             host.showErrorMessage(errMessage);

@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import { getApplication } from "../api";
 import { SELECTED_APP_NAME } from "../constants";
 import { getResourceList } from "../ctl/kubectl";
+import { loadResource } from "../ctl/nhctl";
+import * as yaml from "yaml";
 import { v4 as uuidv4 } from "uuid";
 import host from "../host";
 import state from "../state";
@@ -151,13 +153,25 @@ export class AppFolderNode extends NocalhostFolderNode {
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
     return Promise.resolve(this.children.map((type) => this.createChild(type)));
   }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  async getTreeItem() {
     const collapseState =
       state.get(this.getNodeStateId()) ||
       vscode.TreeItemCollapsibleState.Collapsed;
     let treeItem = new vscode.TreeItem(this.label, collapseState);
+    const info = await this.getApplicationInfo();
+    if (info.installed) {
+      this.installStatus = 1;
+    } else {
+      this.installStatus = 0;
+    }
     this.customUI(treeItem);
+    const info = await this.getApplicationInfo();
     treeItem.id = uuidv4();
+    if (info.installed) {
+      this.installStatus = 1;
+    } else {
+      this.installStatus = 0;
+    }
     treeItem.contextValue = `application-${
       this.installStatus === 1 ? "installed" : "notInstalled"
     }`;
@@ -167,6 +181,16 @@ export class AppFolderNode extends NocalhostFolderNode {
       arguments: [this],
     };
     return treeItem;
+  }
+
+  private async getApplicationInfo() {
+    let info = {} as { installed?: boolean };
+    const infoStr = await loadResource(host, this.label).catch((err) => {});
+    if (infoStr) {
+      info = yaml.parse(infoStr as string);
+    }
+
+    return info;
   }
 
   private customUI(treeItem: vscode.TreeItem) {
