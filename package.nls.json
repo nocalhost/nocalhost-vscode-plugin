@@ -5,5 +5,10 @@
   "tips.clone": "To start develop, you must specify source code directory.",
   "bt.clone": "Clone from Git Repo",
   "bt.open.dir": "Open local directory",
-  "bt.open.other": "Open other directory"
+  "bt.open.other": "Open other directory",
+  "Start.Develop": "Start Develop",
+  "End.Develop": "End Develop",
+  "Terminal": "Terminal",
+  "Logs": "Logs",
+  "PortForward": "Port Forward"
 }

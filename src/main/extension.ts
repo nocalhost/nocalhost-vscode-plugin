@@ -81,7 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }),
 
     registerCommand(
-      "Nocalhost.entryDevSpace",
+      "Nocalhost.startDevMode",
       true,
       async (node: KubernetesResourceNode) => {
         if (!node) {
@@ -92,7 +92,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (!appName) {
           throw new Error("you must select one app");
         }
-        await nocalhostService.entryDevSpace(
+        await nocalhostService.startDevMode(
           host,
           appName,
           node.resourceType,
@@ -101,12 +101,12 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     ),
     registerCommand(
-      "Nocalhost.exitDevSpace",
+      "Nocalhost.endDevMode",
       true,
       async (node: KubernetesResourceNode) => {
         // get app name
         const appName = fileStore.get(SELECTED_APP_NAME);
-        await nocalhostService.exitDevSpace(host, appName, node.name);
+        await nocalhostService.endDevMode(host, appName, node.name);
       }
     ),
     registerCommand("Nocalhost.switchEndPoint", false, async () => {

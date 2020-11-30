@@ -91,11 +91,13 @@ class NocalhostService {
     devSpaceId: number,
     gitUrl: string
   ) {
-    host.log("installing app ...", true);
+    host.log(`Installing application: ${appName}`, true);
+    host.showInformationMessage(`Installing application: ${appName}`);
     await nhctl.install(host, appName, gitUrl);
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
-    host.log("installed app", true);
+    host.log(`Application ${appName} installed`, true);
+    host.showInformationMessage(`Application ${appName} installed`);
   }
 
   async log(host: Host, appId: number, type: string, workloadName: string) {
@@ -140,13 +142,13 @@ class NocalhostService {
     appId: number,
     devSpaceId: number
   ) {
-    host.log("uninstalling app ...", true);
-    host.showInformationMessage("uninstalling app ...");
+    host.log(`Uninstalling application: ${appName}`, true);
+    host.showInformationMessage(`Uninstalling application: ${appName}`);
     await nhctl.uninstall(host, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     fileStore.remove(appName);
-    host.log("uninstalled app", true);
-    host.showInformationMessage("uninstalled app ...");
+    host.log(`Application ${appName} uninstalled`, true);
+    host.showInformationMessage(`Application ${appName} uninstalled`);
 
     vscode.commands.executeCommand("refreshApplication");
   }
@@ -187,7 +189,7 @@ class NocalhostService {
     return destDir;
   }
 
-  async entryDevSpace(
+  async startDevMode(
     host: Host,
     appName: string,
     type: string,
@@ -277,7 +279,7 @@ class NocalhostService {
 
     await vscode.window.withProgress(
       {
-        title: "launching devspace",
+        title: "Starting DevMode",
         location: vscode.ProgressLocation.Notification,
         cancellable: false,
       },
@@ -315,7 +317,7 @@ class NocalhostService {
         host.log("sync file end", true);
         host.log("", true);
         progress.report({
-          message: "launched successful",
+          message: "DevMode Started.",
           increment: 100,
         });
 
@@ -340,13 +342,13 @@ class NocalhostService {
     return config;
   }
 
-  async exitDevSpace(host: Host, appName: string, workLoadName: string) {
+  async endDevMode(host: Host, appName: string, workLoadName: string) {
     host.getOutputChannel().show(true);
-    host.showInformationMessage("ending devSpace ...");
-    host.log("ending devSpace ...", true);
-    await nhctl.exitDevSpace(host, appName, workLoadName);
-    host.showInformationMessage("ended devSpace");
-    host.log("ended devSpace", true);
+    host.showInformationMessage("Ending DevMode.");
+    host.log("Ending DevMode ...", true);
+    await nhctl.endDevMode(host, appName, workLoadName);
+    host.showInformationMessage("DevMode Ended.");
+    host.log("DevMode Ended", true);
     state.delete(`${appName}_${workLoadName}_devSpace`);
   }
 
@@ -360,8 +362,6 @@ class NocalhostService {
   }
 
   async opendevSpaceExec(host: Host, type: string, workloadName: string) {
-    host.log("open container ...", true);
-    host.showInformationMessage("open container ...");
     const resArr = await kubectl.getControllerPod(host, type, workloadName);
     if (resArr && resArr.length <= 0) {
       host.showErrorMessage("Not found pod");
@@ -372,7 +372,7 @@ class NocalhostService {
     const command = `kubectl exec -it ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -- /bin/sh`;
     const terminalDisposed = host.invokeInNewTerminal(command);
     host.pushDebugDispose(terminalDisposed);
-    host.log("open container end", true);
+    host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
   }
 

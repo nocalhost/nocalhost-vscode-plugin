@@ -99,7 +99,7 @@ export async function syncFile(
   await execChildProcessAsync(host, syncFileCommand, []);
 }
 
-export async function exitDevSpace(
+export async function endDevMode(
   host: Host,
   appName: string,
   workLoadName: string,

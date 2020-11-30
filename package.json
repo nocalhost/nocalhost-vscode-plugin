@@ -75,12 +75,12 @@
           "group": "inline"
         },
         {
-          "command": "Nocalhost.entryDevSpace",
+          "command": "Nocalhost.startDevMode",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
           "group": "0"
         },
         {
-          "command": "Nocalhost.exitDevSpace",
+          "command": "Nocalhost.endDevMode",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
           "group": "0"
         },
@@ -149,18 +149,18 @@
         "title": "getWordloadList"
       },
       {
-        "command": "Nocalhost.entryDevSpace",
-        "title": "entry devSpace",
+        "command": "Nocalhost.startDevMode",
+        "title": "%Start.Develop%",
         "category": "devSpace"
       },
       {
-        "command": "Nocalhost.exitDevSpace",
-        "title": "exit devSpace",
+        "command": "Nocalhost.endDevMode",
+        "title": "%End.Develop%",
         "category": "devSpace"
       },
       {
         "command": "Nocalhost.exec",
-        "title": "exec"
+        "title": "%Terminal%"
       },
       {
         "command": "Nocalhost.loadResource",
@@ -168,11 +168,11 @@
       },
       {
         "command": "Nocalhost.log",
-        "title": "log"
+        "title": "%Logs%"
       },
       {
         "command": "Nocalhost.portForward",
-        "title": "port-forward"
+        "title": "%PortForward%"
       }
     ]
   },
