@@ -619,7 +619,36 @@ export class NocalhostAccountNode implements BaseNocalhostNode {
     this.label = label;
   }
   getNodeStateId(): string {
-    return `${this.parent.getNodeStateId()}_account`;
+    return `${this.parent.getNodeStateId()}_${this.type}`;
+  }
+  getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
+    return Promise.resolve([]);
+  }
+  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    let treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.None
+    );
+    return treeItem;
+  }
+  getParent(element?: BaseNocalhostNode): BaseNocalhostNode {
+    return this.parent;
+  }
+}
+
+export class NocalhostDividerNode implements BaseNocalhostNode {
+  label: string;
+  type: string = "divider";
+  parent: BaseNocalhostNode;
+
+  constructor(parent: BaseNocalhostNode, label: string) {
+    this.parent = parent;
+    this.label = label;
+  }
+  getNodeStateId(): string {
+    return `${this.parent.getNodeStateId()}_${this.type}`;
   }
   getChildren(
     parent?: BaseNocalhostNode
@@ -651,7 +680,9 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     parent?: BaseNocalhostNode
   ): Promise<Array<AppFolderNode | NocalhostAccountNode>> {
     const res = await getApplication();
-    let result = res.map((app) => {
+    let result: Array<
+      AppFolderNode | NocalhostAccountNode | NocalhostDividerNode
+    > = res.map((app) => {
       let context = app.context;
       let obj: {
         url?: string;
@@ -676,9 +707,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     const account = fileStore.get(EMAIL);
 
-    (result as Array<AppFolderNode | NocalhostAccountNode>).unshift(
-      new NocalhostAccountNode(this, account)
-    );
+    if (result.length > 0) {
+      result.unshift(new NocalhostDividerNode(this, "————"));
+      result.unshift(new NocalhostAccountNode(this, account));
+    }
     return result;
   }
 
