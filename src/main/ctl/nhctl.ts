@@ -112,7 +112,7 @@ export async function endDevMode(
 }
 
 export async function loadResource(host: Host, appName: string) {
-  const describeCommand = nhctlCommand(`describe ${appName}`);
+  const describeCommand = `nhctl describe ${appName}`;
   host.log(`[cmd] ${describeCommand}`, true);
   const result = await execAsync(describeCommand, []);
   return result.stdout;
