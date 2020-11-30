@@ -47,7 +47,7 @@ const rendererConfig = {
   },
   devtool: "source-map",
   resolve: {
-    extensions: [".ts", ".tsx", ".js"],
+    extensions: [".ts", ".tsx", ".js", ".json"],
   },
   module: {
     rules: [

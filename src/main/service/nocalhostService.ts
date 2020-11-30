@@ -11,13 +11,10 @@ import * as vscode from "vscode";
 import { updateAppInstallStatus } from "../api";
 import { PodResource, Resource } from "../nodes/resourceType";
 import state from "../state";
-import {
-  CURRENT_KUBECONFIG_FULLPATH,
-  KUBE_CONFIG_DIR,
-  SELECTED_APP_NAME,
-} from "../constants";
+import { CURRENT_KUBECONFIG_FULLPATH, SELECTED_APP_NAME } from "../constants";
 import * as fileStore from "../store/fileStore";
 
+import * as nls from "../../../package.nls.json";
 interface NocalhostConfig {
   preInstalls: Array<{
     path: string;
@@ -203,13 +200,13 @@ class NocalhostService {
     fileStore.set(appName, appConfig);
     if (!workloadConfig.directory) {
       const result = await host.showInformationMessage(
-        "current directory is not the directory of devSpace?",
-        "clone source",
-        "open source directory"
+        nls["tips.clone"],
+        nls["bt.clone"],
+        nls["bt.open.dir"]
       );
-      if (result === "clone source") {
+      if (result === nls["tips.clone"]) {
         await this.cloneCode(host, appName, workloadName);
-      } else if (result === "open source directory") {
+      } else if (result === nls["bt.open.dir"]) {
         const uris = await host.showOpenDialog({
           canSelectFiles: false,
           canSelectFolders: true,
@@ -232,12 +229,12 @@ class NocalhostService {
     workloadConfig = appConfig[workloadName];
     if (currentUri !== workloadConfig.directory) {
       const result = await host.showInformationMessage(
-        "current directory is not the directory of devSpace. open source directory",
-        "select other directory",
-        "open source directory",
+        nls["tips.open"],
+        nls["bt.open.other"],
+        nls["bt.open.dir"],
         "cancel"
       );
-      if (result === "select other directory") {
+      if (result === nls["bt.open.other"]) {
         const uris = await host.showOpenDialog({
           canSelectFiles: false,
           canSelectFolders: true,
@@ -251,7 +248,7 @@ class NocalhostService {
           });
           return;
         }
-      } else if (result === "open source directory") {
+      } else if (result === nls["bt.open.dir"]) {
         const uri = vscode.Uri.file(workloadConfig.directory);
         vscode.commands.executeCommand("vscode.openFolder", uri, {
           forceReuseWindow: true,

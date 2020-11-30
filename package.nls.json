@@ -1,4 +1,9 @@
 {
   "noLogin.description": "Click sign in button to list DevSpaces.\n[Config Server Url](command:Nocalhost.switchEndPoint)\n[Sign In](command:Nocalhost.signin)\n[Click here](https://nocalhost.dev/) for more details.",
-  "noApps.description": "You have no DevSpaces currently. You can:\n- Add one on nocalhost-web: http://127.0.0.1:43034\n- Ask the administrator of nocalhost-web for help\n\n[Click here](https://nocalhost.dev/) for more details."
+  "noApps.description": "You have no DevSpaces currently. You can:\n- Add one on nocalhost-web: http://127.0.0.1:43034\n- Ask the administrator of nocalhost-web for help\n\n[Click here](https://nocalhost.dev/) for more details.",
+  "tips.open": "Current directory is not the directory of devSpace. To open source directory",
+  "tips.clone": "To start develop, you must specify source code directory.",
+  "bt.clone": "Clone from Git Repo",
+  "bt.open.dir": "Open local directory",
+  "bt.open.other": "Open other directory"
 }
