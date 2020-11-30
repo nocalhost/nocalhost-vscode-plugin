@@ -24,7 +24,7 @@ export async function execAsync(
   command: string,
   args: Array<any>
 ): Promise<ShellResult> {
-  host.log(`[cmd] ${command}`, true);
+  // host.log(`[cmd] ${command}`, true);
   return new Promise((resolve, reject) => {
     const proc = spawn(command, args, { shell: true });
     let stdout = "";

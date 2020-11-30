@@ -10,5 +10,6 @@
   "End.Develop": "End Develop",
   "Terminal": "Terminal",
   "Logs": "Logs",
-  "PortForward": "Port Forward"
+  "PortForward": "Port Forward",
+  "loadResource": "Load Resource"
 }

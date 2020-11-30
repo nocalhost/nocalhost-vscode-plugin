@@ -93,9 +93,7 @@ export async function syncFile(
   workloadName: string
 ) {
   const syncFileCommand = nhctlCommand(`sync ${appName} -d ${workloadName}`);
-
   host.log(`[cmd] ${syncFileCommand}`, true);
-
   await execChildProcessAsync(host, syncFileCommand, []);
 }
 
@@ -113,13 +111,12 @@ export async function endDevMode(
 
 export async function loadResource(host: Host, appName: string) {
   const describeCommand = `nhctl describe ${appName}`;
-  host.log(`[cmd] ${describeCommand}`, true);
+  // host.log(`[cmd] ${describeCommand}`, true);
   const result = await execAsync(describeCommand, []);
   return result.stdout;
 }
 
 function nhctlCommand(baseCommand: string) {
   const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfig}`;
 }

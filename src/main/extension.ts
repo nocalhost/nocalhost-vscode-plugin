@@ -185,6 +185,10 @@ export async function activate(context: vscode.ExtensionContext) {
           let doc = await vscode.workspace.openTextDocument(uri);
           await vscode.window.showTextDocument(doc, { preview: false });
         } else if (node instanceof AppFolderNode) {
+          if (!node.isInstalled()) {
+            host.showInformationMessage(`${node.label} is not installed.`);
+            return;
+          }
           const name = node.info.name;
           const uri = vscode.Uri.parse(`Nocalhost://nh/${name}.yaml`);
           let doc = await vscode.workspace.openTextDocument(uri);

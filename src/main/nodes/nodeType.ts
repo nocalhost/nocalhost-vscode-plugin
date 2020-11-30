@@ -11,7 +11,6 @@ import * as fileStore from "../store/fileStore";
 import {
   APP,
   APP_FOLDER,
-  APP_SUB_FOLDER,
   CRON_JOB,
   CRON_JOBS_FOLDER,
   DAEMON_SET,
@@ -49,14 +48,14 @@ export interface BaseNocalhostNode {
 }
 
 export abstract class NocalhostFolderNode implements BaseNocalhostNode {
-  getNodeStateId() {
-    const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.label}`;
-  }
   abstract parent: BaseNocalhostNode;
   abstract label: string;
   abstract type: string;
 
+  getNodeStateId(): string {
+    const parentStateId = this.parent.getNodeStateId();
+    return `${parentStateId}_${this.label}`;
+  }
   abstract getParent(element: BaseNocalhostNode): BaseNocalhostNode;
   abstract getChildren(
     parent?: BaseNocalhostNode
@@ -111,11 +110,8 @@ export abstract class KubernetesResourceFolder extends WorkloadSubFolderNode {
 }
 
 export class AppFolderNode extends NocalhostFolderNode {
-  getNodeStateId() {
-    return `app_${this.id}`;
-  }
   public label: string;
-  public type = APP_SUB_FOLDER;
+  public type = APP_FOLDER;
   public id: number;
   public devSpaceId: number;
   public status: number;
@@ -143,38 +139,63 @@ export class AppFolderNode extends NocalhostFolderNode {
     this.kubeConfig = kubeConfig;
     this.info = info;
   }
-  private children = ["Workloads", "Networks"];
+
+  private getDefaultChildrenNodes(): string[] {
+    return this.unInstalled() ? [] : ["Workloads", "Networks"];
+  }
 
   getParent(element: BaseNocalhostNode): NocalhostRootNode {
     return this.parent;
   }
+
   getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    return Promise.resolve(this.children.map((type) => this.createChild(type)));
+    const children: string[] = this.getDefaultChildrenNodes();
+    return Promise.resolve(children.map((type) => this.createChild(type)));
   }
+
   async getTreeItem() {
-    const collapseState =
-      state.get(this.getNodeStateId()) ||
-      vscode.TreeItemCollapsibleState.Collapsed;
-    let treeItem = new vscode.TreeItem(this.label, collapseState);
     const info = await this.getApplicationInfo();
-    if (info.installed) {
-      this.installStatus = 1;
+    this.installStatus = info.installed ? 1 : 0;
+    let collapseState: vscode.TreeItemCollapsibleState;
+    if (this.unInstalled()) {
+      collapseState = vscode.TreeItemCollapsibleState.None;
     } else {
-      this.installStatus = 0;
+      collapseState =
+        state.get(this.getNodeStateId()) ||
+        vscode.TreeItemCollapsibleState.Collapsed;
     }
-    this.customUI(treeItem);
+    let treeItem = new vscode.TreeItem(this.label, collapseState);
+    this.updateIcon(treeItem);
     treeItem.id = uuidv4();
     treeItem.contextValue = `application-${
       this.installStatus === 1 ? "installed" : "notInstalled"
     }`;
-    treeItem.command = {
-      command: "Nocalhost.loadResource",
-      title: "loadResource",
-      arguments: [this],
-    };
+    // treeItem.command = {
+    //   command: "Nocalhost.loadResource",
+    //   title: "loadResource",
+    //   arguments: [this],
+    // };
     return treeItem;
+  }
+
+  isInstalled(): boolean {
+    return this.installStatus === 1;
+  }
+
+  isInstalling(): boolean {
+    const installIng = state.get(`${this.label}_installing`);
+    return this.installStatus === 0 && installIng;
+  }
+
+  unInstalled(): boolean {
+    const installIng = state.get(`${this.label}_installing`);
+    return this.installStatus === 0 && !installIng;
+  }
+
+  getNodeStateId(): string {
+    return `app_${this.id}`;
   }
 
   private async getApplicationInfo() {
@@ -183,17 +204,15 @@ export class AppFolderNode extends NocalhostFolderNode {
     if (infoStr) {
       info = yaml.parse(infoStr as string);
     }
-
     return info;
   }
 
-  private customUI(treeItem: vscode.TreeItem) {
-    const installIng = state.get(`${this.label}_installing`);
-    if (this.installStatus === 1) {
+  private updateIcon(treeItem: vscode.TreeItem) {
+    if (this.isInstalled()) {
       treeItem.iconPath = new vscode.ThemeIcon("vm-active");
-    } else if (this.installStatus === 0 && !installIng) {
+    } else if (this.unInstalled()) {
       treeItem.iconPath = new vscode.ThemeIcon("vm-outline");
-    } else if (this.installStatus === 0 && installIng) {
+    } else if (this.isInstalling()) {
       treeItem.iconPath = new vscode.ThemeIcon("vm-running");
     }
   }
@@ -261,10 +280,6 @@ export class NetworkFolderNode extends NocalhostFolderNode {
 export abstract class NetworkSubFolderNode extends NocalhostFolderNode {}
 
 export class Service extends KubernetesResourceNode {
-  getNodeStateId() {
-    const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.name}`;
-  }
   type = SERVICE;
   public resourceType = "Service";
   constructor(
@@ -279,19 +294,23 @@ export class Service extends KubernetesResourceNode {
     this.info = info;
     this.name = name;
   }
+  getNodeStateId(): string {
+    const parentStateId = this.parent.getNodeStateId();
+    return `${parentStateId}_${this.name}`;
+  }
 }
 
 export class ServiceFolder extends KubernetesResourceFolder {
-  getNodeStateId() {
-    const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.label}`;
-  }
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
   }
   public label: string = "Services";
   public type = SERVICE_FOLDER;
+  getNodeStateId(): string {
+    const parentStateId = this.parent.getNodeStateId();
+    return `${parentStateId}_${this.label}`;
+  }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
   }
@@ -394,7 +413,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
 }
 
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
-  getNodeStateId() {
+  getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
     return `${parentStateId}_${this.name}`;
   }
@@ -476,11 +495,6 @@ export class CronJob extends ControllerResourceNode {
 }
 
 export class Pod extends KubernetesResourceNode {
-  getNodeStateId() {
-    const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.name}`;
-  }
-
   public type = POD;
   public resourceType = "pod";
   constructor(
@@ -490,6 +504,10 @@ export class Pod extends KubernetesResourceNode {
     public info?: any
   ) {
     super();
+  }
+  getNodeStateId(): string {
+    const parentStateId = this.parent.getNodeStateId();
+    return `${parentStateId}_${this.name}`;
   }
 }
 
@@ -655,7 +673,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     return treeItem;
   }
 
-  getNodeStateId() {
+  getNodeStateId(): string {
     return "Nocalhost";
   }
 }
