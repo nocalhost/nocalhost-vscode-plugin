@@ -164,6 +164,7 @@ export class AppFolderNode extends NocalhostFolderNode {
     } else {
       this.installStatus = 0;
     }
+    this.customUI(treeItem);
     treeItem.id = uuidv4();
     treeItem.contextValue = `application-${
       this.installStatus === 1 ? "installed" : "notInstalled"
