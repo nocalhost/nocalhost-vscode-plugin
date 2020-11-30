@@ -92,7 +92,7 @@ export function showDashboard(context: vscode.ExtensionContext) {
 
   const panel = vscode.window.createWebviewPanel(
     "html",
-    "Dashbaord",
+    "Welcome",
     vscode.ViewColumn.One,
     {
       enableScripts: true,

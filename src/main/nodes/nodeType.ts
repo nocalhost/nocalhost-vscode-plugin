@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getApplication } from "../api";
-import { SELECTED_APP_NAME } from "../constants";
+import { EMAIL, SELECTED_APP_NAME } from "../constants";
 import { getResourceList } from "../ctl/kubectl";
 import { loadResource } from "../ctl/nhctl";
 import * as yaml from "yaml";
@@ -609,6 +609,35 @@ export class PodFolder extends KubernetesResourceFolder {
   }
 }
 
+export class NocalhostAccountNode implements BaseNocalhostNode {
+  label: string;
+  type: string = "account";
+  parent: BaseNocalhostNode;
+
+  constructor(parent: BaseNocalhostNode, label: string) {
+    this.parent = parent;
+    this.label = label;
+  }
+  getNodeStateId(): string {
+    return `${this.parent.getNodeStateId()}_account`;
+  }
+  getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
+    return Promise.resolve([]);
+  }
+  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    let treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.None
+    );
+    return treeItem;
+  }
+  getParent(element?: BaseNocalhostNode): BaseNocalhostNode {
+    return this.parent;
+  }
+}
+
 export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
@@ -618,9 +647,11 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     return;
   }
 
-  async getChildren(parent?: BaseNocalhostNode): Promise<AppFolderNode[]> {
+  async getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<Array<AppFolderNode | NocalhostAccountNode>> {
     const res = await getApplication();
-    const result = res.map((app) => {
+    let result = res.map((app) => {
       let context = app.context;
       let obj: {
         url?: string;
@@ -643,7 +674,11 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       );
     });
 
-    state.set("applicationList", result);
+    const account = fileStore.get(EMAIL);
+
+    (result as Array<AppFolderNode | NocalhostAccountNode>).unshift(
+      new NocalhostAccountNode(this, account)
+    );
     return result;
   }
 
