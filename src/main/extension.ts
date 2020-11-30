@@ -250,11 +250,25 @@ function registerCommand(command: string, isLock: boolean, callback: any) {
           return;
         }
         state.setRunning(true);
-        Promise.resolve(callback(...args)).finally(() => {
-          state.setRunning(false);
-        });
+        Promise.resolve(callback(...args))
+          .catch((err) => {
+            const errMessage =
+              (err.message ? err.message : err) || "internal error";
+            host.showErrorMessage(errMessage);
+          })
+          .finally(() => {
+            state.setRunning(false);
+          });
       } else {
-        callback(...args);
+        if (callback.then) {
+          callback(...args).catch((err) => {
+            const errMessage =
+              (err.message ? err.message : err) || "internal error";
+            host.showErrorMessage(errMessage);
+          });
+        } else {
+          callback(...args);
+        }
       }
     }
   );
