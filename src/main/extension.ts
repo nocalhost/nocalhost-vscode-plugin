@@ -139,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
       appTreeProvider.refresh()
     ),
     registerCommand(
-      "Nocahost.installApp",
+      "Nocalhost.installApp",
       true,
       async (appNode: AppFolderNode) => {
         state.set(`${appNode.label}_installing`, true);
@@ -159,7 +159,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     ),
     registerCommand(
-      "Nocahost.uninstallApp",
+      "Nocalhost.uninstallApp",
       true,
       async (appNode: AppFolderNode) => {
         state.set(`${appNode.label}_uninstalling`, true);

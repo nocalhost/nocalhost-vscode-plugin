@@ -65,12 +65,12 @@
       ],
       "view/item/context": [
         {
-          "command": "Nocahost.installApp",
+          "command": "Nocalhost.installApp",
           "when": "viewItem =~ /^application-notInstalled/i",
           "group": "inline"
         },
         {
-          "command": "Nocahost.uninstallApp",
+          "command": "Nocalhost.uninstallApp",
           "when": "viewItem =~ /^application-installed/i",
           "group": "inline"
         },
@@ -136,12 +136,12 @@
         "icon": "$(sign-out)"
       },
       {
-        "command": "Nocahost.installApp",
+        "command": "Nocalhost.installApp",
         "title": "Install App",
         "icon": "$(rocket)"
       },
       {
-        "command": "Nocahost.uninstallApp",
+        "command": "Nocalhost.uninstallApp",
         "title": "Uninstall App",
         "icon": "$(chrome-close)"
       },

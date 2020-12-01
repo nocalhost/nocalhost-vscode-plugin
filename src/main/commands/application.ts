@@ -49,7 +49,7 @@ class Application {
     const currentKubeConfigFullpath = this.getKubeConfigPath(appNode);
     fileStore.set(SELECTED_APP_NAME, appNode.info.name);
     fileStore.set(CURRENT_KUBECONFIG_FULLPATH, currentKubeConfigFullpath);
-    vscode.commands.executeCommand("refreshApplication");
+    vscode.commands.executeCommand("Nocalhost.refresh");
   }
 }
 
