@@ -248,10 +248,12 @@ class NocalhostService {
         const destDir = await this.cloneCode(host, appName, node.name);
         if (destDir) {
           const uri = vscode.Uri.file(destDir);
-          vscode.commands.executeCommand("vscode.openFolder", uri, {
-            forceReuseWindow: true,
-          });
-          return;
+          if (currentUri !== uri.fsPath) {
+            vscode.commands.executeCommand("vscode.openFolder", uri, {
+              forceReuseWindow: true,
+            });
+            return;
+          }
         }
       } else if (result === nls["bt.open.dir"]) {
         const uris = await host.showOpenDialog({
