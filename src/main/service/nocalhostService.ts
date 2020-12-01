@@ -10,16 +10,11 @@ import * as vscode from "vscode";
 
 import { updateAppInstallStatus } from "../api";
 import { PodResource, Resource } from "../nodes/resourceType";
-import state from "../state";
 import { CURRENT_KUBECONFIG_FULLPATH, SELECTED_APP_NAME } from "../constants";
 import * as fileStore from "../store/fileStore";
 
 import * as nls from "../../../package.nls.json";
-import {
-  ControllerResourceNode,
-  DeploymentStatus,
-  KubernetesResourceNode,
-} from "../nodes/nodeType";
+import { ControllerResourceNode, DeploymentStatus } from "../nodes/nodeType";
 interface NocalhostConfig {
   preInstalls: Array<{
     path: string;
@@ -49,6 +44,47 @@ interface NocalhostConfig {
     jobs: Array<string>;
     pods: Array<string>;
   }>;
+}
+
+interface JobConfig {
+  name: string;
+  path: string;
+  priority?: number;
+}
+
+interface NocalhostServiceConfig {
+  name?: string;
+  nameRegex?: string;
+  type: string;
+  gitUrl: string;
+  devContainerImage: string;
+  devContainerShell?: string;
+  syncType?: string;
+  syncDirs?: Array<string>; // default ["."]
+  ignoreDirs?: Array<string>;
+  devPort?: Array<string>;
+  dependPodsLabelSelector?: Array<string>;
+  dependJobsLabelSelector?: Array<string>;
+  workDir?: string; // default value: "/home/nocalhost-dev"
+  persistentVolumeDir?: string;
+  buildCommand?: string;
+  runCommand?: string;
+  debugCommand?: string;
+  hotReloadRunCommand?: string;
+  hotReloadDebugCommand?: string;
+  remoteDebugPort?: number;
+}
+
+interface NewNocalhostConfig {
+  name: string; // uniq
+  manifestType: string; // helm
+  resourcePath: Array<string>; // default: ["."]
+  minimalInstall: boolean;
+  onPreInstall?: Array<JobConfig>;
+  onPostInstall?: Array<JobConfig>;
+  onPreUninstall?: Array<JobConfig>;
+  onPostUninstall?: Array<JobConfig>;
+  services: Array<NocalhostServiceConfig>;
 }
 
 const NHCTL_DIR = path.resolve(os.homedir(), ".nhctl");
@@ -157,7 +193,7 @@ class NocalhostService {
   }
 
   private async cloneCode(host: Host, appName: string, workloadName: string) {
-    const appConfig = fileStore.get(appName);
+    const appConfig = fileStore.get(appName) || {};
     let destDir: string | undefined;
     const nocalhostConfig = await this.getNocalhostConfig();
     let gitUrl = await this.getGitUrl(appName, workloadName);
@@ -208,8 +244,15 @@ class NocalhostService {
         nls["bt.clone"],
         nls["bt.open.dir"]
       );
-      if (result === nls["tips.clone"]) {
-        await this.cloneCode(host, appName, node.name);
+      if (result === nls["bt.clone"]) {
+        const destDir = await this.cloneCode(host, appName, node.name);
+        if (destDir) {
+          const uri = vscode.Uri.file(destDir);
+          vscode.commands.executeCommand("vscode.openFolder", uri, {
+            forceReuseWindow: true,
+          });
+          return;
+        }
       } else if (result === nls["bt.open.dir"]) {
         const uris = await host.showOpenDialog({
           canSelectFiles: false,
