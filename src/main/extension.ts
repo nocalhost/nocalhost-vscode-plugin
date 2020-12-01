@@ -21,6 +21,7 @@ import {
   BaseNocalhostNode,
   ControllerResourceNode,
   KubernetesResourceNode,
+  NocalhostAccountNode,
 } from "./nodes/nodeType";
 import nocalhostService from "./service/nocalhostService";
 import NocalhostTextDocumentProvider from "./textDocumentProvider";
@@ -56,15 +57,13 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.TreeItemCollapsibleState.Expanded
       );
       if (node instanceof AppFolderNode) {
-        const others = (await node.getParent(node).getChildren()).filter(
-          (item) => {
-            if (item instanceof AppFolderNode && item.id !== node.id) {
-              return true;
-            } else {
-              false;
-            }
+        const others = (await node.getParent().getChildren()).filter((item) => {
+          if (item instanceof AppFolderNode && item.id !== node.id) {
+            return true;
+          } else {
+            false;
           }
-        );
+        });
         others.map((item) =>
           state.set(
             item.getNodeStateId(),
@@ -144,6 +143,16 @@ export async function activate(context: vscode.ExtensionContext) {
       async (appNode: AppFolderNode) => {
         state.set(`${appNode.label}_installing`, true);
         await application.useApplication(appNode);
+        // make siblings collapsis
+        const siblings: (
+          | AppFolderNode
+          | NocalhostAccountNode
+        )[] = await appNode.siblings();
+        siblings.forEach((item) => {
+          const node = item as AppFolderNode;
+          node.collapsis();
+        });
+
         appTreeProvider.refresh();
         await nocalhostService
           .install(

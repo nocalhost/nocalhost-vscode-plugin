@@ -146,8 +146,32 @@ export class AppFolderNode extends NocalhostFolderNode {
     return this.unInstalled() ? [] : ["Workloads", "Networks"];
   }
 
-  getParent(element: BaseNocalhostNode): NocalhostRootNode {
-    return this.parent;
+  private async getApplicationInfo() {
+    let info = {} as { installed?: boolean };
+    const infoStr = await loadResource(host, this.label).catch((err) => {});
+    if (infoStr) {
+      info = yaml.parse(infoStr as string);
+    }
+    return info;
+  }
+
+  private updateIcon(treeItem: vscode.TreeItem) {
+    if (this.installed() && !this.unInstalling()) {
+      return (treeItem.iconPath = new vscode.ThemeIcon("vm-active"));
+    }
+    if (this.unInstalled() && !this.installing()) {
+      return (treeItem.iconPath = new vscode.ThemeIcon("vm-outline"));
+    }
+    treeItem.iconPath = new vscode.ThemeIcon("loading");
+  }
+
+  private updateContext(treeItem: vscode.TreeItem) {
+    if (this.unInstalled() && !this.unInstalling() && !this.installing()) {
+      return (treeItem.contextValue = `application-notInstalled`);
+    }
+    if (this.installed() && !this.unInstalling() && !this.installing()) {
+      return (treeItem.contextValue = `application-installed`);
+    }
   }
 
   getChildren(
@@ -200,32 +224,22 @@ export class AppFolderNode extends NocalhostFolderNode {
     return `app_${this.id}`;
   }
 
-  private async getApplicationInfo() {
-    let info = {} as { installed?: boolean };
-    const infoStr = await loadResource(host, this.label).catch((err) => {});
-    if (infoStr) {
-      info = yaml.parse(infoStr as string);
-    }
-    return info;
+  getParent(): NocalhostRootNode {
+    return this.parent;
   }
 
-  private updateIcon(treeItem: vscode.TreeItem) {
-    if (this.installed() && !this.unInstalling()) {
-      return (treeItem.iconPath = new vscode.ThemeIcon("vm-active"));
-    }
-    if (this.unInstalled() && !this.installing()) {
-      return (treeItem.iconPath = new vscode.ThemeIcon("vm-outline"));
-    }
-    treeItem.iconPath = new vscode.ThemeIcon("loading");
+  async siblings(): Promise<(AppFolderNode | NocalhostAccountNode)[]> {
+    return (await this.parent.getChildren()).filter((item) => {
+      return item instanceof AppFolderNode && item.id !== this.id;
+    });
   }
 
-  private updateContext(treeItem: vscode.TreeItem) {
-    if (this.unInstalled() && !this.unInstalling() && !this.installing()) {
-      return (treeItem.contextValue = `application-notInstalled`);
-    }
-    if (this.installed() && !this.unInstalling() && !this.installing()) {
-      return (treeItem.contextValue = `application-installed`);
-    }
+  collapsis(): void {
+    state.set(this.getNodeStateId(), vscode.TreeItemCollapsibleState.Collapsed);
+  }
+
+  expanded(): void {
+    state.set(this.getNodeStateId(), vscode.TreeItemCollapsibleState.Expanded);
   }
 
   createChild(type: string) {
