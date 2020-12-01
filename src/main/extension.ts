@@ -29,7 +29,6 @@ import state from "./state";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
-let _refreshApp: NodeJS.Timeout;
 export async function activate(context: vscode.ExtensionContext) {
   await init();
 
@@ -123,7 +122,6 @@ export async function activate(context: vscode.ExtensionContext) {
       if (newValue) {
         fileStore.set(BASE_URL, newValue);
         host.showInformationMessage("configured api server");
-        vscode.commands.executeCommand("refreshApplication");
       }
     }),
 
@@ -131,14 +129,13 @@ export async function activate(context: vscode.ExtensionContext) {
       fileStore.remove(JWT);
       fileStore.remove(EMAIL);
       state.setLogin(false);
-      appTreeProvider.refresh();
     }),
     registerCommand("Nocalhost.signin", false, showLogin),
 
     registerCommand("getApplicationList", false, () =>
       appTreeProvider.refresh()
     ),
-    registerCommand("refreshApplication", false, () =>
+    registerCommand("Nocalhost.refresh", false, () =>
       appTreeProvider.refresh()
     ),
     registerCommand(
@@ -146,7 +143,6 @@ export async function activate(context: vscode.ExtensionContext) {
       true,
       async (appNode: AppFolderNode) => {
         state.set(`${appNode.label}_installing`, true);
-        vscode.commands.executeCommand("refreshApplication");
         await nocalhostService
           .install(
             host,
@@ -157,7 +153,6 @@ export async function activate(context: vscode.ExtensionContext) {
           )
           .finally(() => {
             state.delete(`${appNode.label}_installing`);
-            vscode.commands.executeCommand("refreshApplication");
           });
       }
     ),
@@ -170,7 +165,6 @@ export async function activate(context: vscode.ExtensionContext) {
           .uninstall(host, appNode.info.name, appNode.id, appNode.devSpaceId)
           .finally(() => {
             state.delete(`${appNode.label}_uninstalling`);
-            vscode.commands.executeCommand("refreshApplication");
           });
       }
     ),
@@ -224,14 +218,12 @@ export async function activate(context: vscode.ExtensionContext) {
       "Nocalhost.exec",
       true,
       async (node: ControllerResourceNode) => {
-        const appName = fileStore.get(SELECTED_APP_NAME);
         await nocalhostService.exec(host, node);
       }
     ),
   ];
 
   context.subscriptions.push(...subs);
-  _refreshApp = host.timer("refreshApplication", []);
   vscode.commands.executeCommand("showDashboard");
   const jwt = fileStore.get(JWT);
   if (jwt) {
@@ -280,9 +272,7 @@ function registerCommand(command: string, isLock: boolean, callback: any) {
   return dispose;
 }
 
-export function deactivate() {
-  clearInterval(_refreshApp);
-}
+export function deactivate() {}
 
 export function checkCtl(name: string) {
   const res = shell.which(name);

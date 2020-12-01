@@ -23,7 +23,7 @@ class Application {
   public async useApplication(appNode: AppFolderNode) {
     fileStore.set(SELECTED_APP_NAME, appNode.info.name);
     await this.setKubeConfig(appNode);
-    vscode.commands.executeCommand("refreshApplication");
+    vscode.commands.executeCommand("Nocalhost.refresh");
   }
 }
 

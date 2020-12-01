@@ -35,7 +35,6 @@ axios.interceptors.response.use(
     const res = response.data;
     if ([20103, 20111].includes(res.code)) {
       state.setLogin(false);
-      vscode.commands.executeCommand("refreshApplication");
     }
     if (res.code !== 0) {
       return Promise.reject(res);

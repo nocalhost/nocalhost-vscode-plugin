@@ -15,8 +15,9 @@ class State {
     return this.running;
   }
 
-  setLogin(state: boolean) {
-    vscode.commands.executeCommand("setContext", "login", state);
+  async setLogin(state: boolean) {
+    await vscode.commands.executeCommand("setContext", "login", state);
+    await vscode.commands.executeCommand("Nocalhost.refresh");
     this.login = state;
   }
 
@@ -30,10 +31,12 @@ class State {
 
   delete(key: string) {
     this.stateMap.delete(key);
+    vscode.commands.executeCommand("Nocalhost.refresh");
   }
 
   set(key: string, value: any) {
     this.stateMap.set(key, value);
+    vscode.commands.executeCommand("Nocalhost.refresh");
   }
 }
 

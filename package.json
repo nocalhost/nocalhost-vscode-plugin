@@ -48,7 +48,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "refreshApplication",
+          "command": "Nocalhost.refresh",
           "when": "view == Nocalhost",
           "group": "navigation"
         },
@@ -126,7 +126,7 @@
         "title": "getApplicationList"
       },
       {
-        "command": "refreshApplication",
+        "command": "Nocalhost.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },

@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import nocalhostState from "./state";
 
 export class Host {
-  private terminal = vscode.window.createTerminal("nhctl");
+  private terminal = vscode.window.createTerminal("Nocalhost");
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
   );
