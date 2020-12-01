@@ -76,13 +76,13 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment)/i",
-          "group": "0"
+          "when": "viewItem =~ /^workload-(deployment)-running/i",
+          "group": "inline"
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment)/i",
-          "group": "0"
+          "when": "viewItem =~ /^workload-(deployment)-developing/i",
+          "group": "inline"
         },
         {
           "command": "Nocalhost.exec",
@@ -156,11 +156,13 @@
       {
         "command": "Nocalhost.startDevMode",
         "title": "%Start.Develop%",
+        "icon": "$(debug-start)",
         "category": "devSpace"
       },
       {
         "command": "Nocalhost.endDevMode",
         "title": "%End.Develop%",
+        "icon": "$(debug-stop)",
         "category": "devSpace"
       },
       {
