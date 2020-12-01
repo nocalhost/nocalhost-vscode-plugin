@@ -19,6 +19,7 @@ import { showDashboard } from "./webviews";
 import {
   AppFolderNode,
   BaseNocalhostNode,
+  ControllerResourceNode,
   KubernetesResourceNode,
 } from "./nodes/nodeType";
 import nocalhostService from "./service/nocalhostService";
@@ -57,7 +58,13 @@ export async function activate(context: vscode.ExtensionContext) {
       );
       if (node instanceof AppFolderNode) {
         const others = (await node.getParent(node).getChildren()).filter(
-          (item) => item.id !== node.id
+          (item) => {
+            if (item instanceof AppFolderNode && item.id !== node.id) {
+              return true;
+            } else {
+              false;
+            }
+          }
         );
         others.map((item) =>
           state.set(
@@ -84,7 +91,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand(
       "Nocalhost.startDevMode",
       true,
-      async (node: KubernetesResourceNode) => {
+      async (node: ControllerResourceNode) => {
         if (!node) {
           return;
         }
@@ -93,21 +100,16 @@ export async function activate(context: vscode.ExtensionContext) {
         if (!appName) {
           throw new Error("you must select one app");
         }
-        await nocalhostService.startDevMode(
-          host,
-          appName,
-          node.resourceType,
-          node.name
-        );
+        await nocalhostService.startDevMode(host, appName, node);
       }
     ),
     registerCommand(
       "Nocalhost.endDevMode",
       true,
-      async (node: KubernetesResourceNode) => {
+      async (node: ControllerResourceNode) => {
         // get app name
         const appName = fileStore.get(SELECTED_APP_NAME);
-        await nocalhostService.endDevMode(host, appName, node.name);
+        await nocalhostService.endDevMode(host, appName, node);
       }
     ),
     registerCommand("Nocalhost.switchEndPoint", false, async () => {

@@ -10,7 +10,7 @@ export default class NocalhostAppProvider
   onDidChangeTreeData = this.onDidChangeTreeDataEventEmitter.event;
   async getTreeItem(element: BaseNocalhostNode): Promise<vscode.TreeItem> {
     let item: vscode.TreeItem | Thenable<vscode.TreeItem>;
-    item = element.getTreeItem();
+    item = await element.getTreeItem();
     return item;
   }
 
