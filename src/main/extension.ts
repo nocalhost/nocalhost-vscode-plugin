@@ -223,13 +223,11 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand(
       "Nocalhost.exec",
       true,
-      async (node: KubernetesResourceNode) => {
+      async (node: ControllerResourceNode) => {
         const appName = fileStore.get(SELECTED_APP_NAME);
         await nocalhostService.exec(
           host,
-          appName,
-          node.resourceType,
-          node.name
+          node
         );
       }
     ),

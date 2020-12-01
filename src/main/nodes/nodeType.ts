@@ -498,7 +498,7 @@ export class Deployment extends ControllerResourceNode {
       this.name,
       "json"
     );
-    const deploymentObj = JSON.parse(deploy) as Resource;
+    const deploymentObj = JSON.parse(deploy as string) as Resource;
     const resStatus = deploymentObj.status as ResourceStatus;
     resStatus.conditions.forEach((s) => {
       if (s.type === "Available") {
