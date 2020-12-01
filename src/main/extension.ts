@@ -225,10 +225,7 @@ export async function activate(context: vscode.ExtensionContext) {
       true,
       async (node: ControllerResourceNode) => {
         const appName = fileStore.get(SELECTED_APP_NAME);
-        await nocalhostService.exec(
-          host,
-          node
-        );
+        await nocalhostService.exec(host, node);
       }
     ),
   ];
