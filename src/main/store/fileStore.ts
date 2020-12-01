@@ -43,7 +43,6 @@ export function get(key: string) {
 export function set(key: string, value: any) {
   const config = getAllConfig();
   config[key] = value;
-
   store(config);
 }
 
