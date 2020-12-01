@@ -101,7 +101,8 @@
         },
         {
           "command": "Nocalhost.loadResource",
-          "title": "%loadResource%"
+          "title": "%loadResource%",
+          "when": "viewItem =~ /^application-installed/i"
         }
       ]
     },
@@ -168,7 +169,8 @@
       },
       {
         "command": "Nocalhost.loadResource",
-        "title": "%loadResource%"
+        "title": "%loadResource%",
+        "when": "viewItem =~ /^application-installed/i"
       },
       {
         "command": "Nocalhost.log",

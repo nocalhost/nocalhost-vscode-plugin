@@ -149,8 +149,6 @@ class NocalhostService {
     fileStore.remove(appName);
     host.log(`Application ${appName} uninstalled`, true);
     host.showInformationMessage(`Application ${appName} uninstalled`);
-
-    vscode.commands.executeCommand("refreshApplication");
   }
 
   private async cloneCode(host: Host, appName: string, workloadName: string) {

@@ -167,11 +167,9 @@ export class AppFolderNode extends NocalhostFolderNode {
         vscode.TreeItemCollapsibleState.Collapsed;
     }
     let treeItem = new vscode.TreeItem(this.label, collapseState);
-    this.updateIcon(treeItem);
     treeItem.id = uuidv4();
-    treeItem.contextValue = `application-${
-      this.installStatus === 1 ? "installed" : "notInstalled"
-    }`;
+    this.updateIcon(treeItem);
+    this.updateContext(treeItem);
     // treeItem.command = {
     //   command: "Nocalhost.loadResource",
     //   title: "loadResource",
@@ -180,18 +178,20 @@ export class AppFolderNode extends NocalhostFolderNode {
     return treeItem;
   }
 
-  isInstalled(): boolean {
+  installed(): boolean {
     return this.installStatus === 1;
   }
 
-  isInstalling(): boolean {
-    const installIng = state.get(`${this.label}_installing`);
-    return this.installStatus === 0 && installIng;
+  unInstalled(): boolean {
+    return this.installStatus === 0;
   }
 
-  unInstalled(): boolean {
-    const installIng = state.get(`${this.label}_installing`);
-    return this.installStatus === 0 && !installIng;
+  installing(): boolean {
+    return !!state.get(`${this.label}_installing`);
+  }
+
+  unInstalling(): boolean {
+    return !!state.get(`${this.label}_uninstalling`);
   }
 
   getNodeStateId(): string {
@@ -208,12 +208,21 @@ export class AppFolderNode extends NocalhostFolderNode {
   }
 
   private updateIcon(treeItem: vscode.TreeItem) {
-    if (this.isInstalled()) {
-      treeItem.iconPath = new vscode.ThemeIcon("vm-active");
-    } else if (this.unInstalled()) {
-      treeItem.iconPath = new vscode.ThemeIcon("vm-outline");
-    } else if (this.isInstalling()) {
-      treeItem.iconPath = new vscode.ThemeIcon("vm-running");
+    if (this.installed() && !this.unInstalling()) {
+      return (treeItem.iconPath = new vscode.ThemeIcon("vm-active"));
+    }
+    if (this.unInstalled() && !this.installing()) {
+      return (treeItem.iconPath = new vscode.ThemeIcon("vm-outline"));
+    }
+    treeItem.iconPath = new vscode.ThemeIcon("loading");
+  }
+
+  private updateContext(treeItem: vscode.TreeItem) {
+    if (this.unInstalled() && !this.unInstalling() && !this.installing()) {
+      return (treeItem.contextValue = `application-notInstalled`);
+    }
+    if (this.installed() && !this.unInstalling() && !this.installing()) {
+      return (treeItem.contextValue = `application-installed`);
     }
   }
 

@@ -163,12 +163,13 @@ export async function activate(context: vscode.ExtensionContext) {
       "Nocahost.uninstallApp",
       true,
       async (appNode: AppFolderNode) => {
-        await nocalhostService.uninstall(
-          host,
-          appNode.info.name,
-          appNode.id,
-          appNode.devSpaceId
-        );
+        state.set(`${appNode.label}_uninstalling`, true);
+        await nocalhostService
+          .uninstall(host, appNode.info.name, appNode.id, appNode.devSpaceId)
+          .finally(() => {
+            state.delete(`${appNode.label}_uninstalling`);
+            vscode.commands.executeCommand("refreshApplication");
+          });
       }
     ),
     registerCommand("useApplication", true, async (appNode: AppFolderNode) => {
@@ -187,7 +188,7 @@ export async function activate(context: vscode.ExtensionContext) {
           let doc = await vscode.workspace.openTextDocument(uri);
           await vscode.window.showTextDocument(doc, { preview: false });
         } else if (node instanceof AppFolderNode) {
-          if (!node.isInstalled()) {
+          if (!node.installed()) {
             host.showInformationMessage(`${node.label} is not installed.`);
             return;
           }
