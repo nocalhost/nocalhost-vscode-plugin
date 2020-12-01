@@ -146,7 +146,8 @@ export async function activate(context: vscode.ExtensionContext) {
       true,
       async (appNode: AppFolderNode) => {
         state.set(`${appNode.label}_installing`, true);
-        vscode.commands.executeCommand("refreshApplication");
+        await application.useApplication(appNode);
+        appTreeProvider.refresh();
         await nocalhostService
           .install(
             host,
@@ -166,6 +167,8 @@ export async function activate(context: vscode.ExtensionContext) {
       true,
       async (appNode: AppFolderNode) => {
         state.set(`${appNode.label}_uninstalling`, true);
+        await application.useApplication(appNode);
+        appTreeProvider.refresh();
         await nocalhostService
           .uninstall(host, appNode.info.name, appNode.id, appNode.devSpaceId)
           .finally(() => {

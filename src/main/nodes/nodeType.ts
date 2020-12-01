@@ -33,6 +33,7 @@ import {
   WORKLOAD_FOLDER,
 } from "./nodeContants";
 import { List, Resource, ResourceStatus } from "./resourceType";
+import application from "../commands/application";
 import { start } from "repl";
 
 export interface BaseNocalhostNode {
@@ -781,6 +782,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         obj.url = jsonObj["application_url"];
         obj.name = jsonObj["application_name"];
       }
+      application.saveKubeConfig(app.id, app.devspaceId, app.kubeconfig);
       return new AppFolderNode(
         this,
         obj.name || `app${app.id}`,

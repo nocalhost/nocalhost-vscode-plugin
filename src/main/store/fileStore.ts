@@ -36,9 +36,6 @@ function store(config: any) {
 }
 
 export function get(key: string) {
-  if (CURRENT_KUBECONFIG_FULLPATH === key) {
-    return "~/.kube/config";
-  }
   const config = getAllConfig();
   return config[key];
 }
@@ -46,7 +43,6 @@ export function get(key: string) {
 export function set(key: string, value: any) {
   const config = getAllConfig();
   config[key] = value;
-
   store(config);
 }
 
