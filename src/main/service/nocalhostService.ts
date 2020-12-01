@@ -15,6 +15,11 @@ import { CURRENT_KUBECONFIG_FULLPATH, SELECTED_APP_NAME } from "../constants";
 import * as fileStore from "../store/fileStore";
 
 import * as nls from "../../../package.nls.json";
+import {
+  ControllerResourceNode,
+  DeploymentStatus,
+  KubernetesResourceNode,
+} from "../nodes/nodeType";
 interface NocalhostConfig {
   preInstalls: Array<{
     path: string;
@@ -190,13 +195,12 @@ class NocalhostService {
   async startDevMode(
     host: Host,
     appName: string,
-    type: string,
-    workloadName: string
+    node: ControllerResourceNode
   ) {
-    let appConfig = fileStore.get(appName);
+    let appConfig = fileStore.get(appName) || {};
     const currentUri = vscode.workspace.rootPath;
-    let workloadConfig = appConfig[workloadName] || {};
-    appConfig[workloadName] = workloadConfig;
+    let workloadConfig = appConfig[node.name] || {};
+    appConfig[node.name] = workloadConfig;
     fileStore.set(appName, appConfig);
     if (!workloadConfig.directory) {
       const result = await host.showInformationMessage(
@@ -205,7 +209,7 @@ class NocalhostService {
         nls["bt.open.dir"]
       );
       if (result === nls["tips.clone"]) {
-        await this.cloneCode(host, appName, workloadName);
+        await this.cloneCode(host, appName, node.name);
       } else if (result === nls["bt.open.dir"]) {
         const uris = await host.showOpenDialog({
           canSelectFiles: false,
@@ -226,7 +230,7 @@ class NocalhostService {
     }
     // fresh config
     appConfig = fileStore.get(appName);
-    workloadConfig = appConfig[workloadName];
+    workloadConfig = appConfig[node.name];
     if (currentUri !== workloadConfig.directory) {
       const result = await host.showInformationMessage(
         nls["tips.open"],
@@ -259,10 +263,10 @@ class NocalhostService {
 
     // fresh config
     appConfig = fileStore.get(appName);
-    workloadConfig = appConfig[workloadName];
+    workloadConfig = appConfig[node.name];
     const nocalhostConfig = await this.getNocalhostConfig();
     nocalhostConfig.svcConfigs.map((config) => {
-      if (config.name === workloadName) {
+      if (config.name === node.name) {
         if (!config.sync) {
           config.sync = [];
         }
@@ -282,46 +286,50 @@ class NocalhostService {
         cancellable: false,
       },
       async (progress) => {
-        host.getOutputChannel().show(true);
-        progress.report({
-          message: "replacing image",
-          increment: 0,
-        });
-        host.log("replace image ...", true);
-        await nhctl.replaceImage(host, appName, workloadName);
-        host.log("replace image end", true);
-        host.log("", true);
+        try {
+          node.setStatus(DeploymentStatus.starting);
+          host.getOutputChannel().show(true);
+          progress.report({
+            message: "replacing image",
+            increment: 0,
+          });
+          host.log("replace image ...", true);
+          await nhctl.replaceImage(host, appName, node.name);
+          host.log("replace image end", true);
+          host.log("", true);
 
-        progress.report({
-          message: "port forwarding",
-          increment: 33,
-        });
-        host.log("port forward ...", true);
-        const portForwardDispose = await nhctl.startPortForward(
-          host,
-          appName,
-          workloadName
-        );
-        host.pushDebugDispose(portForwardDispose);
-        host.log("port forward end", true);
-        host.log("", true);
+          progress.report({
+            message: "port forwarding",
+            increment: 33,
+          });
+          host.log("port forward ...", true);
+          const portForwardDispose = await nhctl.startPortForward(
+            host,
+            appName,
+            node.name
+          );
+          host.pushDebugDispose(portForwardDispose);
+          host.log("port forward end", true);
+          host.log("", true);
 
-        progress.report({
-          message: "syncing file",
-          increment: 66,
-        });
-        host.log("sync file ...", true);
-        await nhctl.syncFile(host, appName, workloadName);
-        host.log("sync file end", true);
-        host.log("", true);
-        progress.report({
-          message: "DevMode Started.",
-          increment: 100,
-        });
+          progress.report({
+            message: "syncing file",
+            increment: 66,
+          });
+          host.log("sync file ...", true);
+          await nhctl.syncFile(host, appName, node.name);
+          host.log("sync file end", true);
+          host.log("", true);
+          progress.report({
+            message: "DevMode Started.",
+            increment: 100,
+          });
+          node.setStatus(DeploymentStatus.developing);
 
-        state.set(`${appName}_${workloadName}_devSpace`, true);
-
-        await this.exec(host, appName, type, workloadName);
+          await this.exec(host, node);
+        } catch (error) {
+          node.setStatus("");
+        }
       }
     );
   }
@@ -340,22 +348,22 @@ class NocalhostService {
     return config;
   }
 
-  async endDevMode(host: Host, appName: string, workLoadName: string) {
+  async endDevMode(host: Host, appName: string, node: ControllerResourceNode) {
     host.getOutputChannel().show(true);
     host.showInformationMessage("Ending DevMode.");
     host.log("Ending DevMode ...", true);
-    await nhctl.endDevMode(host, appName, workLoadName);
+    await nhctl.endDevMode(host, appName, node.name);
+    node.setStatus("");
     host.showInformationMessage("DevMode Ended.");
     host.log("DevMode Ended", true);
-    state.delete(`${appName}_${workLoadName}_devSpace`);
   }
 
-  async exec(host: Host, appName: string, type: string, workloadName: string) {
-    const isdevSpace = state.get(`${appName}_${workloadName}_devSpace`);
-    if (isdevSpace) {
-      await this.opendevSpaceExec(host, type, workloadName);
+  async exec(host: Host, node: ControllerResourceNode) {
+    const status = await node.getStatus();
+    if (status === DeploymentStatus.developing) {
+      await this.opendevSpaceExec(host, node.resourceType, node.name);
     } else {
-      await this.openExec(host, type, workloadName);
+      await this.openExec(host, node.resourceType, node.name);
     }
   }
 

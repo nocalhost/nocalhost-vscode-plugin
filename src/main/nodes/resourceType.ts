@@ -23,11 +23,11 @@ export interface Resource {
     name: string;
     [value: string]: any;
   };
-  status:
-    | string
-    | {
-        conditions: Array<Status>;
-      };
+  status: string | ResourceStatus;
+}
+
+export interface ResourceStatus {
+  conditions: Array<Status>;
 }
 
 export interface ControllerResource extends Resource {

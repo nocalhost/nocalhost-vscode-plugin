@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { getApplication } from "../api";
 import { EMAIL, SELECTED_APP_NAME } from "../constants";
-import { getResourceList } from "../ctl/kubectl";
+import * as kubectl from "../ctl/kubectl";
 import { loadResource } from "../ctl/nhctl";
 import * as yaml from "yaml";
 import { v4 as uuidv4 } from "uuid";
@@ -32,7 +32,8 @@ import {
   STATEFUL_SET_FOLDER,
   WORKLOAD_FOLDER,
 } from "./nodeContants";
-import { List } from "./resourceType";
+import { List, Resource, ResourceStatus } from "./resourceType";
+import { start } from "repl";
 
 export interface BaseNocalhostNode {
   label: string;
@@ -82,7 +83,7 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
     return Promise.resolve([]);
   }
-  getTreeItem(): vscode.TreeItem {
+  getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(
       this.label,
       vscode.TreeItemCollapsibleState.None
@@ -326,7 +327,7 @@ export class ServiceFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await getResourceList(host, "Services");
+    const res = await kubectl.getResourceList(host, "Services");
     const list = JSON.parse(res as string) as List;
     const result: Service[] = list.items.map(
       (item) => new Service(this, item.metadata.name, item.metadata.name, item)
@@ -410,7 +411,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<Deployment[]>> {
-    const res = await getResourceList(host, "Deployments");
+    const res = await kubectl.getResourceList(host, "Deployments");
     const list = JSON.parse(res as string) as List;
     const result: Deployment[] = list.items.map(
       (item) =>
@@ -426,16 +427,31 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     const parentStateId = this.parent.getNodeStateId();
     return `${parentStateId}_${this.name}`;
   }
-  getTreeItem(): vscode.TreeItem {
-    let treeItem = super.getTreeItem();
-    const appName = fileStore.get(SELECTED_APP_NAME);
-    const isDebug = state.get(`${appName}_${this.name}_devSpace`);
-    if (isDebug) {
-      treeItem.label = `(Launching) ${treeItem.label || this.label}`;
-    }
+  async getTreeItem(): Promise<vscode.TreeItem> {
+    let treeItem = await super.getTreeItem();
     treeItem.contextValue = `workload-${this.resourceType}`;
     return treeItem;
   }
+
+  public getStatus(): string | Promise<string> {
+    const status = state.get(`${this.getNodeStateId()}_status`);
+    return status;
+  }
+
+  public setStatus(status: string) {
+    if (status) {
+      state.set(`${this.getNodeStateId()}_status`, status);
+    } else {
+      state.delete(`${this.getNodeStateId()}_status`);
+    }
+  }
+}
+
+export enum DeploymentStatus {
+  running = "running",
+  developing = "developing",
+  starting = "starting",
+  unknown = "unknown",
 }
 
 export class Deployment extends ControllerResourceNode {
@@ -448,6 +464,51 @@ export class Deployment extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+  }
+
+  async getTreeItem(): Promise<vscode.TreeItem> {
+    let treeItem = await super.getTreeItem();
+    const status = await this.getStatus();
+    switch (status) {
+      case "running":
+        treeItem.iconPath = new vscode.ThemeIcon("circle-filled");
+        break;
+      case "developing":
+        treeItem.iconPath = new vscode.ThemeIcon("debug");
+        break;
+      case "starting":
+        treeItem.iconPath = new vscode.ThemeIcon("pulse");
+        break;
+      case "unknown":
+        treeItem.iconPath = new vscode.ThemeIcon("circle-slash");
+        break;
+    }
+    treeItem.contextValue = `${treeItem.contextValue}-${status}`;
+    return treeItem;
+  }
+
+  public async getStatus() {
+    let status = state.get(`${this.getNodeStateId()}_status`);
+    if (status) {
+      return Promise.resolve(status);
+    }
+    const deploy = await kubectl.loadResource(
+      host,
+      this.type,
+      this.name,
+      "json"
+    );
+    const deploymentObj = JSON.parse(deploy) as Resource;
+    const resStatus = deploymentObj.status as ResourceStatus;
+    resStatus.conditions.forEach((s) => {
+      if (s.type === "Available") {
+        status = "running";
+      }
+    });
+    if (!status) {
+      status = "unknown";
+    }
+    return status;
   }
 }
 
@@ -534,7 +595,7 @@ export class StatefulSetFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await getResourceList(host, "StatefulSets");
+    const res = await kubectl.getResourceList(host, "StatefulSets");
     const list = JSON.parse(res as string) as List;
     const result: StatefulSet[] = list.items.map(
       (item) =>
@@ -557,7 +618,7 @@ export class DaemonSetFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await getResourceList(host, "DaemonSets");
+    const res = await kubectl.getResourceList(host, "DaemonSets");
     const list = JSON.parse(res as string) as List;
     const result: DaemonSet[] = list.items.map(
       (item) =>
@@ -580,7 +641,7 @@ export class JobFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await getResourceList(host, "Jobs");
+    const res = await kubectl.getResourceList(host, "Jobs");
     const list = JSON.parse(res as string) as List;
     const result: Job[] = list.items.map(
       (item) => new Job(this, item.metadata.name, item.metadata.name, item)
@@ -603,7 +664,7 @@ export class CronJobFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await getResourceList(host, "CronJobs");
+    const res = await kubectl.getResourceList(host, "CronJobs");
     const list = JSON.parse(res as string) as List;
     const result: CronJob[] = list.items.map(
       (item) => new CronJob(this, item.metadata.name, item.metadata.name, item)
@@ -626,7 +687,7 @@ export class PodFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await getResourceList(host, "Pods");
+    const res = await kubectl.getResourceList(host, "Pods");
     const list = JSON.parse(res as string) as List;
     const result: Pod[] = list.items.map(
       (item) => new Pod(this, item.metadata.name, item.metadata.name, item)
