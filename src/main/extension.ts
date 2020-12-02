@@ -252,9 +252,7 @@ export async function activate(context: vscode.ExtensionContext) {
   if (jwt) {
     state.setLogin(true);
   }
-  // host.getOutputChannel().appendLine("active Nocalhost");
   host.getOutputChannel().show(true);
-  // TODO: open terminal
   const tmpApp = fileStore.get(TMP_APP);
   const tmpWorkload = fileStore.get(TMP_WORKLOAD);
   const tmpStatusId = fileStore.get(TMP_STATUS);

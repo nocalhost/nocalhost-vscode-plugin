@@ -31,9 +31,29 @@ export class Host {
     options?: vscode.MessageOptions,
     ...items: string[]
   ) {
-    return options
-      ? vscode.window.showInformationMessage(msg, options, ...items)
-      : vscode.window.showInformationMessage(msg, ...items);
+    if (options && options.modal) {
+      return vscode.window.showInformationMessage(msg, options, ...items);
+    }
+    return new Promise((res, rej) => {
+      setTimeout(() => {
+        res(undefined);
+      }, 20 * 1000);
+      if (options) {
+        vscode.window.showInformationMessage(msg, options, ...items).then(
+          (value) => {
+            res(value);
+          },
+          (err) => rej(err)
+        );
+      } else {
+        vscode.window.showInformationMessage(msg, ...items).then(
+          (value) => {
+            res(value);
+          },
+          (err) => rej(err)
+        );
+      }
+    });
   }
 
   showErrorMessage(msg: string) {
