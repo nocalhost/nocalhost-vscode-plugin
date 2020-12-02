@@ -488,8 +488,8 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
   }
 
-  public getAppNode(parent?: BaseNocalhostNode) {
-    let node;
+  public getAppNode(parent?: BaseNocalhostNode): AppFolderNode {
+    let node: BaseNocalhostNode | null | undefined;
     if (parent) {
       node = parent.getParent(parent);
     } else {
@@ -498,7 +498,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     if (node instanceof AppFolderNode) {
       return node;
     } else {
-      return this.getAppNode(node);
+      return this.getAppNode(node as BaseNocalhostNode);
     }
   }
 

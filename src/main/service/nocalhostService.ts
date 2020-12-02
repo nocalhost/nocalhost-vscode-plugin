@@ -330,7 +330,7 @@ class NocalhostService {
           });
           host.log("dev start ...", true);
           const svc = await this.getSvcConfig(node.name);
-          let dirs = [];
+          let dirs = new Array<string>();
           if (svc && svc.sync) {
             dirs = svc.sync.map((item) =>
               path.resolve(workloadConfig.directory || os.homedir(), item)
