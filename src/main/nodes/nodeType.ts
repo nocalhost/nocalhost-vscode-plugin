@@ -35,6 +35,34 @@ import {
 import { List, Resource, ResourceStatus } from "./resourceType";
 import application from "../commands/application";
 
+const ID_SPLIT = "*/.&|/";
+
+interface AppInfo {
+  name: string;
+  namespace: string;
+  kubeconfig: string;
+  dependencyConfigMapName: string;
+  appType: string;
+  svcProfile: Array<SvcProfile>;
+  installed: boolean;
+  resourcePath: string;
+}
+
+interface SvcProfile {
+  name: string;
+  type: string;
+  developing: boolean;
+  portForwarded: boolean;
+  syncing: boolean;
+  workDir: string;
+  remoteSyncthingPort: number;
+  remoteSyncthingGUIPort: number;
+  localSyncthingPort: number;
+  localSyncthingGUIPort: number;
+  localAbsoluteSyncDirFromDevStartPlugin: any;
+  devPortList: Array<string>;
+}
+
 export interface BaseNocalhostNode {
   label: string;
   type: string;
@@ -55,7 +83,7 @@ export abstract class NocalhostFolderNode implements BaseNocalhostNode {
 
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.label}`;
+    return `${parentStateId}${ID_SPLIT}${this.label}`;
   }
   abstract getParent(element: BaseNocalhostNode): BaseNocalhostNode;
   abstract getChildren(
@@ -146,7 +174,7 @@ export class AppFolderNode extends NocalhostFolderNode {
   }
 
   private async getApplicationInfo() {
-    let info = {} as { installed?: boolean };
+    let info = {} as AppInfo;
     const infoStr = await loadResource(host, this.label).catch((err) => {});
     if (infoStr) {
       info = yaml.parse(infoStr as string);
@@ -220,7 +248,7 @@ export class AppFolderNode extends NocalhostFolderNode {
   }
 
   getNodeStateId(): string {
-    return `app_${this.id}`;
+    return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.label}`;
   }
 
   getParent(): NocalhostRootNode {
@@ -320,7 +348,7 @@ export class Service extends KubernetesResourceNode {
   }
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.name}`;
+    return `${parentStateId}${ID_SPLIT}${this.name}`;
   }
 }
 
@@ -333,7 +361,7 @@ export class ServiceFolder extends KubernetesResourceFolder {
   public type = SERVICE_FOLDER;
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.label}`;
+    return `${parentStateId}${ID_SPLIT}${this.label}`;
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
@@ -439,7 +467,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.name}`;
+    return `${parentStateId}${ID_SPLIT}${this.name}`;
   }
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
@@ -458,6 +486,30 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     } else {
       state.delete(`${this.getNodeStateId()}_status`);
     }
+  }
+
+  public getAppNode(parent?: BaseNocalhostNode) {
+    let node;
+    if (parent) {
+      node = parent.getParent(parent);
+    } else {
+      node = this.getParent(this);
+    }
+    if (node instanceof AppFolderNode) {
+      return node;
+    } else {
+      return this.getAppNode(node);
+    }
+  }
+
+  public async getApplicationInfo() {
+    let info = {} as AppInfo;
+    const appNode = this.getAppNode() as AppFolderNode;
+    const infoStr = await loadResource(host, appNode.label).catch((err) => {});
+    if (infoStr) {
+      info = yaml.parse(infoStr as string);
+    }
+    return info;
   }
 }
 
@@ -505,6 +557,13 @@ export class Deployment extends ControllerResourceNode {
     let status = state.get(`${this.getNodeStateId()}_status`);
     if (status) {
       return Promise.resolve(status);
+    }
+    const appInfo = await this.getApplicationInfo();
+    const svcProfile = appInfo.svcProfile;
+    for (let i = 0; i < svcProfile.length; i++) {
+      if (svcProfile[i].name === this.name && svcProfile[i].developing) {
+        return DeploymentStatus.developing;
+      }
     }
     const deploy = await kubectl.loadResource(
       host,
@@ -591,7 +650,7 @@ export class Pod extends KubernetesResourceNode {
   }
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}_${this.name}`;
+    return `${parentStateId}${ID_SPLIT}${this.name}`;
   }
 }
 
@@ -721,7 +780,7 @@ export class NocalhostAccountNode implements BaseNocalhostNode {
     this.label = label;
   }
   getNodeStateId(): string {
-    return `${this.parent.getNodeStateId()}_${this.type}`;
+    return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.type}`;
   }
   getChildren(
     parent?: BaseNocalhostNode
@@ -751,7 +810,7 @@ export class NocalhostDividerNode implements BaseNocalhostNode {
     this.label = label;
   }
   getNodeStateId(): string {
-    return `${this.parent.getNodeStateId()}_${this.type}`;
+    return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.type}`;
   }
   getChildren(
     parent?: BaseNocalhostNode
