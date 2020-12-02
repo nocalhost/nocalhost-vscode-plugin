@@ -10,9 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:Nocalhost",
-    "onCommand:Nocalhost.signout",
-    "onCommand:Nocalhost.switchEndPoint"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {

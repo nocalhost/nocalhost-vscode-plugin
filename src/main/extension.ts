@@ -12,6 +12,10 @@ import {
   KUBE_CONFIG_DIR,
   NH_CONFIG_DIR,
   SELECTED_APP_NAME,
+  TMP_APP,
+  TMP_RESOURCE_TYPE,
+  TMP_STATUS,
+  TMP_WORKLOAD,
 } from "./constants";
 import host from "./host";
 import { showDashboard } from "./webviews";
@@ -19,10 +23,13 @@ import {
   AppFolderNode,
   BaseNocalhostNode,
   ControllerResourceNode,
+  DeploymentStatus,
   KubernetesResourceNode,
   NocalhostAccountNode,
 } from "./nodes/nodeType";
-import nocalhostService from "./service/nocalhostService";
+import nocalhostService, {
+  ControllerNodeApi,
+} from "./service/nocalhostService";
 import NocalhostTextDocumentProvider from "./textDocumentProvider";
 import * as shell from "shelljs";
 import state from "./state";
@@ -245,7 +252,31 @@ export async function activate(context: vscode.ExtensionContext) {
   if (jwt) {
     state.setLogin(true);
   }
+  // host.getOutputChannel().appendLine("active Nocalhost");
   host.getOutputChannel().show(true);
+  // TODO: open terminal
+  const tmpApp = fileStore.get(TMP_APP);
+  const tmpWorkload = fileStore.get(TMP_WORKLOAD);
+  const tmpStatusId = fileStore.get(TMP_STATUS);
+  const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
+  if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
+    fileStore.remove(TMP_APP);
+    fileStore.remove(TMP_WORKLOAD);
+    fileStore.remove(TMP_STATUS);
+    fileStore.remove(TMP_RESOURCE_TYPE);
+
+    const node: ControllerNodeApi = {
+      name: tmpWorkload,
+      resourceType: tmpResourceType,
+      setStatus: (status: string) => {
+        fileStore.set(tmpStatusId, status);
+      },
+      getStatus: () => DeploymentStatus.developing,
+    };
+
+    // start develop
+    nocalhostService.startDevMode(host, tmpApp, node);
+  }
 }
 
 function registerCommand(command: string, isLock: boolean, callback: any) {
@@ -288,8 +319,8 @@ function registerCommand(command: string, isLock: boolean, callback: any) {
   return dispose;
 }
 
-export function deactivate(context: vscode.ExtensionContext): undefined {
-  return undefined;
+export function deactivate() {
+  // TODO: DISPOSE
 }
 
 export function checkCtl(name: string) {

@@ -39,54 +39,44 @@ export async function uninstall(host: Host, appName: string) {
   await execChildProcessAsync(host, uninstallCommand, []);
 }
 
-export async function replaceImage(
+export async function devStart(
   host: Host,
   appName: string,
-  workLoadName: string
+  workLoadName: string,
+  syncs?: Array<string>
 ) {
-  const replaceImageCommand = nhctlCommand(
-    `dev start ${appName} -d ${workLoadName}`
+  let syncOptions = "";
+  if (syncs && syncs.length > 0) {
+    syncOptions = syncs.join(" -s ");
+    syncOptions = "-s " + syncOptions;
+  }
+  const devStartCommand = nhctlCommand(
+    `dev start ${appName} -d ${workLoadName} ${syncOptions}`
   );
-  host.log(`[cmd] ${replaceImageCommand}`, true);
-  await execAsync(replaceImageCommand, []);
+  host.log(`[cmd] ${devStartCommand}`, true);
+  await execAsync(devStartCommand, []);
 }
 
-export function startPortForward(
+export async function startPortForward(
   host: Host,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  ports?: Array<string>
 ) {
+  let portOptions = "";
+  if (ports && ports.length > 0) {
+    portOptions = ports.join(" -p ");
+    portOptions = "-p " + portOptions;
+  }
   const portForwardCommand = nhctlCommand(
-    `port-forward ${appName} -d ${workloadName} `
+    `port-forward ${appName} -d ${workloadName} ${portOptions}`
   );
 
   host.log(`[cmd] ${portForwardCommand}`, true);
 
-  return new Promise((resolve: (value: any) => void, reject) => {
-    const proc = spawn(portForwardCommand, [], {
-      shell: true,
-    });
-
-    const rl = readline.createInterface({
-      input: proc.stdout,
-      output: proc.stdin,
-    });
-
-    const _timeoutId = setTimeout(() => {
-      proc.kill();
-      vscode.window.showErrorMessage("port forward error. please check to log");
-      reject("forward timeout");
-    }, 1000 * 5);
-
-    rl.on("line", (line) => {
-      host.log(line, true);
-      if (line.indexOf("Forwarding from") >= 0) {
-        clearTimeout(_timeoutId);
-        resolve({ dispose: () => proc.kill() });
-      }
-    });
-  });
+  await execAsync(portForwardCommand, []);
 }
+
 export async function syncFile(
   host: Host,
   appName: string,

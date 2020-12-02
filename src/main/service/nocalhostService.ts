@@ -10,12 +10,19 @@ import * as vscode from "vscode";
 
 import { updateAppInstallStatus } from "../api";
 import { PodResource, Resource } from "../nodes/resourceType";
-import { CURRENT_KUBECONFIG_FULLPATH, SELECTED_APP_NAME } from "../constants";
+import {
+  CURRENT_KUBECONFIG_FULLPATH,
+  SELECTED_APP_NAME,
+  TMP_APP,
+  TMP_RESOURCE_TYPE,
+  TMP_STATUS,
+  TMP_WORKLOAD,
+} from "../constants";
 import * as fileStore from "../store/fileStore";
 
 import * as nls from "../../../package.nls.json";
 import { ControllerResourceNode, DeploymentStatus } from "../nodes/nodeType";
-interface NocalhostConfig {
+export interface NocalhostConfig {
   preInstalls: Array<{
     path: string;
     weight?: string | number;
@@ -25,34 +32,36 @@ interface NocalhostConfig {
     type: string;
     resourcePath: string;
   };
-  svcConfigs: Array<{
-    name: string;
-    type: string;
-    gitUrl: string;
-    devLang: string; // # java|go|node|php
-    devImage: string;
-    workDir: string;
-    localWorkDir: string;
-    sync: Array<string>;
-    ignore: Array<string>;
-    sshPort: {
-      localPort: number;
-      sshPort: number;
-    };
-    devPort: Array<string>;
-    command: Array<string>;
-    jobs: Array<string>;
-    pods: Array<string>;
-  }>;
+  svcConfigs: Array<WorkloadConfig>;
 }
 
-interface JobConfig {
+export interface WorkloadConfig {
+  name: string;
+  type: string;
+  gitUrl: string;
+  devLang: string; // # java|go|node|php
+  devImage: string;
+  workDir: string;
+  localWorkDir: string;
+  sync: Array<string>;
+  ignore: Array<string>;
+  sshPort: {
+    localPort: number;
+    sshPort: number;
+  };
+  devPort: Array<string>;
+  command: Array<string>;
+  jobs: Array<string>;
+  pods: Array<string>;
+}
+
+export interface JobConfig {
   name: string;
   path: string;
   priority?: number;
 }
 
-interface NocalhostServiceConfig {
+export interface NocalhostServiceConfig {
   name?: string;
   nameRegex?: string;
   type: string;
@@ -75,7 +84,7 @@ interface NocalhostServiceConfig {
   remoteDebugPort?: number;
 }
 
-interface NewNocalhostConfig {
+export interface NewNocalhostConfig {
   name: string; // uniq
   manifestType: string; // helm
   resourcePath: Array<string>; // default: ["."]
@@ -85,6 +94,13 @@ interface NewNocalhostConfig {
   onPreUninstall?: Array<JobConfig>;
   onPostUninstall?: Array<JobConfig>;
   services: Array<NocalhostServiceConfig>;
+}
+
+export interface ControllerNodeApi {
+  name: string;
+  resourceType: string;
+  setStatus: (status: string) => void;
+  getStatus: () => Promise<string> | string;
 }
 
 const NHCTL_DIR = path.resolve(os.homedir(), ".nhctl");
@@ -193,9 +209,7 @@ class NocalhostService {
   }
 
   private async cloneCode(host: Host, appName: string, workloadName: string) {
-    const appConfig = fileStore.get(appName) || {};
     let destDir: string | undefined;
-    const nocalhostConfig = await this.getNocalhostConfig();
     let gitUrl = await this.getGitUrl(appName, workloadName);
     if (!gitUrl) {
       gitUrl = await host.showInputBox({
@@ -212,32 +226,18 @@ class NocalhostService {
       if (saveUris) {
         destDir = path.resolve(saveUris[0].fsPath, workloadName);
         await git.clone(host, gitUrl, [destDir]);
-        const workloadConfig = appConfig[workloadName] || {};
-        workloadConfig["directory"] = destDir;
-        appConfig[workloadName] = workloadConfig;
-        fileStore.set(appName, appConfig);
-        nocalhostConfig.svcConfigs.forEach((conf) => {
-          if (conf.name === workloadName) {
-            conf.localWorkDir = destDir as string;
-            return;
-          }
-        });
-        this.writeConfig(appName, nocalhostConfig);
       }
     }
     return destDir;
   }
 
-  async startDevMode(
-    host: Host,
-    appName: string,
-    node: ControllerResourceNode
-  ) {
+  async startDevMode(host: Host, appName: string, node: ControllerNodeApi) {
     let appConfig = fileStore.get(appName) || {};
     const currentUri = vscode.workspace.rootPath;
     let workloadConfig = appConfig[node.name] || {};
     appConfig[node.name] = workloadConfig;
     fileStore.set(appName, appConfig);
+    let destDir;
     if (!workloadConfig.directory) {
       const result = await host.showInformationMessage(
         nls["tips.clone"],
@@ -246,13 +246,17 @@ class NocalhostService {
         nls["bt.open.dir"]
       );
       if (result === nls["bt.clone"]) {
-        const destDir = await this.cloneCode(host, appName, node.name);
+        destDir = await this.cloneCode(host, appName, node.name);
         if (destDir) {
+          workloadConfig.directory = destDir;
+          appConfig[node.name] = workloadConfig;
+          fileStore.set(appName, appConfig);
           const uri = vscode.Uri.file(destDir);
           if (currentUri !== uri.fsPath) {
             vscode.commands.executeCommand("vscode.openFolder", uri, {
               forceReuseWindow: true,
             });
+            this.setTmpStartRecord(appName, node as ControllerResourceNode);
             return;
           }
         }
@@ -269,6 +273,7 @@ class NocalhostService {
             vscode.commands.executeCommand("vscode.openFolder", uris[0], {
               forceReuseWindow: true,
             });
+            this.setTmpStartRecord(appName, node as ControllerResourceNode);
             return;
           }
         }
@@ -296,6 +301,7 @@ class NocalhostService {
           vscode.commands.executeCommand("vscode.openFolder", uris[0], {
             forceReuseWindow: true,
           });
+          this.setTmpStartRecord(appName, node as ControllerResourceNode);
           return;
         }
       } else if (result === nls["bt.open.dir"]) {
@@ -303,27 +309,10 @@ class NocalhostService {
         vscode.commands.executeCommand("vscode.openFolder", uri, {
           forceReuseWindow: true,
         });
+        this.setTmpStartRecord(appName, node as ControllerResourceNode);
         return;
       }
     }
-
-    // fresh config
-    appConfig = fileStore.get(appName);
-    workloadConfig = appConfig[node.name];
-    const nocalhostConfig = await this.getNocalhostConfig();
-    nocalhostConfig.svcConfigs.map((config) => {
-      if (config.name === node.name) {
-        if (!config.sync) {
-          config.sync = [];
-        }
-        if (!config.sync.includes(workloadConfig.directory)) {
-          config.sync.push(workloadConfig.directory);
-        }
-        return;
-      }
-    });
-
-    await this.writeConfig(appName, nocalhostConfig);
 
     await vscode.window.withProgress(
       {
@@ -336,36 +325,39 @@ class NocalhostService {
           node.setStatus(DeploymentStatus.starting);
           host.getOutputChannel().show(true);
           progress.report({
-            message: "replacing image",
+            message: "dev start",
             increment: 0,
           });
-          host.log("replace image ...", true);
-          await nhctl.replaceImage(host, appName, node.name);
-          host.log("replace image end", true);
-          host.log("", true);
-
-          progress.report({
-            message: "port forwarding",
-            increment: 33,
-          });
-          host.log("port forward ...", true);
-          const portForwardDispose = await nhctl.startPortForward(
-            host,
-            appName,
-            node.name
-          );
-          host.pushDebugDispose(portForwardDispose);
-          host.log("port forward end", true);
+          host.log("dev start ...", true);
+          const svc = await this.getSvcConfig(node.name);
+          let dirs = [];
+          if (svc && svc.sync) {
+            dirs = svc.sync.map((item) =>
+              path.resolve(workloadConfig.directory || os.homedir(), item)
+            );
+          }
+          await nhctl.devStart(host, appName, node.name, dirs);
+          host.log("dev start end", true);
           host.log("", true);
 
           progress.report({
             message: "syncing file",
-            increment: 66,
+            increment: 33,
           });
           host.log("sync file ...", true);
           await nhctl.syncFile(host, appName, node.name);
           host.log("sync file end", true);
           host.log("", true);
+
+          progress.report({
+            message: "port forwarding",
+            increment: 66,
+          });
+          host.log("port forward ...", true);
+          await nhctl.startPortForward(host, appName, node.name);
+          host.log("port forward end", true);
+          host.log("", true);
+
           progress.report({
             message: "DevMode Started.",
             increment: 100,
@@ -378,6 +370,13 @@ class NocalhostService {
         }
       }
     );
+  }
+
+  private setTmpStartRecord(appName: string, node: ControllerResourceNode) {
+    fileStore.set(TMP_APP, appName);
+    fileStore.set(TMP_WORKLOAD, node.name);
+    fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
+    fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
   }
 
   private async getNocalhostConfig() {
@@ -394,6 +393,18 @@ class NocalhostService {
     return config;
   }
 
+  private async getSvcConfig(workloadName: string) {
+    const nocalhostConfig = await this.getNocalhostConfig();
+    let workloadConfig: WorkloadConfig | null | undefined;
+    nocalhostConfig.svcConfigs.map((config) => {
+      if (config.name === workloadName) {
+        workloadConfig = config;
+      }
+    });
+
+    return workloadConfig;
+  }
+
   async endDevMode(host: Host, appName: string, node: ControllerResourceNode) {
     host.getOutputChannel().show(true);
     host.showInformationMessage("Ending DevMode.");
@@ -404,7 +415,7 @@ class NocalhostService {
     host.log("DevMode Ended", true);
   }
 
-  async exec(host: Host, node: ControllerResourceNode) {
+  async exec(host: Host, node: ControllerNodeApi) {
     const status = await node.getStatus();
     if (status === DeploymentStatus.developing) {
       await this.opendevSpaceExec(host, node.resourceType, node.name);
