@@ -16,6 +16,7 @@ export const EMAIL = "email";
 export const PASSWORD = "password";
 export const JWT = "jwt";
 export const BASE_URL = "baseUrl";
+export const USERINFO = "userinfo";
 
 // APP
 export const SELECTED_APP_NAME = "selectedApp";

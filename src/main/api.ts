@@ -3,7 +3,7 @@ import axios from "axios";
 import * as vscode from "vscode";
 import state from "./state";
 import * as fileStore from "./store/fileStore";
-import { BASE_URL, EMAIL, JWT } from "./constants";
+import { BASE_URL, EMAIL, JWT, USERINFO } from "./constants";
 
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
@@ -60,6 +60,16 @@ export async function login(loginInfo: LoginInfo) {
   }
 
   throw new Error("login fail");
+}
+
+export async function getUserinfo() {
+  const response = await axios.get("/v1/me");
+  if (response.status === 200 && response.data) {
+    const { data } = response.data;
+    fileStore.set(USERINFO, data);
+    return data;
+  }
+  throw new Error("Fail to fetch user infomation.");
 }
 
 interface ApplicationInfo {

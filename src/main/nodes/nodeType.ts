@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getApplication } from "../api";
-import { EMAIL, SELECTED_APP_NAME } from "../constants";
+import { USERINFO } from "../constants";
 import * as kubectl from "../ctl/kubectl";
 import { loadResource } from "../ctl/nhctl";
 import * as yaml from "yaml";
@@ -34,7 +34,6 @@ import {
 } from "./nodeContants";
 import { List, Resource, ResourceStatus } from "./resourceType";
 import application from "../commands/application";
-import { start } from "repl";
 
 export interface BaseNocalhostNode {
   label: string;
@@ -810,12 +809,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       );
     });
 
-    const account = fileStore.get(EMAIL);
+    const userinfo = fileStore.get(USERINFO);
 
     if (result.length > 0) {
-      result.unshift(
-        new NocalhostAccountNode(this, account.slice(0, account.indexOf("@")))
-      );
+      result.unshift(new NocalhostAccountNode(this, userinfo.name));
     }
     return result;
   }
