@@ -734,6 +734,7 @@ export class NocalhostAccountNode implements BaseNocalhostNode {
       this.label,
       vscode.TreeItemCollapsibleState.None
     );
+    treeItem.iconPath = new vscode.ThemeIcon("account");
     return treeItem;
   }
   getParent(element?: BaseNocalhostNode): BaseNocalhostNode {
@@ -812,8 +813,9 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     const account = fileStore.get(EMAIL);
 
     if (result.length > 0) {
-      result.unshift(new NocalhostDividerNode(this, "————"));
-      result.unshift(new NocalhostAccountNode(this, account));
+      result.unshift(
+        new NocalhostAccountNode(this, account.slice(0, account.indexOf("@")))
+      );
     }
     return result;
   }
