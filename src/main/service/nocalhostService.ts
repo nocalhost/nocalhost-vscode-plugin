@@ -241,6 +241,7 @@ class NocalhostService {
     if (!workloadConfig.directory) {
       const result = await host.showInformationMessage(
         nls["tips.clone"],
+        { modal: true },
         nls["bt.clone"],
         nls["bt.open.dir"]
       );
@@ -279,9 +280,9 @@ class NocalhostService {
     if (currentUri !== workloadConfig.directory) {
       const result = await host.showInformationMessage(
         nls["tips.open"],
+        { modal: true },
         nls["bt.open.other"],
-        nls["bt.open.dir"],
-        "cancel"
+        nls["bt.open.dir"]
       );
       if (result === nls["bt.open.other"]) {
         const uris = await host.showOpenDialog({

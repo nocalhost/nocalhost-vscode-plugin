@@ -26,8 +26,12 @@ export class Host {
     return vscode.window.showInputBox(options);
   }
 
-  showInformationMessage(msg: string, ...items: string[]) {
-    return vscode.window.showInformationMessage(msg, ...items);
+  showInformationMessage(
+    msg: string,
+    options?: vscode.MessageOptions,
+    ...items: string[]
+  ) {
+    return vscode.window.showInformationMessage(msg, options, ...items);
   }
 
   showErrorMessage(msg: string) {

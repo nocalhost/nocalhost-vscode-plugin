@@ -285,7 +285,9 @@ function registerCommand(command: string, isLock: boolean, callback: any) {
   return dispose;
 }
 
-export function deactivate() {}
+export function deactivate(context: vscode.ExtensionContext): undefined {
+  return undefined;
+}
 
 export function checkCtl(name: string) {
   const res = shell.which(name);
