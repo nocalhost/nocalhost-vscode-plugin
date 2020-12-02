@@ -117,6 +117,10 @@
         "icon": "$(globe)"
       },
       {
+        "command": "Nocalhost.openEndPoint",
+        "title": "Open Endpoint"
+      },
+      {
         "command": "Nocalhost.signin",
         "title": "Sign in",
         "icon": "$(sign-in)"

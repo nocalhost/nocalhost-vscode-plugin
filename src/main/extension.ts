@@ -123,6 +123,10 @@ export async function activate(context: vscode.ExtensionContext) {
         host.showInformationMessage("configured api server");
       }
     }),
+    registerCommand("Nocalhost.openEndPoint", false, async () => {
+      const endpoint: string = fileStore.get(BASE_URL);
+      vscode.env.openExternal(vscode.Uri.parse(endpoint));
+    }),
 
     registerCommand("Nocalhost.signout", false, () => {
       fileStore.remove(JWT);
