@@ -14,7 +14,6 @@ import {
   SELECTED_APP_NAME,
 } from "./constants";
 import host from "./host";
-import { clearInterval } from "timers";
 import { showDashboard } from "./webviews";
 import {
   AppFolderNode,

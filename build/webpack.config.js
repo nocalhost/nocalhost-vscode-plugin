@@ -3,6 +3,7 @@
 "use strict";
 
 const path = require("path");
+const copyWebpackPlugin = require("copy-webpack-plugin");
 
 /**@type {import('webpack').Configuration}*/
 const extensionConfig = {
@@ -35,6 +36,11 @@ const extensionConfig = {
       },
     ],
   },
+  plugins: [
+    new copyWebpackPlugin({
+      patterns: [{ from: "./cleanup.js" }],
+    }),
+  ],
 };
 
 const rendererConfig = {

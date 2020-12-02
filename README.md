@@ -20,6 +20,10 @@ You need do these before using this plugin:
 - Install nhctl
 - Obtain a user account on Nocalhost-web from Administors.
 
+## Package and Publishing
+
+We use [vsce](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) to package the extension.
+
 ## Extension Settings
 
 Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.

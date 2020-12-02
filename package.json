@@ -190,6 +190,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
+    "vscode:uninstall": "node ./dist/cleanup.js",
     "compile": "webpack --devtool nosources-source-map --config ./build/webpack.config.js",
     "watch": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/webpack.config.js",
     "package": "webpack --mode production --config ./build/webpack.config.js",
@@ -216,6 +217,7 @@
     "@types/vscode": "^1.31.0",
     "@typescript-eslint/eslint-plugin": "^4.8.2",
     "@typescript-eslint/parser": "^3.8.0",
+    "copy-webpack-plugin": "^6.3.2",
     "cross-env": "^7.0.2",
     "eslint": "^7.6.0",
     "eslint-config-airbnb-typescript": "^12.0.0",

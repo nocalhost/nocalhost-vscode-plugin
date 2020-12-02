@@ -31,7 +31,9 @@ export class Host {
     options?: vscode.MessageOptions,
     ...items: string[]
   ) {
-    return vscode.window.showInformationMessage(msg, options, ...items);
+    return options
+      ? vscode.window.showInformationMessage(msg, options, ...items)
+      : vscode.window.showInformationMessage(msg, ...items);
   }
 
   showErrorMessage(msg: string) {

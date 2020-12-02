@@ -7,14 +7,14 @@ export default async function showLogin() {
     vscode.window.showInformationMessage("Logined");
     return;
   }
-  const email: string = await vscode.window.showInputBox({
+  const email: string | undefined = await vscode.window.showInputBox({
     placeHolder: "please input your email",
   });
   if (!email) {
     return;
   }
 
-  const password: string = await vscode.window.showInputBox({
+  const password: string | undefined = await vscode.window.showInputBox({
     placeHolder: "please input password",
     password: true,
   });
