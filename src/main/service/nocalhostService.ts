@@ -12,6 +12,7 @@ import { updateAppInstallStatus } from "../api";
 import { PodResource, Resource } from "../nodes/resourceType";
 import {
   CURRENT_KUBECONFIG_FULLPATH,
+  NHCTL_DIR,
   SELECTED_APP_NAME,
   TMP_APP,
   TMP_RESOURCE_TYPE,
@@ -22,6 +23,7 @@ import * as fileStore from "../store/fileStore";
 
 import * as nls from "../../../package.nls.json";
 import { ControllerResourceNode, DeploymentStatus } from "../nodes/nodeType";
+import { fstat } from "fs";
 export interface NocalhostConfig {
   preInstalls: Array<{
     path: string;
@@ -103,8 +105,6 @@ export interface ControllerNodeApi {
   getStatus: () => Promise<string> | string;
 }
 
-const NHCTL_DIR = path.resolve(os.homedir(), ".nhctl");
-
 class NocalhostService {
   private async getGitUrl(appName: string, workloadName: string) {
     const config = await this.getAppConfig(appName);
@@ -125,6 +125,7 @@ class NocalhostService {
       ".nocalhost",
       "config.yaml"
     );
+    await fileUtil.accessFile(configPath);
     const config = (await fileUtil.readYaml(configPath)) as NocalhostConfig;
 
     return config;

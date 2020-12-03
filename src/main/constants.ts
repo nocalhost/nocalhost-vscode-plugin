@@ -3,8 +3,13 @@ import * as path from "path";
 
 export const HOME_DIR = homedir();
 export const NH_CONFIG_DIR = path.resolve(HOME_DIR, ".nh");
-export const USER_CONFIG_FULLPATH = path.resolve(NH_CONFIG_DIR, "config.json");
-export const KUBE_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "kubeConfigs");
+export const PLUGIN_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "plugin");
+export const USER_CONFIG_FULLPATH = path.resolve(
+  PLUGIN_CONFIG_DIR,
+  "config.json"
+);
+export const NHCTL_DIR = path.resolve(NH_CONFIG_DIR, "nhctl");
+export const KUBE_CONFIG_DIR = path.resolve(PLUGIN_CONFIG_DIR, "kubeConfigs");
 export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   HOME_DIR,
   ".kube/config"

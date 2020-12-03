@@ -11,6 +11,7 @@ import {
   JWT,
   KUBE_CONFIG_DIR,
   NH_CONFIG_DIR,
+  PLUGIN_CONFIG_DIR,
   SELECTED_APP_NAME,
   TMP_APP,
   TMP_RESOURCE_TYPE,
@@ -331,6 +332,7 @@ export function checkCtl(name: string) {
 
 async function init() {
   fileStore.mkdir(NH_CONFIG_DIR);
+  fileStore.mkdir(PLUGIN_CONFIG_DIR);
   fileStore.mkdir(KUBE_CONFIG_DIR);
   fileStore.initConfig();
 }
