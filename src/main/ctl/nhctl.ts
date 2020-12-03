@@ -41,7 +41,7 @@ export function install(
 }
 
 export async function uninstall(host: Host, appName: string) {
-  const uninstallCommand = nhctlCommand(`uninstall ${appName}`);
+  const uninstallCommand = nhctlCommand(`uninstall ${appName} --force`);
   host.log(`[cmd] ${uninstallCommand}`, true);
   await execChildProcessAsync(host, uninstallCommand, []);
 }
