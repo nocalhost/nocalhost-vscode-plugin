@@ -177,6 +177,8 @@ export async function activate(context: vscode.ExtensionContext) {
           )
           .finally(() => {
             state.delete(`${appNode.label}_installing`);
+            appNode.expanded();
+            appNode.expandWorkloadNode();
           });
       }
     ),
