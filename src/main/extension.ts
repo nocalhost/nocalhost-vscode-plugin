@@ -90,6 +90,39 @@ export async function activate(context: vscode.ExtensionContext) {
       nocalhostFileSystemProvider,
       { isReadonly: true }
     ),
+    vscode.workspace.registerFileSystemProvider(
+      "NocalhostRW",
+      nocalhostFileSystemProvider
+    ),
+
+    registerCommand(
+      "Nocalhost.editServiceConfig",
+      false,
+      async (node: ControllerResourceNode) => {
+        // open service config
+        const appNode = node.getAppNode();
+        const uri = vscode.Uri.parse(
+          `NocalhostRW://nh/config/app/${appNode.label}/svcConfigs/${node.name}.yaml`
+        );
+        let doc = await vscode.workspace.openTextDocument(uri);
+        vscode.window.showTextDocument(doc, { preview: false });
+      }
+    ),
+
+    registerCommand(
+      "Nocalhost.writeServiceConfig",
+      false,
+      async (node: ControllerResourceNode) => {
+        // open service config
+        const appNode = node.getAppNode();
+        const uri = vscode.Uri.parse(
+          `NocalhostRW://nh/config/app/${appNode.label}/svcConfigs/${node.name}.yaml`
+        );
+        let doc = await vscode.workspace.openTextDocument(uri);
+        vscode.window.showTextDocument(doc, { preview: false });
+      }
+    ),
+
     registerCommand("showDashboard", false, () => {
       showDashboard(context);
     }),
@@ -106,6 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (!appName) {
           throw new Error("you must select one app");
         }
+        // TODO: check Info
         await nocalhostService.startDevMode(host, appName, node);
       }
     ),
@@ -217,7 +251,9 @@ export async function activate(context: vscode.ExtensionContext) {
             return;
           }
           const name = node.info.name;
-          const uri = vscode.Uri.parse(`Nocalhost://nh/${name}.yaml`);
+          const uri = vscode.Uri.parse(
+            `Nocalhost://nh/loadResource/${name}.yaml`
+          );
           let doc = await vscode.workspace.openTextDocument(uri);
           await vscode.window.showTextDocument(doc, { preview: false });
         }

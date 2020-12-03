@@ -11,5 +11,6 @@
   "Terminal": "Terminal",
   "Logs": "Logs",
   "PortForward": "Port Forward",
-  "loadResource": "Load Resource"
+  "loadResource": "Load Resource",
+  "Config": "Config"
 }

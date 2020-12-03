@@ -34,6 +34,8 @@ import {
 } from "./nodeContants";
 import { List, Resource, ResourceStatus } from "./resourceType";
 import application from "../commands/application";
+import ConfigService from "../service/configService";
+import validate from "../utils/validate";
 
 const ID_SPLIT = "*/.&|/";
 
@@ -521,6 +523,10 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
     return info;
   }
+
+  public checkConfig() {
+    return Promise.resolve(true);
+  }
 }
 
 export enum DeploymentStatus {
@@ -559,7 +565,10 @@ export class Deployment extends ControllerResourceNode {
         treeItem.iconPath = new vscode.ThemeIcon("circle-slash");
         break;
     }
-    treeItem.contextValue = `${treeItem.contextValue}-${status}`;
+    const check = await this.checkConfig();
+    treeItem.contextValue = `${treeItem.contextValue}-${status}-${
+      check ? "info" : "warn"
+    }`;
     return treeItem;
   }
 
@@ -592,6 +601,19 @@ export class Deployment extends ControllerResourceNode {
       status = "unknown";
     }
     return status;
+  }
+
+  public async checkConfig() {
+    const appNode = this.getAppNode();
+    const workloadConfig = await ConfigService.getWorkloadConfig(
+      appNode.label,
+      this.name
+    );
+    const schema = {
+      type: "object",
+      required: ["gitUrl", "devImage", "name"],
+    };
+    return validate(workloadConfig, schema);
   }
 }
 

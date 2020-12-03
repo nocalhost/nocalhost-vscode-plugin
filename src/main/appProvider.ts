@@ -35,7 +35,7 @@ export default class NocalhostAppProvider
     return parent;
   }
 
-  refresh() {
-    this.onDidChangeTreeDataEventEmitter.fire(undefined);
+  refresh(node?: BaseNocalhostNode) {
+    this.onDidChangeTreeDataEventEmitter.fire(node);
   }
 }

@@ -75,12 +75,22 @@
         {
           "command": "Nocalhost.startDevMode",
           "when": "viewItem =~ /^workload-(deployment)-running/i",
-          "group": "inline"
+          "group": "inline@0"
         },
         {
           "command": "Nocalhost.endDevMode",
           "when": "viewItem =~ /^workload-(deployment)-developing/i",
-          "group": "inline"
+          "group": "inline@0"
+        },
+        {
+          "command": "Nocalhost.editServiceConfig",
+          "when": "viewItem =~ /^workload-(deployment)-(.*?)-info/i",
+          "group": "inline@1"
+        },
+        {
+          "command": "Nocalhost.writeServiceConfig",
+          "when": "viewItem =~ /^workload-(deployment)-(.+?)-warn/i",
+          "group": "inline@1"
         },
         {
           "command": "Nocalhost.exec",
@@ -183,6 +193,16 @@
       {
         "command": "Nocalhost.portForward",
         "title": "%PortForward%"
+      },
+      {
+        "command": "Nocalhost.editServiceConfig",
+        "title": "%Config%",
+        "icon": "$(notifications-configure)"
+      },
+      {
+        "command": "Nocalhost.writeServiceConfig",
+        "title": "%Config%",
+        "icon": "$(dialog-warning)"
       }
     ]
   },
@@ -239,6 +259,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "ajv": "^6.12.6",
     "axios": "^0.21.0",
     "shelljs": "^0.8.4",
     "uuid": "^8.3.1",

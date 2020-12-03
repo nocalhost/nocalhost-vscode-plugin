@@ -1,5 +1,4 @@
 import {
-  ProviderResult,
   Disposable,
   Event,
   FileChangeEvent,
@@ -8,17 +7,21 @@ import {
   FileType,
   Uri,
   EventEmitter,
+  commands,
 } from "vscode";
-import * as path from "path";
+import * as yaml from "yaml";
 import * as kubectl from "./ctl/kubectl";
 import * as nhctl from "./ctl/nhctl";
 import * as shell from "./ctl/shell";
 import host from "./host";
 
 import * as fileUtil from "./utils/fileUtil";
+import ConfigService from "./service/configService";
+import * as fileStore from "./store/fileStore";
+import { CURRENT_KUBECONFIG_FULLPATH } from "./constants";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
-  static supportScheme = ["Nocalhost"];
+  static supportScheme = ["Nocalhost", "NocalhostRW"];
   static supportAuthority = ["k8s", "nh"];
   private readonly onDidChangeFileEmitter: EventEmitter<
     FileChangeEvent[]
@@ -76,8 +79,9 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           // Nocalhost://k8s/log/pod/container
           const podName = paths[2];
           const constainerName = paths[3];
+          const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
           const shellObj = await shell.execAsync(
-            `kubectl logs ${podName} -c ${constainerName}`,
+            `kubectl logs ${podName} -c ${constainerName} --kubeconfig ${kubeconfigPath}`,
             []
           );
           if (shellObj.code === 0) {
@@ -91,12 +95,43 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
 
       case "nh": {
         // Nocalhost://nh/loadResource/name
-        // Nocalhost://nh/config/svc/name
-        // TODO:
-        const paths = uri.path.split("/");
-        const names = paths[1].split(".");
-        const name = names[0];
-        result = await nhctl.loadResource(host, name);
+        // Nocalhost://nh/config/app/{appName}/{key}/{subkey}
+
+        // last string is .yaml or .json
+        const style = uri.path.substring(uri.path.length - 4);
+        const paths = uri.path.substring(0, uri.path.length - 5).split("/");
+        const type = paths[1];
+        if (type === "loadResource") {
+          const name = paths[2];
+          result = await nhctl.loadResource(host, name);
+        } else if (type === "config") {
+          const configType = paths[2];
+          if (configType === "app") {
+            const appName = paths[3];
+            const key = paths[4]; // Array|Object|string
+            const subKey = paths[5]; // subPropery
+
+            const appInfo = await ConfigService.getAppConfig(appName);
+            if (key && subKey) {
+              if (appInfo[key] instanceof Array) {
+                result = "";
+                for (let i = 0; i < appInfo[key].length; i++) {
+                  if (appInfo[key][i] && appInfo[key][i].name === subKey) {
+                    result = this.stringify([appInfo[key][i]], style);
+                  }
+                }
+              } else if (appInfo[key] instanceof Object) {
+                const obj = {};
+                obj[subKey] = appInfo[key][subKey];
+                result = this.stringify(obj, style);
+              }
+            } else if (key) {
+              const obj = {};
+              obj[key] = appInfo[key];
+              result = this.stringify(obj, style);
+            }
+          }
+        }
         break;
       }
       default:
@@ -109,8 +144,85 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     content: Uint8Array,
     options: { create: boolean; overwrite: boolean }
   ): Promise<void> {
-    const fspath = path.resolve(uri.fsPath);
-    await fileUtil.writeFile(fspath, content);
+    const style = uri.path.substring(uri.path.length - 4);
+    const paths = uri.path.substring(0, uri.path.length - 5).split("/");
+    const type = paths[1];
+    const data = this.parse(content.toString(), style);
+    let destDir = "";
+    let destData: string | Buffer;
+
+    let command: string;
+    let args;
+    if (type === "config") {
+      const configType = paths[2];
+      if (configType === "app") {
+        const appName = paths[3];
+        const key = paths[4]; // Array|Object|string
+        const subKey = paths[5]; // subPropery
+
+        destDir = ConfigService.getAppConfigPath(appName);
+
+        const appInfo = await ConfigService.getAppConfig(appName);
+        let originData = "";
+        if (key && subKey) {
+          originData = this.getOriginData(subKey, data);
+          if (appInfo[key] instanceof Array) {
+            let replaced = false;
+            for (let i = 0; i < appInfo[key].length; i++) {
+              if (appInfo[key][i].name === subKey) {
+                appInfo[key][i] = originData;
+                replaced = true;
+              }
+            }
+            if (!replaced) {
+              appInfo[key].push(originData);
+            }
+            command = "Nocalhost.refresh";
+            args = { appName: appName, workloadName: subKey };
+          } else if (appInfo[key] instanceof Object) {
+            appInfo[key][subKey] = originData;
+          }
+        } else if (key) {
+          appInfo[key] = originData;
+        }
+        destData = Buffer.from(this.stringify(appInfo, "yaml"), "utf-8");
+      }
+    }
+
+    if (destDir) {
+      await fileUtil.writeFile(destDir, destData);
+      if (command) {
+        commands.executeCommand(command, args);
+      }
+    }
+  }
+
+  private stringify(obj, style: string) {
+    if (style === "yaml") {
+      return yaml.stringify(obj);
+    } else if (style === "json") {
+      return JSON.stringify(obj, null, 2);
+    }
+  }
+
+  private parse(str, style: string) {
+    if (style === "yaml") {
+      return yaml.parse(str);
+    } else if (style === "json") {
+      return JSON.parse(str);
+    }
+  }
+
+  private getOriginData(name: string, obj: any) {
+    if (obj instanceof Array) {
+      for (let i = 0; i < obj.length; i++) {
+        if (obj[i].name === name) {
+          return obj[i] || "";
+        }
+      }
+    } else {
+      return obj[name] || "";
+    }
   }
 
   private checkSchema(uri: Uri) {
