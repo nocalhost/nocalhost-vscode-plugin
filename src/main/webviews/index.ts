@@ -1,7 +1,15 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fileStore from "../store/fileStore";
+import { WELCOME_DID_SHOW } from "../constants";
 
 export function showDashboard(context: vscode.ExtensionContext) {
+  const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
+  if (welcomeDidShow) {
+    return;
+  }
+  fileStore.set(WELCOME_DID_SHOW, true);
+
   const createWebviewContent = (bundlePath: vscode.Uri): string => {
     // return `
     //   <!DOCTYPE html>

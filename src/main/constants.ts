@@ -22,6 +22,7 @@ export const PASSWORD = "password";
 export const JWT = "jwt";
 export const BASE_URL = "baseUrl";
 export const USERINFO = "userinfo";
+export const WELCOME_DID_SHOW = "welcomeDidShow";
 
 // APP
 export const SELECTED_APP_NAME = "selectedApp";
