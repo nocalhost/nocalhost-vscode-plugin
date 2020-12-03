@@ -147,11 +147,12 @@ class NocalhostService {
     appName: string,
     appId: number,
     devSpaceId: number,
-    gitUrl: string
+    gitUrl: string,
+    installType: string
   ) {
     host.log(`Installing application: ${appName}`, true);
     host.showInformationMessage(`Installing application: ${appName}`);
-    await nhctl.install(host, appName, gitUrl);
+    await nhctl.install(host, appName, gitUrl, installType);
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
     host.log(`Application ${appName} installed`, true);

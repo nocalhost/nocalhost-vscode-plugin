@@ -6,8 +6,15 @@ import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
 import { spawn } from "child_process";
 import * as readline from "readline";
 
-export function install(host: Host, appName: string, gitUrl: string) {
-  const installCommand = nhctlCommand(`install ${appName} -u ${gitUrl}`);
+export function install(
+  host: Host,
+  appName: string,
+  gitUrl: string,
+  installType: string
+) {
+  const installCommand = nhctlCommand(
+    `install ${appName} -u ${gitUrl} -t ${installType}`
+  );
 
   host.log(`[cmd] ${installCommand}`, true);
 

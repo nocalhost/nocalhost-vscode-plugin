@@ -145,11 +145,13 @@ export class AppFolderNode extends NocalhostFolderNode {
   public devSpaceId: number;
   public status: number;
   public installStatus: number;
+  public installType: string;
   public kubeConfig: string;
   public info?: any;
   public parent: NocalhostRootNode;
   constructor(
     parent: NocalhostRootNode,
+    installType: string,
     label: string,
     id: number,
     devSpaceId: number,
@@ -159,6 +161,7 @@ export class AppFolderNode extends NocalhostFolderNode {
     info?: any
   ) {
     super();
+    this.installType = installType;
     this.parent = parent;
     this.label = label;
     this.id = id;
@@ -849,15 +852,22 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       let obj: {
         url?: string;
         name?: string;
-      } = {};
+        installType: string;
+      } = {
+        installType: "manifest",
+      };
       if (context) {
         let jsonObj = JSON.parse(context);
         obj.url = jsonObj["application_url"];
         obj.name = jsonObj["application_name"];
+        let originInstallType = jsonObj["install_type"];
+        let source = jsonObj["source"];
+        obj.installType = this.generateInstallType(source, originInstallType);
       }
       application.saveKubeConfig(app.id, app.devspaceId, app.kubeconfig);
       return new AppFolderNode(
         this,
+        obj.installType,
         obj.name || `app${app.id}`,
         app.id,
         app.devspaceId,
@@ -874,6 +884,17 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       result.unshift(new NocalhostAccountNode(this, userinfo.name));
     }
     return result;
+  }
+
+  private generateInstallType(source: string, originInstallType: string) {
+    let type = "helm-repo";
+
+    if (source === "git" && originInstallType === "manifest") {
+      type = "manifest";
+    } else if (source === "git" && originInstallType === "helm_chart") {
+      type = "helm";
+    }
+    return type;
   }
 
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {

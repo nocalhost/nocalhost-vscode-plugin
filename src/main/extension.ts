@@ -31,7 +31,7 @@ import {
 import nocalhostService, {
   ControllerNodeApi,
 } from "./service/nocalhostService";
-import NocalhostTextDocumentProvider from "./textDocumentProvider";
+import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
 import state from "./state";
 
@@ -41,7 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
   await init();
 
   let appTreeProvider = new NocalhostAppProvider();
-  let nocalhostTextDocumentProvider = new NocalhostTextDocumentProvider();
+  let nocalhostFileSystemProvider = new NocalhostFileSystemProvider();
   appTreeView = vscode.window.createTreeView("Nocalhost", {
     treeDataProvider: appTreeProvider,
   });
@@ -85,9 +85,10 @@ export async function activate(context: vscode.ExtensionContext) {
     {
       dispose: appTreeView.dispose,
     },
-    vscode.workspace.registerTextDocumentContentProvider(
+    vscode.workspace.registerFileSystemProvider(
       "Nocalhost",
-      nocalhostTextDocumentProvider
+      nocalhostFileSystemProvider,
+      { isReadonly: true }
     ),
     registerCommand("showDashboard", false, () => {
       showDashboard(context);
@@ -171,7 +172,8 @@ export async function activate(context: vscode.ExtensionContext) {
             appNode.info.name,
             appNode.id,
             appNode.devSpaceId,
-            appNode.info.url
+            appNode.info.url,
+            appNode.installType
           )
           .finally(() => {
             state.delete(`${appNode.label}_installing`);
