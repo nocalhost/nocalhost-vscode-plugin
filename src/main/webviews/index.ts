@@ -66,12 +66,11 @@ export function showDashboard(context: vscode.ExtensionContext) {
           <li>kubectl is installed</li>
           <li>helm is installed if you develop helm apps</li>
           <li>nhctl is installed</li>
-          <li>mutagen is installed</li>
-          <li>ssh is installed</li>
+          <li>One or more DevSpaces created by nocalhost-web administrator.</li>
         </ul><br />
         then,
         <br /><br />
-        click <span class="sign" onclick="signInHandler()">sign in</span> to start.
+        click <span class="sign" onclick="signInHandler()">sign in</span> to list your DevSpaces.
         <br /><br />
         <a href="https://nocalhost.dev/">Click here</a> for more details.
       
