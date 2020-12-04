@@ -331,12 +331,12 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 function registerCommand(command: string, isLock: boolean, callback: any) {
-  checkCtl("nhctl");
-  checkCtl("kubectl");
-  checkCtl("git");
   const dispose = vscode.commands.registerCommand(
     command,
     async (...args: any[]) => {
+      checkCtl("nhctl");
+      checkCtl("kubectl");
+      checkCtl("git");
       if (isLock) {
         if (state.isRunning()) {
           host.showWarnMessage("A task is running, please try again later");
