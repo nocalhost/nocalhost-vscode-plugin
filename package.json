@@ -79,7 +79,7 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment)-running/i",
+          "when": "viewItem =~ /^workload-(deployment)-running$|^workload-(deployment)-running-info$/i",
           "group": "inline@0"
         },
         {
