@@ -25,7 +25,6 @@ export function readFile(fliePath: string): Promise<string> {
 }
 
 export async function writeFile(filePath: string, data: string | Uint8Array) {
-  await accessFile(filePath);
   return new Promise((resolve, reject) => {
     fs.writeFile(filePath, data, { encoding: "utf-8" }, (err) => {
       if (err) {

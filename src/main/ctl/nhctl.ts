@@ -4,16 +4,19 @@ import { Host } from "../host";
 import * as fileStore from "../store/fileStore";
 import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
 import { spawn } from "child_process";
-import * as readline from "readline";
 
 export function install(
   host: Host,
   appName: string,
   gitUrl: string,
-  installType: string
+  installType: string,
+  resourceDir: string,
+  values?: string
 ) {
   const installCommand = nhctlCommand(
-    `install ${appName} -u ${gitUrl} -t ${installType}`
+    `install ${appName} -u ${gitUrl} -t ${installType} ${
+      values ? "-f " + values : ""
+    } --resource-path ${resourceDir}`
   );
 
   host.log(`[cmd] ${installCommand}`, true);

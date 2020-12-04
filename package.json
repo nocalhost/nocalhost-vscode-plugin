@@ -65,12 +65,17 @@
         {
           "command": "Nocalhost.installApp",
           "when": "viewItem =~ /^application-notInstalled/i",
-          "group": "inline"
+          "group": "inline@0"
         },
         {
           "command": "Nocalhost.uninstallApp",
           "when": "viewItem =~ /^application-installed/i",
-          "group": "inline"
+          "group": "inline@0"
+        },
+        {
+          "command": "Nocalhost.editHelmValues",
+          "when": "viewItem =~ /^application-(.+?)-helm/i",
+          "group": "inline@1"
         },
         {
           "command": "Nocalhost.startDevMode",
@@ -203,6 +208,11 @@
         "command": "Nocalhost.writeServiceConfig",
         "title": "%Config%",
         "icon": "$(dialog-warning)"
+      },
+      {
+        "command": "Nocalhost.editHelmValues",
+        "title": "$HelmValues$",
+        "icon": "$(file)"
       }
     ]
   },

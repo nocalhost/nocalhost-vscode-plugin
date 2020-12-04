@@ -7,10 +7,12 @@ import * as os from "os";
 
 import * as vscode from "vscode";
 
+import * as fileUtil from "../utils/fileUtil";
 import { updateAppInstallStatus } from "../api";
 import { PodResource, Resource } from "../nodes/resourceType";
 import {
   CURRENT_KUBECONFIG_FULLPATH,
+  HELM_VALUES_DIR,
   NHCTL_DIR,
   SELECTED_APP_NAME,
   TMP_APP,
@@ -49,11 +51,34 @@ class NocalhostService {
     appId: number,
     devSpaceId: number,
     gitUrl: string,
-    installType: string
+    installType: string,
+    resourceDir: string
   ) {
     host.log(`Installing application: ${appName}`, true);
     host.showInformationMessage(`Installing application: ${appName}`);
-    await nhctl.install(host, appName, gitUrl, installType);
+    // tips
+    const valuePath = path.resolve(HELM_VALUES_DIR, `${appName}-values.yaml`);
+    const isExist = await fileUtil.isExist(valuePath);
+    let values: string;
+    if (["helm", "helm-repo"].includes(installType) && isExist) {
+      const res = await host.showInformationMessage(
+        "override the values?",
+        { modal: true },
+        "confirm",
+        "cancel"
+      );
+      if (res === "confirm") {
+        values = valuePath;
+      }
+    }
+    await nhctl.install(
+      host,
+      appName,
+      gitUrl,
+      installType,
+      resourceDir,
+      values
+    );
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
     host.log(`Application ${appName} installed`, true);

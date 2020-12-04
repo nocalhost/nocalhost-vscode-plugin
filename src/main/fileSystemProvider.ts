@@ -10,6 +10,8 @@ import {
   commands,
 } from "vscode";
 import * as yaml from "yaml";
+import * as path from "path";
+
 import * as kubectl from "./ctl/kubectl";
 import * as nhctl from "./ctl/nhctl";
 import * as shell from "./ctl/shell";
@@ -18,7 +20,7 @@ import host from "./host";
 import * as fileUtil from "./utils/fileUtil";
 import ConfigService from "./service/configService";
 import * as fileStore from "./store/fileStore";
-import { CURRENT_KUBECONFIG_FULLPATH } from "./constants";
+import { CURRENT_KUBECONFIG_FULLPATH, HELM_VALUES_DIR } from "./constants";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
   static supportScheme = ["Nocalhost", "NocalhostRW"];
@@ -131,6 +133,19 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
               result = this.stringify(obj, style);
             }
           }
+        } else if (type === "helm-value" && paths[2] === "app") {
+          // NocalhostRW://nh/helm-value/app/${appNode.label}.yaml
+          const appName = paths[3];
+          const valuePath = path.resolve(
+            HELM_VALUES_DIR,
+            `${appName}-values.yaml`
+          );
+          const isExist = await fileUtil.isExist(valuePath);
+          if (!isExist) {
+            result = "";
+          } else {
+            result = await fileUtil.readFile(valuePath);
+          }
         }
         break;
       }
@@ -187,6 +202,11 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         }
         destData = Buffer.from(this.stringify(appInfo, "yaml"), "utf-8");
       }
+    } else if (type === "helm-value" && paths[2] === "app") {
+      // NocalhostRW://nh/helm-value/app/${appNode.label}.yaml
+      const appName = paths[3];
+      const valuePath = path.resolve(HELM_VALUES_DIR, `${appName}-values.yaml`);
+      destDir = valuePath;
     }
 
     if (destDir) {

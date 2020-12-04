@@ -10,6 +10,7 @@ export const USER_CONFIG_FULLPATH = path.resolve(
 );
 export const NHCTL_DIR = path.resolve(NH_CONFIG_DIR, "nhctl");
 export const KUBE_CONFIG_DIR = path.resolve(PLUGIN_CONFIG_DIR, "kubeConfigs");
+export const HELM_VALUES_DIR = path.resolve(PLUGIN_CONFIG_DIR, "helmValues");
 export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   HOME_DIR,
   ".kube/config"

@@ -8,6 +8,7 @@ import application from "./commands/application";
 import {
   BASE_URL,
   EMAIL,
+  HELM_VALUES_DIR,
   JWT,
   KUBE_CONFIG_DIR,
   NH_CONFIG_DIR,
@@ -207,7 +208,8 @@ export async function activate(context: vscode.ExtensionContext) {
             appNode.id,
             appNode.devSpaceId,
             appNode.info.url,
-            appNode.installType
+            appNode.installType,
+            appNode.resourceDir
           )
           .finally(() => {
             state.delete(`${appNode.label}_installing`);
@@ -222,12 +224,22 @@ export async function activate(context: vscode.ExtensionContext) {
       async (appNode: AppFolderNode) => {
         state.set(`${appNode.label}_uninstalling`, true);
         await application.useApplication(appNode);
-        appTreeProvider.refresh();
         await nocalhostService
           .uninstall(host, appNode.info.name, appNode.id, appNode.devSpaceId)
           .finally(() => {
             state.delete(`${appNode.label}_uninstalling`);
           });
+      }
+    ),
+    registerCommand(
+      "Nocalhost.editHelmValues",
+      false,
+      async (appNode: AppFolderNode) => {
+        const uri = vscode.Uri.parse(
+          `NocalhostRW://nh/helm-value/app/${appNode.label}.yaml`
+        );
+        let doc = await vscode.workspace.openTextDocument(uri);
+        vscode.window.showTextDocument(doc, { preview: false });
       }
     ),
     registerCommand("useApplication", true, async (appNode: AppFolderNode) => {
@@ -373,5 +385,6 @@ async function init() {
   fileStore.mkdir(NH_CONFIG_DIR);
   fileStore.mkdir(PLUGIN_CONFIG_DIR);
   fileStore.mkdir(KUBE_CONFIG_DIR);
+  fileStore.mkdir(HELM_VALUES_DIR);
   fileStore.initConfig();
 }

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getApplication } from "../api";
-import { USERINFO } from "../constants";
+import { KUBE_CONFIG_DIR, USERINFO } from "../constants";
 import * as kubectl from "../ctl/kubectl";
 import { loadResource } from "../ctl/nhctl";
 import * as yaml from "yaml";
@@ -36,6 +36,7 @@ import { List, Resource, ResourceStatus } from "./resourceType";
 import application from "../commands/application";
 import ConfigService from "../service/configService";
 import validate from "../utils/validate";
+import * as path from "path";
 
 const ID_SPLIT = "*/.&|/";
 
@@ -149,11 +150,13 @@ export class AppFolderNode extends NocalhostFolderNode {
   public installStatus: number;
   public installType: string;
   public kubeConfig: string;
+  public resourceDir: string;
   public info?: any;
   public parent: NocalhostRootNode;
   constructor(
     parent: NocalhostRootNode,
     installType: string,
+    resourceDir: string,
     label: string,
     id: number,
     devSpaceId: number,
@@ -164,6 +167,7 @@ export class AppFolderNode extends NocalhostFolderNode {
   ) {
     super();
     this.installType = installType;
+    this.resourceDir = resourceDir;
     this.parent = parent;
     this.label = label;
     this.id = id;
@@ -199,11 +203,21 @@ export class AppFolderNode extends NocalhostFolderNode {
 
   private updateContext(treeItem: vscode.TreeItem) {
     if (this.unInstalled() && !this.unInstalling() && !this.installing()) {
-      return (treeItem.contextValue = `application-notInstalled`);
+      treeItem.contextValue = `application-notInstalled`;
     }
     if (this.installed() && !this.unInstalling() && !this.installing()) {
-      return (treeItem.contextValue = `application-installed`);
+      treeItem.contextValue = `application-installed`;
     }
+    if (["helm", "helm-repo"].includes(this.installType)) {
+      treeItem.contextValue += `${treeItem.contextValue}-helm`;
+    }
+  }
+
+  private getKUbeconfigPath() {
+    return path.resolve(
+      KUBE_CONFIG_DIR,
+      `${this.id}_${this.devSpaceId}_config`
+    );
   }
 
   getChildren(
@@ -832,35 +846,6 @@ export class NocalhostAccountNode implements BaseNocalhostNode {
   }
 }
 
-export class NocalhostDividerNode implements BaseNocalhostNode {
-  label: string;
-  type: string = "divider";
-  parent: BaseNocalhostNode;
-
-  constructor(parent: BaseNocalhostNode, label: string) {
-    this.parent = parent;
-    this.label = label;
-  }
-  getNodeStateId(): string {
-    return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.type}`;
-  }
-  getChildren(
-    parent?: BaseNocalhostNode
-  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    return Promise.resolve([]);
-  }
-  getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.None
-    );
-    return treeItem;
-  }
-  getParent(element?: BaseNocalhostNode): BaseNocalhostNode {
-    return this.parent;
-  }
-}
-
 export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
@@ -874,16 +859,16 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     parent?: BaseNocalhostNode
   ): Promise<Array<AppFolderNode | NocalhostAccountNode>> {
     const res = await getApplication();
-    let result: Array<
-      AppFolderNode | NocalhostAccountNode | NocalhostDividerNode
-    > = res.map((app) => {
+    let result: Array<AppFolderNode | NocalhostAccountNode> = res.map((app) => {
       let context = app.context;
       let obj: {
         url?: string;
         name?: string;
         installType: string;
+        resourceDir: string;
       } = {
         installType: "manifest",
+        resourceDir: "manifest",
       };
       if (context) {
         let jsonObj = JSON.parse(context);
@@ -892,11 +877,13 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         let originInstallType = jsonObj["install_type"];
         let source = jsonObj["source"];
         obj.installType = this.generateInstallType(source, originInstallType);
+        obj.resourceDir = jsonObj["resource_dir"];
       }
       application.saveKubeConfig(app.id, app.devspaceId, app.kubeconfig);
       return new AppFolderNode(
         this,
         obj.installType,
+        obj.resourceDir,
         obj.name || `app${app.id}`,
         app.id,
         app.devspaceId,

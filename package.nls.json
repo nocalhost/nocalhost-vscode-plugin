@@ -12,5 +12,6 @@
   "Logs": "Logs",
   "PortForward": "Port Forward",
   "loadResource": "Load Resource",
-  "Config": "Config"
+  "Config": "Config",
+  "HelmValues": "Helm Values"
 }
