@@ -30,14 +30,18 @@ class State {
     return this.stateMap.get(key);
   }
 
-  delete(key: string, args?: { refresh: boolean, node?: BaseNocalhostNode }) {
+  delete(key: string, args?: { refresh: boolean; node?: BaseNocalhostNode }) {
     this.stateMap.delete(key);
     if (args && args.refresh) {
       vscode.commands.executeCommand("Nocalhost.refresh", args.node);
     }
   }
 
-  set(key: string, value: any, args?: { refresh: boolean, node?: BaseNocalhostNode }) {
+  set(
+    key: string,
+    value: any,
+    args?: { refresh: boolean; node?: BaseNocalhostNode }
+  ) {
     this.stateMap.set(key, value);
     if (args && args.refresh) {
       vscode.commands.executeCommand("Nocalhost.refresh", args.node);

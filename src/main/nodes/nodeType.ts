@@ -491,7 +491,10 @@ export class DeploymentFolder extends KubernetesResourceFolder {
       (item) =>
         new Deployment(this, item.metadata.name, item.metadata.name, item)
     );
-    console.log("deploymentFold time spents: ", (new Date().getTime() - startTime));
+    console.log(
+      "deploymentFold time spents: ",
+      new Date().getTime() - startTime
+    );
     return result;
   }
 }
@@ -514,9 +517,15 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
 
   public setStatus(status: string) {
     if (status) {
-      state.set(`${this.getNodeStateId()}_status`, status, { refresh: true, node: this });
+      state.set(`${this.getNodeStateId()}_status`, status, {
+        refresh: true,
+        node: this,
+      });
     } else {
-      state.delete(`${this.getNodeStateId()}_status`, { refresh: true, node: this });
+      state.delete(`${this.getNodeStateId()}_status`, {
+        refresh: true,
+        node: this,
+      });
     }
   }
 
@@ -580,7 +589,10 @@ export class Deployment extends ControllerResourceNode {
     treeItem.contextValue = `${treeItem.contextValue}-${
       check ? "info" : "warn"
     }-${status}`;
-    console.log(`deployment ${this.name} time spents: `, (new Date().getTime() - startTime));
+    console.log(
+      `deployment ${this.name} time spents: `,
+      new Date().getTime() - startTime
+    );
     return treeItem;
   }
 
