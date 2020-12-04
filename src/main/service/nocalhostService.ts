@@ -59,7 +59,7 @@ class NocalhostService {
     // tips
     const valuePath = path.resolve(HELM_VALUES_DIR, `${appName}-values.yaml`);
     const isExist = await fileUtil.isExist(valuePath);
-    let values: string;
+    let values: string | undefined;
     if (["helm", "helm-repo"].includes(installType) && isExist) {
       const res = await host.showInformationMessage(
         "override the values?",

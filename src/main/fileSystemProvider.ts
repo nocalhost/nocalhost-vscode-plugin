@@ -113,24 +113,24 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             const key = paths[4]; // Array|Object|string
             const subKey = paths[5]; // subPropery
 
-            const appInfo = await ConfigService.getAppConfig(appName);
+            const appInfo: any = await ConfigService.getAppConfig(appName);
             if (key && subKey) {
               if (appInfo[key] instanceof Array) {
                 result = "";
                 for (let i = 0; i < appInfo[key].length; i++) {
                   if (appInfo[key][i] && appInfo[key][i].name === subKey) {
-                    result = this.stringify([appInfo[key][i]], style);
+                    result = this.stringify([appInfo[key][i]], style) || "";
                   }
                 }
               } else if (appInfo[key] instanceof Object) {
-                const obj = {};
+                const obj: any = {};
                 obj[subKey] = appInfo[key][subKey];
-                result = this.stringify(obj, style);
+                result = this.stringify(obj, style) as string;
               }
             } else if (key) {
-              const obj = {};
+              const obj: any = {};
               obj[key] = appInfo[key];
-              result = this.stringify(obj, style);
+              result = this.stringify(obj, style) || "";
             }
           }
         } else if (type === "helm-value" && paths[2] === "app") {
@@ -164,9 +164,9 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     const type = paths[1];
     const data = this.parse(content.toString(), style);
     let destDir = "";
-    let destData: string | Buffer;
+    let destData: string | Buffer = "";
 
-    let command: string;
+    let command: string | undefined;
     let args;
     if (type === "config") {
       const configType = paths[2];
@@ -177,7 +177,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
 
         destDir = ConfigService.getAppConfigPath(appName);
 
-        const appInfo = await ConfigService.getAppConfig(appName);
+        const appInfo: any = await ConfigService.getAppConfig(appName);
         let originData = "";
         if (key && subKey) {
           originData = this.getOriginData(subKey, data);
@@ -200,7 +200,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         } else if (key) {
           appInfo[key] = originData;
         }
-        destData = Buffer.from(this.stringify(appInfo, "yaml"), "utf-8");
+        destData = Buffer.from(this.stringify(appInfo, "yaml") || "", "utf-8");
       }
     } else if (type === "helm-value" && paths[2] === "app") {
       // NocalhostRW://nh/helm-value/app/${appNode.label}.yaml
@@ -217,7 +217,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     }
   }
 
-  private stringify(obj, style: string) {
+  private stringify(obj: Object, style: string) {
     if (style === "yaml") {
       return yaml.stringify(obj);
     } else if (style === "json") {
@@ -225,7 +225,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     }
   }
 
-  private parse(str, style: string) {
+  private parse(str: string, style: string) {
     if (style === "yaml") {
       return yaml.parse(str);
     } else if (style === "json") {
