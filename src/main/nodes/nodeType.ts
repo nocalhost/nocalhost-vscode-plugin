@@ -580,9 +580,9 @@ export class Deployment extends ControllerResourceNode {
         break;
     }
     const check = await this.checkConfig();
-    treeItem.contextValue = `${treeItem.contextValue}-${status}-${
+    treeItem.contextValue = `${treeItem.contextValue}-${
       check ? "info" : "warn"
-    }`;
+    }-${status}`;
     return treeItem;
   }
 
