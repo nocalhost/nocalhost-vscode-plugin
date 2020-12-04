@@ -24,10 +24,9 @@ export default async function showLogin() {
 
   try {
     await login({ email, password });
-    state.setLogin(true);
-    vscode.window.showInformationMessage("login successful");
     await getUserinfo();
-    vscode.commands.executeCommand("getApplicationList");
+    await state.setLogin(true);
+    vscode.window.showInformationMessage("login successful");
   } catch (e) {
     vscode.window.showWarningMessage(e.message);
   }
