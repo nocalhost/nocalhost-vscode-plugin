@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { BaseNocalhostNode } from "./nodes/nodeType";
 
 class State {
   private login = false;
@@ -29,14 +30,18 @@ class State {
     return this.stateMap.get(key);
   }
 
-  delete(key: string) {
+  delete(key: string, args?: { refresh: boolean, node?: BaseNocalhostNode }) {
     this.stateMap.delete(key);
-    vscode.commands.executeCommand("Nocalhost.refresh");
+    if (args && args.refresh) {
+      vscode.commands.executeCommand("Nocalhost.refresh", args.node);
+    }
   }
 
-  set(key: string, value: any) {
+  set(key: string, value: any, args?: { refresh: boolean, node?: BaseNocalhostNode }) {
     this.stateMap.set(key, value);
-    vscode.commands.executeCommand("Nocalhost.refresh");
+    if (args && args.refresh) {
+      vscode.commands.executeCommand("Nocalhost.refresh", args.node);
+    }
   }
 }
 

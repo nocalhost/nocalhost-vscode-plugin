@@ -153,6 +153,7 @@ export class AppFolderNode extends NocalhostFolderNode {
   public resourceDir: string;
   public info?: any;
   public parent: NocalhostRootNode;
+  private nhctlAppInfo: AppInfo;
   constructor(
     parent: NocalhostRootNode,
     installType: string,
@@ -182,13 +183,17 @@ export class AppFolderNode extends NocalhostFolderNode {
     return this.unInstalled() ? [] : ["Workloads", "Networks"];
   }
 
-  private async getApplicationInfo() {
+  public async getApplicationInfo() {
+    if (this.nhctlAppInfo) {
+      return this.nhctlAppInfo;
+    }
     let info = {} as AppInfo;
     const infoStr = await loadResource(host, this.label).catch((err) => {});
     if (infoStr) {
       info = yaml.parse(infoStr as string);
     }
-    return info;
+    this.nhctlAppInfo = info;
+    return this.nhctlAppInfo;
   }
 
   private updateIcon(treeItem: vscode.TreeItem) {
@@ -479,13 +484,14 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<Deployment[]>> {
+    const startTime = new Date().getTime();
     const res = await kubectl.getResourceList(host, "Deployments");
     const list = JSON.parse(res as string) as List;
     const result: Deployment[] = list.items.map(
       (item) =>
         new Deployment(this, item.metadata.name, item.metadata.name, item)
     );
-
+    console.log("deploymentFold time spents: ", (new Date().getTime() - startTime));
     return result;
   }
 }
@@ -508,9 +514,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
 
   public setStatus(status: string) {
     if (status) {
-      state.set(`${this.getNodeStateId()}_status`, status);
+      state.set(`${this.getNodeStateId()}_status`, status, { refresh: true, node: this });
     } else {
-      state.delete(`${this.getNodeStateId()}_status`);
+      state.delete(`${this.getNodeStateId()}_status`, { refresh: true, node: this });
     }
   }
 
@@ -526,16 +532,6 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     } else {
       return this.getAppNode(node as BaseNocalhostNode);
     }
-  }
-
-  public async getApplicationInfo() {
-    let info = {} as AppInfo;
-    const appNode = this.getAppNode() as AppFolderNode;
-    const infoStr = await loadResource(host, appNode.label).catch((err) => {});
-    if (infoStr) {
-      info = yaml.parse(infoStr as string);
-    }
-    return info;
   }
 
   public checkConfig() {
@@ -563,6 +559,7 @@ export class Deployment extends ControllerResourceNode {
   }
 
   async getTreeItem(): Promise<vscode.TreeItem> {
+    const startTime = new Date().getTime();
     let treeItem = await super.getTreeItem();
     const status = await this.getStatus();
     switch (status) {
@@ -583,6 +580,7 @@ export class Deployment extends ControllerResourceNode {
     treeItem.contextValue = `${treeItem.contextValue}-${
       check ? "info" : "warn"
     }-${status}`;
+    console.log(`deployment ${this.name} time spents: `, (new Date().getTime() - startTime));
     return treeItem;
   }
 
@@ -591,7 +589,8 @@ export class Deployment extends ControllerResourceNode {
     if (status) {
       return Promise.resolve(status);
     }
-    const appInfo = await this.getApplicationInfo();
+    const appNode = this.getAppNode();
+    const appInfo = await appNode.getApplicationInfo();
     const svcProfile = appInfo.svcProfile;
     for (let i = 0; i < svcProfile.length; i++) {
       if (svcProfile[i].name === this.name && svcProfile[i].developing) {

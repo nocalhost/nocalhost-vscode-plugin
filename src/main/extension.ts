@@ -60,10 +60,6 @@ export async function activate(context: vscode.ExtensionContext) {
   appTreeView.onDidExpandElement(
     async (e: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
       const node = e.element;
-      state.set(
-        node.getNodeStateId(),
-        vscode.TreeItemCollapsibleState.Expanded
-      );
       if (node instanceof AppFolderNode) {
         const others = (await node.getParent().getChildren()).filter((item) => {
           if (item instanceof AppFolderNode && item.id !== node.id) {
@@ -80,6 +76,11 @@ export async function activate(context: vscode.ExtensionContext) {
         );
         vscode.commands.executeCommand("useApplication", node);
       }
+
+      state.set(
+        node.getNodeStateId(),
+        vscode.TreeItemCollapsibleState.Expanded
+      );
     }
   );
   let subs = [
@@ -181,14 +182,14 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand("getApplicationList", false, () =>
       appTreeProvider.refresh()
     ),
-    registerCommand("Nocalhost.refresh", false, () =>
-      appTreeProvider.refresh()
+    registerCommand("Nocalhost.refresh", false, (node: BaseNocalhostNode) =>
+      appTreeProvider.refresh(node)
     ),
     registerCommand(
       "Nocalhost.installApp",
       true,
       async (appNode: AppFolderNode) => {
-        state.set(`${appNode.label}_installing`, true);
+        state.set(`${appNode.label}_installing`, true, { refresh: true, node: appNode });
         await application.useApplication(appNode);
         // make siblings collapsis
         const siblings: (
@@ -200,7 +201,6 @@ export async function activate(context: vscode.ExtensionContext) {
           node.collapsis();
         });
 
-        appTreeProvider.refresh();
         await nocalhostService
           .install(
             host,
@@ -212,7 +212,7 @@ export async function activate(context: vscode.ExtensionContext) {
             appNode.resourceDir
           )
           .finally(() => {
-            state.delete(`${appNode.label}_installing`);
+            state.delete(`${appNode.label}_installing`, { refresh: true, node: appNode });
             appNode.expanded();
             appNode.expandWorkloadNode();
           });
@@ -227,7 +227,7 @@ export async function activate(context: vscode.ExtensionContext) {
         await nocalhostService
           .uninstall(host, appNode.info.name, appNode.id, appNode.devSpaceId)
           .finally(() => {
-            state.delete(`${appNode.label}_uninstalling`);
+            state.delete(`${appNode.label}_uninstalling`, { refresh: true, node: appNode });
           });
       }
     ),
