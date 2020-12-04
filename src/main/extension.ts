@@ -322,7 +322,6 @@ function registerCommand(command: string, isLock: boolean, callback: any) {
   checkCtl("nhctl");
   checkCtl("kubectl");
   checkCtl("git");
-  checkCtl("mutagen");
   const dispose = vscode.commands.registerCommand(
     command,
     async (...args: any[]) => {
