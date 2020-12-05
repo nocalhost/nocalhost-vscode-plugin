@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "resolveJsonModule": true,
+    "typeRoots": ["../src/main/typings"],
     "module": "commonjs",
     "target": "es6",
     "outDir": "../out",
