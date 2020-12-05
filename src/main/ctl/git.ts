@@ -33,7 +33,7 @@ class Git {
         }
       });
     } else {
-      const closeCheck = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no'";
+      const closeCheck = 'GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"';
       await this.exec(host, closeCheck);
     }
     await this.execComandsByArgs(host, ["clone", gitUrl, ...args]);
