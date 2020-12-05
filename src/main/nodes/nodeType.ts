@@ -153,7 +153,7 @@ export class AppFolderNode extends NocalhostFolderNode {
   public resourceDir: string;
   public info?: any;
   public parent: NocalhostRootNode;
-  private nhctlAppInfo: AppInfo;
+  private nhctlAppInfo: AppInfo | undefined;
   constructor(
     parent: NocalhostRootNode,
     installType: string,
