@@ -187,6 +187,10 @@ export class AppFolderNode extends NocalhostFolderNode {
     if (this.nhctlAppInfo) {
       return this.nhctlAppInfo;
     }
+    return this.freshApplicationInfo();
+  }
+
+  public async freshApplicationInfo() {
     let info = {} as AppInfo;
     const infoStr = await loadResource(host, this.label).catch((err) => {});
     if (infoStr) {
@@ -515,7 +519,16 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     return status;
   }
 
-  public setStatus(status: string) {
+  /**
+   *
+   * @param status
+   * @param fresh Refresh dependencies
+   */
+  public async setStatus(status: string, fresh?: boolean) {
+    if (fresh) {
+      const appNode = this.getAppNode();
+      await appNode.freshApplicationInfo();
+    }
     if (status) {
       state.set(`${this.getNodeStateId()}_status`, status, {
         refresh: true,

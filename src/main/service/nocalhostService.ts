@@ -29,7 +29,7 @@ import { ControllerResourceNode, DeploymentStatus } from "../nodes/nodeType";
 export interface ControllerNodeApi {
   name: string;
   resourceType: string;
-  setStatus: (status: string) => void;
+  setStatus: (status: string, refresh?: boolean) => Promise<void>;
   getStatus: () => Promise<string> | string;
 }
 
@@ -250,7 +250,7 @@ class NocalhostService {
       },
       async (progress) => {
         try {
-          node.setStatus(DeploymentStatus.starting);
+          await node.setStatus(DeploymentStatus.starting);
           host.getOutputChannel().show(true);
           progress.report({
             message: "dev start",
@@ -290,11 +290,16 @@ class NocalhostService {
             message: "DevMode Started.",
             increment: 100,
           });
-          node.setStatus(DeploymentStatus.developing);
+
+          if (node instanceof ControllerResourceNode) {
+            await node.setStatus("", true);
+          } else {
+            await node.setStatus(DeploymentStatus.developing);
+          }
 
           await this.exec(host, node);
         } catch (error) {
-          node.setStatus("");
+          node.setStatus("", true);
         }
       }
     );
@@ -331,7 +336,7 @@ class NocalhostService {
     host.showInformationMessage("Ending DevMode.");
     host.log("Ending DevMode ...", true);
     await nhctl.endDevMode(host, appName, node.name);
-    node.setStatus("");
+    await node.setStatus("", true);
     host.showInformationMessage("DevMode Ended.");
     host.log("DevMode Ended", true);
   }

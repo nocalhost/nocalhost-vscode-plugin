@@ -328,8 +328,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const node: ControllerNodeApi = {
       name: tmpWorkload,
       resourceType: tmpResourceType,
-      setStatus: (status: string) => {
-        fileStore.set(tmpStatusId, status);
+      setStatus: (status: string, refresh?: boolean): Promise<void> => {
+        return Promise.resolve(fileStore.set(tmpStatusId, status));
       },
       getStatus: () => DeploymentStatus.developing,
     };
