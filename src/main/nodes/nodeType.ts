@@ -212,10 +212,10 @@ export class AppFolderNode extends NocalhostFolderNode {
 
   private updateContext(treeItem: vscode.TreeItem) {
     if (this.unInstalled() && !this.unInstalling() && !this.installing()) {
-      treeItem.contextValue = `application-notInstalled`;
+      treeItem.contextValue = "application-notInstalled";
     }
     if (this.installed() && !this.unInstalling() && !this.installing()) {
-      treeItem.contextValue = `application-installed`;
+      treeItem.contextValue = "application-installed";
     }
     if (["helm", "helm-repo"].includes(this.installType)) {
       treeItem.contextValue += `${treeItem.contextValue}-helm`;

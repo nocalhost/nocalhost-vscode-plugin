@@ -228,7 +228,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run prettier && npm run lint"
+      "pre-commit": "npm run prettier && npm run compile"
     }
   },
   "devDependencies": {
@@ -249,6 +249,7 @@
     "cross-env": "^7.0.2",
     "eslint": "^7.6.0",
     "eslint-config-airbnb-typescript": "^12.0.0",
+    "eslint-loader": "^4.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.21.5",
@@ -263,7 +264,7 @@
     "react-router-dom": "^5.2.0",
     "sirv-cli": "^1.0.8",
     "ts-loader": "^8.0.11",
-    "typescript": "^4.0.2",
+    "typescript": "4.0.2",
     "vscode-test": "^1.4.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"

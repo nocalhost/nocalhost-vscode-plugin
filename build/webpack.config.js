@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-nocheck
 
 "use strict";
 
@@ -33,6 +33,19 @@ const extensionConfig = {
         options: {
           configFile: path.resolve(__dirname, "./tsconfig.extension.json"),
         },
+      },
+      {
+        test: /\.(ts)$/,
+        enforce: "pre",
+        use: [
+          {
+            options: {
+              eslintPath: require.resolve("eslint"),
+            },
+            loader: require.resolve("eslint-loader"),
+          },
+        ],
+        exclude: /node_modules/,
       },
     ],
   },
