@@ -488,16 +488,11 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<Deployment[]>> {
-    const startTime = new Date().getTime();
     const res = await kubectl.getResourceList(host, "Deployments");
     const list = JSON.parse(res as string) as List;
     const result: Deployment[] = list.items.map(
       (item) =>
         new Deployment(this, item.metadata.name, item.metadata.name, item)
-    );
-    console.log(
-      "deploymentFold time spents: ",
-      new Date().getTime() - startTime
     );
     return result;
   }
@@ -581,7 +576,6 @@ export class Deployment extends ControllerResourceNode {
   }
 
   async getTreeItem(): Promise<vscode.TreeItem> {
-    const startTime = new Date().getTime();
     let treeItem = await super.getTreeItem();
     const status = await this.getStatus();
     switch (status) {
@@ -602,10 +596,6 @@ export class Deployment extends ControllerResourceNode {
     treeItem.contextValue = `${treeItem.contextValue}-${
       check ? "info" : "warn"
     }-${status}`;
-    console.log(
-      `deployment ${this.name} time spents: `,
-      new Date().getTime() - startTime
-    );
     return treeItem;
   }
 
