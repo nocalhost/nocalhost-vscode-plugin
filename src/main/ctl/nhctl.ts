@@ -64,7 +64,7 @@ export async function devStart(
     `dev start ${appName} -d ${workLoadName} ${syncOptions}`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
-  await execAsync(devStartCommand, []);
+  await execChildProcessAsync(host, devStartCommand, []);
 }
 
 export async function startPortForward(
@@ -84,7 +84,7 @@ export async function startPortForward(
 
   host.log(`[cmd] ${portForwardCommand}`, true);
 
-  await execAsync(portForwardCommand, []);
+  await execChildProcessAsync(host, portForwardCommand, []);
 }
 
 export async function syncFile(
