@@ -136,6 +136,14 @@ class NocalhostService {
     host.showInformationMessage(`Application ${appName} uninstalled`);
   }
 
+  delay(second: number) {
+    return new Promise((res, rej) => {
+      setTimeout(() => {
+        res();
+      }, second * 1000);
+    });
+  }
+
   private async cloneCode(host: Host, appName: string, workloadName: string) {
     let destDir: string | undefined;
     let gitUrl = await this.getGitUrl(appName, workloadName);
@@ -276,6 +284,8 @@ class NocalhostService {
           await nhctl.syncFile(host, appName, node.name);
           host.log("sync file end", true);
           host.log("", true);
+
+          await this.delay(2);
 
           progress.report({
             message: "port forwarding",
