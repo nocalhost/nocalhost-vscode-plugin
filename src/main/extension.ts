@@ -187,9 +187,9 @@ export async function activate(context: vscode.ExtensionContext) {
     registerCommand("getApplicationList", false, () =>
       appTreeProvider.refresh()
     ),
-    registerCommand("Nocalhost.refresh", false, (node: BaseNocalhostNode) =>
-      appTreeProvider.refresh(node)
-    ),
+    registerCommand("Nocalhost.refresh", false, (node: BaseNocalhostNode) => {
+      appTreeProvider.refresh(node);
+    }),
     registerCommand(
       "Nocalhost.installApp",
       true,
@@ -396,3 +396,11 @@ async function init() {
   fileStore.initConfig();
   updateServerConfigStatus();
 }
+
+process.on("uncaughtException", (error) => {
+  vscode.window.showErrorMessage(error.message);
+});
+
+process.on("unhandledRejection", (error: any) => {
+  vscode.window.showErrorMessage((error && error.message) || error);
+});
