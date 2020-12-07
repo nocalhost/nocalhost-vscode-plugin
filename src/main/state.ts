@@ -68,6 +68,7 @@ class State {
     if (args && args.refresh) {
       vscode.commands.executeCommand("Nocalhost.refresh", args.node);
     }
+    this.set(appName, appMap);
   }
 
   getAppState(appName: string, key: string) {
@@ -85,6 +86,7 @@ class State {
     if (args && args.refresh) {
       vscode.commands.executeCommand("Nocalhost.refresh", args.node);
     }
+    this.set(appName, appMap);
   }
 }
 
