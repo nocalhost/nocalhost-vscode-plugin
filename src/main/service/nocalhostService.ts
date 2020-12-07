@@ -58,18 +58,24 @@ class NocalhostService {
     host.log(`Installing application: ${appName}`, true);
     host.showInformationMessage(`Installing application: ${appName}`);
     // tips
-    const valuePath = path.resolve(HELM_VALUES_DIR, `${appName}-values.yaml`);
-    const isExist = await fileUtil.isExist(valuePath);
     let values: string | undefined;
-    if (["helm", "helm-repo"].includes(installType) && isExist) {
+    if (["helm", "helm-repo"].includes(installType)) {
       const res = await host.showInformationMessage(
         "override the values?",
         { modal: true },
-        "confirm",
-        "cancel"
+        "confirm"
       );
       if (res === "confirm") {
-        values = valuePath;
+        const valuesUri = await host.showOpenDialog({
+          canSelectFiles: true,
+          canSelectFolders: false,
+          canSelectMany: false,
+          title: "Select the value file path",
+        });
+
+        if (valuesUri) {
+          values = valuesUri[0].path;
+        }
       }
     }
     await nhctl.install(

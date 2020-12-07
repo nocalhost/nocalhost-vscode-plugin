@@ -236,17 +236,6 @@ export async function activate(context: vscode.ExtensionContext) {
           });
       }
     ),
-    registerCommand(
-      "Nocalhost.editHelmValues",
-      false,
-      async (appNode: AppFolderNode) => {
-        const uri = vscode.Uri.parse(
-          `NocalhostRW://nh/helm-value/app/${appNode.label}.yaml`
-        );
-        let doc = await vscode.workspace.openTextDocument(uri);
-        vscode.window.showTextDocument(doc, { preview: false });
-      }
-    ),
     registerCommand("useApplication", true, async (appNode: AppFolderNode) => {
       await application.useApplication(appNode);
     }),

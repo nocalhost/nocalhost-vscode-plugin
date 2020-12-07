@@ -73,11 +73,6 @@
           "group": "inline@0"
         },
         {
-          "command": "Nocalhost.editHelmValues",
-          "when": "viewItem =~ /^application-(.+?)-helm/i",
-          "group": "inline@1"
-        },
-        {
           "command": "Nocalhost.startDevMode",
           "when": "viewItem =~ /^workload-(deployment)-info-running/i",
           "group": "inline@0"
