@@ -296,6 +296,10 @@ class NocalhostService {
           host.log("port forward end", true);
           host.log("", true);
 
+          setTimeout(() => {
+            nhctl.printAppInfo(host, appName);
+          }, 10 * 1000);
+
           progress.report({
             message: "DevMode Started.",
             increment: 100,

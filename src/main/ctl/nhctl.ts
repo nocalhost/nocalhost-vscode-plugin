@@ -122,6 +122,12 @@ export async function loadResource(host: Host, appName: string) {
   return result.stdout;
 }
 
+export async function printAppInfo(host: Host, appName: string) {
+  const printAppCommand = nhctlCommand(`list ${appName}`);
+  host.log(`[cmd] ${printAppCommand}`, true);
+  await execChildProcessAsync(host, printAppCommand, []);
+}
+
 function nhctlCommand(baseCommand: string) {
   const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfig}`;
