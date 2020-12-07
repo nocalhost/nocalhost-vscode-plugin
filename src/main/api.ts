@@ -104,11 +104,6 @@ export async function getApplication() {
     };
     result.push(app);
   }
-  vscode.commands.executeCommand(
-    "setContext",
-    "Nocalhost:appIsEmpty",
-    result.length === 0
-  );
   return result;
 }
 

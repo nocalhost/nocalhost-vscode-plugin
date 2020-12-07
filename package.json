@@ -34,8 +34,13 @@
     "viewsWelcome": [
       {
         "view": "Nocalhost",
+        "contents": "%noServer.description%",
+        "when": "!serverConfig && !login"
+      },
+      {
+        "view": "Nocalhost",
         "contents": "%noLogin.description%",
-        "when": "!login"
+        "when": "serverConfig && !login"
       },
       {
         "view": "Nocalhost",

@@ -164,6 +164,11 @@ export async function activate(context: vscode.ExtensionContext) {
       const newValue: string | undefined = await host.showInputBox(options);
       if (newValue) {
         fileStore.set(BASE_URL, newValue);
+        await vscode.commands.executeCommand(
+          "setContext",
+          "serverConfig",
+          true
+        );
         host.showInformationMessage("configured api server");
       }
     }),
@@ -375,10 +380,19 @@ export function checkCtl(name: string) {
   throw new Error(`not found ${name}`);
 }
 
+export async function updateServerConfigStatus() {
+  await vscode.commands.executeCommand(
+    "setContext",
+    "serverConfig",
+    fileStore.get(BASE_URL)
+  );
+}
+
 async function init() {
   fileStore.mkdir(NH_CONFIG_DIR);
   fileStore.mkdir(PLUGIN_CONFIG_DIR);
   fileStore.mkdir(KUBE_CONFIG_DIR);
   fileStore.mkdir(HELM_VALUES_DIR);
   fileStore.initConfig();
+  updateServerConfigStatus();
 }
