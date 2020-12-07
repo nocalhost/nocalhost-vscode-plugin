@@ -13,11 +13,17 @@ export function install(
   resourceDir: string,
   values?: string
 ) {
-  const installCommand = nhctlCommand(
+  let installCommand = nhctlCommand(
     `install ${appName} -u ${gitUrl} -t ${installType} ${
       values ? "-f " + values : ""
     } --resource-path ${resourceDir}`
   );
+
+  if (installType === "helm-repo") {
+    installCommand = nhctlCommand(
+      `install ${appName} --helm-chart-name ${appName} -t ${installType} --helm-repo-url ${gitUrl}`
+    );
+  }
 
   host.log(`[cmd] ${installCommand}`, true);
 
