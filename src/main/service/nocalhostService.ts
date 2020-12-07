@@ -285,8 +285,6 @@ class NocalhostService {
           host.log("sync file end", true);
           host.log("", true);
 
-          await this.delay(2);
-
           progress.report({
             message: "port forwarding",
             increment: 66,
