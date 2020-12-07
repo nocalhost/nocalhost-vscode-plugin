@@ -368,8 +368,8 @@ class NocalhostService {
     }
     const podName = (resArr as Array<Resource>)[0].metadata.name;
     const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-    const command = `kubectl exec -it ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -- /bin/sh`;
-    const terminalDisposed = host.invokeInNewTerminal(command);
+    const command = `kubectl exec -it ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -- zsh||bash||sh`;
+    const terminalDisposed = host.invokeInNewTerminal(command, podName);
     host.pushDebugDispose(terminalDisposed);
     host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
@@ -412,8 +412,8 @@ class NocalhostService {
       return;
     }
     const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-    const command = `kubectl exec -it ${podName} -c ${containerName} --kubeconfig ${kubeconfigPath} -- /bin/sh`;
-    const terminalDisposed = host.invokeInNewTerminal(command);
+    const command = `kubectl exec -it ${podName} -c ${containerName} --kubeconfig ${kubeconfigPath} -- zsh||bash||sh`;
+    const terminalDisposed = host.invokeInNewTerminal(command, podName);
     host.pushDebugDispose(terminalDisposed);
     host.log("open container end", true);
     host.log("", true);
