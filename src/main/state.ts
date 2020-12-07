@@ -47,6 +47,45 @@ class State {
       vscode.commands.executeCommand("Nocalhost.refresh", args.node);
     }
   }
+
+  getAllAppState(appName: string) {
+    let appMap: Map<string, any> = this.get(appName);
+    if (!appMap) {
+      appMap = new Map<string, any>();
+    }
+
+    return appMap;
+  }
+
+  setAppState(
+    appName: string,
+    key: string,
+    value: any,
+    args?: { refresh: boolean; node?: BaseNocalhostNode }
+  ) {
+    const appMap = this.getAllAppState(appName);
+    appMap.set(key, value);
+    if (args && args.refresh) {
+      vscode.commands.executeCommand("Nocalhost.refresh", args.node);
+    }
+  }
+
+  getAppState(appName: string, key: string) {
+    const appMap = this.getAllAppState(appName);
+    return appMap.get(key);
+  }
+
+  deleteAppState(
+    appName: string,
+    key: string,
+    args?: { refresh: boolean; node?: BaseNocalhostNode }
+  ) {
+    const appMap = this.getAllAppState(appName);
+    appMap.delete(key);
+    if (args && args.refresh) {
+      vscode.commands.executeCommand("Nocalhost.refresh", args.node);
+    }
+  }
 }
 
 export default new State();

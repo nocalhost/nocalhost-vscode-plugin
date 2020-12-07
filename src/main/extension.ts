@@ -189,7 +189,7 @@ export async function activate(context: vscode.ExtensionContext) {
       "Nocalhost.installApp",
       true,
       async (appNode: AppFolderNode) => {
-        state.set(`${appNode.label}_installing`, true, {
+        state.setAppState(appNode.label, "installing", true, {
           refresh: true,
           node: appNode,
         });
@@ -215,7 +215,7 @@ export async function activate(context: vscode.ExtensionContext) {
             appNode.resourceDir
           )
           .finally(() => {
-            state.delete(`${appNode.label}_installing`);
+            state.deleteAppState(appNode.label, "installing");
             appNode.expanded();
             appNode.expandWorkloadNode();
             appTreeProvider.refresh();
@@ -226,12 +226,12 @@ export async function activate(context: vscode.ExtensionContext) {
       "Nocalhost.uninstallApp",
       true,
       async (appNode: AppFolderNode) => {
-        state.set(`${appNode.label}_uninstalling`, true);
+        state.setAppState(appNode.label, "uninstalling", true);
         await application.useApplication(appNode);
         await nocalhostService
           .uninstall(host, appNode.info.name, appNode.id, appNode.devSpaceId)
           .finally(() => {
-            state.delete(`${appNode.label}_uninstalling`);
+            state.deleteAppState(appNode.label, "uninstalling");
             appTreeProvider.refresh();
           });
       }

@@ -25,6 +25,7 @@ import ConfigService, { WorkloadConfig } from "./configService";
 
 import * as nls from "../../../package.nls.json";
 import { ControllerResourceNode, DeploymentStatus } from "../nodes/nodeType";
+import state from "../state";
 
 export interface ControllerNodeApi {
   name: string;
@@ -132,6 +133,7 @@ class NocalhostService {
     await nhctl.uninstall(host, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     fileStore.remove(appName);
+    state.delete(appName);
     host.log(`Application ${appName} uninstalled`, true);
     host.showInformationMessage(`Application ${appName} uninstalled`);
   }

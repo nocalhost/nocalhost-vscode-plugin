@@ -268,11 +268,11 @@ export class AppFolderNode extends NocalhostFolderNode {
   }
 
   installing(): boolean {
-    return !!state.get(`${this.label}_installing`);
+    return !!state.getAppState(this.label, "installing");
   }
 
   unInstalling(): boolean {
-    return !!state.get(`${this.label}_uninstalling`);
+    return !!state.getAppState(this.label, "uninstalling");
   }
 
   getNodeStateId(): string {
@@ -510,7 +510,11 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   }
 
   public getStatus(): string | Promise<string> {
-    const status = state.get(`${this.getNodeStateId()}_status`);
+    const appNode = this.getAppNode();
+    const status = state.getAppState(
+      appNode.label,
+      `${this.getNodeStateId()}_status`
+    );
     return status;
   }
 
@@ -520,17 +524,22 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
    * @param fresh Refresh dependencies
    */
   public async setStatus(status: string, fresh?: boolean) {
+    const appNode = this.getAppNode();
     if (fresh) {
-      const appNode = this.getAppNode();
       await appNode.freshApplicationInfo();
     }
     if (status) {
-      state.set(`${this.getNodeStateId()}_status`, status, {
-        refresh: true,
-        node: this,
-      });
+      state.setAppState(
+        appNode.label,
+        `${this.getNodeStateId()}_status`,
+        status,
+        {
+          refresh: true,
+          node: this,
+        }
+      );
     } else {
-      state.delete(`${this.getNodeStateId()}_status`, {
+      state.deleteAppState(appNode.label, `${this.getNodeStateId()}_status`, {
         refresh: true,
         node: this,
       });
@@ -600,11 +609,14 @@ export class Deployment extends ControllerResourceNode {
   }
 
   public async getStatus() {
-    let status = state.get(`${this.getNodeStateId()}_status`);
+    const appNode = this.getAppNode();
+    let status = state.getAppState(
+      appNode.label,
+      `${this.getNodeStateId()}_status`
+    );
     if (status) {
       return Promise.resolve(status);
     }
-    const appNode = this.getAppNode();
     const appInfo = await appNode.getApplicationInfo();
     const svcProfile = appInfo.svcProfile;
     for (let i = 0; i < svcProfile.length; i++) {
