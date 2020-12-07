@@ -932,7 +932,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     const userinfo = fileStore.get(USERINFO);
 
     if (result.length > 0) {
-      result.unshift(new NocalhostAccountNode(this, userinfo.name));
+      result.unshift(new NocalhostAccountNode(this, `Hi, ${userinfo.name}`));
     }
     return result;
   }
