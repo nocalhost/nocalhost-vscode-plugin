@@ -575,6 +575,7 @@ export enum DeploymentStatus {
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
   public resourceType = "deployment";
+  private firstRender = true;
   constructor(
     public parent: BaseNocalhostNode,
     public label: string,
@@ -586,7 +587,15 @@ export class Deployment extends ControllerResourceNode {
 
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
-    const status = await this.getStatus();
+    let status = "";
+    if (this.firstRender) {
+      this.firstRender = false;
+      setTimeout(() => {
+        vscode.commands.executeCommand("Nocalhost.refresh", this);
+      }, 0);
+      return treeItem;
+    }
+    status = await this.getStatus();
     switch (status) {
       case "running":
         treeItem.iconPath = new vscode.ThemeIcon("circle-filled");
