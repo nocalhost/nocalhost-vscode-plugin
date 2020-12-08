@@ -231,6 +231,15 @@ export async function activate(context: vscode.ExtensionContext) {
       "Nocalhost.uninstallApp",
       true,
       async (appNode: AppFolderNode) => {
+        const result = await host.showInformationMessage(
+          `Uninstall application: ${appNode.label}?`,
+          { modal: true },
+          `OK`
+        );
+        if (!result) {
+          return;
+        }
+
         state.setAppState(appNode.label, "uninstalling", true);
         await application.useApplication(appNode);
         await nocalhostService
