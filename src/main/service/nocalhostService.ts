@@ -61,11 +61,12 @@ class NocalhostService {
     let values: string | undefined;
     if (["helm", "helm-repo"].includes(installType)) {
       const res = await host.showInformationMessage(
-        "override the values?",
+        "Do you want to specify a values.yaml?",
         { modal: true },
-        "confirm"
+        "Specify One",
+        "Use Default values"
       );
-      if (res === "confirm") {
+      if (res === "Specify One") {
         const valuesUri = await host.showOpenDialog({
           canSelectFiles: true,
           canSelectFolders: false,
