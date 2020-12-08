@@ -1,5 +1,8 @@
 import * as fs from "fs";
+import * as path from "path";
 import * as yaml from "yaml";
+import * as vscode from "vscode";
+import * as fileStore from "../store/fileStore";
 
 export async function readYaml(filePath: string) {
   const data = await readFile(filePath);
@@ -55,4 +58,10 @@ export function isExist(filePath: string) {
       resolve(true);
     });
   });
+}
+
+export function resolveVSCodeUri(filePath: string): vscode.Uri {
+  const extensionPath: string = fileStore.get("extensionPath");
+  const resolvePath: string = path.resolve(extensionPath, filePath);
+  return vscode.Uri.file(resolvePath);
 }

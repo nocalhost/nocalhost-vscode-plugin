@@ -17,7 +17,7 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "icon": "images/coding-logo.png",
+          "icon": "images/icons/logo-light.svg",
           "id": "NocalhostView",
           "title": "Nocalhost"
         }
@@ -160,7 +160,7 @@
       {
         "command": "Nocalhost.uninstallApp",
         "title": "Uninstall App",
-        "icon": "$(chrome-close)"
+        "icon": "$(trash)"
       },
       {
         "command": "useApplication",
@@ -173,13 +173,13 @@
       {
         "command": "Nocalhost.startDevMode",
         "title": "%Start.Develop%",
-        "icon": "$(debug-start)",
+        "icon": "images/icons/dev-start.svg",
         "category": "devSpace"
       },
       {
         "command": "Nocalhost.endDevMode",
         "title": "%End.Develop%",
-        "icon": "$(debug-stop)",
+        "icon": "images/icons/dev-end.svg",
         "category": "devSpace"
       },
       {
@@ -202,12 +202,12 @@
       {
         "command": "Nocalhost.editServiceConfig",
         "title": "%Config%",
-        "icon": "$(notifications-configure)"
+        "icon": "images/icons/setting-normal.svg"
       },
       {
         "command": "Nocalhost.writeServiceConfig",
         "title": "%Config%",
-        "icon": "$(dialog-warning)"
+        "icon": "images/icons/setting-warning.svg"
       },
       {
         "command": "Nocalhost.editHelmValues",

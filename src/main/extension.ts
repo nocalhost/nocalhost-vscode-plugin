@@ -39,7 +39,7 @@ import state from "./state";
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
-  await init();
+  await init(context);
 
   let appTreeProvider = new NocalhostAppProvider();
   let nocalhostFileSystemProvider = new NocalhostFileSystemProvider();
@@ -388,12 +388,13 @@ export async function updateServerConfigStatus() {
   );
 }
 
-async function init() {
+async function init(context: vscode.ExtensionContext) {
   fileStore.mkdir(NH_CONFIG_DIR);
   fileStore.mkdir(PLUGIN_CONFIG_DIR);
   fileStore.mkdir(KUBE_CONFIG_DIR);
   fileStore.mkdir(HELM_VALUES_DIR);
   fileStore.initConfig();
+  fileStore.set("extensionPath", context.extensionPath);
   updateServerConfigStatus();
 }
 
