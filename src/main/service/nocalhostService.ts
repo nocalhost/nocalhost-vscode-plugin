@@ -270,7 +270,6 @@ class NocalhostService {
           host.getOutputChannel().show(true);
           progress.report({
             message: "dev start",
-            increment: 0,
           });
           host.log("dev start ...", true);
           const svc = await this.getSvcConfig(node.name);
@@ -286,7 +285,6 @@ class NocalhostService {
 
           progress.report({
             message: "syncing file",
-            increment: 33,
           });
           host.log("sync file ...", true);
           await nhctl.syncFile(host, appName, node.name);
@@ -295,7 +293,6 @@ class NocalhostService {
 
           progress.report({
             message: "port forwarding",
-            increment: 66,
           });
           host.log("port forward ...", true);
           await nhctl.startPortForward(host, appName, node.name);
@@ -308,7 +305,6 @@ class NocalhostService {
 
           progress.report({
             message: "DevMode Started.",
-            increment: 100,
           });
 
           if (node instanceof ControllerResourceNode) {
