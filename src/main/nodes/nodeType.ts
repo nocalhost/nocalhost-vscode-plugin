@@ -662,7 +662,7 @@ export class Deployment extends ControllerResourceNode {
         }
       });
 
-      if (progressing  && !available) {
+      if (progressing && !available) {
         status = "starting";
       }
     }
