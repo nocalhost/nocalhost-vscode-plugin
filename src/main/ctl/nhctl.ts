@@ -128,6 +128,32 @@ export async function printAppInfo(host: Host, appName: string) {
   await execChildProcessAsync(host, printAppCommand, []);
 }
 
+export async function getConfig(appName: string, workloadName?: string) {
+  const configCommand = `nhctl config get ${appName} ${
+    workloadName ? `-d ${workloadName}` : ""
+  }`;
+  const result = await execAsync(configCommand, []);
+  return result.stdout;
+}
+
+export async function editConfig(
+  appName: string,
+  workloadName: string | undefined | null,
+  contents: string
+) {
+  const configCommand = `nhctl config edit ${appName} ${
+    workloadName ? `-d ${workloadName}` : ""
+  } -c ${contents}`;
+  const result = await execAsync(configCommand, []);
+  return result.stdout;
+}
+
+export async function getTemplateConfig(appName: string, workloadName: string) {
+  const configCommand = `nhctl config template ${appName} -d ${workloadName}`;
+  const result = await execAsync(configCommand, []);
+  return result.stdout;
+}
+
 function nhctlCommand(baseCommand: string) {
   const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfig}`;

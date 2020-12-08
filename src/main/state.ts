@@ -5,8 +5,17 @@ class State {
   private login = false;
 
   private stateMap = new Map<string, any>();
+  private nodeMap = new Map<string, BaseNocalhostNode>();
 
   private running = false;
+
+  public getNode(id: string) {
+    return this.nodeMap.get(id);
+  }
+
+  public setNode(id: string, node: BaseNocalhostNode) {
+    this.nodeMap.set(id, node);
+  }
 
   public isLogin() {
     return this.login;

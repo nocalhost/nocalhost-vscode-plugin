@@ -7,7 +7,6 @@ import * as os from "os";
 
 import * as vscode from "vscode";
 
-import * as fileUtil from "../utils/fileUtil";
 import { updateAppInstallStatus } from "../api";
 import { PodResource, Resource } from "../nodes/resourceType";
 import {
@@ -21,7 +20,7 @@ import {
   TMP_WORKLOAD,
 } from "../constants";
 import * as fileStore from "../store/fileStore";
-import ConfigService, { WorkloadConfig } from "./configService";
+import ConfigService, { NocalhostServiceConfig } from "./configService";
 
 import * as nls from "../../../package.nls.json";
 import { ControllerResourceNode, DeploymentStatus } from "../nodes/nodeType";
@@ -37,7 +36,7 @@ export interface ControllerNodeApi {
 class NocalhostService {
   private async getGitUrl(appName: string, workloadName: string) {
     const config = await ConfigService.getAppConfig(appName);
-    const arr = config.svcConfigs;
+    const arr = config.services;
     for (let i = 0; i < arr.length; i++) {
       const { gitUrl, name } = arr[i];
       if (name === workloadName) {
@@ -276,8 +275,8 @@ class NocalhostService {
           host.log("dev start ...", true);
           const svc = await this.getSvcConfig(node.name);
           let dirs = new Array<string>();
-          if (svc && svc.sync) {
-            dirs = svc.sync.map((item) =>
+          if (svc && svc.syncDirs) {
+            dirs = svc.syncDirs.map((item) =>
               path.resolve(workloadConfig.directory || os.homedir(), item)
             );
           }
@@ -333,21 +332,12 @@ class NocalhostService {
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
   }
 
-  private async getNocalhostConfig() {
-    const appName = fileStore.get(SELECTED_APP_NAME);
-    const config = ConfigService.getAppConfig(appName);
-
-    return config;
-  }
-
   private async getSvcConfig(workloadName: string) {
-    const nocalhostConfig = await this.getNocalhostConfig();
-    let workloadConfig: WorkloadConfig | null | undefined;
-    nocalhostConfig.svcConfigs.map((config) => {
-      if (config.name === workloadName) {
-        workloadConfig = config;
-      }
-    });
+    const appName = fileStore.get(SELECTED_APP_NAME);
+    let workloadConfig = await ConfigService.getWorkloadConfig(
+      appName,
+      workloadName
+    );
 
     return workloadConfig;
   }

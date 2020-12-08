@@ -1,40 +1,5 @@
-import { promises } from "fs";
-import * as path from "path";
-import { NHCTL_DIR } from "../constants";
-import * as fileUtil from "../utils/fileUtil";
-
-export interface NocalhostConfig {
-  preInstalls: Array<{
-    path: string;
-    weight?: string | number;
-  }>;
-  appConfig: {
-    name: string;
-    type: string;
-    resourcePath: string;
-  };
-  svcConfigs: Array<WorkloadConfig>;
-}
-
-export interface WorkloadConfig {
-  name: string;
-  type: string;
-  gitUrl: string;
-  devLang: string; // # java|go|node|php
-  devImage: string;
-  workDir: string;
-  localWorkDir: string;
-  sync: Array<string>;
-  ignore: Array<string>;
-  sshPort: {
-    localPort: number;
-    sshPort: number;
-  };
-  devPort: Array<string>;
-  command: Array<string>;
-  jobs: Array<string>;
-  pods: Array<string>;
-}
+import * as yaml from "yaml";
+import * as nhctl from "../ctl/nhctl";
 
 export interface JobConfig {
   name: string;
@@ -43,9 +8,9 @@ export interface JobConfig {
 }
 
 export interface NocalhostServiceConfig {
-  name?: string;
+  name: string;
   nameRegex?: string;
-  type: string;
+  serviceType: string;
   gitUrl: string;
   devContainerImage: string;
   devContainerShell?: string;
@@ -63,13 +28,14 @@ export interface NocalhostServiceConfig {
   hotReloadRunCommand?: string;
   hotReloadDebugCommand?: string;
   remoteDebugPort?: number;
+  useDevContainer?: string;
 }
 
-export interface NewNocalhostConfig {
+export interface NocalhostConfig {
   name: string; // uniq
   manifestType: string; // helm
   resourcePath: Array<string>; // default: ["."]
-  minimalInstall: boolean;
+  minimalInstall?: boolean;
   onPreInstall?: Array<JobConfig>;
   onPostInstall?: Array<JobConfig>;
   onPreUninstall?: Array<JobConfig>;
@@ -79,42 +45,29 @@ export interface NewNocalhostConfig {
 
 export default class ConfigService {
   static async getAppConfig(appName: string) {
-    const configPath = ConfigService.getAppConfigPath(appName);
-    await fileUtil.accessFile(configPath);
-    const config = (await fileUtil.readYaml(configPath)) as NocalhostConfig;
+    const configStr = await nhctl.getConfig(appName);
+    const config = yaml.parse(configStr) as NocalhostConfig;
 
     return config;
   }
 
-  static async writeAppConfig(appName: string, config: NocalhostConfig) {
-    const configPath = ConfigService.getAppConfigPath(appName);
-    await fileUtil.writeYaml(configPath, config);
+  static async writeConfig(
+    appName: string,
+    workloadName: string | undefined | null,
+    config: NocalhostConfig | NocalhostServiceConfig
+  ) {
+    let objJsonStr = JSON.stringify(config);
+    let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
+    await nhctl.editConfig(appName, workloadName, objJsonB64);
   }
 
   static async getWorkloadConfig(
     appName: string,
     workloadName: string
-  ): Promise<WorkloadConfig | undefined> {
-    const appConfig = await ConfigService.getAppConfig(appName);
-    const svcConfigs = appConfig.svcConfigs;
-    let workloadConfig;
-    for (let i = 0; i < svcConfigs.length; i++) {
-      if (svcConfigs[i] && svcConfigs[i].name === workloadName) {
-        workloadConfig = svcConfigs[i];
-        return workloadConfig;
-      }
-    }
+  ): Promise<NocalhostServiceConfig | undefined> {
+    const configStr = await nhctl.getConfig(appName, workloadName);
+    const config = yaml.parse(configStr) as NocalhostServiceConfig;
 
-    return workloadConfig;
-  }
-
-  static getAppConfigPath(appName: string) {
-    return path.resolve(
-      NHCTL_DIR,
-      "application",
-      appName,
-      ".nocalhost",
-      "config.yaml"
-    );
+    return config;
   }
 }

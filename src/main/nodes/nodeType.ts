@@ -490,10 +490,16 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   ): Promise<vscode.ProviderResult<Deployment[]>> {
     const res = await kubectl.getResourceList(host, "Deployments");
     const list = JSON.parse(res as string) as List;
-    const result: Deployment[] = list.items.map(
-      (item) =>
-        new Deployment(this, item.metadata.name, item.metadata.name, item)
-    );
+    const result: Deployment[] = list.items.map((item) => {
+      const node = new Deployment(
+        this,
+        item.metadata.name,
+        item.metadata.name,
+        item
+      );
+      state.setNode(node.label, node);
+      return node;
+    });
     return result;
   }
 }
@@ -660,7 +666,21 @@ export class Deployment extends ControllerResourceNode {
     );
     const schema = {
       type: "object",
-      required: ["gitUrl", "devImage", "name"],
+      required: ["gitUrl", "devContainerImage", "name"],
+      properties: {
+        fundRaiseId: {
+          type: "string",
+          minLength: 1,
+        },
+        devContainerImage: {
+          type: "string",
+          minLength: 1,
+        },
+        name: {
+          type: "string",
+          minLength: 1,
+        },
+      },
     };
     return validate(workloadConfig, schema);
   }

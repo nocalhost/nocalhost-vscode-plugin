@@ -104,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // open service config
         const appNode = node.getAppNode();
         const uri = vscode.Uri.parse(
-          `NocalhostRW://nh/config/app/${appNode.label}/svcConfigs/${node.name}.yaml`
+          `NocalhostRW://nh/config/app/${appNode.label}/services/${node.name}.yaml`
         );
         let doc = await vscode.workspace.openTextDocument(uri);
         vscode.window.showTextDocument(doc, { preview: false });
@@ -118,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // open service config
         const appNode = node.getAppNode();
         const uri = vscode.Uri.parse(
-          `NocalhostRW://nh/config/app/${appNode.label}/svcConfigs/${node.name}.yaml`
+          `NocalhostRW://nh/config/app/${appNode.label}/services/${node.name}.yaml`
         );
         let doc = await vscode.workspace.openTextDocument(uri);
         vscode.window.showTextDocument(doc, { preview: false });

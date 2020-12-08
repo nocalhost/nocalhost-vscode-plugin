@@ -21,6 +21,7 @@ import * as fileUtil from "./utils/fileUtil";
 import ConfigService from "./service/configService";
 import * as fileStore from "./store/fileStore";
 import { CURRENT_KUBECONFIG_FULLPATH, HELM_VALUES_DIR } from "./constants";
+import state from "./state";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
   static supportScheme = ["Nocalhost", "NocalhostRW"];
@@ -113,21 +114,34 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             const key = paths[4]; // Array|Object|string
             const subKey = paths[5]; // subPropery
 
-            const appInfo: any = await ConfigService.getAppConfig(appName);
             if (key && subKey) {
-              if (appInfo[key] instanceof Array) {
-                result = "";
-                for (let i = 0; i < appInfo[key].length; i++) {
-                  if (appInfo[key][i] && appInfo[key][i].name === subKey) {
-                    result = this.stringify([appInfo[key][i]], style) || "";
-                  }
+              if (key === "services" && subKey) {
+                let serviceInfo = await ConfigService.getWorkloadConfig(
+                  appName,
+                  subKey
+                );
+                if (!serviceInfo) {
+                  result = await nhctl.getTemplateConfig(appName, subKey);
+                } else {
+                  result = this.stringify(serviceInfo, style) as string;
                 }
-              } else if (appInfo[key] instanceof Object) {
-                const obj: any = {};
-                obj[subKey] = appInfo[key][subKey];
-                result = this.stringify(obj, style) as string;
+              } else {
+                const appInfo: any = await ConfigService.getAppConfig(appName);
+                if (appInfo[key] instanceof Array) {
+                  result = "";
+                  for (let i = 0; i < appInfo[key].length; i++) {
+                    if (appInfo[key][i] && appInfo[key][i].name === subKey) {
+                      result = this.stringify([appInfo[key][i]], style) || "";
+                    }
+                  }
+                } else if (appInfo[key] instanceof Object) {
+                  const obj: any = {};
+                  obj[subKey] = appInfo[key][subKey];
+                  result = this.stringify(obj, style) as string;
+                }
               }
             } else if (key) {
+              const appInfo: any = await ConfigService.getAppConfig(appName);
               const obj: any = {};
               obj[key] = appInfo[key];
               result = this.stringify(obj, style) || "";
@@ -175,7 +189,13 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const key = paths[4]; // Array|Object|string
         const subKey = paths[5]; // subPropery
 
-        destDir = ConfigService.getAppConfigPath(appName);
+        // destDir = ConfigService.getAppConfigPath(appName);
+        if (key === "services" && subKey) {
+          await ConfigService.writeConfig(appName, subKey, data);
+          command = "Nocalhost.refresh";
+          commands.executeCommand(command, state.getNode(subKey));
+          return;
+        }
 
         const appInfo: any = await ConfigService.getAppConfig(appName);
         let originData = "";
