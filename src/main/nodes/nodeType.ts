@@ -651,11 +651,20 @@ export class Deployment extends ControllerResourceNode {
       resStatus.conditions &&
       Array.isArray(resStatus.conditions)
     ) {
+      let available = false;
+      let progressing = false;
       resStatus.conditions.forEach((s) => {
         if (s.type === "Available" && s.status === "True") {
           status = "running";
+          available = true;
+        } else if (s.type === "Progressing" && s.status === "True") {
+          progressing = true;
         }
       });
+
+      if (progressing  && !available) {
+        status = "starting";
+      }
     }
     if (!status) {
       status = "unknown";
