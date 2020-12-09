@@ -124,6 +124,12 @@ export async function activate(context: vscode.ExtensionContext) {
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }
+
+  await vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    true
+  );
 }
 
 export function deactivate() {

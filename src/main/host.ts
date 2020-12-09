@@ -22,6 +22,8 @@ export class Host {
     });
   }
 
+  private defaultShell: string[] = ["/bin/zsh", "/bin/bash", "/bin/sh"];
+
   public showInputBox(options: vscode.InputBoxOptions) {
     return vscode.window.showInputBox(options);
   }
@@ -86,12 +88,31 @@ export class Host {
     return this.terminal.sendText(command);
   }
 
-  invokeInNewTerminal(command: string, name?: string, replace?: boolean) {
+  invokeInNewTerminal(
+    command: string,
+    name?: string,
+    withProperShell?: boolean
+  ) {
     this.newTerminal = vscode.window.createTerminal(name);
     this.newTerminal.show();
-    this.newTerminal.sendText(command);
-
+    if (withProperShell) {
+      this.execWithProperShell(command, 0);
+    } else {
+      this.newTerminal.sendText(command);
+    }
     return this.newTerminal;
+  }
+
+  execWithProperShell(command: string, index: number) {
+    setTimeout(() => {
+      this.newTerminal &&
+        this.newTerminal.sendText(`${command} -- ${this.defaultShell[index]}`);
+      if (this.defaultShell[index + 1]) {
+        this.execWithProperShell(command, index + 1);
+      } else {
+        this.newTerminal && this.newTerminal.sendText(`clear`);
+      }
+    }, 600);
   }
 
   log(msg: string, line?: boolean) {

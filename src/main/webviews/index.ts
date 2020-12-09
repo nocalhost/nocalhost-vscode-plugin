@@ -71,6 +71,7 @@ export function showDashboard(context: vscode.ExtensionContext) {
         Before you start, please make sure:
         <br />
         <ul>
+          <li>git is installed</li>
           <li>kubectl is installed</li>
           <li>helm is installed if you develop helm apps</li>
           <li>nhctl is installed</li>
