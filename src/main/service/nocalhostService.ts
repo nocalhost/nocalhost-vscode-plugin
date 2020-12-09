@@ -55,8 +55,6 @@ class NocalhostService {
     installType: string,
     resourceDir: string
   ) {
-    host.log(`Installing application: ${appName}`, true);
-    host.showInformationMessage(`Installing application: ${appName}`);
     // tips
     let values: string | undefined;
     if (["helm", "helm-repo"].includes(installType)) {
@@ -66,6 +64,7 @@ class NocalhostService {
         "Specify One",
         "Use Default values"
       );
+      if (!res) return;
       if (res === "Specify One") {
         const valuesUri = await host.showOpenDialog({
           canSelectFiles: true,
@@ -79,6 +78,8 @@ class NocalhostService {
         }
       }
     }
+    host.log(`Installing application: ${appName}`, true);
+    host.showInformationMessage(`Installing application: ${appName}`);
     await nhctl.install(
       host,
       appName,
@@ -190,6 +191,7 @@ class NocalhostService {
         nls["bt.clone"],
         nls["bt.open.dir"]
       );
+      if (!result) return;
       if (result === nls["bt.clone"]) {
         destDir = await this.cloneCode(host, appName, node.name);
         if (destDir) {
