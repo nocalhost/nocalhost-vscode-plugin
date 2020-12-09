@@ -80,6 +80,9 @@ export default class StartDevModeCommand implements ICommand {
         nls["bt.clone"],
         nls["bt.open.dir"]
       );
+      if (!result) {
+        return;
+      }
       if (result === nls["bt.clone"]) {
         destDir = await this.cloneCode(host, appName, node.name);
         if (destDir) {
