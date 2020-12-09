@@ -24,12 +24,12 @@ import {
   BaseNocalhostNode,
   DeploymentStatus,
 } from "./nodes/nodeType";
-import { ControllerNodeApi } from "./service/nocalhostService";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
 import state from "./state";
 import { SHOW_DASHBOARD, START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
+import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 

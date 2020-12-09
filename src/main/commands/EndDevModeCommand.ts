@@ -7,8 +7,8 @@ import registerCommand from "./register";
 
 import { ControllerResourceNode } from "../nodes/nodeType";
 import { SELECTED_APP_NAME } from "../constants";
-import nocalhostService from "../service/nocalhostService";
 import host from "../host";
+import * as nhctl from "../ctl/nhctl";
 
 export default class EndDevModeCommand implements ICommand {
   command: string = END_DEV_MODE;
@@ -22,7 +22,12 @@ export default class EndDevModeCommand implements ICommand {
     if (!appName) {
       throw new Error("you must select one app");
     }
-    // TODO remove nocalhostService
-    await nocalhostService.endDevMode(host, appName, node);
+    host.getOutputChannel().show(true);
+    host.showInformationMessage("Ending DevMode.");
+    host.log("Ending DevMode ...", true);
+    await nhctl.endDevMode(host, appName, node.name);
+    await node.setStatus("", true);
+    host.showInformationMessage("DevMode Ended.");
+    host.log("DevMode Ended", true);
   }
 }
