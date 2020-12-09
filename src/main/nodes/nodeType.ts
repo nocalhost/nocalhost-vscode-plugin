@@ -36,6 +36,7 @@ import { List, Resource, ResourceStatus } from "./resourceType";
 import application from "../commands/application";
 import ConfigService from "../service/configService";
 import validate from "../utils/validate";
+import { resolveVSCodeUri } from "../utils/fileUtil";
 import * as path from "path";
 
 const ID_SPLIT = "*/.&|/";
@@ -202,12 +203,16 @@ export class AppFolderNode extends NocalhostFolderNode {
 
   private updateIcon(treeItem: vscode.TreeItem) {
     if (this.installed() && !this.unInstalling()) {
-      return (treeItem.iconPath = new vscode.ThemeIcon("vm-active"));
+      return (treeItem.iconPath = resolveVSCodeUri(
+        "images/icons/app-connected.svg"
+      ));
     }
     if (this.unInstalled() && !this.installing()) {
-      return (treeItem.iconPath = new vscode.ThemeIcon("vm-outline"));
+      return (treeItem.iconPath = resolveVSCodeUri(
+        "images/icons/app-inactive.svg"
+      ));
     }
-    treeItem.iconPath = new vscode.ThemeIcon("loading");
+    treeItem.iconPath = resolveVSCodeUri("images/icons/loading.svg");
   }
 
   private updateContext(treeItem: vscode.TreeItem) {
@@ -604,16 +609,16 @@ export class Deployment extends ControllerResourceNode {
     status = await this.getStatus();
     switch (status) {
       case "running":
-        treeItem.iconPath = new vscode.ThemeIcon("circle-filled");
+        treeItem.iconPath = resolveVSCodeUri("images/icons/status-normal.svg");
         break;
       case "developing":
-        treeItem.iconPath = new vscode.ThemeIcon("debug");
+        treeItem.iconPath = resolveVSCodeUri("images/icons/status-running.svg");
         break;
       case "starting":
-        treeItem.iconPath = new vscode.ThemeIcon("pulse");
+        treeItem.iconPath = resolveVSCodeUri("images/icons/loading.svg");
         break;
       case "unknown":
-        treeItem.iconPath = new vscode.ThemeIcon("circle-slash");
+        treeItem.iconPath = resolveVSCodeUri("images/icons/status-unknown.svg");
         break;
     }
     const check = await this.checkConfig();
@@ -647,11 +652,26 @@ export class Deployment extends ControllerResourceNode {
     );
     const deploymentObj = JSON.parse(deploy as string) as Resource;
     const resStatus = deploymentObj.status as ResourceStatus;
-    resStatus.conditions.forEach((s) => {
-      if (s.type === "Available" && s.status === "True") {
-        status = "running";
+    if (
+      resStatus &&
+      resStatus.conditions &&
+      Array.isArray(resStatus.conditions)
+    ) {
+      let available = false;
+      let progressing = false;
+      resStatus.conditions.forEach((s) => {
+        if (s.type === "Available" && s.status === "True") {
+          status = "running";
+          available = true;
+        } else if (s.type === "Progressing" && s.status === "True") {
+          progressing = true;
+        }
+      });
+
+      if (progressing && !available) {
+        status = "starting";
       }
-    });
+    }
     if (!status) {
       status = "unknown";
     }
