@@ -28,8 +28,6 @@ class Git {
 
           const scheme = gitUrl.split("://");
           gitUrl = `${scheme[0]}://${username}:${password}@${scheme[1]}`;
-        } else {
-          throw data;
         }
       });
     } else {
