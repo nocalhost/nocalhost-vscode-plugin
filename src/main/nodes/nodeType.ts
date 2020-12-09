@@ -32,7 +32,7 @@ import {
   STATEFUL_SET_FOLDER,
   WORKLOAD_FOLDER,
 } from "./nodeContants";
-import { List, Resource, ResourceStatus } from "./resourceType";
+import { List, Resource, ResourceStatus, Status } from "./resourceType";
 import application from "../commands/application";
 import ConfigService from "../service/configService";
 import validate from "../utils/validate";
@@ -495,10 +495,17 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   ): Promise<vscode.ProviderResult<Deployment[]>> {
     const res = await kubectl.getResourceList(host, "Deployments");
     const list = JSON.parse(res as string) as List;
-    const result: Deployment[] = list.items.map(
-      (item) =>
-        new Deployment(this, item.metadata.name, item.metadata.name, item)
-    );
+    const result: Deployment[] = list.items.map((item) => {
+      const status = item.status as ResourceStatus;
+      const node = new Deployment(
+        this,
+        item.metadata.name,
+        item.metadata.name,
+        status.conditions || ((status as unknown) as string),
+        item
+      );
+      return node;
+    });
     return result;
   }
 }
@@ -581,10 +588,12 @@ export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
   public resourceType = "deployment";
   private firstRender = true;
+
   constructor(
     public parent: BaseNocalhostNode,
     public label: string,
     public name: string,
+    private conditionsStatus: Array<Status> | string,
     public info?: any
   ) {
     super();
@@ -593,13 +602,6 @@ export class Deployment extends ControllerResourceNode {
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
     let status = "";
-    if (this.firstRender) {
-      this.firstRender = false;
-      setTimeout(() => {
-        vscode.commands.executeCommand("Nocalhost.refresh", this);
-      }, 0);
-      return treeItem;
-    }
     status = await this.getStatus();
     switch (status) {
       case "running":
@@ -638,22 +640,24 @@ export class Deployment extends ControllerResourceNode {
         return DeploymentStatus.developing;
       }
     }
-    const deploy = await kubectl.loadResource(
-      host,
-      this.type,
-      this.name,
-      "json"
-    );
-    const deploymentObj = JSON.parse(deploy as string) as Resource;
-    const resStatus = deploymentObj.status as ResourceStatus;
-    if (
-      resStatus &&
-      resStatus.conditions &&
-      Array.isArray(resStatus.conditions)
-    ) {
+    if (this.firstRender) {
+      this.firstRender = false;
+    } else {
+      const deploy = await kubectl.loadResource(
+        host,
+        this.type,
+        this.name,
+        "json"
+      );
+      const deploymentObj = JSON.parse(deploy as string) as Resource;
+      const status = deploymentObj.status as ResourceStatus;
+      this.conditionsStatus =
+        status.conditions || ((status as unknown) as string);
+    }
+    if (Array.isArray(this.conditionsStatus)) {
       let available = false;
       let progressing = false;
-      resStatus.conditions.forEach((s) => {
+      this.conditionsStatus.forEach((s) => {
         if (s.type === "Available" && s.status === "True") {
           status = "running";
           available = true;
