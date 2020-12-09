@@ -64,7 +64,9 @@ class NocalhostService {
         "Specify One",
         "Use Default values"
       );
-      if (!res) return;
+      if (!res) {
+        return;
+      }
       if (res === "Specify One") {
         const valuesUri = await host.showOpenDialog({
           canSelectFiles: true,
@@ -191,7 +193,9 @@ class NocalhostService {
         nls["bt.clone"],
         nls["bt.open.dir"]
       );
-      if (!result) return;
+      if (!result) {
+        return;
+      }
       if (result === nls["bt.clone"]) {
         destDir = await this.cloneCode(host, appName, node.name);
         if (destDir) {
