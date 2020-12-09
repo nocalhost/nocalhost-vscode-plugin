@@ -198,9 +198,7 @@ class NocalhostService {
           fileStore.set(appName, appConfig);
           const uri = vscode.Uri.file(destDir);
           if (currentUri !== uri.fsPath) {
-            vscode.commands.executeCommand("vscode.openFolder", uri, {
-              forceReuseWindow: true,
-            });
+            vscode.commands.executeCommand("vscode.openFolder", uri, true);
             this.setTmpStartRecord(appName, node as ControllerResourceNode);
             return;
           }
@@ -215,9 +213,7 @@ class NocalhostService {
           workloadConfig.directory = uris[0].fsPath;
           fileStore.set(appName, appConfig);
           if (currentUri !== uris[0].fsPath) {
-            vscode.commands.executeCommand("vscode.openFolder", uris[0], {
-              forceReuseWindow: true,
-            });
+            vscode.commands.executeCommand("vscode.openFolder", uris[0], true);
             this.setTmpStartRecord(appName, node as ControllerResourceNode);
             return;
           }
@@ -243,17 +239,13 @@ class NocalhostService {
         if (uris) {
           workloadConfig["directory"] = uris[0].fsPath;
           fileStore.set(appName, appConfig);
-          vscode.commands.executeCommand("vscode.openFolder", uris[0], {
-            forceReuseWindow: true,
-          });
+          vscode.commands.executeCommand("vscode.openFolder", uris[0], true);
           this.setTmpStartRecord(appName, node as ControllerResourceNode);
           return;
         }
       } else if (result === nls["bt.open.dir"]) {
         const uri = vscode.Uri.file(workloadConfig.directory);
-        vscode.commands.executeCommand("vscode.openFolder", uri, {
-          forceReuseWindow: true,
-        });
+        vscode.commands.executeCommand("vscode.openFolder", uri, true);
         this.setTmpStartRecord(appName, node as ControllerResourceNode);
         return;
       }
