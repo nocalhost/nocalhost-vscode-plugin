@@ -3,10 +3,10 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 import { LOG } from "./constants";
 import registerCommand from "./register";
-import { KubernetesResourceNode } from "../nodes/nodeType";
 import host from "../host";
-import { Resource, PodResource } from "../nodes/resourceType";
 import * as kubectl from "../ctl/kubectl";
+import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
+import { Resource, PodResource } from "../nodes/types/resourceType";
 
 export default class LogCommand implements ICommand {
   command: string = LOG;

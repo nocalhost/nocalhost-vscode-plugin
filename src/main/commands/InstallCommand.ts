@@ -5,34 +5,39 @@ import ICommand from "./ICommand";
 import { INSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
-import { AppFolderNode, NocalhostAccountNode } from "../nodes/nodeType";
 import host, { Host } from "../host";
-import { KUBE_CONFIG_DIR, SELECTED_APP_NAME } from "../constants";
+import {
+  CURRENT_KUBECONFIG_FULLPATH,
+  KUBE_CONFIG_DIR,
+  SELECTED_APP_NAME,
+} from "../constants";
 import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
+import { AppNode } from "../nodes/AppNode";
+import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
-  async execCommand(appNode: AppFolderNode) {
+  async execCommand(appNode: AppNode) {
     state.setAppState(appNode.label, "installing", true, {
       refresh: true,
       node: appNode,
     });
     const currentKubeConfigFullpath = this.getKubeConfigPath(appNode);
     fileStore.set(SELECTED_APP_NAME, appNode.info.name);
-    fileStore.set(currentKubeConfigFullpath, currentKubeConfigFullpath);
+    fileStore.set(CURRENT_KUBECONFIG_FULLPATH, currentKubeConfigFullpath);
     vscode.commands.executeCommand("Nocalhost.refresh");
     // make siblings collapsis
     const siblings: (
-      | AppFolderNode
+      | AppNode
       | NocalhostAccountNode
     )[] = await appNode.siblings();
     siblings.forEach((item) => {
-      const node = item as AppFolderNode;
+      const node = item as AppNode;
       node.collapsis();
     });
 
@@ -99,7 +104,7 @@ export default class InstallCommand implements ICommand {
     host.showInformationMessage(`Application ${appName} installed`);
   }
 
-  private getKubeConfigPath(appNode: AppFolderNode): string {
+  private getKubeConfigPath(appNode: AppNode): string {
     const { id, devSpaceId } = appNode;
     return path.resolve(KUBE_CONFIG_DIR, `${id}_${devSpaceId}_config`);
   }

@@ -7,6 +7,7 @@ import NocalhostAppProvider from "./appProvider";
 import * as fileStore from "./store/fileStore";
 import {
   BASE_URL,
+  CURRENT_KUBECONFIG_FULLPATH,
   HELM_VALUES_DIR,
   JWT,
   KUBE_CONFIG_DIR,
@@ -19,17 +20,14 @@ import {
   TMP_WORKLOAD,
 } from "./constants";
 import host from "./host";
-import {
-  AppFolderNode,
-  BaseNocalhostNode,
-  DeploymentStatus,
-} from "./nodes/nodeType";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
 import state from "./state";
 import { SHOW_DASHBOARD, START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
+import { AppNode } from "./nodes/AppNode";
+import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -55,9 +53,9 @@ export async function activate(context: vscode.ExtensionContext) {
   appTreeView.onDidExpandElement(
     async (e: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
       const node = e.element;
-      if (node instanceof AppFolderNode) {
+      if (node instanceof AppNode) {
         const others = (await node.getParent().getChildren()).filter((item) => {
-          if (item instanceof AppFolderNode && item.id !== node.id) {
+          if (item instanceof AppNode && item.id !== node.id) {
             return true;
           } else {
             false;
@@ -74,7 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
           `${node.id}_${node.devSpaceId}_config`
         );
         fileStore.set(SELECTED_APP_NAME, node.info.name);
-        fileStore.set(currentKubeConfigFullpath, currentKubeConfigFullpath);
+        fileStore.set(CURRENT_KUBECONFIG_FULLPATH, currentKubeConfigFullpath);
         vscode.commands.executeCommand("Nocalhost.refresh");
       }
 

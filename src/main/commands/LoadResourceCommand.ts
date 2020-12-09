@@ -3,15 +3,16 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 import { LOAD_RESOURCE } from "./constants";
 import registerCommand from "./register";
-import { AppFolderNode, KubernetesResourceNode } from "../nodes/nodeType";
 import host from "../host";
+import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
+import { AppNode } from "../nodes/AppNode";
 
 export default class LoadResourceCommand implements ICommand {
   command: string = LOAD_RESOURCE;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  async execCommand(node: KubernetesResourceNode | AppFolderNode) {
+  async execCommand(node: KubernetesResourceNode | AppNode) {
     if (node instanceof KubernetesResourceNode) {
       const kind = node.resourceType;
       const name = node.name;
@@ -20,7 +21,7 @@ export default class LoadResourceCommand implements ICommand {
       );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: false });
-    } else if (node instanceof AppFolderNode) {
+    } else if (node instanceof AppNode) {
       if (!node.installed()) {
         host.showInformationMessage(`${node.label} is not installed.`);
         return;

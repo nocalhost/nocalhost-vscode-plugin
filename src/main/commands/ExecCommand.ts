@@ -3,13 +3,13 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 import { EXEC } from "./constants";
 import registerCommand from "./register";
-import { DeploymentStatus } from "../nodes/nodeType";
 import host, { Host } from "../host";
 import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
-import { Resource, PodResource } from "../nodes/resourceType";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as kubectl from "../ctl/kubectl";
 import * as fileStore from "../store/fileStore";
+import { DeploymentStatus } from "../nodes/types/nodeType";
+import { Resource, PodResource } from "../nodes/types/resourceType";
 
 export default class ExecCommand implements ICommand {
   command: string = EXEC;

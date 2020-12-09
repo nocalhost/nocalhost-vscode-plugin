@@ -4,7 +4,7 @@ import * as shell from "shelljs";
 import * as fileStore from "../store/fileStore";
 import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
 import { Host } from "../host";
-import { ControllerResource, List } from "../nodes/resourceType";
+import { ControllerResource, List } from "../nodes/types/resourceType";
 
 export async function exec(command: string) {
   if (!checkKubectl()) {

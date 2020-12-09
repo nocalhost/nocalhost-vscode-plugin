@@ -5,10 +5,10 @@ import * as fileStore from "../store/fileStore";
 import { END_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 
-import { ControllerResourceNode } from "../nodes/nodeType";
 import { SELECTED_APP_NAME } from "../constants";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export default class EndDevModeCommand implements ICommand {
   command: string = END_DEV_MODE;

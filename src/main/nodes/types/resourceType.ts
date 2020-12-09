@@ -1,5 +1,3 @@
-import { Resolver } from "dns";
-
 export interface List {
   apiVersion: string;
   items: Array<Resource>;

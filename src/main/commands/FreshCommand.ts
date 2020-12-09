@@ -3,9 +3,9 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 
 import { REFRESH } from "./constants";
-import { BaseNocalhostNode } from "../nodes/nodeType";
 import NocalhostAppProvider from "../appProvider";
 import registerCommand from "./register";
+import { BaseNocalhostNode } from "../nodes/types/nodeType";
 
 export default class RefreshCommand implements ICommand {
   command: string = REFRESH;

@@ -3,8 +3,8 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 
 import { WRITE_SERVICE_CONFIG } from "./constants";
-import { ControllerResourceNode } from "../nodes/nodeType";
 import registerCommand from "./register";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export default class WriteServiceConfigCommand implements ICommand {
   command: string = WRITE_SERVICE_CONFIG;

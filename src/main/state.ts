@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { BaseNocalhostNode } from "./nodes/nodeType";
+import { BaseNocalhostNode } from "./nodes/types/nodeType";
 
 class State {
   private login = false;

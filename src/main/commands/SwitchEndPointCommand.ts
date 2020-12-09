@@ -5,7 +5,6 @@ import * as fileStore from "../store/fileStore";
 import { SWITCH_END_POINT } from "./constants";
 import registerCommand from "./register";
 
-import { ControllerResourceNode } from "../nodes/nodeType";
 import { BASE_URL } from "../constants";
 import host from "../host";
 

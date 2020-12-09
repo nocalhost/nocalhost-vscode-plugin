@@ -26,3 +26,5 @@ export const POD = "POD";
 
 export const KUBERNETE_RESOURCE = "KUBERNETE_RESOURCE";
 export const KUBERNETE_FOLDER_RESOURCE = "KUBERNETE_FOLDER_RESOURCE";
+
+export const ID_SPLIT = "*/.&|/";

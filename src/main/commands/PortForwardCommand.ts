@@ -3,12 +3,12 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 import { PORT_FORWARD } from "./constants";
 import registerCommand from "./register";
-import { KubernetesResourceNode } from "../nodes/nodeType";
 import host from "../host";
 import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
-import { Resource } from "../nodes/resourceType";
 import * as kubectl from "../ctl/kubectl";
 import * as fileStore from "../store/fileStore";
+import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
+import { Resource } from "../nodes/types/resourceType";
 
 export default class PortForwardCommand implements ICommand {
   command: string = PORT_FORWARD;

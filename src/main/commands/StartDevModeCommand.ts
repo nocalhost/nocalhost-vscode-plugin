@@ -5,7 +5,6 @@ import ICommand from "./ICommand";
 import * as fileStore from "../store/fileStore";
 import { EXEC, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
-import { ControllerResourceNode, DeploymentStatus } from "../nodes/nodeType";
 import {
   SELECTED_APP_NAME,
   TMP_APP,
@@ -19,6 +18,8 @@ import git from "../ctl/git";
 import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as nls from "../../../package.nls.json";
+import { DeploymentStatus } from "../nodes/types/nodeType";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export interface ControllerNodeApi {
   name: string;

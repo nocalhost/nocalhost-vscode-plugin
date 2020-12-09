@@ -3,8 +3,8 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 
 import { EDIT_SERVICE_CONFIG } from "./constants";
-import { ControllerResourceNode } from "../nodes/nodeType";
 import registerCommand from "./register";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export default class EditServiceConfigCommand implements ICommand {
   command: string = EDIT_SERVICE_CONFIG;
