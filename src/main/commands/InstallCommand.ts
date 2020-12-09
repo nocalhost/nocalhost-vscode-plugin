@@ -66,8 +66,6 @@ export default class InstallCommand implements ICommand {
     installType: string,
     resourceDir: Array<string>
   ) {
-    host.log(`Installing application: ${appName}`, true);
-    host.showInformationMessage(`Installing application: ${appName}`);
     // tips
     let values: string | undefined;
     if (["helm", "helm-repo"].includes(installType)) {
@@ -77,6 +75,9 @@ export default class InstallCommand implements ICommand {
         "Specify One",
         "Use Default values"
       );
+      if (!res) {
+        return;
+      }
       if (res === "Specify One") {
         const valuesUri = await host.showOpenDialog({
           canSelectFiles: true,
@@ -90,6 +91,8 @@ export default class InstallCommand implements ICommand {
         }
       }
     }
+    host.log(`Installing application: ${appName}`, true);
+    host.showInformationMessage(`Installing application: ${appName}`);
     await nhctl.install(
       host,
       appName,
