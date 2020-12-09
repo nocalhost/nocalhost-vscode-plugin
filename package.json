@@ -34,35 +34,40 @@
     "viewsWelcome": [
       {
         "view": "Nocalhost",
+        "contents": "%noReady.description%",
+        "when": "!extensionActivated"
+      },
+      {
+        "view": "Nocalhost",
         "contents": "%noServer.description%",
-        "when": "!serverConfig && !login"
+        "when": "extensionActivated && !serverConfig && !login"
       },
       {
         "view": "Nocalhost",
         "contents": "%noLogin.description%",
-        "when": "serverConfig && !login"
+        "when": "extensionActivated && serverConfig && !login"
       },
       {
         "view": "Nocalhost",
         "contents": "%noApps.description%",
-        "when": "login"
+        "when": "extensionActivated && login"
       }
     ],
     "menus": {
       "view/title": [
         {
           "command": "Nocalhost.refresh",
-          "when": "view == Nocalhost",
+          "when": "extensionActivated && view == Nocalhost",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.signout",
-          "when": "view == Nocalhost",
+          "when": "extensionActivated && view == Nocalhost",
           "group": "overflow"
         },
         {
           "command": "Nocalhost.switchEndPoint",
-          "when": "view == Nocalhost",
+          "when": "extensionActivated && view == Nocalhost",
           "group": "navigation"
         }
       ],
