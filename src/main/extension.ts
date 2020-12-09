@@ -337,6 +337,12 @@ export async function activate(context: vscode.ExtensionContext) {
     // start develop
     nocalhostService.startDevMode(host, tmpApp, node);
   }
+
+  await vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    true
+  );
 }
 
 function registerCommand(command: string, isLock: boolean, callback: any) {
