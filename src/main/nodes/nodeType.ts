@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from "uuid";
 import host from "../host";
 import state from "../state";
 import * as fileStore from "../store/fileStore";
+import * as fileUtil from "../utils/fileUtil";
+
 import {
   APP,
   APP_FOLDER,
@@ -33,7 +35,6 @@ import {
   WORKLOAD_FOLDER,
 } from "./nodeContants";
 import { List, Resource, ResourceStatus, Status } from "./resourceType";
-import application from "../commands/application";
 import ConfigService from "../service/configService";
 import validate from "../utils/validate";
 import { resolveVSCodeUri } from "../utils/fileUtil";
@@ -953,7 +954,11 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         obj.installType = this.generateInstallType(source, originInstallType);
         obj.resourceDir = jsonObj["resource_dir"];
       }
-      application.saveKubeConfig(app.id, app.devspaceId, app.kubeconfig);
+      const filePath = path.resolve(
+        KUBE_CONFIG_DIR,
+        `${app.id}_${app.devspaceId}_config`
+      );
+      fileUtil.writeFile(filePath, app.kubeconfig);
       return new AppFolderNode(
         this,
         obj.installType,

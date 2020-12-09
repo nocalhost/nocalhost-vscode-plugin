@@ -121,7 +121,7 @@
     },
     "commands": [
       {
-        "command": "showDashboard",
+        "command": "Nocalhost.showDashboard",
         "title": "Show Dashboard"
       },
       {
@@ -137,10 +137,6 @@
         "command": "Nocalhost.signin",
         "title": "Sign in",
         "icon": "$(sign-in)"
-      },
-      {
-        "command": "getApplicationList",
-        "title": "getApplicationList"
       },
       {
         "command": "Nocalhost.refresh",
@@ -161,10 +157,6 @@
         "command": "Nocalhost.uninstallApp",
         "title": "Uninstall App",
         "icon": "$(trash)"
-      },
-      {
-        "command": "useApplication",
-        "title": "Use Application"
       },
       {
         "command": "getWordloadList",
