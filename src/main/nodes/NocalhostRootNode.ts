@@ -29,10 +29,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         url?: string;
         name?: string;
         installType: string;
-        resourceDir: string;
+        resourceDir: Array<string>;
       } = {
         installType: "manifest",
-        resourceDir: "manifest",
+        resourceDir: ["manifest/templates"],
       };
       if (context) {
         let jsonObj = JSON.parse(context);

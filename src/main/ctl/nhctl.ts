@@ -10,13 +10,17 @@ export function install(
   appName: string,
   gitUrl: string,
   installType: string,
-  resourceDir: string,
+  resourceDir: Array<string>,
   values?: string
 ) {
+  let resourcePath = "";
+  resourceDir.map((dir) => {
+    resourcePath += ` --resource-path ${dir}`;
+  });
   let installCommand = nhctlCommand(
     `install ${appName} -u ${gitUrl} -t ${installType} ${
       values ? "-f " + values : ""
-    } --resource-path ${resourceDir}`
+    } ${resourcePath}`
   );
 
   if (installType === "helm-repo") {

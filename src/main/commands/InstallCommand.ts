@@ -64,7 +64,7 @@ export default class InstallCommand implements ICommand {
     devSpaceId: number,
     gitUrl: string,
     installType: string,
-    resourceDir: string
+    resourceDir: Array<string>
   ) {
     host.log(`Installing application: ${appName}`, true);
     host.showInformationMessage(`Installing application: ${appName}`);

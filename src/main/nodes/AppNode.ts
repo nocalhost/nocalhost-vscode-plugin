@@ -25,14 +25,14 @@ export class AppNode extends NocalhostFolderNode {
   public installStatus: number;
   public installType: string;
   public kubeConfig: string;
-  public resourceDir: string;
+  public resourceDir: Array<string>;
   public info?: any;
   public parent: NocalhostRootNode;
   private nhctlAppInfo: AppInfo | undefined;
   constructor(
     parent: NocalhostRootNode,
     installType: string,
-    resourceDir: string,
+    resourceDir: Array<string>,
     label: string,
     id: number,
     devSpaceId: number,
