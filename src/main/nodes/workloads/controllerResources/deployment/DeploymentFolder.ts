@@ -22,7 +22,10 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<Deployment[]>> {
-    const res = await kubectl.getResourceList(host, "Deployments");
+    const res = await kubectl.getResourceList(
+      this.getKubeConfigPath(),
+      "Deployments"
+    );
     const list = JSON.parse(res as string) as List;
     const result: Deployment[] = list.items.map((item) => {
       const status = item.status as ResourceStatus;

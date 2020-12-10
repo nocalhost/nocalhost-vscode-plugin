@@ -1,6 +1,7 @@
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import { JOB } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
+import state from "../../../../state";
 
 export class Job extends ControllerResourceNode {
   public type = JOB;
@@ -12,5 +13,6 @@ export class Job extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    state.setNode(this.getNodeStateId(), this);
   }
 }

@@ -1,5 +1,6 @@
+import state from "../../../state";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
-import { POD, ID_SPLIT } from "../../nodeContants";
+import { POD } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 
 export class Pod extends KubernetesResourceNode {
@@ -12,9 +13,6 @@ export class Pod extends KubernetesResourceNode {
     public info?: any
   ) {
     super();
-  }
-  getNodeStateId(): string {
-    const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}${ID_SPLIT}${this.name}`;
+    state.setNode(this.getNodeStateId(), this);
   }
 }

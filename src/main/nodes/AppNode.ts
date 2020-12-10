@@ -101,7 +101,7 @@ export class AppNode extends NocalhostFolderNode {
     }
   }
 
-  private getKUbeconfigPath() {
+  public getKUbeconfigPath() {
     return path.resolve(
       KUBE_CONFIG_DIR,
       `${this.id}_${this.devSpaceId}_config`

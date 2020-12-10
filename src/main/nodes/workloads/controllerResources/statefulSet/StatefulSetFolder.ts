@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 
 import * as kubectl from "../../../../ctl/kubectl";
-import host from "../../../../host";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { STATEFUL_SET_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
@@ -22,7 +21,10 @@ export class StatefulSetFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await kubectl.getResourceList(host, "StatefulSets");
+    const res = await kubectl.getResourceList(
+      this.getKubeConfigPath(),
+      "StatefulSets"
+    );
     const list = JSON.parse(res as string) as List;
     const result: StatefulSet[] = list.items.map(
       (item) =>

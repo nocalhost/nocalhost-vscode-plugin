@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 
 import * as kubectl from "../../../../ctl/kubectl";
-import host from "../../../../host";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { CronJob } from "./CronJob";
 import { CRON_JOBS_FOLDER } from "../../../nodeContants";
@@ -21,7 +20,10 @@ export class CronJobFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await kubectl.getResourceList(host, "CronJobs");
+    const res = await kubectl.getResourceList(
+      this.getKubeConfigPath(),
+      "CronJobs"
+    );
     const list = JSON.parse(res as string) as List;
     const result: CronJob[] = list.items.map(
       (item) => new CronJob(this, item.metadata.name, item.metadata.name, item)

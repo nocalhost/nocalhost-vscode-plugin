@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 
 import * as kubectl from "../../../../ctl/kubectl";
-import host from "../../../../host";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { DAEMON_SET_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
@@ -20,7 +19,10 @@ export class DaemonSetFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await kubectl.getResourceList(host, "DaemonSets");
+    const res = await kubectl.getResourceList(
+      this.getKubeConfigPath(),
+      "DaemonSets"
+    );
     const list = JSON.parse(res as string) as List;
     const result: DaemonSet[] = list.items.map(
       (item) =>

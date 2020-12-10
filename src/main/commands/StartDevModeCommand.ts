@@ -8,6 +8,7 @@ import registerCommand from "./register";
 import {
   SELECTED_APP_NAME,
   TMP_APP,
+  TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
   TMP_WORKLOAD,
@@ -26,6 +27,7 @@ export interface ControllerNodeApi {
   resourceType: string;
   setStatus: (status: string, refresh?: boolean) => Promise<void>;
   getStatus: () => Promise<string> | string;
+  getKubeConfigPath: () => string;
 }
 
 export default class StartDevModeCommand implements ICommand {
@@ -35,7 +37,7 @@ export default class StartDevModeCommand implements ICommand {
     this.context = context;
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
-  async execCommand(node: ControllerResourceNode) {
+  async execCommand(node: ControllerNodeApi) {
     const appName = fileStore.get(SELECTED_APP_NAME);
     if (!appName) {
       throw new Error("you must select one app");
@@ -165,7 +167,13 @@ export default class StartDevModeCommand implements ICommand {
               path.resolve(workloadConfig.directory || os.homedir(), item)
             );
           }
-          await nhctl.devStart(host, appName, node.name, dirs);
+          await nhctl.devStart(
+            host,
+            node.getKubeConfigPath(),
+            appName,
+            node.name,
+            dirs
+          );
           host.log("dev start end", true);
           host.log("", true);
 
@@ -173,7 +181,12 @@ export default class StartDevModeCommand implements ICommand {
             message: "syncing file",
           });
           host.log("sync file ...", true);
-          await nhctl.syncFile(host, appName, node.name);
+          await nhctl.syncFile(
+            host,
+            node.getKubeConfigPath(),
+            appName,
+            node.name
+          );
           host.log("sync file end", true);
           host.log("", true);
 
@@ -181,12 +194,17 @@ export default class StartDevModeCommand implements ICommand {
             message: "port forwarding",
           });
           host.log("port forward ...", true);
-          await nhctl.startPortForward(host, appName, node.name);
+          await nhctl.startPortForward(
+            host,
+            node.getKubeConfigPath(),
+            appName,
+            node.name
+          );
           host.log("port forward end", true);
           host.log("", true);
 
           setTimeout(() => {
-            nhctl.printAppInfo(host, appName);
+            nhctl.printAppInfo(host, node.getKubeConfigPath(), appName);
           }, 10 * 1000);
 
           progress.report({
@@ -208,10 +226,12 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   private setTmpStartRecord(appName: string, node: ControllerResourceNode) {
+    const appNode = node.getAppNode();
     fileStore.set(TMP_APP, appName);
     fileStore.set(TMP_WORKLOAD, node.name);
     fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
+    fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKUbeconfigPath());
   }
 
   private async getSvcConfig(workloadName: string) {

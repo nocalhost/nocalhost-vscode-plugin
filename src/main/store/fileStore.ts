@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import {
-  CURRENT_KUBECONFIG_FULLPATH,
   DEFAULT_KUBE_CONFIG_FULLPATH,
   USER_CONFIG_FULLPATH,
 } from "../constants";

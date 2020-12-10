@@ -11,6 +11,7 @@ import {
 } from "vscode";
 import * as yaml from "yaml";
 import * as path from "path";
+import * as querystring from "querystring";
 
 import * as kubectl from "./ctl/kubectl";
 import * as nhctl from "./ctl/nhctl";
@@ -19,9 +20,9 @@ import host from "./host";
 
 import * as fileUtil from "./utils/fileUtil";
 import ConfigService from "./service/configService";
-import * as fileStore from "./store/fileStore";
-import { CURRENT_KUBECONFIG_FULLPATH, HELM_VALUES_DIR } from "./constants";
+import { HELM_VALUES_DIR } from "./constants";
 import state from "./state";
+import { KubernetesResourceNode } from "./nodes/abstract/KubernetesResourceNode";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
   static supportScheme = ["Nocalhost", "NocalhostRW"];
@@ -71,20 +72,32 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     switch (authority) {
       case "k8s": {
         const paths = uri.path.split("/");
+        const query = querystring.decode(uri.query);
+        let id = "";
+        if (query) {
+          id = query.id as string;
+        }
         const type = paths[1];
         if (type === "loadResource") {
           const kind = paths[2];
           const names = paths[3].split(".");
           const name = names[0];
           const output = names[1];
-          result = (await kubectl.loadResource(host, kind, name, output)) || "";
+          const node = state.getNode(id) as KubernetesResourceNode;
+          result =
+            (await kubectl.loadResource(
+              node.getKubeConfigPath(),
+              kind,
+              name,
+              output
+            )) || "";
         } else if (type === "log") {
           // Nocalhost://k8s/log/pod/container
+          const node = state.getNode(id) as KubernetesResourceNode;
           const podName = paths[2];
           const constainerName = paths[3];
-          const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
           const shellObj = await shell.execAsync(
-            `kubectl logs ${podName} -c ${constainerName} --kubeconfig ${kubeconfigPath}`,
+            `kubectl logs ${podName} -c ${constainerName} --kubeconfig ${node.getKubeConfigPath()}`,
             []
           );
           if (shellObj.code === 0) {

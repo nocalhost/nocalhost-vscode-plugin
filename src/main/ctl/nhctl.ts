@@ -1,12 +1,10 @@
-import * as vscode from "vscode";
 import { execAsync, execChildProcessAsync } from "./shell";
 import { Host } from "../host";
-import * as fileStore from "../store/fileStore";
-import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
 import { spawn } from "child_process";
 
 export function install(
   host: Host,
+  kubeconfigPath: string,
   appName: string,
   gitUrl: string,
   installType: string,
@@ -18,6 +16,7 @@ export function install(
     resourcePath += ` --resource-path ${dir}`;
   });
   let installCommand = nhctlCommand(
+    kubeconfigPath,
     `install ${appName} -u ${gitUrl} -t ${installType} ${
       values ? "-f " + values : ""
     } ${resourcePath}`
@@ -25,6 +24,7 @@ export function install(
 
   if (installType === "helm-repo") {
     installCommand = nhctlCommand(
+      kubeconfigPath,
       `install ${appName} --helm-chart-name ${appName} -t ${installType} --helm-repo-url ${gitUrl}`
     );
   }
@@ -53,14 +53,22 @@ export function install(
   });
 }
 
-export async function uninstall(host: Host, appName: string) {
-  const uninstallCommand = nhctlCommand(`uninstall ${appName} --force`);
+export async function uninstall(
+  host: Host,
+  kubeconfigPath: string,
+  appName: string
+) {
+  const uninstallCommand = nhctlCommand(
+    kubeconfigPath,
+    `uninstall ${appName} --force`
+  );
   host.log(`[cmd] ${uninstallCommand}`, true);
   await execChildProcessAsync(host, uninstallCommand, []);
 }
 
 export async function devStart(
   host: Host,
+  kubeconfigPath: string,
   appName: string,
   workLoadName: string,
   syncs?: Array<string>
@@ -71,6 +79,7 @@ export async function devStart(
     syncOptions = "-s " + syncOptions;
   }
   const devStartCommand = nhctlCommand(
+    kubeconfigPath,
     `dev start ${appName} -d ${workLoadName} ${syncOptions}`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
@@ -79,6 +88,7 @@ export async function devStart(
 
 export async function startPortForward(
   host: Host,
+  kubeconfigPath: string,
   appName: string,
   workloadName: string,
   ports?: Array<string>
@@ -89,6 +99,7 @@ export async function startPortForward(
     portOptions = "-p " + portOptions;
   }
   const portForwardCommand = nhctlCommand(
+    kubeconfigPath,
     `port-forward ${appName} -d ${workloadName} ${portOptions}`
   );
 
@@ -99,21 +110,28 @@ export async function startPortForward(
 
 export async function syncFile(
   host: Host,
+  kubeconfigPath: string,
   appName: string,
   workloadName: string
 ) {
-  const syncFileCommand = nhctlCommand(`sync ${appName} -d ${workloadName}`);
+  const syncFileCommand = nhctlCommand(
+    kubeconfigPath,
+    `sync ${appName} -d ${workloadName}`
+  );
   host.log(`[cmd] ${syncFileCommand}`, true);
   await execChildProcessAsync(host, syncFileCommand, []);
 }
 
 export async function endDevMode(
   host: Host,
+  kubeconfigPath: string,
   appName: string,
-  workLoadName: string,
-  namespace?: string
+  workLoadName: string
 ) {
-  const end = nhctlCommand(`dev end ${appName} -d ${workLoadName} `);
+  const end = nhctlCommand(
+    kubeconfigPath,
+    `dev end ${appName} -d ${workLoadName} `
+  );
   host.log(`[cmd] ${end}`, true);
   host.disposeDebug();
   await execChildProcessAsync(host, end, []);
@@ -126,8 +144,12 @@ export async function loadResource(host: Host, appName: string) {
   return result.stdout;
 }
 
-export async function printAppInfo(host: Host, appName: string) {
-  const printAppCommand = nhctlCommand(`list ${appName}`);
+export async function printAppInfo(
+  host: Host,
+  kubeconfigPath: string,
+  appName: string
+) {
+  const printAppCommand = nhctlCommand(kubeconfigPath, `list ${appName}`);
   host.log(`[cmd] ${printAppCommand}`, true);
   await execChildProcessAsync(host, printAppCommand, []);
 }
@@ -158,7 +180,6 @@ export async function getTemplateConfig(appName: string, workloadName: string) {
   return result.stdout;
 }
 
-function nhctlCommand(baseCommand: string) {
-  const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-  return `nhctl ${baseCommand} --kubeconfig ${kubeconfig}`;
+function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
+  return `nhctl ${baseCommand} --kubeconfig ${kubeconfigPath}`;
 }

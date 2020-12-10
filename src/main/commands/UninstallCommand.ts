@@ -6,11 +6,7 @@ import { UNINSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import {
-  CURRENT_KUBECONFIG_FULLPATH,
-  KUBE_CONFIG_DIR,
-  SELECTED_APP_NAME,
-} from "../constants";
+import { KUBE_CONFIG_DIR, SELECTED_APP_NAME } from "../constants";
 import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
@@ -33,12 +29,11 @@ export default class UninstallCommand implements ICommand {
 
     state.setAppState(appNode.label, "uninstalling", true);
     appNode.collapsis();
-    const currentKubeConfigFullpath = this.getKubeConfigPath(appNode);
     fileStore.set(SELECTED_APP_NAME, appNode.info.name);
-    fileStore.set(CURRENT_KUBECONFIG_FULLPATH, currentKubeConfigFullpath);
     vscode.commands.executeCommand("Nocalhost.refresh");
     await this.uninstall(
       host,
+      appNode.getKubeConfigPath(),
       appNode.info.name,
       appNode.id,
       appNode.devSpaceId
@@ -50,13 +45,14 @@ export default class UninstallCommand implements ICommand {
 
   private async uninstall(
     host: Host,
+    kubeconfigPath: string,
     appName: string,
     appId: number,
     devSpaceId: number
   ) {
     host.log(`Uninstalling application: ${appName}`, true);
     host.showInformationMessage(`Uninstalling application: ${appName}`);
-    await nhctl.uninstall(host, appName);
+    await nhctl.uninstall(host, kubeconfigPath, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     fileStore.remove(appName);
     state.delete(appName);

@@ -24,6 +24,7 @@ export class Deployment extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    state.setNode(this.getNodeStateId(), this);
   }
 
   async getTreeItem(): Promise<vscode.TreeItem> {
@@ -71,7 +72,7 @@ export class Deployment extends ControllerResourceNode {
       this.firstRender = false;
     } else {
       const deploy = await kubectl.loadResource(
-        host,
+        this.getKubeConfigPath(),
         this.type,
         this.name,
         "json"

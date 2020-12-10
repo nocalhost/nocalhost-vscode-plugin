@@ -16,7 +16,12 @@ export default class LogCommand implements ICommand {
   async execCommand(node: KubernetesResourceNode) {
     const kind = node.resourceType;
     const name = node.name;
-    const resArr = await kubectl.getControllerPod(host, kind, name);
+    const appNode = node.getAppNode();
+    const resArr = await kubectl.getControllerPod(
+      appNode.getKUbeconfigPath(),
+      kind,
+      name
+    );
     if (resArr && resArr.length <= 0) {
       host.showErrorMessage("Not found pod");
       return;
@@ -31,7 +36,12 @@ export default class LogCommand implements ICommand {
     if (!podName) {
       return;
     }
-    const podStr = await kubectl.loadResource(host, "pod", podName, "json");
+    const podStr = await kubectl.loadResource(
+      appNode.getKUbeconfigPath(),
+      "pod",
+      podName,
+      "json"
+    );
     const pod = JSON.parse(podStr as string) as PodResource;
     const containerNameArr = pod.spec.containers.map((c) => {
       return c.name;
@@ -45,7 +55,7 @@ export default class LogCommand implements ICommand {
     }
 
     const uri = vscode.Uri.parse(
-      `Nocalhost://k8s/log/${podName}/${containerName}`
+      `Nocalhost://k8s/log/${podName}/${containerName}?id=${node.getNodeStateId()}`
     );
     let doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, { preview: false });

@@ -1,3 +1,4 @@
+import state from "../../../../state";
 import { STATEFUL_SET } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
@@ -12,5 +13,6 @@ export class StatefulSet extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    state.setNode(this.getNodeStateId(), this);
   }
 }

@@ -21,7 +21,7 @@ export class PodFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await kubectl.getResourceList(host, "Pods");
+    const res = await kubectl.getResourceList(this.getKubeConfigPath(), "Pods");
     const list = JSON.parse(res as string) as List;
     const result: Pod[] = list.items.map(
       (item) => new Pod(this, item.metadata.name, item.metadata.name, item)

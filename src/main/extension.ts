@@ -7,7 +7,6 @@ import NocalhostAppProvider from "./appProvider";
 import * as fileStore from "./store/fileStore";
 import {
   BASE_URL,
-  CURRENT_KUBECONFIG_FULLPATH,
   HELM_VALUES_DIR,
   JWT,
   KUBE_CONFIG_DIR,
@@ -15,6 +14,7 @@ import {
   PLUGIN_CONFIG_DIR,
   SELECTED_APP_NAME,
   TMP_APP,
+  TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
   TMP_WORKLOAD,
@@ -67,12 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.TreeItemCollapsibleState.Collapsed
           )
         );
-        const currentKubeConfigFullpath = path.resolve(
-          KUBE_CONFIG_DIR,
-          `${node.id}_${node.devSpaceId}_config`
-        );
         fileStore.set(SELECTED_APP_NAME, node.info.name);
-        fileStore.set(CURRENT_KUBECONFIG_FULLPATH, currentKubeConfigFullpath);
         vscode.commands.executeCommand("Nocalhost.refresh");
       }
 
@@ -108,11 +103,13 @@ export async function activate(context: vscode.ExtensionContext) {
   const tmpWorkload = fileStore.get(TMP_WORKLOAD);
   const tmpStatusId = fileStore.get(TMP_STATUS);
   const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
+  const tmpKubeConfigPath = fileStore.get(TMP_KUBECONFIG_PATH);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     fileStore.remove(TMP_APP);
     fileStore.remove(TMP_WORKLOAD);
     fileStore.remove(TMP_STATUS);
     fileStore.remove(TMP_RESOURCE_TYPE);
+    fileStore.remove(TMP_KUBECONFIG_PATH);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -121,6 +118,7 @@ export async function activate(context: vscode.ExtensionContext) {
         return Promise.resolve(fileStore.set(tmpStatusId, status));
       },
       getStatus: () => DeploymentStatus.developing,
+      getKubeConfigPath: () => tmpKubeConfigPath,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }

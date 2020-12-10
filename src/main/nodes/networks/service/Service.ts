@@ -1,3 +1,4 @@
+import state from "../../../state";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import { SERVICE, ID_SPLIT } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
@@ -16,9 +17,6 @@ export class Service extends KubernetesResourceNode {
     this.label = label;
     this.info = info;
     this.name = name;
-  }
-  getNodeStateId(): string {
-    const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}${ID_SPLIT}${this.name}`;
+    state.setNode(this.getNodeStateId(), this);
   }
 }

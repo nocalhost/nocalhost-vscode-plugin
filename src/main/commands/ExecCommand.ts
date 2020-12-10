@@ -4,13 +4,10 @@ import ICommand from "./ICommand";
 import { EXEC } from "./constants";
 import registerCommand from "./register";
 import host, { Host } from "../host";
-import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as kubectl from "../ctl/kubectl";
-import * as fileStore from "../store/fileStore";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Resource, PodResource } from "../nodes/types/resourceType";
-import { execAsync } from "../ctl/shell";
 
 export default class ExecCommand implements ICommand {
   command: string = EXEC;
@@ -25,28 +22,47 @@ export default class ExecCommand implements ICommand {
   async exec(host: Host, node: ControllerNodeApi) {
     const status = await node.getStatus();
     if (status === DeploymentStatus.developing) {
-      await this.opendevSpaceExec(host, node.resourceType, node.name);
+      await this.opendevSpaceExec(
+        node.getKubeConfigPath(),
+        node.resourceType,
+        node.name
+      );
     } else {
-      await this.openExec(host, node.resourceType, node.name);
+      await this.openExec(
+        node.getKubeConfigPath(),
+        node.resourceType,
+        node.name
+      );
     }
   }
 
-  async opendevSpaceExec(host: Host, type: string, workloadName: string) {
-    const resArr = await kubectl.getControllerPod(host, type, workloadName);
+  async opendevSpaceExec(
+    kubeConfigPath: string,
+    type: string,
+    workloadName: string
+  ) {
+    const resArr = await kubectl.getControllerPod(
+      kubeConfigPath,
+      type,
+      workloadName
+    );
     if (resArr && resArr.length <= 0) {
       host.showErrorMessage("Not found pod");
       return;
     }
     const podName = (resArr as Array<Resource>)[0].metadata.name;
-    await this.execCore(podName, "nocalhost-dev");
+    await this.execCore(kubeConfigPath, podName, "nocalhost-dev");
     host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
   }
 
-  private async execCore(podName: string, containerName: string) {
-    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
+  private async execCore(
+    kubeConfigPath: string,
+    podName: string,
+    containerName: string
+  ) {
     let shell = '/bin/sh -c "(zsh||bash||sh)"';
-    const command = `kubectl exec -it ${podName} -c ${containerName} --kubeconfig ${kubeconfigPath} -- ${shell}`;
+    const command = `kubectl exec -it ${podName} -c ${containerName} --kubeconfig ${kubeConfigPath} -- ${shell}`;
     const terminalDisposed = host.invokeInNewTerminal(command, podName);
     host.pushDebugDispose(terminalDisposed);
   }
@@ -57,10 +73,14 @@ export default class ExecCommand implements ICommand {
    * @param type
    * @param workloadName
    */
-  async openExec(host: Host, type: string, workloadName: string) {
+  async openExec(kubeConfigPath: string, type: string, workloadName: string) {
     host.log("open container ...", true);
     host.showInformationMessage("open container ...");
-    const resArr = await kubectl.getControllerPod(host, type, workloadName);
+    const resArr = await kubectl.getControllerPod(
+      kubeConfigPath,
+      type,
+      workloadName
+    );
     if (resArr && resArr.length <= 0) {
       host.showErrorMessage("Not found pod");
       return;
@@ -75,7 +95,12 @@ export default class ExecCommand implements ICommand {
     if (!podName) {
       return;
     }
-    const podStr = await kubectl.loadResource(host, "pod", podName, "json");
+    const podStr = await kubectl.loadResource(
+      kubeConfigPath,
+      "pod",
+      podName,
+      "json"
+    );
     const pod = JSON.parse(podStr as string) as PodResource;
     const containerNameArr = pod.spec.containers.map((c) => {
       return c.name;
@@ -87,7 +112,7 @@ export default class ExecCommand implements ICommand {
     if (!containerName) {
       return;
     }
-    await this.execCore(podName, containerName);
+    await this.execCore(kubeConfigPath, podName, containerName);
     host.log("open container end", true);
     host.log("", true);
   }

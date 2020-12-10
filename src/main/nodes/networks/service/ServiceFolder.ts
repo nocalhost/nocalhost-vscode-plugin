@@ -25,7 +25,10 @@ export class ServiceFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await kubectl.getResourceList(host, "Services");
+    const res = await kubectl.getResourceList(
+      this.getKubeConfigPath(),
+      "Services"
+    );
     const list = JSON.parse(res as string) as List;
     const result: Service[] = list.items.map(
       (item) => new Service(this, item.metadata.name, item.metadata.name, item)

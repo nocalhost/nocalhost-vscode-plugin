@@ -17,7 +17,7 @@ export default class LoadResourceCommand implements ICommand {
       const kind = node.resourceType;
       const name = node.name;
       const uri = vscode.Uri.parse(
-        `Nocalhost://k8s/loadResource/${kind}/${name}.yaml`
+        `Nocalhost://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: false });

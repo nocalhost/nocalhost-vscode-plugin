@@ -20,7 +20,7 @@ export class JobFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    const res = await kubectl.getResourceList(host, "Jobs");
+    const res = await kubectl.getResourceList(this.getKubeConfigPath(), "Jobs");
     const list = JSON.parse(res as string) as List;
     const result: Job[] = list.items.map(
       (item) => new Job(this, item.metadata.name, item.metadata.name, item)

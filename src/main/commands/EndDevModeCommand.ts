@@ -25,7 +25,7 @@ export default class EndDevModeCommand implements ICommand {
     host.getOutputChannel().show(true);
     host.showInformationMessage("Ending DevMode.");
     host.log("Ending DevMode ...", true);
-    await nhctl.endDevMode(host, appName, node.name);
+    await nhctl.endDevMode(host, node.getKubeConfigPath(), appName, node.name);
     await node.setStatus("", true);
     host.showInformationMessage("DevMode Ended.");
     host.log("DevMode Ended", true);

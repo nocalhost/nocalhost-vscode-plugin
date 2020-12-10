@@ -4,7 +4,6 @@ import ICommand from "./ICommand";
 import { PORT_FORWARD } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
 import * as kubectl from "../ctl/kubectl";
 import * as fileStore from "../store/fileStore";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
@@ -18,7 +17,12 @@ export default class PortForwardCommand implements ICommand {
   async execCommand(node: KubernetesResourceNode) {
     const kind = node.resourceType;
     const name = node.name;
-    const resArr = await kubectl.getControllerPod(host, kind, name);
+    const appNode = node.getAppNode();
+    const resArr = await kubectl.getControllerPod(
+      appNode.getKUbeconfigPath(),
+      kind,
+      name
+    );
     if (resArr && resArr.length <= 0) {
       host.showErrorMessage("Not found pod");
       return;
@@ -40,9 +44,7 @@ export default class PortForwardCommand implements ICommand {
     if (!portMap) {
       return;
     }
-    // kubeconfig
-    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-    const command = `kubectl port-forward ${podName} ${portMap} --kubeconfig ${kubeconfigPath}`;
+    const command = `kubectl port-forward ${podName} ${portMap} --kubeconfig ${node.getKubeConfigPath()}`;
     const terminalDisposed = host.invokeInNewTerminal(command);
     host.pushDebugDispose(terminalDisposed);
     host.log("open container end", true);

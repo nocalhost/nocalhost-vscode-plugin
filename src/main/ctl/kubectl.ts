@@ -1,19 +1,17 @@
 import * as vscode from "vscode";
 import { execAsync } from "./shell";
 import * as shell from "shelljs";
-import * as fileStore from "../store/fileStore";
-import { CURRENT_KUBECONFIG_FULLPATH } from "../constants";
-import { Host } from "../host";
 import { ControllerResource, List } from "../nodes/types/resourceType";
+import * as fileStore from "../store/fileStore";
+import { DEFAULT_KUBE_CONFIG_FULLPATH } from "../constants";
 
-export async function exec(command: string) {
+export async function exec(command: string, kubeconfigPath: string) {
   if (!checkKubectl()) {
     return;
   }
 
-  const kubeconfig = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
   const res = await execAsync(
-    `kubectl ${command} --kubeconfig ${kubeconfig}`,
+    `kubectl ${command} --kubeconfig ${kubeconfigPath}`,
     []
   );
 
@@ -29,7 +27,7 @@ function getKubectlCommand(args: Array<string>) {
 }
 
 export async function getResourceList(
-  host: Host,
+  kubeconfigPath: string,
   kind: string,
   label?: string
 ) {
@@ -41,27 +39,38 @@ export async function getResourceList(
   args.push("-o", "json");
 
   const command = getKubectlCommand(args);
-  const result = await exec(command);
+  const result = await exec(command, kubeconfigPath);
   return result;
 }
 
 export async function loadResource(
-  host: Host,
+  kubeconfigPath: string,
   kind: string,
   name: string,
   outputType = "yaml"
 ) {
-  const result = await exec(`get ${kind} ${name} -o ${outputType}`);
+  const result = await exec(
+    `get ${kind} ${name} -o ${outputType}`,
+    kubeconfigPath || fileStore.get(DEFAULT_KUBE_CONFIG_FULLPATH)
+  );
   return result;
 }
 
-export async function getResourceObj(host: Host, kind: string, name: string) {
-  const result = await exec(`get ${kind} ${name} -o json`);
+export async function getResourceObj(
+  kubeconfigPath: string,
+  kind: string,
+  name: string
+) {
+  const result = await exec(`get ${kind} ${name} -o json`, kubeconfigPath);
   return result;
 }
 
-export async function getControllerPod(host: Host, kind: string, name: string) {
-  const res = await getResourceObj(host, kind, name);
+export async function getControllerPod(
+  kubeconfigPath: string,
+  kind: string,
+  name: string
+) {
+  const res = await getResourceObj(kubeconfigPath, kind, name);
   if (res) {
     const result = JSON.parse(res) as ControllerResource;
     const labels = result.spec.selector.matchLabels;
@@ -70,7 +79,7 @@ export async function getControllerPod(host: Host, kind: string, name: string) {
       labelStrArr.push(`${key}=${labels[key]}`);
     }
     const labelStr = labelStrArr.join(",");
-    const listStr = await getResourceList(host, "pods", labelStr);
+    const listStr = await getResourceList(kubeconfigPath, "pods", labelStr);
 
     const resourceList = JSON.parse(listStr as string) as List;
 

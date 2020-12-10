@@ -6,11 +6,7 @@ import { INSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import {
-  CURRENT_KUBECONFIG_FULLPATH,
-  KUBE_CONFIG_DIR,
-  SELECTED_APP_NAME,
-} from "../constants";
+import { SELECTED_APP_NAME } from "../constants";
 import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
@@ -27,9 +23,7 @@ export default class InstallCommand implements ICommand {
       refresh: true,
       node: appNode,
     });
-    const currentKubeConfigFullpath = this.getKubeConfigPath(appNode);
     fileStore.set(SELECTED_APP_NAME, appNode.info.name);
-    fileStore.set(CURRENT_KUBECONFIG_FULLPATH, currentKubeConfigFullpath);
     vscode.commands.executeCommand("Nocalhost.refresh");
     // make siblings collapsis
     const siblings: (
@@ -43,6 +37,7 @@ export default class InstallCommand implements ICommand {
 
     await this.install(
       host,
+      appNode.getKubeConfigPath(),
       appNode.info.name,
       appNode.id,
       appNode.devSpaceId,
@@ -59,6 +54,7 @@ export default class InstallCommand implements ICommand {
 
   private async install(
     host: Host,
+    kubeconfigPath: string,
     appName: string,
     appId: number,
     devSpaceId: number,
@@ -95,6 +91,7 @@ export default class InstallCommand implements ICommand {
     host.showInformationMessage(`Installing application: ${appName}`);
     await nhctl.install(
       host,
+      kubeconfigPath,
       appName,
       gitUrl,
       installType,
@@ -105,10 +102,5 @@ export default class InstallCommand implements ICommand {
     fileStore.set(appName, {});
     host.log(`Application ${appName} installed`, true);
     host.showInformationMessage(`Application ${appName} installed`);
-  }
-
-  private getKubeConfigPath(appNode: AppNode): string {
-    const { id, devSpaceId } = appNode;
-    return path.resolve(KUBE_CONFIG_DIR, `${id}_${devSpaceId}_config`);
   }
 }
