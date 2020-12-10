@@ -10,9 +10,11 @@ import * as kubectl from "../ctl/kubectl";
 import * as fileStore from "../store/fileStore";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Resource, PodResource } from "../nodes/types/resourceType";
+import { execAsync } from "../ctl/shell";
 
 export default class ExecCommand implements ICommand {
   command: string = EXEC;
+  static defaultShells = ["zsh", "bash"];
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
@@ -36,12 +38,17 @@ export default class ExecCommand implements ICommand {
       return;
     }
     const podName = (resArr as Array<Resource>)[0].metadata.name;
-    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-    const command = `kubectl exec -it ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -- /bin/sh`;
-    const terminalDisposed = host.invokeInNewTerminal(command, podName);
-    host.pushDebugDispose(terminalDisposed);
+    await this.execCore(podName, "nocalhost-dev");
     host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
+  }
+
+  private async execCore(podName: string, containerName: string) {
+    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
+    let shell = '/bin/sh -c "(zsh||bash||sh)"';
+    const command = `kubectl exec -it ${podName} -c ${containerName} --kubeconfig ${kubeconfigPath} -- ${shell}`;
+    const terminalDisposed = host.invokeInNewTerminal(command, podName);
+    host.pushDebugDispose(terminalDisposed);
   }
 
   /**
@@ -80,10 +87,7 @@ export default class ExecCommand implements ICommand {
     if (!containerName) {
       return;
     }
-    const kubeconfigPath = fileStore.get(CURRENT_KUBECONFIG_FULLPATH);
-    const command = `kubectl exec -it ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -- /bin/sh`;
-    const terminalDisposed = host.invokeInNewTerminal(command, podName);
-    host.pushDebugDispose(terminalDisposed);
+    await this.execCore(podName, containerName);
     host.log("open container end", true);
     host.log("", true);
   }
