@@ -58,6 +58,12 @@ export default class LogCommand implements ICommand {
       `Nocalhost://k8s/log/${podName}/${containerName}?id=${node.getNodeStateId()}`
     );
     let doc = await vscode.workspace.openTextDocument(uri);
-    await vscode.window.showTextDocument(doc, { preview: false });
+    const editor = await vscode.window.showTextDocument(doc, {
+      preview: false,
+    });
+    const lineCount = editor.document.lineCount;
+    const range = editor.document.lineAt(lineCount - 1).range;
+    editor.selection = new vscode.Selection(range.end, range.end);
+    editor.revealRange(range);
   }
 }
