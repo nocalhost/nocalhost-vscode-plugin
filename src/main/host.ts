@@ -96,23 +96,18 @@ export class Host {
     this.newTerminal = vscode.window.createTerminal(name);
     this.newTerminal.show();
     if (withProperShell) {
-      this.execWithProperShell(command, 0);
+      this.execWithProperShell(command, this.newTerminal);
     } else {
       this.newTerminal.sendText(command);
     }
     return this.newTerminal;
   }
 
-  execWithProperShell(command: string, index: number) {
-    setTimeout(() => {
-      this.newTerminal &&
-        this.newTerminal.sendText(`${command} -- ${this.defaultShell[index]}`);
-      if (this.defaultShell[index + 1]) {
-        this.execWithProperShell(command, index + 1);
-      } else {
-        this.newTerminal && this.newTerminal.sendText(`clear`);
-      }
-    }, 600);
+  execWithProperShell(command: string, terminal: vscode.Terminal) {
+    const resolvedCommand: string = this.defaultShell
+      .map((shell) => `${command} -- ${shell}`)
+      .join(" || ");
+    terminal.sendText(`${resolvedCommand}`);
   }
 
   log(msg: string, line?: boolean) {
