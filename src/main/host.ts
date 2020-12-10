@@ -107,6 +107,7 @@ export class Host {
     const resolvedCommand: string = this.defaultShell
       .map((shell) => `${command} -- ${shell}`)
       .join(" || ");
+    setTimeout(() => terminal.sendText("clear"), 600);
     terminal.sendText(`${resolvedCommand}`);
   }
 
