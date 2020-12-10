@@ -12,7 +12,6 @@ import {
   KUBE_CONFIG_DIR,
   NH_CONFIG_DIR,
   PLUGIN_CONFIG_DIR,
-  SELECTED_APP_NAME,
   TMP_APP,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
@@ -67,7 +66,6 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.TreeItemCollapsibleState.Collapsed
           )
         );
-        fileStore.set(SELECTED_APP_NAME, node.info.name);
         vscode.commands.executeCommand("Nocalhost.refresh");
       }
 
@@ -119,6 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
       },
       getStatus: () => DeploymentStatus.developing,
       getKubeConfigPath: () => tmpKubeConfigPath,
+      getAppName: () => tmpApp,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }

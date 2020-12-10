@@ -6,7 +6,6 @@ import * as fileStore from "../store/fileStore";
 import { EXEC, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import {
-  SELECTED_APP_NAME,
   TMP_APP,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
@@ -28,6 +27,7 @@ export interface ControllerNodeApi {
   setStatus: (status: string, refresh?: boolean) => Promise<void>;
   getStatus: () => Promise<string> | string;
   getKubeConfigPath: () => string;
+  getAppName: () => string;
 }
 
 export default class StartDevModeCommand implements ICommand {
@@ -38,10 +38,7 @@ export default class StartDevModeCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
   async execCommand(node: ControllerNodeApi) {
-    const appName = fileStore.get(SELECTED_APP_NAME);
-    if (!appName) {
-      throw new Error("you must select one app");
-    }
+    const appName = node.getAppName();
     await this.startDevMode(host, appName, node);
   }
 
@@ -160,7 +157,7 @@ export default class StartDevModeCommand implements ICommand {
             message: "dev start",
           });
           host.log("dev start ...", true);
-          const svc = await this.getSvcConfig(node.name);
+          const svc = await this.getSvcConfig(appName, node.name);
           let dirs = new Array<string>();
           if (svc && svc.syncDirs) {
             dirs = svc.syncDirs.map((item) =>
@@ -234,8 +231,7 @@ export default class StartDevModeCommand implements ICommand {
     fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKUbeconfigPath());
   }
 
-  private async getSvcConfig(workloadName: string) {
-    const appName = fileStore.get(SELECTED_APP_NAME);
+  private async getSvcConfig(appName: string, workloadName: string) {
     let workloadConfig = await ConfigService.getWorkloadConfig(
       appName,
       workloadName

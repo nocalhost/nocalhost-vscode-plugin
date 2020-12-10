@@ -25,12 +25,7 @@ export const BASE_URL = "baseUrl";
 export const USERINFO = "userinfo";
 export const WELCOME_DID_SHOW = "welcomeDidShow";
 
-// APP
-export const SELECTED_APP_NAME = "selectedApp";
-// export const
-
 // tmp start record
-
 export const TMP_STATUS = "tmpStatus";
 export const TMP_APP = "tmpApp";
 export const TMP_WORKLOAD = "tmpWorkload";

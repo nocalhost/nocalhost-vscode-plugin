@@ -6,7 +6,6 @@ import { INSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import { SELECTED_APP_NAME } from "../constants";
 import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
@@ -23,7 +22,6 @@ export default class InstallCommand implements ICommand {
       refresh: true,
       node: appNode,
     });
-    fileStore.set(SELECTED_APP_NAME, appNode.info.name);
     vscode.commands.executeCommand("Nocalhost.refresh");
     // make siblings collapsis
     const siblings: (
@@ -37,7 +35,7 @@ export default class InstallCommand implements ICommand {
 
     await this.install(
       host,
-      appNode.getKubeConfigPath(),
+      appNode.getKUbeconfigPath(),
       appNode.info.name,
       appNode.id,
       appNode.devSpaceId,
