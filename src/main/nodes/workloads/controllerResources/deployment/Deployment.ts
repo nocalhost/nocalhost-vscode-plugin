@@ -16,6 +16,7 @@ import {
 import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
+import host from "../../../../host";
 
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
@@ -38,6 +39,9 @@ export class Deployment extends ControllerResourceNode {
     let treeItem = await super.getTreeItem();
     let status = "";
     status = await this.getStatus();
+    if (this.firstRender) {
+      this.firstRender = false;
+    }
     switch (status) {
       case "running":
         treeItem.iconPath = resolveVSCodeUri("images/icons/status-normal.svg");
@@ -69,7 +73,6 @@ export class Deployment extends ControllerResourceNode {
       return Promise.resolve(status);
     }
     if (this.firstRender) {
-      this.firstRender = false;
       if (this.svcProfile && this.svcProfile.developing) {
         return DeploymentStatus.developing;
       }
@@ -108,6 +111,7 @@ export class Deployment extends ControllerResourceNode {
     if (!status) {
       status = "unknown";
     }
+    host.log(`getstatus---svc return: ${this.name} ${status}`, true);
     return status;
   }
 
@@ -118,7 +122,9 @@ export class Deployment extends ControllerResourceNode {
       .catch((err) => {});
     if (infoStr) {
       const serviceProfile = yaml.parse(infoStr as string) as ServiceProfile;
-      this.svcProfile = serviceProfile.svcProfile;
+      if (serviceProfile) {
+        this.svcProfile = serviceProfile.svcProfile;
+      }
     }
   }
 

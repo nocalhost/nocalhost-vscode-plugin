@@ -20,6 +20,7 @@ import * as nhctl from "../ctl/nhctl";
 import * as nls from "../../../package.nls.json";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
+import state from "../state";
 
 export interface ControllerNodeApi {
   name: string;
@@ -219,7 +220,7 @@ export default class StartDevModeCommand implements ICommand {
             await node.setStatus(DeploymentStatus.developing);
           }
 
-          vscode.commands.executeCommand(EXEC, node);
+          await vscode.commands.executeCommand(EXEC, node);
         } catch (error) {
           node.setStatus("");
         }

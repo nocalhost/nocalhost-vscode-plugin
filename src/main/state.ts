@@ -9,8 +9,10 @@ class State {
 
   private running = false;
 
-  public getNode(id: string) {
-    return this.nodeMap.get(id);
+  public getNode(id: string | undefined) {
+    if (id) {
+      return this.nodeMap.get(id);
+    }
   }
 
   public setNode(id: string, node: BaseNocalhostNode) {
@@ -66,16 +68,19 @@ class State {
     return appMap;
   }
 
-  setAppState(
+  async setAppState(
     appName: string,
     key: string,
     value: any,
-    args?: { refresh: boolean; node?: BaseNocalhostNode }
+    args?: { refresh: boolean; nodeStateId?: string }
   ) {
     const appMap = this.getAllAppState(appName);
     appMap.set(key, value);
     if (args && args.refresh) {
-      vscode.commands.executeCommand("Nocalhost.refresh", args.node);
+      await vscode.commands.executeCommand(
+        "Nocalhost.refresh",
+        this.getNode(args.nodeStateId)
+      );
     }
     this.set(appName, appMap);
   }
@@ -85,15 +90,18 @@ class State {
     return appMap.get(key);
   }
 
-  deleteAppState(
+  async deleteAppState(
     appName: string,
     key: string,
-    args?: { refresh: boolean; node?: BaseNocalhostNode }
+    args?: { refresh: boolean; nodeStateId?: string }
   ) {
     const appMap = this.getAllAppState(appName);
     appMap.delete(key);
     if (args && args.refresh) {
-      vscode.commands.executeCommand("Nocalhost.refresh", args.node);
+      await vscode.commands.executeCommand(
+        "Nocalhost.refresh",
+        this.getNode(args.nodeStateId)
+      );
     }
     this.set(appName, appMap);
   }

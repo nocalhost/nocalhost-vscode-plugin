@@ -111,8 +111,19 @@ export async function activate(context: vscode.ExtensionContext) {
     const node: ControllerNodeApi = {
       name: tmpWorkload,
       resourceType: tmpResourceType,
-      setStatus: (status: string): Promise<void> => {
-        return Promise.resolve(fileStore.set(tmpStatusId, status));
+      setStatus: async (status: string): Promise<void> => {
+        if (status) {
+          await state.setAppState(tmpApp, `${tmpStatusId}`, status, {
+            refresh: true,
+            nodeStateId: tmpStatusId,
+          });
+        } else {
+          await state.deleteAppState(tmpApp, `${tmpStatusId}`, {
+            refresh: true,
+            nodeStateId: tmpStatusId,
+          });
+        }
+        return Promise.resolve();
       },
       getStatus: () => DeploymentStatus.developing,
       getKubeConfigPath: () => tmpKubeConfigPath,

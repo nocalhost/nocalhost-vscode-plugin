@@ -27,20 +27,24 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   public async setStatus(status: string) {
     const appNode = this.getAppNode();
     if (status) {
-      state.setAppState(
+      await state.setAppState(
         appNode.label,
         `${this.getNodeStateId()}_status`,
         status,
         {
           refresh: true,
-          node: this,
+          nodeStateId: this.getNodeStateId(),
         }
       );
     } else {
-      state.deleteAppState(appNode.label, `${this.getNodeStateId()}_status`, {
-        refresh: true,
-        node: this,
-      });
+      await state.deleteAppState(
+        appNode.label,
+        `${this.getNodeStateId()}_status`,
+        {
+          refresh: true,
+          nodeStateId: this.getNodeStateId(),
+        }
+      );
     }
   }
 

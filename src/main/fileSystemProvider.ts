@@ -190,6 +190,11 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     const paths = uri.path.substring(0, uri.path.length - 5).split("/");
     const type = paths[1];
     const data = this.parse(content.toString(), style);
+    const query = querystring.decode(uri.query);
+    let id = "";
+    if (query) {
+      id = query.id as string;
+    }
     let destDir = "";
     let destData: string | Buffer = "";
 
@@ -206,7 +211,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         if (key === "services" && subKey) {
           await ConfigService.writeConfig(appName, subKey, data);
           command = "Nocalhost.refresh";
-          commands.executeCommand(command, state.getNode(subKey));
+          commands.executeCommand(command, state.getNode(id));
           return;
         }
 

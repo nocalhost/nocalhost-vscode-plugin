@@ -6,6 +6,7 @@ import registerCommand from "./register";
 import host, { Host } from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as kubectl from "../ctl/kubectl";
+import * as nhctl from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Resource, PodResource } from "../nodes/types/resourceType";
 
@@ -22,11 +23,7 @@ export default class ExecCommand implements ICommand {
   async exec(host: Host, node: ControllerNodeApi) {
     const status = await node.getStatus();
     if (status === DeploymentStatus.developing) {
-      await this.opendevSpaceExec(
-        node.getKubeConfigPath(),
-        node.resourceType,
-        node.name
-      );
+      await this.opendevSpaceExec(node.getAppName(), node.name);
     } else {
       await this.openExec(
         node.getKubeConfigPath(),
@@ -36,22 +33,15 @@ export default class ExecCommand implements ICommand {
     }
   }
 
-  async opendevSpaceExec(
-    kubeConfigPath: string,
-    type: string,
-    workloadName: string
-  ) {
-    const resArr = await kubectl.getControllerPod(
-      kubeConfigPath,
-      type,
+  async opendevSpaceExec(appName: string, workloadName: string) {
+    host.log("Opening DevSpace terminal", true);
+    host.showInformationMessage("Opening DevSpace terminal");
+    const terminalCommand = nhctl.terminalCommand(appName, workloadName);
+    const terminalDisposed = host.invokeInNewTerminal(
+      terminalCommand,
       workloadName
     );
-    if (resArr && resArr.length <= 0) {
-      host.showErrorMessage("Not found pod");
-      return;
-    }
-    const podName = (resArr as Array<Resource>)[0].metadata.name;
-    await this.execCore(kubeConfigPath, podName, "nocalhost-dev");
+    host.pushDebugDispose(terminalDisposed);
     host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
   }
@@ -74,8 +64,6 @@ export default class ExecCommand implements ICommand {
    * @param workloadName
    */
   async openExec(kubeConfigPath: string, type: string, workloadName: string) {
-    host.log("open container ...", true);
-    host.showInformationMessage("open container ...");
     const resArr = await kubectl.getControllerPod(
       kubeConfigPath,
       type,

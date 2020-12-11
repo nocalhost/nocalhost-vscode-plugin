@@ -47,7 +47,6 @@ export class DeploymentFolder extends KubernetesResourceFolder {
         svcProfile,
         item
       );
-      state.setNode(node.label, node);
       return node;
     });
     return result;

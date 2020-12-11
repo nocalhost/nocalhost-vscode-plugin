@@ -20,7 +20,7 @@ export default class InstallCommand implements ICommand {
   async execCommand(appNode: AppNode) {
     state.setAppState(appNode.label, "installing", true, {
       refresh: true,
-      node: appNode,
+      nodeStateId: appNode.getNodeStateId(),
     });
     vscode.commands.executeCommand("Nocalhost.refresh");
     // make siblings collapsis
