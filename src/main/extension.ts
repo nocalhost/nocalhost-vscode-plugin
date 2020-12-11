@@ -19,10 +19,20 @@ import {
   TMP_STATUS,
   TMP_WORKLOAD,
 } from "./constants";
+import {
+  DEPLOYMENT_FOLDER,
+  STATEFUL_SET_FOLDER,
+  DAEMON_SET_FOLDER,
+  JOBS_FOLDER,
+  CRON_JOBS_FOLDER,
+  PODS_FOLDER,
+  SERVICE_FOLDER,
+} from "./nodes/nodeContants";
 import host from "./host";
 import { showDashboard } from "./webviews";
 import {
   AppFolderNode,
+  DeploymentFolder,
   BaseNocalhostNode,
   ControllerResourceNode,
   DeploymentStatus,
@@ -35,6 +45,7 @@ import nocalhostService, {
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
 import state from "./state";
+import notification from "./notification";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -50,6 +61,20 @@ export async function activate(context: vscode.ExtensionContext) {
   appTreeView.onDidCollapseElement(
     (e: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
       const node = e.element;
+      // if (
+      //   [
+      //     DEPLOYMENT_FOLDER,
+      //     STATEFUL_SET_FOLDER,
+      //     DAEMON_SET_FOLDER,
+      //     JOBS_FOLDER,
+      //     CRON_JOBS_FOLDER,
+      //     PODS_FOLDER,
+      //     SERVICE_FOLDER,
+      //   ].includes(node.type)
+      // ) {
+      //   notification.removeSubscriber("refresh", node);
+      // }
+      notification.removeSubscriber("refresh", node);
       state.set(
         node.getNodeStateId(),
         vscode.TreeItemCollapsibleState.Collapsed
@@ -75,6 +100,20 @@ export async function activate(context: vscode.ExtensionContext) {
           )
         );
         vscode.commands.executeCommand("useApplication", node);
+      }
+
+      if (
+        [
+          DEPLOYMENT_FOLDER,
+          STATEFUL_SET_FOLDER,
+          DAEMON_SET_FOLDER,
+          JOBS_FOLDER,
+          CRON_JOBS_FOLDER,
+          PODS_FOLDER,
+          SERVICE_FOLDER,
+        ].includes(node.type)
+      ) {
+        notification.addSubscriber("refresh", node);
       }
 
       state.set(

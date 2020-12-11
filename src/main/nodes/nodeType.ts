@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import host from "../host";
 import state from "../state";
 import * as fileStore from "../store/fileStore";
+import nodeStore from "../store/nodeStore";
 import {
   APP,
   APP_FOLDER,
@@ -80,20 +81,22 @@ export interface BaseNocalhostNode {
   getParent(element?: BaseNocalhostNode): BaseNocalhostNode | null | undefined;
 }
 
+const nodeMap: Map<string, BaseNocalhostNode> = nodeStore.getInstance();
+
 export abstract class NocalhostFolderNode implements BaseNocalhostNode {
   abstract parent: BaseNocalhostNode;
   abstract label: string;
   abstract type: string;
-
-  getNodeStateId(): string {
-    const parentStateId = this.parent.getNodeStateId();
-    return `${parentStateId}${ID_SPLIT}${this.label}`;
-  }
   abstract getParent(element: BaseNocalhostNode): BaseNocalhostNode;
   abstract getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>>;
   abstract getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
+
+  getNodeStateId(): string {
+    const parentStateId = this.parent.getNodeStateId();
+    return `${parentStateId}${ID_SPLIT}${this.label}`;
+  }
 }
 
 export abstract class WorkloadSubFolderNode extends NocalhostFolderNode {}
@@ -178,6 +181,7 @@ export class AppFolderNode extends NocalhostFolderNode {
     this.installStatus = installStatus;
     this.kubeConfig = kubeConfig;
     this.info = info;
+    nodeMap.set(this.getNodeStateId(), this);
   }
 
   private getDefaultChildrenNodes(): string[] {
@@ -335,6 +339,7 @@ export class NetworkFolderNode extends NocalhostFolderNode {
   constructor(parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
@@ -385,6 +390,7 @@ export class Service extends KubernetesResourceNode {
     this.label = label;
     this.info = info;
     this.name = name;
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
@@ -396,6 +402,7 @@ export class ServiceFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    nodeMap.set(this.getNodeStateId(), this);
   }
   public label: string = "Services";
   public type = SERVICE_FOLDER;
@@ -433,6 +440,7 @@ export class WorkloadFolderNode extends NocalhostFolderNode {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    nodeMap.set(this.getNodeStateId(), this);
   }
 
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
@@ -484,6 +492,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
@@ -597,6 +606,7 @@ export class Deployment extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
 
   async getTreeItem(): Promise<vscode.TreeItem> {
@@ -700,6 +710,7 @@ export class StatefulSet extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
 }
 
@@ -713,6 +724,7 @@ export class DaemonSet extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
 }
 
@@ -726,6 +738,7 @@ export class Job extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
 }
 
@@ -739,6 +752,7 @@ export class CronJob extends ControllerResourceNode {
     public info?: any
   ) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
 }
 
@@ -752,6 +766,7 @@ export class Pod extends KubernetesResourceNode {
     public info?: any
   ) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
@@ -765,6 +780,7 @@ export class StatefulSetFolder extends KubernetesResourceFolder {
 
   constructor(public parent: BaseNocalhostNode) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
 
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
@@ -789,6 +805,7 @@ export class DaemonSetFolder extends KubernetesResourceFolder {
   public type: string = DAEMON_SET_FOLDER;
   constructor(public parent: BaseNocalhostNode) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
@@ -810,6 +827,7 @@ export class DaemonSetFolder extends KubernetesResourceFolder {
 export class JobFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
@@ -833,6 +851,7 @@ export class CronJobFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
@@ -856,6 +875,7 @@ export class PodFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;
@@ -883,6 +903,7 @@ export class NocalhostAccountNode implements BaseNocalhostNode {
   constructor(parent: BaseNocalhostNode, label: string) {
     this.parent = parent;
     this.label = label;
+    nodeMap.set(this.getNodeStateId(), this);
   }
   getNodeStateId(): string {
     return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.type}`;
@@ -908,7 +929,9 @@ export class NocalhostAccountNode implements BaseNocalhostNode {
 export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
-  constructor(public parent: BaseNocalhostNode | null) {}
+  constructor(public parent: BaseNocalhostNode | null) {
+    nodeMap.set(this.getNodeStateId(), this);
+  }
 
   getParent(element: BaseNocalhostNode): BaseNocalhostNode | null | undefined {
     return;

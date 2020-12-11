@@ -1,12 +1,22 @@
 import * as vscode from "vscode";
 import nocalhostState from "./state";
 import { BaseNocalhostNode, NocalhostRootNode } from "./nodes/nodeType";
+import nodeStore from "./store/nodeStore";
+import notification from "./notification";
+
+const nodeMap: Map<string, BaseNocalhostNode> = nodeStore.getInstance();
 
 export default class NocalhostAppProvider
   implements vscode.TreeDataProvider<BaseNocalhostNode> {
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
     BaseNocalhostNode | undefined
   >();
+  constructor() {
+    notification.on("refresh", (node: BaseNocalhostNode) => {
+      this.refresh(node);
+    });
+    notification.notify("refresh");
+  }
   onDidChangeTreeData = this.onDidChangeTreeDataEventEmitter.event;
   async getTreeItem(element: BaseNocalhostNode): Promise<vscode.TreeItem> {
     let item: vscode.TreeItem | Thenable<vscode.TreeItem>;
