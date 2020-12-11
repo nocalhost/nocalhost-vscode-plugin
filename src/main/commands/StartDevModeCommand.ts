@@ -193,18 +193,26 @@ export default class StartDevModeCommand implements ICommand {
           host.log("sync file end", true);
           host.log("", true);
 
-          progress.report({
-            message: "port forwarding",
-          });
-          host.log("port forward ...", true);
-          await nhctl.startPortForward(
-            host,
-            node.getKubeConfigPath(),
-            appName,
-            node.name
-          );
-          host.log("port forward end", true);
-          host.log("", true);
+          if (
+            svc &&
+            svc.devPorts &&
+            svc.devPorts.length &&
+            svc.devPorts.length > 0
+          ) {
+            progress.report({
+              message: "port forwarding",
+            });
+            host.log("port forward ...", true);
+            await nhctl.startPortForward(
+              host,
+              node.getKubeConfigPath(),
+              appName,
+              node.name,
+              svc.devPorts
+            );
+            host.log("port forward end", true);
+            host.log("", true);
+          }
 
           setTimeout(() => {
             nhctl.printAppInfo(host, node.getKubeConfigPath(), appName);

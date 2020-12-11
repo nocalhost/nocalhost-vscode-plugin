@@ -17,7 +17,7 @@ export interface NocalhostServiceConfig {
   syncType?: string;
   syncDirs?: Array<string>; // default ["."]
   ignoreDirs?: Array<string>;
-  devPort?: Array<string>;
+  devPorts?: Array<string>;
   dependPodsLabelSelector?: Array<string>;
   dependJobsLabelSelector?: Array<string>;
   workDir?: string; // default value: "/home/nocalhost-dev"
