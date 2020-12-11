@@ -111,7 +111,6 @@ export class Deployment extends ControllerResourceNode {
     if (!status) {
       status = "unknown";
     }
-    host.log(`getstatus---svc return: ${this.name} ${status}`, true);
     return status;
   }
 
