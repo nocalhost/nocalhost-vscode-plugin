@@ -1,5 +1,6 @@
 import { open } from "fs";
 import * as vscode from "vscode";
+import { Progress } from "vscode";
 import nocalhostState from "./state";
 
 export class Host {
@@ -24,6 +25,21 @@ export class Host {
 
   public showInputBox(options: vscode.InputBoxOptions) {
     return vscode.window.showInputBox(options);
+  }
+
+  public showProgressing(
+    aciton: (
+      progress: Progress<{ message?: string; increment?: number }>
+    ) => Thenable<unknown>
+  ) {
+    return vscode.window.withProgress(
+      {
+        title: "Starting DevMode",
+        location: vscode.ProgressLocation.Notification,
+        cancellable: false,
+      },
+      aciton
+    );
   }
 
   showInformationMessage(

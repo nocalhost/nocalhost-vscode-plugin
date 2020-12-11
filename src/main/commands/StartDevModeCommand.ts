@@ -59,7 +59,12 @@ export default class StartDevModeCommand implements ICommand {
       });
       if (saveUris) {
         destDir = path.resolve(saveUris[0].fsPath, workloadName);
-        await git.clone(host, gitUrl, [destDir]);
+        await host.showProgressing(async (progress) => {
+          progress.report({
+            message: "cloning code",
+          });
+          await git.clone(host, gitUrl as string, [destDir as string]);
+        });
       }
     }
     return destDir;
