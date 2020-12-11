@@ -46,7 +46,7 @@ export default {
     }
     channelValue.subscribers.add(node.getNodeStateId());
   },
-  async removeSubscriber(channelName: string, node: BaseNocalhostNode): void {
+  async removeSubscriber(channelName: string, node: BaseNocalhostNode) {
     const channelValue: IChannelValue = channels[channelName];
     const children: BaseNocalhostNode[] = await node.getChildren();
     if (children && Array.isArray(children)) {

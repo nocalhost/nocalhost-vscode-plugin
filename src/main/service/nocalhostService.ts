@@ -236,6 +236,9 @@ class NocalhostService {
         nls["bt.open.other"],
         nls["bt.open.dir"]
       );
+      if (!result) {
+        return;
+      }
       if (result === nls["bt.open.other"]) {
         const uris = await host.showOpenDialog({
           canSelectFiles: false,
