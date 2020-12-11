@@ -31,7 +31,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         installType: string;
         resourceDir: Array<string>;
       } = {
-        installType: "manifest",
+        installType: "rawManifest",
         resourceDir: ["manifest/templates"],
       };
       if (context) {
@@ -71,12 +71,12 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   }
 
   private generateInstallType(source: string, originInstallType: string) {
-    let type = "helm-repo";
+    let type = "helmRepo";
 
-    if (source === "git" && originInstallType === "manifest") {
-      type = "manifest";
+    if (source === "git" && originInstallType === "rawManifest") {
+      type = "rawManifest";
     } else if (source === "git" && originInstallType === "helm_chart") {
-      type = "helm";
+      type = "helmGit";
     }
     return type;
   }

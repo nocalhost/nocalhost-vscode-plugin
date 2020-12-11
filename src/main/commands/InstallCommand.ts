@@ -62,7 +62,7 @@ export default class InstallCommand implements ICommand {
   ) {
     // tips
     let values: string | undefined;
-    if (["helm", "helm-repo"].includes(installType)) {
+    if (["helmGit", "helmRepo"].includes(installType)) {
       const res = await host.showInformationMessage(
         "Do you want to specify a values.yaml?",
         { modal: true },

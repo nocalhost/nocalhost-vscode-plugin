@@ -22,7 +22,7 @@ export function install(
     } ${resourcePath}`
   );
 
-  if (installType === "helm-repo") {
+  if (installType === "helmRepo") {
     installCommand = nhctlCommand(
       kubeconfigPath,
       `install ${appName} --helm-chart-name ${appName} -t ${installType} --helm-repo-url ${gitUrl}`
