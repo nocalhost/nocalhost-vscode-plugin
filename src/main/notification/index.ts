@@ -2,14 +2,13 @@ import nodeStore from "../store/nodeStore";
 import { BaseNocalhostNode } from "../nodes/nodeType";
 
 interface IChannels {
-  channelName?: string;
-  channelValue?: IChannelValue;
+  [channelName: string]: IChannelValue;
 }
 
 interface IChannelValue {
-  handler?: (node: BaseNocalhostNode) => void;
+  handler?: (node?: BaseNocalhostNode) => void;
   subscribers: Set<string>;
-  timer: NodeJS.Timeout;
+  timer: NodeJS.Timeout | null;
 }
 
 const nodeMap: Map<string, BaseNocalhostNode> = nodeStore.getInstance();
@@ -17,7 +16,7 @@ const channels: IChannels = {};
 const TIMEOUT: number = 1000;
 
 export default {
-  on(channelName: string, handler: (node: BaseNocalhostNode) => void): void {
+  on(channelName: string, handler: (node?: BaseNocalhostNode) => void): void {
     if (!channels[channelName]) {
       const channelValue: IChannelValue = {
         handler: () => {},
@@ -27,7 +26,6 @@ export default {
       channels[channelName] = channelValue;
     }
     channels[channelName].handler = handler;
-    return this;
   },
   remove(channelName: string): void {
     const channelValue: IChannelValue = channels[channelName];
@@ -48,7 +46,10 @@ export default {
   },
   async removeSubscriber(channelName: string, node: BaseNocalhostNode) {
     const channelValue: IChannelValue = channels[channelName];
-    const children: BaseNocalhostNode[] = await node.getChildren();
+    const children:
+      | BaseNocalhostNode[]
+      | null
+      | undefined = await node.getChildren();
     if (children && Array.isArray(children)) {
       children.forEach((n) => this.removeSubscriber(channelName, n));
     }
@@ -66,9 +67,11 @@ export default {
     }
     channelValue.timer = setTimeout(() => {
       for (let subscriber of subscribers) {
-        const node: BaseNocalhostNode = nodeMap.get(subscriber);
+        const node: BaseNocalhostNode | undefined = nodeMap.get(subscriber);
         console.log("running timer...", node);
-        handler(node);
+        if (handler && typeof handler === "function") {
+          handler(node);
+        }
       }
       this.notify(channelName);
     }, TIMEOUT);

@@ -1,5 +1,5 @@
 import { BaseNocalhostNode } from "../nodes/nodeType";
-let instance: Map<string, BaseNocalhostNode> = null;
+let instance: Map<string, BaseNocalhostNode>;
 
 export default {
   getInstance() {

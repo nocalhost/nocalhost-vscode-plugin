@@ -12,7 +12,7 @@ export default class NocalhostAppProvider
     BaseNocalhostNode | undefined
   >();
   constructor() {
-    notification.on("refresh", (node: BaseNocalhostNode) => {
+    notification.on("refresh", (node: BaseNocalhostNode | undefined) => {
       this.refresh(node);
     });
     notification.notify("refresh");
