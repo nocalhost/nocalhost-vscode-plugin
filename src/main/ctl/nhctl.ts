@@ -144,6 +144,18 @@ export async function loadResource(host: Host, appName: string) {
   return result.stdout;
 }
 
+export async function getAppInfo(appName: string) {
+  const describeCommand = `nhctl plugin get ${appName}`;
+  const result = await execAsync(describeCommand, []);
+  return result.stdout;
+}
+
+export async function getServiceConfig(appName: string, workloadName: string) {
+  const describeCommand = `nhctl plugin get ${appName} -d ${workloadName}`;
+  const result = await execAsync(describeCommand, []);
+  return result.stdout;
+}
+
 export async function printAppInfo(
   host: Host,
   kubeconfigPath: string,

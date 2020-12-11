@@ -24,11 +24,8 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
    * @param status
    * @param fresh Refresh dependencies
    */
-  public async setStatus(status: string, fresh?: boolean) {
+  public async setStatus(status: string) {
     const appNode = this.getAppNode();
-    if (fresh) {
-      await appNode.freshApplicationInfo();
-    }
     if (status) {
       state.setAppState(
         appNode.label,

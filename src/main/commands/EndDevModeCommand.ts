@@ -25,7 +25,7 @@ export default class EndDevModeCommand implements ICommand {
       appNode.label,
       node.name
     );
-    await node.setStatus("", true);
+    await node.setStatus("");
     host.showInformationMessage("DevMode Ended.");
     host.log("DevMode Ended", true);
   }

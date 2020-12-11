@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import * as path from "path";
 
 import NocalhostAppProvider from "./appProvider";
 import * as fileStore from "./store/fileStore";
@@ -112,7 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const node: ControllerNodeApi = {
       name: tmpWorkload,
       resourceType: tmpResourceType,
-      setStatus: (status: string, refresh?: boolean): Promise<void> => {
+      setStatus: (status: string): Promise<void> => {
         return Promise.resolve(fileStore.set(tmpStatusId, status));
       },
       getStatus: () => DeploymentStatus.developing,

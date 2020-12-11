@@ -11,6 +11,18 @@ export interface AppInfo {
   resourcePath: string;
 }
 
+// include application info
+export interface ServiceProfile {
+  name: string;
+  namespace: string;
+  kubeconfig: string;
+  dependencyConfigMapName: string;
+  appType: string;
+  svcProfile: SvcProfile;
+  installed: boolean;
+  resourcePath: string;
+}
+
 export interface SvcProfile {
   name: string;
   type: string;

@@ -24,7 +24,7 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 export interface ControllerNodeApi {
   name: string;
   resourceType: string;
-  setStatus: (status: string, refresh?: boolean) => Promise<void>;
+  setStatus: (status: string) => Promise<void>;
   getStatus: () => Promise<string> | string;
   getKubeConfigPath: () => string;
   getAppName: () => string;
@@ -214,14 +214,14 @@ export default class StartDevModeCommand implements ICommand {
           });
 
           if (node instanceof ControllerResourceNode) {
-            await node.setStatus("", true);
+            await node.setStatus("");
           } else {
             await node.setStatus(DeploymentStatus.developing);
           }
 
           vscode.commands.executeCommand(EXEC, node);
         } catch (error) {
-          node.setStatus("", true);
+          node.setStatus("");
         }
       }
     );

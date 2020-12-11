@@ -1,12 +1,18 @@
 import * as vscode from "vscode";
+import * as yaml from "yaml";
 
 import * as kubectl from "../../../../ctl/kubectl";
-import host from "../../../../host";
+import * as nhctl from "../../../../ctl/nhctl";
 import ConfigService from "../../../../service/configService";
 import state from "../../../../state";
 import { resolveVSCodeUri } from "../../../../utils/fileUtil";
 import { DEPLOYMENT } from "../../../nodeContants";
-import { BaseNocalhostNode, DeploymentStatus } from "../../../types/nodeType";
+import {
+  BaseNocalhostNode,
+  DeploymentStatus,
+  ServiceProfile,
+  SvcProfile,
+} from "../../../types/nodeType";
 import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
@@ -21,6 +27,7 @@ export class Deployment extends ControllerResourceNode {
     public label: string,
     public name: string,
     private conditionsStatus: Array<Status> | string,
+    private svcProfile: SvcProfile | undefined | null,
     public info?: any
   ) {
     super();
@@ -61,16 +68,16 @@ export class Deployment extends ControllerResourceNode {
     if (status) {
       return Promise.resolve(status);
     }
-    const appInfo = await appNode.getApplicationInfo();
-    const svcProfile = appInfo.svcProfile;
-    for (let i = 0; i < svcProfile.length; i++) {
-      if (svcProfile[i].name === this.name && svcProfile[i].developing) {
-        return DeploymentStatus.developing;
-      }
-    }
     if (this.firstRender) {
       this.firstRender = false;
+      if (this.svcProfile && this.svcProfile.developing) {
+        return DeploymentStatus.developing;
+      }
     } else {
+      await this.refreshSvcProfile();
+      if (this.svcProfile && this.svcProfile.developing) {
+        return DeploymentStatus.developing;
+      }
       const deploy = await kubectl.loadResource(
         this.getKubeConfigPath(),
         this.type,
@@ -102,6 +109,17 @@ export class Deployment extends ControllerResourceNode {
       status = "unknown";
     }
     return status;
+  }
+
+  public async refreshSvcProfile() {
+    const appNode = this.getAppNode();
+    const infoStr = await nhctl
+      .getServiceConfig(appNode.label, this.name)
+      .catch((err) => {});
+    if (infoStr) {
+      const serviceProfile = yaml.parse(infoStr as string) as ServiceProfile;
+      this.svcProfile = serviceProfile.svcProfile;
+    }
   }
 
   public async checkConfig() {

@@ -1,9 +1,8 @@
 import * as vscode from "vscode";
 import { KUBE_CONFIG_DIR } from "../constants";
-import { loadResource } from "../ctl/nhctl";
+import * as nhctl from "../ctl/nhctl";
 import * as yaml from "yaml";
 import { v4 as uuidv4 } from "uuid";
-import host from "../host";
 import state from "../state";
 
 import { APP_FOLDER, ID_SPLIT } from "./nodeContants";
@@ -67,7 +66,7 @@ export class AppNode extends NocalhostFolderNode {
 
   public async freshApplicationInfo() {
     let info = {} as AppInfo;
-    const infoStr = await loadResource(host, this.label).catch((err) => {});
+    const infoStr = await nhctl.getAppInfo(this.label).catch((err) => {});
     if (infoStr) {
       info = yaml.parse(infoStr as string);
     }
