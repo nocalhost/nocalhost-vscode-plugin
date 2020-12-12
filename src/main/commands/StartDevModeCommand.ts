@@ -111,14 +111,15 @@ export default class StartDevModeCommand implements ICommand {
           canSelectFolders: true,
           canSelectMany: false,
         });
-        if (uris) {
-          workloadConfig.directory = uris[0].fsPath;
-          fileStore.set(appName, appConfig);
-          if (currentUri !== uris[0].fsPath) {
-            vscode.commands.executeCommand("vscode.openFolder", uris[0], true);
-            this.setTmpStartRecord(appName, node as ControllerResourceNode);
-            return;
-          }
+        if (!uris) {
+          return;
+        }
+        workloadConfig.directory = uris[0].fsPath;
+        fileStore.set(appName, appConfig);
+        if (currentUri !== uris[0].fsPath) {
+          vscode.commands.executeCommand("vscode.openFolder", uris[0], true);
+          this.setTmpStartRecord(appName, node as ControllerResourceNode);
+          return;
         }
       }
     }
