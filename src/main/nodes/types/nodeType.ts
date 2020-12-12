@@ -45,7 +45,9 @@ export interface BaseNocalhostNode {
   getNodeStateId(): string;
   getChildren(
     parent?: BaseNocalhostNode
-  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>>;
+  ):
+    | Promise<vscode.ProviderResult<BaseNocalhostNode[]>>
+    | vscode.ProviderResult<BaseNocalhostNode[]>;
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
 
   getParent(element?: BaseNocalhostNode): BaseNocalhostNode | null | undefined;

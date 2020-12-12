@@ -11,6 +11,7 @@ import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
+import { appTreeView } from "../extension";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
@@ -22,7 +23,6 @@ export default class InstallCommand implements ICommand {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
     });
-    vscode.commands.executeCommand("Nocalhost.refresh");
     // make siblings collapsis
     const siblings: (
       | AppNode
@@ -43,10 +43,12 @@ export default class InstallCommand implements ICommand {
       appNode.installType,
       appNode.resourceDir
     ).finally(() => {
-      state.deleteAppState(appNode.label, "installing");
       appNode.expanded();
       appNode.expandWorkloadNode();
-      vscode.commands.executeCommand("Nocalhost.refresh");
+      state.deleteAppState(appNode.label, "installing", {
+        refresh: true,
+        nodeStateId: appNode.getNodeStateId(),
+      });
     });
   }
 

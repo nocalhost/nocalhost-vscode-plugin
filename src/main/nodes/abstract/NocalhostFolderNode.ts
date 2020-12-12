@@ -17,6 +17,8 @@ export abstract class NocalhostFolderNode implements BaseNocalhostNode {
   abstract getParent(element: BaseNocalhostNode): BaseNocalhostNode;
   abstract getChildren(
     parent?: BaseNocalhostNode
-  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>>;
+  ):
+    | Promise<vscode.ProviderResult<BaseNocalhostNode[]>>
+    | vscode.ProviderResult<BaseNocalhostNode[]>;
   abstract getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
 }

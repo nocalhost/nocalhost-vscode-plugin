@@ -33,8 +33,8 @@ export class WorkloadFolderNode extends NocalhostFolderNode {
   }
   getChildren(
     parent?: BaseNocalhostNode
-  ): Promise<vscode.ProviderResult<NocalhostFolderNode[]>> {
-    return Promise.resolve(this.children.map((type) => this.createChild(type)));
+  ): vscode.ProviderResult<NocalhostFolderNode[]> {
+    return this.children.map((type) => this.createChild(type));
   }
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     const collapseState =

@@ -107,11 +107,9 @@ export class AppNode extends NocalhostFolderNode {
     );
   }
 
-  getChildren(
-    parent?: BaseNocalhostNode
-  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
+  getChildren(parent?: BaseNocalhostNode): BaseNocalhostNode[] {
     const children: string[] = this.getDefaultChildrenNodes();
-    return Promise.resolve(children.map((type) => this.createChild(type)));
+    return children.map((type) => this.createChild(type));
   }
 
   async getTreeItem() {
