@@ -98,16 +98,17 @@ export default class StartDevModeCommand implements ICommand {
       }
       if (result === nls["bt.clone"]) {
         destDir = await this.cloneCode(host, appName, node.name);
-        if (destDir) {
-          workloadConfig.directory = destDir;
-          appConfig[node.name] = workloadConfig;
-          fileStore.set(appName, appConfig);
-          const uri = vscode.Uri.file(destDir);
-          if (currentUri !== uri.fsPath) {
-            vscode.commands.executeCommand("vscode.openFolder", uri, true);
-            this.setTmpStartRecord(appName, node as ControllerResourceNode);
-            return;
-          }
+        if (!destDir) {
+          return;
+        }
+        workloadConfig.directory = destDir;
+        appConfig[node.name] = workloadConfig;
+        fileStore.set(appName, appConfig);
+        const uri = vscode.Uri.file(destDir);
+        if (currentUri !== uri.fsPath) {
+          vscode.commands.executeCommand("vscode.openFolder", uri, true);
+          this.setTmpStartRecord(appName, node as ControllerResourceNode);
+          return;
         }
       } else if (result === nls["bt.open.dir"]) {
         const uris = await host.showOpenDialog({
