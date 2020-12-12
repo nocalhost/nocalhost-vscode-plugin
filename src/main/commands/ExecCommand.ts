@@ -17,6 +17,10 @@ export default class ExecCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(node: ControllerNodeApi) {
+    if (!node) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
     await this.exec(host, node);
   }
 

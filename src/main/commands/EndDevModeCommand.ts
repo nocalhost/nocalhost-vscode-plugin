@@ -15,6 +15,10 @@ export default class EndDevModeCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
   async execCommand(node: ControllerResourceNode) {
+    if (!node) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
     const appNode = node.getAppNode();
     host.getOutputChannel().show(true);
     host.showInformationMessage("Ending DevMode.");

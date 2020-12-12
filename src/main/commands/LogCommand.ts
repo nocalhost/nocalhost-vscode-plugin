@@ -14,6 +14,10 @@ export default class LogCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(node: KubernetesResourceNode) {
+    if (!node) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
     const kind = node.resourceType;
     const name = node.name;
     const appNode = node.getAppNode();

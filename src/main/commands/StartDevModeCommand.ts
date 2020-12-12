@@ -40,6 +40,10 @@ export default class StartDevModeCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
   async execCommand(node: ControllerNodeApi) {
+    if (!node) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
