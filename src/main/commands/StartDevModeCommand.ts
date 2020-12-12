@@ -21,6 +21,7 @@ import * as nls from "../../../package.nls.json";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import state from "../state";
+import { appTreeView } from "../extension";
 
 export interface ControllerNodeApi {
   name: string;
@@ -39,6 +40,9 @@ export default class StartDevModeCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
   async execCommand(node: ControllerNodeApi) {
+    if (node instanceof ControllerResourceNode && appTreeView) {
+      await appTreeView.reveal(node, { select: true, focus: true });
+    }
     const appName = node.getAppName();
     await this.startDevMode(host, appName, node);
   }
