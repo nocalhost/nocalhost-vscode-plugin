@@ -126,7 +126,6 @@ export class AppNode extends NocalhostFolderNode {
         vscode.TreeItemCollapsibleState.Collapsed;
     }
     let treeItem = new vscode.TreeItem(this.label, collapseState);
-    treeItem.id = uuidv4();
     this.updateIcon(treeItem);
     this.updateContext(treeItem);
     // treeItem.command = {

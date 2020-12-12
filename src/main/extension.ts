@@ -17,15 +17,6 @@ import {
   TMP_STATUS,
   TMP_WORKLOAD,
 } from "./constants";
-import {
-  DEPLOYMENT_FOLDER,
-  STATEFUL_SET_FOLDER,
-  DAEMON_SET_FOLDER,
-  JOBS_FOLDER,
-  CRON_JOBS_FOLDER,
-  PODS_FOLDER,
-  SERVICE_FOLDER,
-} from "./nodes/nodeContants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
@@ -49,70 +40,6 @@ export async function activate(context: vscode.ExtensionContext) {
     treeDataProvider: appTreeProvider,
   });
 
-  appTreeView.onDidCollapseElement(
-    (e: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
-      const node = e.element;
-      // if (
-      //   [
-      //     DEPLOYMENT_FOLDER,
-      //     STATEFUL_SET_FOLDER,
-      //     DAEMON_SET_FOLDER,
-      //     JOBS_FOLDER,
-      //     CRON_JOBS_FOLDER,
-      //     PODS_FOLDER,
-      //     SERVICE_FOLDER,
-      //   ].includes(node.type)
-      // ) {
-      //   notification.removeSubscriber("refresh", node);
-      // }
-      // notification.removeSubscriber("refresh", node);
-      state.set(
-        node.getNodeStateId(),
-        vscode.TreeItemCollapsibleState.Collapsed
-      );
-    }
-  );
-
-  appTreeView.onDidExpandElement(
-    async (e: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
-      const node = e.element;
-      if (node instanceof AppNode) {
-        const others = (await node.getParent().getChildren()).filter((item) => {
-          if (item instanceof AppNode && item.id !== node.id) {
-            return true;
-          } else {
-            false;
-          }
-        });
-        others.map((item) =>
-          state.set(
-            item.getNodeStateId(),
-            vscode.TreeItemCollapsibleState.Collapsed
-          )
-        );
-        vscode.commands.executeCommand("Nocalhost.refresh");
-      }
-
-      // if (
-      //   [
-      //     DEPLOYMENT_FOLDER,
-      //     STATEFUL_SET_FOLDER,
-      //     DAEMON_SET_FOLDER,
-      //     JOBS_FOLDER,
-      //     CRON_JOBS_FOLDER,
-      //     PODS_FOLDER,
-      //     SERVICE_FOLDER,
-      //   ].includes(node.type)
-      // ) {
-      //   notification.addSubscriber("refresh", node);
-      // }
-
-      state.set(
-        node.getNodeStateId(),
-        vscode.TreeItemCollapsibleState.Expanded
-      );
-    }
-  );
   let subs = [
     {
       dispose: appTreeView.dispose,
