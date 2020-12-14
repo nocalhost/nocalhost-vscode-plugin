@@ -118,7 +118,7 @@ export default class InstallCommand implements ICommand {
   }
 
   private async checkStatus(appNode: AppNode) {
-    const check = await this.checkBookInfoStatus(appNode);
+    const check = await this.checkBookInfoStatus(appNode).catch(() => {});
     if (check) {
       this.portForwordService(appNode);
       return;
