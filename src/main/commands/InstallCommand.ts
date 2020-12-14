@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as path from "path";
 
 import ICommand from "./ICommand";
 import { INSTALL_APP } from "./constants";
@@ -9,9 +8,10 @@ import host, { Host } from "../host";
 import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
+import * as kubectl from "../ctl/kubectl";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
-import { appTreeView } from "../extension";
+import { List, ResourceStatus } from "../nodes/types/resourceType";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
@@ -42,14 +42,27 @@ export default class InstallCommand implements ICommand {
       appNode.info.url,
       appNode.installType,
       appNode.resourceDir
-    ).finally(() => {
-      appNode.expanded();
-      appNode.expandWorkloadNode();
-      state.deleteAppState(appNode.label, "installing", {
-        refresh: true,
-        nodeStateId: appNode.getNodeStateId(),
+    )
+      .then(() => {
+        const bookInfoUrls = [
+          "https://github.com/nocalhost/bookinfo.git",
+          "git@github.com:nocalhost/bookinfo.git",
+        ];
+        if (
+          bookInfoUrls.includes(appNode.info.url) &&
+          appNode.info.name === "bookinfo"
+        ) {
+          this.checkStatus(appNode);
+        }
+      })
+      .finally(() => {
+        appNode.expanded();
+        appNode.expandWorkloadNode();
+        state.deleteAppState(appNode.label, "installing", {
+          refresh: true,
+          nodeStateId: appNode.getNodeStateId(),
+        });
       });
-    });
   }
 
   private async install(
@@ -102,5 +115,75 @@ export default class InstallCommand implements ICommand {
     fileStore.set(appName, {});
     host.log(`Application ${appName} installed`, true);
     host.showInformationMessage(`Application ${appName} installed`);
+  }
+
+  private async checkStatus(appNode: AppNode) {
+    const check = await this.checkBookInfoStatus(appNode);
+    if (check) {
+      this.portForwordService(appNode);
+      return;
+    }
+    setTimeout(() => {
+      this.checkStatus(appNode);
+    }, 2000);
+  }
+
+  private async checkBookInfoStatus(appNode: AppNode) {
+    const res = await kubectl.getResourceList(
+      appNode.getKUbeconfigPath(),
+      "Deployments"
+    );
+    const list = JSON.parse(res as string) as List;
+    let check = true;
+    list.items.map((item) => {
+      const conditionStatus = item.status as ResourceStatus;
+      if (conditionStatus && conditionStatus.conditions) {
+        const conditions = conditionStatus.conditions;
+        let isAvaiable = false;
+        for (let i = 0; i < conditions.length; i++) {
+          if (
+            conditions[i].type === "Available" &&
+            conditions[i].status === "True"
+          ) {
+            isAvaiable = true;
+            break;
+          }
+        }
+        if (!isAvaiable) {
+          check = false;
+        }
+      } else {
+        check = false;
+      }
+    });
+
+    return check;
+  }
+
+  private async portForwordService(appNode: AppNode) {
+    // port-forward services/productpage 9080:9080
+    const terminalCommands = [
+      "port-forward",
+      "services/productpage",
+      "39080:9080",
+    ];
+    terminalCommands.push("--kubeconfig", appNode.getKUbeconfigPath());
+    const shellPath = "kubectl";
+    const terminalDisposed = host.invokeInNewTerminalSpecialShell(
+      terminalCommands,
+      process.platform === "win32" ? `${shellPath}.exe` : shellPath,
+      "kubectl"
+    );
+    terminalDisposed.show();
+    host.pushDebugDispose(terminalDisposed);
+    const res = await host.showInformationMessage(
+      `productpage url: http://localhost:39080`,
+      { modal: true },
+      "go"
+    );
+    if (res === "go") {
+      const uri = vscode.Uri.parse("http://localhost:39080");
+      vscode.env.openExternal(uri);
+    }
   }
 }
