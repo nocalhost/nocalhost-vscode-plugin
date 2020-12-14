@@ -109,6 +109,18 @@ export class Host {
     return this.newTerminal;
   }
 
+  invokeInNewTerminalSpecialShell(
+    commands: string[],
+    shellPath: string,
+    name: string
+  ) {
+    return vscode.window.createTerminal({
+      name,
+      shellArgs: commands,
+      shellPath,
+    });
+  }
+
   log(msg: string, line?: boolean) {
     if (line) {
       this.outputChannel.appendLine(msg);

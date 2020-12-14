@@ -7,6 +7,7 @@ import host, { Host } from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as kubectl from "../ctl/kubectl";
 import * as nhctl from "../ctl/nhctl";
+import * as shell from "../ctl/shell";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Resource, PodResource } from "../nodes/types/resourceType";
 
@@ -27,7 +28,11 @@ export default class ExecCommand implements ICommand {
   async exec(host: Host, node: ControllerNodeApi) {
     const status = await node.getStatus();
     if (status === DeploymentStatus.developing) {
-      await this.opendevSpaceExec(node.getAppName(), node.name);
+      await this.opendevSpaceExec(
+        node.getAppName(),
+        node.name,
+        node.getKubeConfigPath()
+      );
     } else {
       await this.openExec(
         node.getKubeConfigPath(),
@@ -37,14 +42,44 @@ export default class ExecCommand implements ICommand {
     }
   }
 
-  async opendevSpaceExec(appName: string, workloadName: string) {
+  private async getDefaultShell(
+    podName: string,
+    constainerName: string,
+    kubeConfigPath: string
+  ) {
+    let defaultShell = "sh";
+    for (let i = 0; i < ExecCommand.defaultShells.length; i++) {
+      const shellObj = await shell.execAsync(
+        `kubectl exec ${podName} -c ${constainerName} --kubeconfig ${kubeConfigPath} -- which ${ExecCommand.defaultShells[i]}`,
+        []
+      );
+      if (shellObj.code === 0 && shellObj.stdout) {
+        defaultShell = ExecCommand.defaultShells[i];
+        break;
+      }
+    }
+
+    return defaultShell;
+  }
+
+  async opendevSpaceExec(
+    appName: string,
+    workloadName: string,
+    kubeConfigPath: string
+  ) {
     host.log("Opening DevSpace terminal", true);
     host.showInformationMessage("Opening DevSpace terminal");
-    const terminalCommand = nhctl.terminalCommand(appName, workloadName);
-    const terminalDisposed = host.invokeInNewTerminal(
-      terminalCommand,
+
+    const terminalCommands = ["dev", "terminal", appName];
+    terminalCommands.push("-d", workloadName);
+    terminalCommands.push("--kubeconfig", kubeConfigPath);
+    const shellPath = "nhctl";
+    const terminalDisposed = host.invokeInNewTerminalSpecialShell(
+      terminalCommands,
+      process.platform === "win32" ? `${shellPath}.exe` : shellPath,
       workloadName
     );
+    terminalDisposed.show();
     host.pushDebugDispose(terminalDisposed);
     host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
@@ -55,9 +90,24 @@ export default class ExecCommand implements ICommand {
     podName: string,
     containerName: string
   ) {
-    let shell = '/bin/sh -c "(zsh||bash||sh)"';
-    const command = `kubectl exec -it ${podName} -c ${containerName} --kubeconfig ${kubeConfigPath} -- ${shell}`;
-    const terminalDisposed = host.invokeInNewTerminal(command, podName);
+    let shell = await this.getDefaultShell(
+      podName,
+      containerName,
+      kubeConfigPath
+    );
+    const terminalCommands = new Array<string>();
+    terminalCommands.push("exec");
+    terminalCommands.push("-it", podName);
+    terminalCommands.push("-c", containerName);
+    terminalCommands.push("--kubeconfig", kubeConfigPath);
+    terminalCommands.push("--", shell);
+    const shellPath = "kubectl";
+    const terminalDisposed = host.invokeInNewTerminalSpecialShell(
+      terminalCommands,
+      process.platform === "win32" ? `${shellPath}.exe` : shellPath,
+      podName
+    );
+    terminalDisposed.show();
     host.pushDebugDispose(terminalDisposed);
   }
 
