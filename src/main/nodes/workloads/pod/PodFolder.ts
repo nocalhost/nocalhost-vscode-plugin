@@ -7,11 +7,13 @@ import { PODS_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 import { List } from "../../types/resourceType";
 import { Pod } from "./Pod";
+import refreshSchedule from "../../../schedule/refreshSchedule";
 
 export class PodFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    refreshSchedule.getInstance()?.addNode(this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;

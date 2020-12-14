@@ -1,18 +1,18 @@
 import * as vscode from "vscode";
 
 import * as kubectl from "../../../../ctl/kubectl";
-import host from "../../../../host";
-import state from "../../../../state";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { DEPLOYMENT_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode, SvcProfile } from "../../../types/nodeType";
 import { List, ResourceStatus } from "../../../types/resourceType";
 import { Deployment } from "./Deployment";
+import refreshSchedule from "../../../../schedule/refreshSchedule";
 
 export class DeploymentFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    refreshSchedule.getInstance()?.addNode(this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;

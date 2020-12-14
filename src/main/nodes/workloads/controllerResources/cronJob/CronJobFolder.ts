@@ -6,11 +6,13 @@ import { CronJob } from "./CronJob";
 import { CRON_JOBS_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
 import { List } from "../../../types/resourceType";
+import refreshSchedule from "../../../../schedule/refreshSchedule";
 
 export class CronJobFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    refreshSchedule.getInstance()?.addNode(this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;

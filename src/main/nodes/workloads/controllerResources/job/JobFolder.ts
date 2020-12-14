@@ -1,16 +1,17 @@
 import * as vscode from "vscode";
 
 import * as kubectl from "../../../../ctl/kubectl";
-import host from "../../../../host";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { JOBS_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
 import { List } from "../../../types/resourceType";
 import { Job } from "./Job";
+import refreshSchedule from "../../../../schedule/refreshSchedule";
 
 export class JobFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
+    refreshSchedule.getInstance()?.addNode(this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;

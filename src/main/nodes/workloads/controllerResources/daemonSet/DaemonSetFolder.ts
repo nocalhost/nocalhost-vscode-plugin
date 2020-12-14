@@ -6,12 +6,14 @@ import { DAEMON_SET_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
 import { List } from "../../../types/resourceType";
 import { DaemonSet } from "./DaemonSet";
+import refreshSchedule from "../../../../schedule/refreshSchedule";
 
 export class DaemonSetFolder extends KubernetesResourceFolder {
   public label: string = "DaemonSets";
   public type: string = DAEMON_SET_FOLDER;
   constructor(public parent: BaseNocalhostNode) {
     super();
+    refreshSchedule.getInstance()?.addNode(this);
   }
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {
     return this.parent;

@@ -1,17 +1,18 @@
 import * as vscode from "vscode";
 
 import * as kubectl from "../../../ctl/kubectl";
-import host from "../../../host";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { SERVICE_FOLDER, ID_SPLIT } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 import { List } from "../../types/resourceType";
 import { Service } from "./Service";
+import refreshSchedule from "../../../schedule/refreshSchedule";
 
 export class ServiceFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    refreshSchedule.getInstance()?.addNode(this);
   }
   public label: string = "Services";
   public type = SERVICE_FOLDER;

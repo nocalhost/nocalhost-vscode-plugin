@@ -6,6 +6,7 @@ import { STATEFUL_SET_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
 import { List } from "../../../types/resourceType";
 import { StatefulSet } from "./StatefulSet";
+import refreshSchedule from "../../../../schedule/refreshSchedule";
 
 export class StatefulSetFolder extends KubernetesResourceFolder {
   public label: string = "StatefulSets";
@@ -13,6 +14,7 @@ export class StatefulSetFolder extends KubernetesResourceFolder {
 
   constructor(public parent: BaseNocalhostNode) {
     super();
+    refreshSchedule.getInstance()?.addNode(this);
   }
 
   getParent(element: BaseNocalhostNode): BaseNocalhostNode {

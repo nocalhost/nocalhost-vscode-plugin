@@ -24,8 +24,8 @@ import state from "./state";
 import { SHOW_DASHBOARD, START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
-import { AppNode } from "./nodes/AppNode";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
+import refreshSchedule, { IRefreshSchedule } from "./schedule/refreshSchedule";
 
 // import notification from "./notification";
 
@@ -39,6 +39,21 @@ export async function activate(context: vscode.ExtensionContext) {
   appTreeView = vscode.window.createTreeView("Nocalhost", {
     treeDataProvider: appTreeProvider,
   });
+
+  const refreshScheduleInstance: IRefreshSchedule = refreshSchedule.getInstance(
+    appTreeProvider
+  );
+  refreshScheduleInstance.start();
+  appTreeView.onDidCollapseElement(
+    (event: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
+      refreshScheduleInstance.terminate();
+    }
+  );
+  appTreeView.onDidExpandElement(
+    (event: vscode.TreeViewExpansionEvent<BaseNocalhostNode>) => {
+      refreshScheduleInstance.terminate();
+    }
+  );
 
   let subs = [
     {
