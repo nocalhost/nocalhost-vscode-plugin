@@ -101,10 +101,12 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   public getKUbeconfigPath() {
-    return path.resolve(
+    const kubeconfigPath = path.resolve(
       KUBE_CONFIG_DIR,
       `${this.id}_${this.devSpaceId}_config`
     );
+
+    return path.normalize(kubeconfigPath);
   }
 
   getChildren(parent?: BaseNocalhostNode): BaseNocalhostNode[] {

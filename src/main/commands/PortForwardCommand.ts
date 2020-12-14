@@ -5,7 +5,6 @@ import { PORT_FORWARD } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import * as kubectl from "../ctl/kubectl";
-import * as fileStore from "../store/fileStore";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { Resource } from "../nodes/types/resourceType";
 
@@ -48,8 +47,15 @@ export default class PortForwardCommand implements ICommand {
     if (!portMap) {
       return;
     }
-    const command = `kubectl port-forward ${podName} ${portMap} --kubeconfig ${node.getKubeConfigPath()}`;
-    const terminalDisposed = host.invokeInNewTerminal(command);
+    const terminalCommands = ["port-forward", podName, portMap];
+    terminalCommands.push("--kubeconfig", node.getKubeConfigPath());
+    const shellPath = "kubectl";
+    const terminalDisposed = host.invokeInNewTerminalSpecialShell(
+      terminalCommands,
+      process.platform === "win32" ? `${shellPath}.exe` : shellPath,
+      "kubectl"
+    );
+    terminalDisposed.show();
     host.pushDebugDispose(terminalDisposed);
     host.log("open container end", true);
     host.log("", true);

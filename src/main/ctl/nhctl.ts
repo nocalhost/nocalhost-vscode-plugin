@@ -192,10 +192,6 @@ export async function getTemplateConfig(appName: string, workloadName: string) {
   return result.stdout;
 }
 
-export function terminalCommand(appName: string, workloadName: string) {
-  return `nhctl dev terminal ${appName} -d ${workloadName}`;
-}
-
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfigPath}`;
 }
