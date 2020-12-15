@@ -26,6 +26,7 @@ jobs:
         VERSION: ${{ env.RELEASE_VERSION }}
       run: |
         npm i -g yarn
+        yarn install
         yarn build
         mv nocalhost-*.vsix nocalhost.vsix
 
