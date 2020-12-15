@@ -10,6 +10,8 @@ export class Host {
   private newTerminal!: vscode.Terminal | null;
   private debugDisposes: Array<{ dispose: () => any }> = [];
 
+  private bookInfoDisposes: Array<{ dispose: () => any }> = [];
+
   public pushDebugDispose(item: { dispose: () => any }) {
     this.debugDisposes.push(item);
   }
@@ -20,6 +22,20 @@ export class Host {
         item.dispose();
       }
     });
+  }
+
+  public pushBookInfoDispose(item: { dispose: () => any }) {
+    this.bookInfoDisposes.push(item);
+  }
+
+  public disposeBookInfo() {
+    this.bookInfoDisposes.map((item) => {
+      if (item) {
+        item.dispose();
+      }
+    });
+
+    this.bookInfoDisposes = [];
   }
 
   public showInputBox(options: vscode.InputBoxOptions) {

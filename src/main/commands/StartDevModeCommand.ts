@@ -50,9 +50,11 @@ export default class StartDevModeCommand implements ICommand {
     const appName = node.getAppName();
     const destDir = await this.cloneOrGetFolderDir(appName, node);
 
-    if (destDir === true) {
+    if (destDir === true || destDir === vscode.workspace.rootPath) {
+      host.disposeBookInfo();
       await this.startDevMode(host, appName, node);
     } else if (destDir) {
+      host.disposeBookInfo();
       this.saveAndOpenFolder(appName, node, destDir);
     }
   }
