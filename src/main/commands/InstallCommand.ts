@@ -15,6 +15,7 @@ import { List, ResourceStatus } from "../nodes/types/resourceType";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
+  private openPortForward: boolean = false;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
@@ -161,7 +162,10 @@ export default class InstallCommand implements ICommand {
   }
 
   private async portForwordService(appNode: AppNode) {
-    // port-forward services/productpage 9080:9080
+    if (this.openPortForward) {
+      return;
+    }
+    this.openPortForward = true;
     const terminalCommands = [
       "port-forward",
       "services/productpage",
@@ -174,15 +178,15 @@ export default class InstallCommand implements ICommand {
       process.platform === "win32" ? `${shellPath}.exe` : shellPath,
       "kubectl"
     );
+    host.pushBookInfoDispose(terminalDisposed);
     terminalDisposed.show();
-    host.pushDebugDispose(terminalDisposed);
     const res = await host.showInformationMessage(
-      `productpage url: http://localhost:39080`,
+      `productpage url: http://127.0.0.1:39080/productpage`,
       { modal: true },
       "go"
     );
     if (res === "go") {
-      const uri = vscode.Uri.parse("http://localhost:39080");
+      const uri = vscode.Uri.parse("http://127.0.0.1:39080/productpage");
       vscode.env.openExternal(uri);
     }
   }

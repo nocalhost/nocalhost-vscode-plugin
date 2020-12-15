@@ -48,7 +48,33 @@ export default class StartDevModeCommand implements ICommand {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
     const appName = node.getAppName();
-    await this.startDevMode(host, appName, node);
+    const destDir = await this.cloneOrGetFolderDir(appName, node);
+
+    if (destDir === true || destDir === vscode.workspace.rootPath) {
+      host.disposeBookInfo();
+      await this.startDevMode(host, appName, node);
+    } else if (destDir) {
+      host.disposeBookInfo();
+      this.saveAndOpenFolder(appName, node, destDir);
+    }
+  }
+
+  private saveAndOpenFolder(
+    appName: string,
+    node: ControllerNodeApi,
+    destDir: string
+  ) {
+    let appConfig = fileStore.get(appName) || {};
+    let workloadConfig = appConfig[node.name] || {};
+    const currentUri = vscode.workspace.rootPath;
+    workloadConfig.directory = destDir;
+    appConfig[node.name] = workloadConfig;
+    fileStore.set(appName, appConfig);
+    const uri = vscode.Uri.file(destDir);
+    if (currentUri !== uri.fsPath) {
+      vscode.commands.executeCommand("vscode.openFolder", uri, true);
+      this.setTmpStartRecord(appName, node as ControllerResourceNode);
+    }
   }
 
   private async cloneCode(host: Host, appName: string, workloadName: string) {
@@ -79,89 +105,80 @@ export default class StartDevModeCommand implements ICommand {
     return destDir;
   }
 
-  async startDevMode(host: Host, appName: string, node: ControllerNodeApi) {
+  private async firstOpen(appName: string, node: ControllerNodeApi) {
+    let destDir: string | undefined;
+    const result = await host.showInformationMessage(
+      nls["tips.clone"],
+      { modal: true },
+      nls["bt.clone"],
+      nls["bt.open.dir"]
+    );
+    if (!result) {
+      return;
+    }
+    if (result === nls["bt.clone"]) {
+      destDir = await this.cloneCode(host, appName, node.name);
+    } else if (result === nls["bt.open.dir"]) {
+      const uris = await host.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+      });
+      if (uris && uris.length > 0) {
+        destDir = uris[0].fsPath;
+      }
+    }
+
+    return destDir;
+  }
+
+  private async getTargetDirectory(appName: string, node: ControllerNodeApi) {
+    let destDir: string | undefined;
+    let appConfig = fileStore.get(appName);
+    let workloadConfig = appConfig[node.name];
+
+    const result = await host.showInformationMessage(
+      nls["tips.open"],
+      { modal: true },
+      nls["bt.open.other"],
+      nls["bt.open.dir"]
+    );
+    if (result === nls["bt.open.other"]) {
+      const uris = await host.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+      });
+      if (uris && uris.length > 0) {
+        destDir = uris[0].fsPath;
+      }
+    } else if (result === nls["bt.open.dir"]) {
+      destDir = workloadConfig.directory;
+    }
+
+    return destDir;
+  }
+
+  private async cloneOrGetFolderDir(appName: string, node: ControllerNodeApi) {
+    let destDir: string | undefined | boolean;
     let appConfig = fileStore.get(appName) || {};
     const currentUri = vscode.workspace.rootPath;
     let workloadConfig = appConfig[node.name] || {};
     appConfig[node.name] = workloadConfig;
     fileStore.set(appName, appConfig);
-    let destDir;
     if (!workloadConfig.directory) {
-      const result = await host.showInformationMessage(
-        nls["tips.clone"],
-        { modal: true },
-        nls["bt.clone"],
-        nls["bt.open.dir"]
-      );
-      if (!result) {
-        return;
-      }
-      if (result === nls["bt.clone"]) {
-        destDir = await this.cloneCode(host, appName, node.name);
-        if (!destDir) {
-          return;
-        }
-        workloadConfig.directory = destDir;
-        appConfig[node.name] = workloadConfig;
-        fileStore.set(appName, appConfig);
-        const uri = vscode.Uri.file(destDir);
-        if (currentUri !== uri.fsPath) {
-          vscode.commands.executeCommand("vscode.openFolder", uri, true);
-          this.setTmpStartRecord(appName, node as ControllerResourceNode);
-          return;
-        }
-      } else if (result === nls["bt.open.dir"]) {
-        const uris = await host.showOpenDialog({
-          canSelectFiles: false,
-          canSelectFolders: true,
-          canSelectMany: false,
-        });
-        if (!uris) {
-          return;
-        }
-        workloadConfig.directory = uris[0].fsPath;
-        fileStore.set(appName, appConfig);
-        if (currentUri !== uris[0].fsPath) {
-          vscode.commands.executeCommand("vscode.openFolder", uris[0], true);
-          this.setTmpStartRecord(appName, node as ControllerResourceNode);
-          return;
-        }
-      }
+      destDir = await this.firstOpen(appName, node);
+    } else if (currentUri !== workloadConfig.directory) {
+      destDir = await this.getTargetDirectory(appName, node);
+    } else {
+      destDir = true;
     }
-    // fresh config
-    appConfig = fileStore.get(appName);
-    workloadConfig = appConfig[node.name];
-    if (currentUri !== workloadConfig.directory) {
-      const result = await host.showInformationMessage(
-        nls["tips.open"],
-        { modal: true },
-        nls["bt.open.other"],
-        nls["bt.open.dir"]
-      );
-      if (!result) {
-        return;
-      }
-      if (result === nls["bt.open.other"]) {
-        const uris = await host.showOpenDialog({
-          canSelectFiles: false,
-          canSelectFolders: true,
-          canSelectMany: false,
-        });
-        if (!uris) {
-          return;
-        }
-        workloadConfig["directory"] = uris[0].fsPath;
-        fileStore.set(appName, appConfig);
-        vscode.commands.executeCommand("vscode.openFolder", uris[0], true);
-        this.setTmpStartRecord(appName, node as ControllerResourceNode);
-        return;
-      } else if (result === nls["bt.open.dir"]) {
-        const uri = vscode.Uri.file(workloadConfig.directory);
-        vscode.commands.executeCommand("vscode.openFolder", uri, true);
-        this.setTmpStartRecord(appName, node as ControllerResourceNode);
-        return;
-      }
-    }
+
+    return destDir;
+  }
+
+  async startDevMode(host: Host, appName: string, node: ControllerNodeApi) {
+    const currentUri = vscode.workspace.rootPath || os.homedir();
 
     await vscode.window.withProgress(
       {
@@ -180,9 +197,7 @@ export default class StartDevModeCommand implements ICommand {
           const svc = await this.getSvcConfig(appName, node.name);
           let dirs = new Array<string>();
           if (svc && svc.syncDirs) {
-            dirs = svc.syncDirs.map((item) =>
-              path.resolve(workloadConfig.directory || os.homedir(), item)
-            );
+            dirs = svc.syncDirs.map((item) => path.resolve(currentUri, item));
           }
           await nhctl.devStart(
             host,
