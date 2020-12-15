@@ -3,6 +3,11 @@
   "displayName": "nocalhost-vscode-plugin",
   "description": "",
   "version": "0.0.6",
+  "license": "Apache-2.0",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/nocalhost/nocalhost-vscode-plugin.git"
+  },
   "engines": {
     "vscode": "^1.31.0"
   },
@@ -214,7 +219,8 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run package",
+    "build": "./node_modules/.bin/vsce package",
+    "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
     "ts-compile-check": "tsc -p build/tsconfig.extension.json",
     "compile": "webpack --devtool nosources-source-map --config ./build/webpack.config.js",
@@ -226,7 +232,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run prettier && npm run lint && npm run ts-compile-check"
+      "pre-commit": "yarn run prettier && yarn run lint && yarn run ts-compile-check"
     }
   },
   "devDependencies": {
@@ -263,6 +269,7 @@
     "sirv-cli": "^1.0.8",
     "ts-loader": "^8.0.11",
     "typescript": "4.0.2",
+    "vsce": "^1.81.1",
     "vscode-test": "^1.4.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
