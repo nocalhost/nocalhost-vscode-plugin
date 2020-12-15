@@ -44,10 +44,10 @@ export class Deployment extends ControllerResourceNode {
     }
     switch (status) {
       case "running":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/status-normal.svg");
+        treeItem.iconPath = resolveVSCodeUri("images/icons/status-running.svg");
         break;
       case "developing":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/status-running.svg");
+        treeItem.iconPath = resolveVSCodeUri("images/icons/dev-start.svg");
         break;
       case "starting":
         treeItem.iconPath = resolveVSCodeUri("images/icons/loading.svg");

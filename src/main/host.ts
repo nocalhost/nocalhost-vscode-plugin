@@ -4,7 +4,6 @@ import { Progress } from "vscode";
 import nocalhostState from "./state";
 
 export class Host {
-  private terminal = vscode.window.createTerminal("Nocalhost");
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
   );
@@ -97,11 +96,6 @@ export class Host {
     return this.outputChannel;
   }
 
-  invokeInTerminal(command: string) {
-    this.terminal.show();
-    return this.terminal.sendText(command);
-  }
-
   invokeInNewTerminal(command: string, name?: string) {
     this.newTerminal = vscode.window.createTerminal(name);
     this.newTerminal.show();
@@ -130,7 +124,6 @@ export class Host {
   }
 
   dispose() {
-    this.terminal.dispose();
     this.outputChannel.dispose();
   }
 
