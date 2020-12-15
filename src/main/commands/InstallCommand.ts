@@ -161,7 +161,6 @@ export default class InstallCommand implements ICommand {
   }
 
   private async portForwordService(appNode: AppNode) {
-    // port-forward services/productpage 9080:9080
     const terminalCommands = [
       "port-forward",
       "services/productpage",
@@ -177,12 +176,12 @@ export default class InstallCommand implements ICommand {
     terminalDisposed.show();
     host.pushDebugDispose(terminalDisposed);
     const res = await host.showInformationMessage(
-      `productpage url: http://localhost:39080`,
+      `productpage url: http://127.0.0.1:39080`,
       { modal: true },
       "go"
     );
     if (res === "go") {
-      const uri = vscode.Uri.parse("http://localhost:39080");
+      const uri = vscode.Uri.parse("http://127.0.0.1:39080");
       vscode.env.openExternal(uri);
     }
   }
