@@ -180,14 +180,13 @@ export default class InstallCommand implements ICommand {
     );
     host.pushBookInfoDispose(terminalDisposed);
     terminalDisposed.show();
-    host.pushDebugDispose(terminalDisposed);
     const res = await host.showInformationMessage(
-      `productpage url: http://127.0.0.1:39080`,
+      `productpage url: http://127.0.0.1:39080/productpage`,
       { modal: true },
       "go"
     );
     if (res === "go") {
-      const uri = vscode.Uri.parse("http://127.0.0.1:39080");
+      const uri = vscode.Uri.parse("http://127.0.0.1:39080/productpage");
       vscode.env.openExternal(uri);
     }
   }
