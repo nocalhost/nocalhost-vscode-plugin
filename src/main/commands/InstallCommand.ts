@@ -48,6 +48,8 @@ export default class InstallCommand implements ICommand {
         const bookInfoUrls = [
           "https://github.com/nocalhost/bookinfo.git",
           "git@github.com:nocalhost/bookinfo.git",
+          "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
+          "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
         ];
         if (
           bookInfoUrls.includes(appNode.info.url) &&
@@ -97,7 +99,7 @@ export default class InstallCommand implements ICommand {
         });
 
         if (valuesUri) {
-          values = valuesUri[0].path;
+          values = valuesUri[0].fsPath;
         }
       }
     }
@@ -185,6 +187,7 @@ export default class InstallCommand implements ICommand {
       { modal: true },
       "go"
     );
+    await vscode.commands.executeCommand("Nocalhost.refresh", appNode);
     if (res === "go") {
       const uri = vscode.Uri.parse("http://127.0.0.1:39080/productpage");
       vscode.env.openExternal(uri);
