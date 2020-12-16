@@ -1,16 +1,17 @@
 const fs = require("fs");
+const rimraf = require("rimraf");
 const path = require("path");
 const os = require("os");
 
 const homeDir = os.homedir();
 const nhDir = path.resolve(homeDir, ".nh");
-const configPath = path.resolve(nhDir, "plugin/config.json");
+const pluginPath = path.resolve(nhDir, "plugin");
 
-function destroyConfig() {
-  const isExist = fs.existsSync(configPath);
+function destroy() {
+  const isExist = fs.existsSync(pluginPath);
   if (isExist) {
-    fs.unlinkSync(configPath);
+    rimraf.sync(pluginPath);
   }
 }
 
-destroyConfig();
+destroy();
