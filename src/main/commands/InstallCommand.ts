@@ -48,6 +48,8 @@ export default class InstallCommand implements ICommand {
         const bookInfoUrls = [
           "https://github.com/nocalhost/bookinfo.git",
           "git@github.com:nocalhost/bookinfo.git",
+          "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
+          "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
         ];
         if (
           bookInfoUrls.includes(appNode.info.url) &&
