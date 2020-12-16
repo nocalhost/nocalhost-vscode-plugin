@@ -99,7 +99,7 @@ export default class InstallCommand implements ICommand {
         });
 
         if (valuesUri) {
-          values = valuesUri[0].path;
+          values = valuesUri[0].fsPath;
         }
       }
     }
