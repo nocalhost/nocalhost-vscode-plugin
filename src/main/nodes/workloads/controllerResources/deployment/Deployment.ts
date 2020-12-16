@@ -3,7 +3,9 @@ import * as yaml from "yaml";
 
 import * as kubectl from "../../../../ctl/kubectl";
 import * as nhctl from "../../../../ctl/nhctl";
-import ConfigService from "../../../../service/configService";
+import ConfigService, {
+  NocalhostServiceConfig,
+} from "../../../../service/configService";
 import state from "../../../../state";
 import { resolveVSCodeUri } from "../../../../utils/fileUtil";
 import { DEPLOYMENT } from "../../../nodeContants";
@@ -29,6 +31,7 @@ export class Deployment extends ControllerResourceNode {
     public name: string,
     private conditionsStatus: Array<Status> | string,
     private svcProfile: SvcProfile | undefined | null,
+    private nocalhostService: NocalhostServiceConfig | undefined | null,
     public info?: any
   ) {
     super();
@@ -39,9 +42,6 @@ export class Deployment extends ControllerResourceNode {
     let treeItem = await super.getTreeItem();
     let status = "";
     status = await this.getStatus();
-    if (this.firstRender) {
-      this.firstRender = false;
-    }
     switch (status) {
       case "running":
         treeItem.iconPath = resolveVSCodeUri("images/icons/status-running.svg");
@@ -60,6 +60,9 @@ export class Deployment extends ControllerResourceNode {
     treeItem.contextValue = `${treeItem.contextValue}-${
       check ? "info" : "warn"
     }-${status}`;
+    if (this.firstRender) {
+      this.firstRender = false;
+    }
     return treeItem;
   }
 
@@ -129,10 +132,12 @@ export class Deployment extends ControllerResourceNode {
 
   public async checkConfig() {
     const appNode = this.getAppNode();
-    const workloadConfig = await ConfigService.getWorkloadConfig(
-      appNode.label,
-      this.name
-    );
+    if (!this.firstRender) {
+      this.nocalhostService = await ConfigService.getWorkloadConfig(
+        appNode.label,
+        this.name
+      );
+    }
     const schema = {
       type: "object",
       required: ["gitUrl", "devContainerImage", "name"],
@@ -151,6 +156,6 @@ export class Deployment extends ControllerResourceNode {
         },
       },
     };
-    return validate(workloadConfig, schema);
+    return validate(this.nocalhostService || {}, schema);
   }
 }
