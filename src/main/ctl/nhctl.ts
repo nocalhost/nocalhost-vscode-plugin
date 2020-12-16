@@ -32,7 +32,10 @@ export function install(
   host.log(`[cmd] ${installCommand}`, true);
 
   return new Promise((resolve, reject) => {
-    const proc = spawn(installCommand, [], { shell: true });
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+
+    const proc = spawn(installCommand, [], { shell: true, env });
     let errorStr = "";
     proc.on("close", (code) => {
       if (code === 0) {
