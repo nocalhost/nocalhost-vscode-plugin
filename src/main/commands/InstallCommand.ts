@@ -187,6 +187,7 @@ export default class InstallCommand implements ICommand {
       { modal: true },
       "go"
     );
+    await vscode.commands.executeCommand("Nocalhost.refresh", appNode);
     if (res === "go") {
       const uri = vscode.Uri.parse("http://127.0.0.1:39080/productpage");
       vscode.env.openExternal(uri);
