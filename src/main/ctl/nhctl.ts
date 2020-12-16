@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { execAsync, execChildProcessAsync } from "./shell";
 import { Host } from "../host";
 import { spawn } from "child_process";
@@ -29,31 +30,35 @@ export function install(
     );
   }
 
-  host.log(`[cmd] ${installCommand}`, true);
+  return vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Installing application: ${appName}`,
+      cancellable: false,
+    },
+    () =>
+      new Promise((resolve, reject) => {
+        const proc = spawn(installCommand, [], { shell: true });
+        let errorStr = "";
+        proc.on("close", (code) => {
+          if (code === 0) {
+            host.showInformationMessage(`Application ${appName} installed`);
+            resolve(null);
+          } else {
+            reject(errorStr);
+          }
+        });
 
-  return new Promise((resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+        proc.stdout.on("data", function (data) {
+          host.log("" + data, true);
+        });
 
-    const proc = spawn(installCommand, [], { shell: true, env });
-    let errorStr = "";
-    proc.on("close", (code) => {
-      if (code === 0) {
-        resolve(null);
-      } else {
-        reject(errorStr);
-      }
-    });
-
-    proc.stdout.on("data", function (data) {
-      host.log("" + data, true);
-    });
-
-    proc.stderr.on("data", function (data) {
-      errorStr = data + "";
-      host.log("" + data, true);
-    });
-  });
+        proc.stderr.on("data", function (data) {
+          errorStr = data + "";
+          host.log("" + data, true);
+        });
+      })
+  );
 }
 
 export async function uninstall(

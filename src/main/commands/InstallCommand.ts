@@ -104,7 +104,6 @@ export default class InstallCommand implements ICommand {
       }
     }
     host.log(`Installing application: ${appName}`, true);
-    host.showInformationMessage(`Installing application: ${appName}`);
     await nhctl.install(
       host,
       kubeconfigPath,
@@ -117,7 +116,6 @@ export default class InstallCommand implements ICommand {
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
     host.log(`Application ${appName} installed`, true);
-    host.showInformationMessage(`Application ${appName} installed`);
   }
 
   private async checkStatus(appNode: AppNode) {
