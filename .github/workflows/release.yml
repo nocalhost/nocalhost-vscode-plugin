@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-plugin:
-    name: Release nhctl
+    name: Release nocalhost-vscode-plugin
     runs-on: ubuntu-latest
     steps:
     - name: Set up Node 1.x
@@ -15,7 +15,7 @@ jobs:
       with:
         node-version: 12.x
 
-    - name: Check out code into the Go module directory
+    - name: Check out code into the project's root directory
       uses: actions/checkout@v2
 
     - name: Get tag
@@ -30,7 +30,7 @@ jobs:
         yarn build
         mv nocalhost-*.vsix nocalhost.vsix
 
-    - name: Create nhctl Release
+    - name: Create nocalhost-vscode-plugin Release
       id: create_release
       uses: actions/create-release@v1
       env:
