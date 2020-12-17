@@ -98,8 +98,10 @@ export default class InstallCommand implements ICommand {
           title: "Select the value file path",
         });
 
-        if (valuesUri) {
+        if (valuesUri && valuesUri.length > 0) {
           values = valuesUri[0].fsPath;
+        } else {
+          return;
         }
       }
     }
