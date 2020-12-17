@@ -9,6 +9,7 @@ import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import PortForwardCommand from "./PortForwardCommand";
+import ResetCommand from "./ResetCommand";
 import ShowDashboardCommand from "./ShowDashboardCommand";
 import SignInCommand from "./SignInCommand";
 import SignOutCommand from "./SignOutCommand";
@@ -42,4 +43,5 @@ export default function initCommands(
   new LogCommand(context);
   new PortForwardCommand(context);
   new ExecCommand(context);
+  new ResetCommand(context);
 }

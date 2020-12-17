@@ -10,6 +10,7 @@
   "bt.open.other": "Open other directory",
   "Start.Develop": "Start Develop",
   "End.Develop": "End Develop",
+  "Reset": "Reset",
   "Terminal": "Terminal",
   "Logs": "Logs",
   "PortForward": "Port Forward",

@@ -2,7 +2,7 @@
   "name": "nocalhost",
   "displayName": "nocalhost-vscode-plugin",
   "description": "",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "license": "Apache-2.0",
   "icon": "images/icon.png",
   "repository": {
@@ -114,6 +114,11 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.reset",
+          "when": "viewItem =~ /^workload-deployment/i",
+          "group": "1"
+        },
+        {
           "command": "Nocalhost.log",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
           "group": "1"
@@ -184,6 +189,10 @@
         "title": "%End.Develop%",
         "icon": "images/icons/dev-end.svg",
         "category": "devSpace"
+      },
+      {
+        "command": "Nocalhost.reset",
+        "title": "%Reset%"
       },
       {
         "command": "Nocalhost.exec",
