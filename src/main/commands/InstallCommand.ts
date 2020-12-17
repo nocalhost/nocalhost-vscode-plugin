@@ -19,6 +19,10 @@ export default class InstallCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
   async execCommand(appNode: AppNode) {
+    if (!appNode) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
     state.setAppState(appNode.label, "installing", true, {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),

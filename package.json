@@ -2,8 +2,9 @@
   "name": "nocalhost",
   "displayName": "nocalhost-vscode-plugin",
   "description": "",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "Apache-2.0",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/nocalhost/nocalhost-vscode-plugin.git"

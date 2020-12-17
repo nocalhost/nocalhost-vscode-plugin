@@ -13,6 +13,10 @@ export default class LoadResourceCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(node: KubernetesResourceNode | AppNode) {
+    if (!node) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
     if (node instanceof KubernetesResourceNode) {
       const kind = node.resourceType;
       const name = node.name;

@@ -18,6 +18,10 @@ export default class UninstallCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
   async execCommand(appNode: AppNode) {
+    if (!appNode) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
     const result = await host.showInformationMessage(
       `Uninstall application: ${appNode.label}?`,
       { modal: true },
