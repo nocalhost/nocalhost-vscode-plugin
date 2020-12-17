@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { execAsync, execChildProcessAsync } from "./shell";
-import { Host } from "../host";
+import host, { Host } from "../host";
 import { spawn } from "child_process";
 
 export function install(
@@ -192,6 +192,19 @@ export async function editConfig(
   } -c ${contents}`;
   const result = await execAsync(configCommand, []);
   return result.stdout;
+}
+
+export async function resetService(
+  kubeConfigPath: string,
+  appName: string,
+  workloadName: string
+) {
+  const resetCommand = nhctlCommand(
+    kubeConfigPath,
+    `dev reset ${appName} -d ${workloadName}`
+  );
+  host.log(`[cmd] ${resetCommand}`, true);
+  await execChildProcessAsync(host, resetCommand, []);
 }
 
 export async function getTemplateConfig(appName: string, workloadName: string) {

@@ -252,12 +252,7 @@ export default class StartDevModeCommand implements ICommand {
           progress.report({
             message: "DevMode Started.",
           });
-
-          if (node instanceof ControllerResourceNode) {
-            await node.setStatus("");
-          } else {
-            await node.setStatus(DeploymentStatus.developing);
-          }
+          await node.setStatus("");
 
           await vscode.commands.executeCommand(EXEC, node);
         } catch (error) {
