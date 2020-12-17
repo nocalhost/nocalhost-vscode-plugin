@@ -20,6 +20,7 @@ export default class ResetCommand implements ICommand {
     }
     const appName = node.getAppName();
     await nhctl.resetService(node.getKubeConfigPath(), appName, node.name);
+    host.disposeDebug();
     vscode.commands.executeCommand(REFRESH, node);
   }
 }

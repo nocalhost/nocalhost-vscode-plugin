@@ -6,7 +6,6 @@ import registerCommand from "./register";
 import host, { Host } from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as kubectl from "../ctl/kubectl";
-import * as nhctl from "../ctl/nhctl";
 import * as shell from "../ctl/shell";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Resource, PodResource } from "../nodes/types/resourceType";
