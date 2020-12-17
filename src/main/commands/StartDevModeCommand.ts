@@ -49,8 +49,10 @@ export default class StartDevModeCommand implements ICommand {
     }
     const appName = node.getAppName();
     const destDir = await this.cloneOrGetFolderDir(appName, node);
-
-    if (destDir === true || destDir === vscode.workspace.rootPath) {
+    if (
+      destDir === true ||
+      (destDir && destDir === this.getCurrentRootPath())
+    ) {
       host.disposeBookInfo();
       await this.startDevMode(host, appName, node);
     } else if (destDir) {
@@ -66,7 +68,7 @@ export default class StartDevModeCommand implements ICommand {
   ) {
     let appConfig = fileStore.get(appName) || {};
     let workloadConfig = appConfig[node.name] || {};
-    const currentUri = vscode.workspace.rootPath;
+    const currentUri = this.getCurrentRootPath();
     workloadConfig.directory = destDir;
     appConfig[node.name] = workloadConfig;
     fileStore.set(appName, appConfig);
@@ -92,7 +94,7 @@ export default class StartDevModeCommand implements ICommand {
         canSelectMany: false,
         title: "select save directory",
       });
-      if (saveUris) {
+      if (saveUris && saveUris.length > 0) {
         destDir = path.resolve(saveUris[0].fsPath, workloadName);
         await host.showProgressing(async (progress) => {
           progress.report({
@@ -162,7 +164,7 @@ export default class StartDevModeCommand implements ICommand {
   private async cloneOrGetFolderDir(appName: string, node: ControllerNodeApi) {
     let destDir: string | undefined | boolean;
     let appConfig = fileStore.get(appName) || {};
-    const currentUri = vscode.workspace.rootPath;
+    const currentUri = this.getCurrentRootPath();
     let workloadConfig = appConfig[node.name] || {};
     appConfig[node.name] = workloadConfig;
     fileStore.set(appName, appConfig);
@@ -178,7 +180,7 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   async startDevMode(host: Host, appName: string, node: ControllerNodeApi) {
-    const currentUri = vscode.workspace.rootPath || os.homedir();
+    const currentUri = this.getCurrentRootPath() || os.homedir();
 
     await vscode.window.withProgress(
       {
@@ -262,6 +264,14 @@ export default class StartDevModeCommand implements ICommand {
           node.setStatus("");
         }
       }
+    );
+  }
+
+  private getCurrentRootPath() {
+    return (
+      vscode.workspace.workspaceFolders &&
+      vscode.workspace.workspaceFolders.length > 0 &&
+      vscode.workspace.workspaceFolders[0].uri.fsPath
     );
   }
 
