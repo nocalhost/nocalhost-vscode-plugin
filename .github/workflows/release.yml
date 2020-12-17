@@ -57,3 +57,4 @@ jobs:
         args: "publish -p $VSCE_TOKEN"
       env:
         VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+      
