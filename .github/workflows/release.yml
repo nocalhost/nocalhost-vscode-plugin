@@ -52,7 +52,6 @@ jobs:
         asset_content_type: application/octet-stream
 
     - name: Publish To VS Code Extension Marketplace
-      run: npm install
       uses: lannonbr/vsce-action@master
       with:
         args: "publish -p $VSCE_TOKEN"
