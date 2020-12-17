@@ -50,3 +50,12 @@ jobs:
         asset_path: nocalhost.vsix
         asset_name: nocalhost.vsix
         asset_content_type: application/octet-stream
+        
+    - name: Publish To VS Code Extension Marketplace
+      uses: actions/checkout@v2
+      run: npm install
+      uses: lannonbr/vsce-action@master
+      with:
+        args: "publish -p $VSCE_TOKEN"
+      env:
+        VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
