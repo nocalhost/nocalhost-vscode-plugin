@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import ICommand from "./ICommand";
-import { INSTALL_APP } from "./constants";
+import { INSTALL_APP, REFRESH } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
@@ -15,7 +15,6 @@ import { List, ResourceStatus } from "../nodes/types/resourceType";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
-  private openPortForward: boolean = false;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
@@ -164,10 +163,6 @@ export default class InstallCommand implements ICommand {
   }
 
   private async portForwordService(appNode: AppNode) {
-    if (this.openPortForward) {
-      return;
-    }
-    this.openPortForward = true;
     const terminalCommands = [
       "port-forward",
       "services/productpage",
@@ -187,7 +182,7 @@ export default class InstallCommand implements ICommand {
       { modal: true },
       "go"
     );
-    await vscode.commands.executeCommand("Nocalhost.refresh", appNode);
+    await vscode.commands.executeCommand(REFRESH);
     if (res === "go") {
       const uri = vscode.Uri.parse("http://127.0.0.1:39080/productpage");
       vscode.env.openExternal(uri);
