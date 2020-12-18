@@ -51,7 +51,7 @@ const extensionConfig = {
   },
   plugins: [
     new copyWebpackPlugin({
-      patterns: [{ from: "./cleanup.js" }],
+      patterns: [{ from: "./scripts/cleanup.js" }],
     }),
   ],
 };
