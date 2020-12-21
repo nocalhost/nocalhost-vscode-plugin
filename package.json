@@ -68,7 +68,7 @@
         },
         {
           "command": "Nocalhost.signout",
-          "when": "extensionActivated && view == Nocalhost",
+          "when": "extensionActivated && view == Nocalhost && login",
           "group": "overflow"
         },
         {
