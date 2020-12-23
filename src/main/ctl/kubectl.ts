@@ -1,7 +1,12 @@
 import * as vscode from "vscode";
 import { execAsync } from "./shell";
 import * as shell from "shelljs";
-import { ControllerResource, List } from "../nodes/types/resourceType";
+import {
+  ControllerResource,
+  List,
+  PodResource,
+  Resource,
+} from "../nodes/types/resourceType";
 import * as fileStore from "../store/fileStore";
 import { DEFAULT_KUBE_CONFIG_FULLPATH } from "../constants";
 
@@ -85,6 +90,35 @@ export async function getControllerPod(
 
     return resourceList.items;
   }
+}
+
+export async function getContainerNames(
+  podName: string,
+  kubeConfigPath: string
+) {
+  const podStr = await loadResource(kubeConfigPath, "pod", podName, "json");
+  const pod = JSON.parse(podStr as string) as PodResource;
+  const containerNameArr = pod.spec.containers.map((c) => {
+    return c.name;
+  });
+
+  return containerNameArr;
+}
+
+export async function getPodNames(
+  name: string,
+  kind: string,
+  kubeConfigPath: string
+) {
+  let podNameArr: Array<string> = [];
+  const resArr = await getControllerPod(kubeConfigPath, kind, name);
+  if (resArr && resArr.length <= 0) {
+    return podNameArr;
+  }
+  podNameArr = (resArr as Array<Resource>).map((res) => {
+    return res.metadata.name;
+  });
+  return podNameArr;
 }
 
 function checkKubectl() {
