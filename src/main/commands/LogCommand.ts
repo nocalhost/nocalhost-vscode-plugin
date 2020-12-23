@@ -54,7 +54,11 @@ export default class LogCommand implements ICommand {
     };
 
     if (node instanceof ControllerResourceNode) {
-      const podNameArr = await this.getPods(node);
+      const podNameArr = await kubectl.getPodNames(
+        node.name,
+        node.resourceType,
+        node.getKubeConfigPath()
+      );
       result.podName = podNameArr[0];
       if (podNameArr.length > 1) {
         result.podName = await vscode.window.showQuickPick(podNameArr);
@@ -67,7 +71,7 @@ export default class LogCommand implements ICommand {
     } else {
       return result;
     }
-    const containerNameArr = await this.getContainers(
+    const containerNameArr = await kubectl.getContainerNames(
       result.podName,
       node.getKubeConfigPath()
     );
@@ -78,38 +82,5 @@ export default class LogCommand implements ICommand {
       );
     }
     return result;
-  }
-
-  async getPods(node: ControllerResourceNode) {
-    const kind = node.resourceType;
-    const name = node.name;
-    let podNameArr: Array<string> = [];
-    const resArr = await kubectl.getControllerPod(
-      node.getKubeConfigPath(),
-      kind,
-      name
-    );
-    if (resArr && resArr.length <= 0) {
-      return podNameArr;
-    }
-    podNameArr = (resArr as Array<Resource>).map((res) => {
-      return res.metadata.name;
-    });
-    return podNameArr;
-  }
-
-  async getContainers(podName: string, kubeConfigPath: string) {
-    const podStr = await kubectl.loadResource(
-      kubeConfigPath,
-      "pod",
-      podName,
-      "json"
-    );
-    const pod = JSON.parse(podStr as string) as PodResource;
-    const containerNameArr = pod.spec.containers.map((c) => {
-      return c.name;
-    });
-
-    return containerNameArr;
   }
 }
