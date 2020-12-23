@@ -19,7 +19,9 @@ export class Pod extends KubernetesResourceNode {
   }
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
-    treeItem.contextValue = `workload-${this.resourceType}`;
+    treeItem.contextValue = `workload-${this.resourceType}-${
+      this.info.status && this.info.status.phase
+    }`;
 
     return treeItem;
   }
