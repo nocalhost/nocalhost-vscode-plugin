@@ -110,7 +110,7 @@
         },
         {
           "command": "Nocalhost.exec",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)/i",
           "group": "1"
         },
         {
@@ -125,7 +125,7 @@
         },
         {
           "command": "Nocalhost.portForward",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
           "group": "1"
         },
         {
