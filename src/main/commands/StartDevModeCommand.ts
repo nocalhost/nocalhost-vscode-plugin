@@ -176,6 +176,11 @@ export default class StartDevModeCommand implements ICommand {
       destDir = true;
     }
 
+    if (destDir && destDir !== true) {
+      workloadConfig.directory = destDir;
+      fileStore.set(appName, appConfig);
+    }
+
     return destDir;
   }
 
