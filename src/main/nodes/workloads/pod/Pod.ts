@@ -1,3 +1,5 @@
+import * as vscode from "vscode";
+
 import state from "../../../state";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import { POD } from "../../nodeContants";
@@ -14,5 +16,11 @@ export class Pod extends KubernetesResourceNode {
   ) {
     super();
     state.setNode(this.getNodeStateId(), this);
+  }
+  async getTreeItem(): Promise<vscode.TreeItem> {
+    let treeItem = await super.getTreeItem();
+    treeItem.contextValue = `workload-${this.resourceType}`;
+
+    return treeItem;
   }
 }
