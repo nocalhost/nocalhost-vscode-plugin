@@ -120,7 +120,7 @@
         },
         {
           "command": "Nocalhost.log",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
           "group": "1"
         },
         {
