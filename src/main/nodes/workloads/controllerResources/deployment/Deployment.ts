@@ -18,7 +18,6 @@ import {
 import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
-import host from "../../../../host";
 
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;

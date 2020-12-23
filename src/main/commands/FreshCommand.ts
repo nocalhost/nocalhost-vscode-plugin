@@ -18,6 +18,10 @@ export default class RefreshCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   execCommand(node?: BaseNocalhostNode) {
+    if (this.provider.refreshTimer && this.provider.refreshTimeMS) {
+      clearTimeout(this.provider.refreshTimer);
+      this.provider.startRefreshInterval(this.provider.refreshTimeMS);
+    }
     this.provider.refresh(node);
   }
 }

@@ -103,6 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
     "extensionActivated",
     true
   );
+
+  appTreeProvider.startRefreshInterval(5000);
 }
 
 export function deactivate() {
