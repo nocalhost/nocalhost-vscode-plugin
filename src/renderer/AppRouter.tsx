@@ -1,24 +1,20 @@
 import React from "react";
 import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
-import { makeStyles, createStyles } from "@material-ui/core/styles";
+import Layout from "./components/Layout";
+import Landing from "./modules/Landing";
 import Welcome from "./modules/Welcome";
 import Dashboard from "./modules/Dashboard";
 
-const useStyles = makeStyles(() =>
-  createStyles({
-    root: {},
-  })
-);
-
 const AppRouter: React.FC = () => {
-  const classes = useStyles();
-
   return (
     <HashRouter>
-      <div className={classes.root}>
+      <Layout>
         <Switch>
           <Route path="/" exact>
-            <Redirect to="/welcome" />
+            <Redirect to="/landing" />
+          </Route>
+          <Route path="/landing" exact>
+            <Landing />
           </Route>
           <Route path="/welcome" exact>
             <Welcome />
@@ -27,7 +23,7 @@ const AppRouter: React.FC = () => {
             <Dashboard />
           </Route>
         </Switch>
-      </div>
+      </Layout>
     </HashRouter>
   );
 };

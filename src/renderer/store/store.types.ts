@@ -1,7 +1,8 @@
 import { Actions } from "./actions/actions.types";
 
 export interface IStoreState {
-  [key: string]: any;
+  url: string;
+  theme: string;
 }
 
 export interface IAppContext {
