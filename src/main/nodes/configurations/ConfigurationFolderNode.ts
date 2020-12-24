@@ -5,7 +5,7 @@ import { CONFIGURATION_FOLDER } from "../nodeContants";
 import { BaseNocalhostNode } from "../types/nodeType";
 import { ConfigMapFolder } from "./configMap/ConfigMapFolder";
 import { HPAFolder } from "./hpa/HpaFolder";
-import { PodDisruptionBudgetFolder } from "./PodDisruptionBudget/PodDisruptionBudgetFolder";
+import { PodDisruptionBudgetFolder } from "./podDisruptionBudget/PodDisruptionBudgetFolder";
 import { ResourceQuotaFolder } from "./resourceQuota/ResourceQuotaFolder";
 import { SecretFolder } from "./secret/SecretFolder";
 
