@@ -4,13 +4,22 @@ import { NocalhostFolderNode } from "../abstract/NocalhostFolderNode";
 import { CONFIGURATION_FOLDER } from "../nodeContants";
 import { BaseNocalhostNode } from "../types/nodeType";
 import { ConfigMapFolder } from "./configMap/ConfigMapFolder";
+import { HPAFolder } from "./hpa/HpaFolder";
+import { PodDisruptionBudgetFolder } from "./PodDisruptionBudget/PodDisruptionBudgetFolder";
+import { ResourceQuotaFolder } from "./resourceQuota/ResourceQuotaFolder";
 import { SecretFolder } from "./secret/SecretFolder";
 
 export class ConfigurationFolderNode extends NocalhostFolderNode {
   public parent: BaseNocalhostNode;
   public label: string = "Configurations";
   public type = CONFIGURATION_FOLDER;
-  private children = ["ConfigMaps", "Secrets"];
+  private children = [
+    "ConfigMaps",
+    "Secrets",
+    "HPA",
+    "ResourceQuota",
+    "PodDisruptionBudget",
+  ];
 
   constructor(parent: BaseNocalhostNode) {
     super();
@@ -40,6 +49,15 @@ export class ConfigurationFolderNode extends NocalhostFolderNode {
         break;
       case "Secrets":
         node = new SecretFolder(this);
+        break;
+      case "HPA":
+        node = new HPAFolder(this);
+        break;
+      case "ResourceQuota":
+        node = new ResourceQuotaFolder(this);
+        break;
+      case "PodDisruptionBudget":
+        node = new PodDisruptionBudgetFolder(this);
         break;
       default:
         throw new Error("not implement the resource");
