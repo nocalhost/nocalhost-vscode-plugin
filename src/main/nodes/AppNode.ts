@@ -14,6 +14,7 @@ import { NetworkFolderNode } from "./networks/NetworkFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
+import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -54,7 +55,9 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   private getDefaultChildrenNodes(): string[] {
-    return this.unInstalled() ? [] : ["Workloads", "Networks"];
+    return this.unInstalled()
+      ? []
+      : ["Workloads", "Networks", "Configurations"];
   }
 
   public async getApplicationInfo() {
@@ -182,13 +185,16 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   createChild(type: string) {
-    let node: WorkloadFolderNode | NetworkFolderNode;
+    let node: BaseNocalhostNode;
     switch (type) {
       case "Workloads":
         node = new WorkloadFolderNode(this);
         break;
       case "Networks":
         node = new NetworkFolderNode(this);
+        break;
+      case "Configurations":
+        node = new ConfigurationFolderNode(this);
         break;
       default:
         throw new Error("not implement the resource");
