@@ -1,6 +1,6 @@
 # nocalhost-vscode-plugin
 
-Nocalhost is Cloud Native Development Enviroment. This is a vscode plugin for nocalhost to help connect IDE and Kubernetes smoothly.
+Nocalhost is Cloud Native Development Environment. This is a vscode plugin for nocalhost to help connect IDE and Kubernetes smoothly.
 
 ## Features
 
