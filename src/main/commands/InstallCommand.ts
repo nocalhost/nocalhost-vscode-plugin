@@ -83,6 +83,16 @@ export default class InstallCommand implements ICommand {
   ) {
     // tips
     let values: string | undefined;
+    let msg = "";
+    if (installType === "helmRepo") {
+      msg = "please input the version of chart";
+    } else {
+      msg = "please input the ref of repository";
+    }
+
+    const refOrVersion = await host.showInputBox({
+      placeHolder: msg,
+    });
     if (["helmGit", "helmRepo"].includes(installType)) {
       const res = await host.showInformationMessage(
         "Do you want to specify a values.yaml?",
@@ -116,7 +126,8 @@ export default class InstallCommand implements ICommand {
       gitUrl,
       installType,
       resourceDir,
-      values
+      values,
+      refOrVersion
     );
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
