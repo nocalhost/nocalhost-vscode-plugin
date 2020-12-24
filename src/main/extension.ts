@@ -106,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  // TODO: DISPOSE
+  host.dispose();
 }
 
 export function checkCtl(name: string) {
