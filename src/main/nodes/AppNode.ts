@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import { KUBE_CONFIG_DIR } from "../constants";
 import * as nhctl from "../ctl/nhctl";
 import * as yaml from "yaml";
-import { v4 as uuidv4 } from "uuid";
 import state from "../state";
 
 import { APP_FOLDER, ID_SPLIT } from "./nodeContants";
@@ -15,6 +14,7 @@ import { NocalhostRootNode } from "./NocalhostRootNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
+import { StorageFolder } from "./storage/storageFolder";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -57,7 +57,7 @@ export class AppNode extends NocalhostFolderNode {
   private getDefaultChildrenNodes(): string[] {
     return this.unInstalled()
       ? []
-      : ["Workloads", "Networks", "Configurations"];
+      : ["Workloads", "Networks", "Configurations", "storage"];
   }
 
   public async getApplicationInfo() {
@@ -195,6 +195,9 @@ export class AppNode extends NocalhostFolderNode {
         break;
       case "Configurations":
         node = new ConfigurationFolderNode(this);
+        break;
+      case "storage":
+        node = new StorageFolder(this);
         break;
       default:
         throw new Error("not implement the resource");
