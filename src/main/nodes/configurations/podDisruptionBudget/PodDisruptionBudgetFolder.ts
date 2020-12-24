@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 import * as kubectl from "../../../ctl/kubectl";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
-import { POD_DISRUPTION_BUDGET, RESOURCE_QUOTA } from "../../nodeContants";
+import { POD_DISRUPTION_BUDGET } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 import { List } from "../../types/resourceType";
 import { PodDisruptionBudget } from "./PodDisruptionBudget";
