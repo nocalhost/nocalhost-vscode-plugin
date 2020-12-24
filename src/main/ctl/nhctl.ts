@@ -10,7 +10,8 @@ export function install(
   gitUrl: string,
   installType: string,
   resourceDir: Array<string>,
-  values?: string
+  values?: string,
+  refOrVersion?: string
 ) {
   let resourcePath = "";
   resourceDir.map((dir) => {
@@ -28,6 +29,12 @@ export function install(
       kubeconfigPath,
       `install ${appName} --helm-chart-name ${appName} -t ${installType} --helm-repo-url ${gitUrl}`
     );
+  }
+
+  if (refOrVersion) {
+    installCommand += ` ${
+      installType === "helmRepo" ? "--helm-repo-version" : "-r"
+    } ${refOrVersion}`;
   }
 
   return vscode.window.withProgress(
