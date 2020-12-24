@@ -1,9 +1,11 @@
 import React, { createContext, useReducer } from "react";
 import { IStoreState, IAppContext } from "./store.types";
 import reducer from "./reducers";
+import { ThemeType } from "../constants";
 
 const initialState: IStoreState = {
-  uri: "/welcome",
+  url: "/landing",
+  theme: ThemeType.dark,
 };
 
 const store = createContext<IAppContext>({

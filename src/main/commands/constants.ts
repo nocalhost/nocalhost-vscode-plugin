@@ -19,5 +19,3 @@ export const LOAD_RESOURCE = "Nocalhost.loadResource";
 export const LOG = "Nocalhost.log";
 export const PORT_FORWARD = "Nocalhost.portForward";
 export const EXEC = "Nocalhost.exec";
-
-export const SHOW_DASHBOARD = "Nocalhost.showDashboard";

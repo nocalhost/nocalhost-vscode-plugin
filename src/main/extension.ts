@@ -16,18 +16,17 @@ import {
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
   TMP_WORKLOAD,
+  WELCOME_DID_SHOW,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
 import state from "./state";
-import { SHOW_DASHBOARD, START_DEV_MODE } from "./commands/constants";
+import { START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
-import { AppNode } from "./nodes/AppNode";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
-
-// import notification from "./notification";
+import webview from "./webview";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -56,7 +55,6 @@ export async function activate(context: vscode.ExtensionContext) {
   ];
 
   context.subscriptions.push(...subs);
-  vscode.commands.executeCommand(SHOW_DASHBOARD);
   const jwt = fileStore.get(JWT);
   if (jwt) {
     state.setLogin(true);
@@ -135,6 +133,12 @@ async function init(context: vscode.ExtensionContext) {
   fileStore.initConfig();
   fileStore.set("extensionPath", context.extensionPath);
   updateServerConfigStatus();
+
+  const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
+  if (!welcomeDidShow) {
+    webview?.setContext(context).open("/welcome", "Welcome");
+    fileStore.set(WELCOME_DID_SHOW, true);
+  }
 }
 
 process.on("uncaughtException", (error) => {

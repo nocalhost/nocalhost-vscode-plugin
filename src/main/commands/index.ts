@@ -10,7 +10,6 @@ import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import PortForwardCommand from "./PortForwardCommand";
 import ResetCommand from "./ResetCommand";
-import ShowDashboardCommand from "./ShowDashboardCommand";
 import SignInCommand from "./SignInCommand";
 import SignOutCommand from "./SignOutCommand";
 import StartDevModeCommand from "./StartDevModeCommand";
@@ -24,8 +23,6 @@ export default function initCommands(
 ) {
   new EditServiceConfigCommand(context);
   new WriteServiceConfigCommand(context);
-
-  new ShowDashboardCommand(context);
 
   new StartDevModeCommand(context);
   new EndDevModeCommand(context);
