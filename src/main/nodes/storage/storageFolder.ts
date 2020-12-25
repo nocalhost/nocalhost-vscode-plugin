@@ -1,18 +1,17 @@
 import * as vscode from "vscode";
 import state from "../../state";
 import { NocalhostFolderNode } from "../abstract/NocalhostFolderNode";
-import { NETWORK_FOLDER } from "../nodeContants";
+import { CONFIGURATION_FOLDER } from "../nodeContants";
 import { BaseNocalhostNode } from "../types/nodeType";
-import { EndpointFolder } from "./endpoints/EndpointFolder";
-import { IngressFolder } from "./ingresses/IngressFolder";
-import { NetworkPolicyFolder } from "./networkPolicies/NetworkPolicyFolder";
-import { ServiceFolder } from "./service/ServiceFolder";
+import { PersistentVolumeFolder } from "./persistentVolume/PersistentVolumeFolder";
+import { PersistentVolumeClaimFolder } from "./persistentVolumeClaim/PersistentVolumeClaimFolder";
+import { StorageClassFolder } from "./storageClass/storageClassFolder";
 
-export class NetworkFolderNode extends NocalhostFolderNode {
+export class StorageFolder extends NocalhostFolderNode {
   public parent: BaseNocalhostNode;
-  public label: string = "Networks";
-  public type = NETWORK_FOLDER;
-  private children = ["Services", "Endpoints", "Ingresses", "NetworkPolicies"];
+  public label: string = "Storage";
+  public type = CONFIGURATION_FOLDER;
+  private children = ["pv", "pvc", "storageClass"];
 
   constructor(parent: BaseNocalhostNode) {
     super();
@@ -21,7 +20,9 @@ export class NetworkFolderNode extends NocalhostFolderNode {
   getParent(): BaseNocalhostNode {
     return this.parent;
   }
-  getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
+  getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
     return Promise.resolve(this.children.map((type) => this.createChild(type)));
   }
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -33,19 +34,16 @@ export class NetworkFolderNode extends NocalhostFolderNode {
   }
 
   createChild(type: string): BaseNocalhostNode {
-    let node;
+    let node: BaseNocalhostNode;
     switch (type) {
-      case "Services":
-        node = new ServiceFolder(this);
+      case "pv":
+        node = new PersistentVolumeFolder(this);
         break;
-      case "Endpoints":
-        node = new EndpointFolder(this);
+      case "pvc":
+        node = new PersistentVolumeClaimFolder(this);
         break;
-      case "Ingresses":
-        node = new IngressFolder(this);
-        break;
-      case "NetworkPolicies":
-        node = new NetworkPolicyFolder(this);
+      case "storageClass":
+        node = new StorageClassFolder(this);
         break;
       default:
         throw new Error("not implement the resource");

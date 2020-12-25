@@ -21,7 +21,7 @@ export default class EditServiceConfigCommand implements ICommand {
     const uri = vscode.Uri.parse(
       `NocalhostRW://nh/config/app/${appNode.label}/services/${
         node.name
-      }.yaml?id=${node.getNodeStateId()}`
+      }.yaml?id=${node.getNodeStateId()}&&time=${new Date()}`
     );
     let doc = await vscode.workspace.openTextDocument(uri);
     vscode.window.showTextDocument(doc, { preview: false });

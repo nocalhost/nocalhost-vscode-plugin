@@ -21,7 +21,7 @@ export default class LoadResourceCommand implements ICommand {
       const kind = node.resourceType;
       const name = node.name;
       const uri = vscode.Uri.parse(
-        `Nocalhost://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}`
+        `Nocalhost://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&&time=${new Date()}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: false });
@@ -31,7 +31,9 @@ export default class LoadResourceCommand implements ICommand {
         return;
       }
       const name = node.info.name;
-      const uri = vscode.Uri.parse(`Nocalhost://nh/loadResource/${name}.yaml`);
+      const uri = vscode.Uri.parse(
+        `Nocalhost://nh/loadResource/${name}.yaml?&&time=${new Date()}`
+      );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: false });
     }

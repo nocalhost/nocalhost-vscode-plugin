@@ -1,4 +1,3 @@
-import { open } from "fs";
 import * as vscode from "vscode";
 import { Progress } from "vscode";
 import nocalhostState from "./state";
@@ -141,6 +140,11 @@ export class Host {
 
   dispose() {
     this.outputChannel.dispose();
+    this.disposeDebug();
+    this.disposeBookInfo();
+    if (this.newTerminal) {
+      this.newTerminal.dispose();
+    }
   }
 
   timer(command: string, args: [], timeDuring?: number) {

@@ -8,7 +8,7 @@ import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as kubectl from "../ctl/kubectl";
 import * as shell from "../ctl/shell";
 import { DeploymentStatus } from "../nodes/types/nodeType";
-import { Resource, PodResource } from "../nodes/types/resourceType";
+import { Pod } from "../nodes/workloads/pod/Pod";
 
 export default class ExecCommand implements ICommand {
   command: string = EXEC;
@@ -21,24 +21,22 @@ export default class ExecCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
-    await this.exec(host, node);
+    await this.exec(node);
   }
 
-  async exec(host: Host, node: ControllerNodeApi) {
-    const status = await node.getStatus();
-    if (status === DeploymentStatus.developing) {
-      await this.opendevSpaceExec(
-        node.getAppName(),
-        node.name,
-        node.getKubeConfigPath()
-      );
-    } else {
-      await this.openExec(
-        node.getKubeConfigPath(),
-        node.resourceType,
-        node.name
-      );
+  async exec(node: ControllerNodeApi | Pod) {
+    if (!(node instanceof Pod)) {
+      const status = await node.getStatus();
+      if (status === DeploymentStatus.developing) {
+        await this.opendevSpaceExec(
+          node.getAppName(),
+          node.name,
+          node.getKubeConfigPath()
+        );
+        return;
+      }
     }
+    this.openExec(node);
   }
 
   private async getDefaultShell(
@@ -116,36 +114,29 @@ export default class ExecCommand implements ICommand {
    * @param type
    * @param workloadName
    */
-  async openExec(kubeConfigPath: string, type: string, workloadName: string) {
-    const resArr = await kubectl.getControllerPod(
-      kubeConfigPath,
-      type,
-      workloadName
-    );
-    if (resArr && resArr.length <= 0) {
-      host.showErrorMessage("Not found pod");
-      return;
-    }
-    const podNameArr = (resArr as Array<Resource>).map((res) => {
-      return res.metadata.name;
-    });
-    let podName: string | undefined = podNameArr[0];
-    if (podNameArr.length > 1) {
-      podName = await vscode.window.showQuickPick(podNameArr);
+  async openExec(node: ControllerNodeApi | Pod) {
+    const kubeConfigPath = node.getKubeConfigPath();
+    let podName: string | undefined;
+    if (node instanceof Pod) {
+      podName = node.name;
+    } else {
+      const podNameArr = await kubectl.getPodNames(
+        node.name,
+        node.resourceType,
+        kubeConfigPath
+      );
+      podName = podNameArr[0];
+      if (podNameArr.length > 1) {
+        podName = await vscode.window.showQuickPick(podNameArr);
+      }
     }
     if (!podName) {
       return;
     }
-    const podStr = await kubectl.loadResource(
-      kubeConfigPath,
-      "pod",
+    const containerNameArr = await kubectl.getContainerNames(
       podName,
-      "json"
+      kubeConfigPath
     );
-    const pod = JSON.parse(podStr as string) as PodResource;
-    const containerNameArr = pod.spec.containers.map((c) => {
-      return c.name;
-    });
     let containerName: string | undefined = containerNameArr[0];
     if (containerNameArr.length > 1) {
       containerName = await vscode.window.showQuickPick(containerNameArr);
@@ -154,7 +145,5 @@ export default class ExecCommand implements ICommand {
       return;
     }
     await this.execCore(kubeConfigPath, podName, containerName);
-    host.log("open container end", true);
-    host.log("", true);
   }
 }

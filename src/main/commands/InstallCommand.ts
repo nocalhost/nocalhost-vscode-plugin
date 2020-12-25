@@ -23,6 +23,59 @@ export default class InstallCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
+
+    const r = await host.showInformationMessage(
+      "Specified version or use default version",
+      { modal: true },
+      "Specify one",
+      "Use Default"
+    );
+    if (!r) {
+      return;
+    }
+    let refOrVersion: string | undefined;
+
+    if (r === "Specify one") {
+      let msg = "";
+      if (appNode.installType === "helmRepo") {
+        msg = "please input the version of chart";
+      } else {
+        msg = "please input the ref of repository";
+      }
+      refOrVersion = await host.showInputBox({
+        placeHolder: msg,
+      });
+
+      if (!refOrVersion) {
+        return;
+      }
+    }
+    let values: string | undefined;
+    if (["helmGit", "helmRepo"].includes(appNode.installType)) {
+      const res = await host.showInformationMessage(
+        "Do you want to specify a values.yaml?",
+        { modal: true },
+        "Specify One",
+        "Use Default values"
+      );
+      if (!res) {
+        return;
+      }
+      if (res === "Specify One") {
+        const valuesUri = await host.showOpenDialog({
+          canSelectFiles: true,
+          canSelectFolders: false,
+          canSelectMany: false,
+          title: "Select the value file path",
+        });
+
+        if (valuesUri && valuesUri.length > 0) {
+          values = valuesUri[0].fsPath;
+        } else {
+          return;
+        }
+      }
+    }
     state.setAppState(appNode.label, "installing", true, {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
@@ -45,7 +98,9 @@ export default class InstallCommand implements ICommand {
       appNode.devSpaceId,
       appNode.info.url,
       appNode.installType,
-      appNode.resourceDir
+      appNode.resourceDir,
+      values,
+      refOrVersion
     )
       .then(() => {
         const bookInfoUrls = [
@@ -79,35 +134,10 @@ export default class InstallCommand implements ICommand {
     devSpaceId: number,
     gitUrl: string,
     installType: string,
-    resourceDir: Array<string>
+    resourceDir: Array<string>,
+    values: string | undefined,
+    refOrVersion: string | undefined
   ) {
-    // tips
-    let values: string | undefined;
-    if (["helmGit", "helmRepo"].includes(installType)) {
-      const res = await host.showInformationMessage(
-        "Do you want to specify a values.yaml?",
-        { modal: true },
-        "Specify One",
-        "Use Default values"
-      );
-      if (!res) {
-        return;
-      }
-      if (res === "Specify One") {
-        const valuesUri = await host.showOpenDialog({
-          canSelectFiles: true,
-          canSelectFolders: false,
-          canSelectMany: false,
-          title: "Select the value file path",
-        });
-
-        if (valuesUri && valuesUri.length > 0) {
-          values = valuesUri[0].fsPath;
-        } else {
-          return;
-        }
-      }
-    }
     host.log(`Installing application: ${appName}`, true);
     await nhctl.install(
       host,
@@ -116,7 +146,8 @@ export default class InstallCommand implements ICommand {
       gitUrl,
       installType,
       resourceDir,
-      values
+      values,
+      refOrVersion
     );
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
