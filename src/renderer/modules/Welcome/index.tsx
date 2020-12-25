@@ -6,9 +6,8 @@ import { MessageActionType, Commands } from "../../constants";
 
 const useStyles = makeStyles((theme: CustomThemeOptions) =>
   createStyles({
-    root: {},
-    heading: {
-      paddingTop: 20,
+    root: {
+      padding: 15,
     },
     divider: {
       height: 1,
@@ -43,7 +42,7 @@ const Welcome: React.FC = () => {
 
   return (
     <div className={classes.root}>
-      <h1 className={classes.heading}>Welcome to Nocalhost</h1>
+      <h1>Welcome to Nocalhost</h1>
       <div className={classes.divider}></div>
       <p className={classes.paragraph}>
         Nocalhost is a CloudNative Development Enviroment. You can coding in
