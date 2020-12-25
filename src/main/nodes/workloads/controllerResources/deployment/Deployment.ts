@@ -43,16 +43,16 @@ export class Deployment extends ControllerResourceNode {
     status = await this.getStatus();
     switch (status) {
       case "running":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/status-running.svg");
+        treeItem.iconPath = resolveVSCodeUri("status-running.svg");
         break;
       case "developing":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/dev-start.svg");
+        treeItem.iconPath = resolveVSCodeUri("dev-start.svg");
         break;
       case "starting":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/loading.svg");
+        treeItem.iconPath = resolveVSCodeUri("loading.svg");
         break;
       case "unknown":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/status-unknown.svg");
+        treeItem.iconPath = resolveVSCodeUri("status-unknown.svg");
         break;
     }
     const check = await this.checkConfig();
