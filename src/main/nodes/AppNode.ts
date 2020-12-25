@@ -79,16 +79,12 @@ export class AppNode extends NocalhostFolderNode {
 
   private updateIcon(treeItem: vscode.TreeItem) {
     if (this.installed() && !this.unInstalling()) {
-      return (treeItem.iconPath = resolveVSCodeUri(
-        "images/icons/app-connected.svg"
-      ));
+      return (treeItem.iconPath = resolveVSCodeUri("app-connected.svg"));
     }
     if (this.unInstalled() && !this.installing()) {
-      return (treeItem.iconPath = resolveVSCodeUri(
-        "images/icons/app-inactive.svg"
-      ));
+      return (treeItem.iconPath = resolveVSCodeUri("app-inactive.svg"));
     }
-    treeItem.iconPath = resolveVSCodeUri("images/icons/loading.svg");
+    treeItem.iconPath = resolveVSCodeUri("loading.svg");
   }
 
   private updateContext(treeItem: vscode.TreeItem) {

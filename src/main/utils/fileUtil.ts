@@ -3,6 +3,7 @@ import * as path from "path";
 import * as yaml from "yaml";
 import * as vscode from "vscode";
 import * as fileStore from "../store/fileStore";
+import { ColorThemeKind } from "vscode";
 
 export async function readYaml(filePath: string) {
   const data = await readFile(filePath);
@@ -60,8 +61,17 @@ export function isExist(filePath: string) {
   });
 }
 
-export function resolveVSCodeUri(filePath: string): vscode.Uri {
+export function resolveVSCodeUri(iconName: string): vscode.Uri {
   const extensionPath: string = fileStore.get("extensionPath");
-  const resolvePath: string = path.resolve(extensionPath, filePath);
+  const colorTheme =
+    vscode.window.activeColorTheme.kind === ColorThemeKind.Dark
+      ? "dark"
+      : "light";
+  const resolvePath: string = path.resolve(
+    extensionPath,
+    "images",
+    colorTheme,
+    iconName
+  );
   return vscode.Uri.file(resolvePath);
 }
