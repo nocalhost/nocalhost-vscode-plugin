@@ -10,6 +10,9 @@ import { BaseNocalhostNode } from "../nodes/types/nodeType";
 export default class RefreshCommand implements ICommand {
   command: string = REFRESH;
   provider: NocalhostAppProvider;
+  private delay: number = 1000;
+  private startTime: number = Date.now();
+  private flag = true;
   constructor(
     context: vscode.ExtensionContext,
     provider: NocalhostAppProvider
@@ -18,6 +21,13 @@ export default class RefreshCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   execCommand(node?: BaseNocalhostNode) {
+    if (!this.flag && !node && Date.now() - this.startTime < this.delay) {
+      return;
+    }
+    if (!node) {
+      this.startTime = Date.now();
+      this.flag = false;
+    }
     if (this.provider.refreshTimer && this.provider.refreshTimeMS) {
       clearTimeout(this.provider.refreshTimer);
       this.provider.startRefreshInterval(this.provider.refreshTimeMS);
