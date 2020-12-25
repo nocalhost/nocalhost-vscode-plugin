@@ -1,8 +1,6 @@
 import { useContext, useEffect } from "react";
-import { redirect, toggleTheme } from "../store/actions";
+import { toggleTheme } from "../store/actions";
 import { store } from "../store/store";
-import { postMessage } from "../utils";
-import { MessageActionType } from "../constants";
 
 export default function useMessage() {
   const {
@@ -30,11 +28,6 @@ export default function useMessage() {
       attributes: true,
       attributeFilter: ["class"],
     });
-
-    const lastVisit: string = localStorage.getItem("lastVisit") || "";
-    if (lastVisit && lastVisit !== url) {
-      dispatch(redirect(lastVisit));
-    }
   };
 
   useEffect(() => {

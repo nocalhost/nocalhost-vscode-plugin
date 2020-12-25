@@ -31,3 +31,5 @@ export const TMP_APP = "tmpApp";
 export const TMP_WORKLOAD = "tmpWorkload";
 export const TMP_RESOURCE_TYPE = "tmpResourceType";
 export const TMP_KUBECONFIG_PATH = "tmpKubeconfigPath";
+
+export const LOG_INTERVAL_MS = 3000;

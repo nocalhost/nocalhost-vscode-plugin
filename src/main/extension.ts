@@ -26,7 +26,7 @@ import { START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
-import webview from "./webview";
+import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -136,7 +136,7 @@ async function init(context: vscode.ExtensionContext) {
 
   const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
   if (!welcomeDidShow) {
-    webview?.setContext(context).open("/welcome", "Welcome");
+    NocalhostWebviewPanel.open("/welcome", "Welcome");
     fileStore.set(WELCOME_DID_SHOW, true);
   }
 }

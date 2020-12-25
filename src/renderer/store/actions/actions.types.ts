@@ -1,6 +1,9 @@
+import { ILogs } from "../store.types";
+
 export enum ActionType {
   redirect = "redirect",
   toggleTheme = "theme/toggle",
+  updateLogs = "logs/update",
 }
 
 export interface IRedirect {
@@ -13,4 +16,9 @@ export interface IToggleTheme {
   payload: { theme: string };
 }
 
-export type Actions = IRedirect | IToggleTheme;
+export interface IUpdateLogs {
+  type: ActionType.updateLogs;
+  payload: { logs: ILogs };
+}
+
+export type Actions = IRedirect | IToggleTheme | IUpdateLogs;
