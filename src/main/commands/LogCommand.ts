@@ -28,8 +28,15 @@ export default class LogCommand implements ICommand {
 
     if (podName && containerName) {
       NocalhostWebviewPanel.open("/logs", node.label);
+      NocalhostWebviewPanel.onDispose(() => this.clearTimer());
       const kubeConfig: string = node.getKubeConfigPath();
       this.openLogs(node.getNodeStateId(), podName, containerName, kubeConfig);
+    }
+  }
+
+  private clearTimer(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
     }
   }
 
@@ -39,9 +46,7 @@ export default class LogCommand implements ICommand {
     containerName: string,
     kubeConfig: string
   ) {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
+    this.clearTimer();
     this.sendLogs(logId, podName, containerName, kubeConfig);
     this.timer = setInterval(() => {
       this.sendLogs(logId, podName, containerName, kubeConfig);

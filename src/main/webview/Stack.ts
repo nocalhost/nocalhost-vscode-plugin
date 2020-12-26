@@ -1,9 +1,20 @@
 export default class Stack {
   private dataStore: any = [];
   private top: number = 0;
+  private maxLength: number = 100;
+
+  constructor(maxLength?: number) {
+    if (maxLength) {
+      this.maxLength = maxLength;
+    }
+  }
 
   public push(element: any): void {
     this.dataStore[this.top++] = element;
+    if (this.length() > this.maxLength) {
+      this.dataStore = this.dataStore.slice(1);
+      this.top--;
+    }
   }
 
   public pop(): any {

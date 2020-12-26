@@ -2,6 +2,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import MessageManager, { IMessage, MessageListener } from "./MessageManager";
 import Stack from "./Stack";
+import CallableStack from "./CallableStack";
 import * as fileStore from "../store/fileStore";
 
 export default class NocalhostWebviewPanel {
@@ -12,6 +13,9 @@ export default class NocalhostWebviewPanel {
   private static readonly messageManager: MessageManager = new MessageManager();
   private static readonly openStack: Stack = new Stack();
   private static readonly postMessageStack: Stack = new Stack();
+  private static readonly disposeHandlerStack: CallableStack = new CallableStack();
+  private static readonly activeHandlerStack: CallableStack = new CallableStack();
+  private static readonly inactiveHandlerStack: CallableStack = new CallableStack();
 
   public static open(url: string, title = "Nocalhost") {
     const column = vscode.window.activeTextEditor
@@ -49,16 +53,24 @@ export default class NocalhostWebviewPanel {
     NocalhostWebviewPanel.messageManager.removeListener(listener);
   }
 
+  public static onDispose(handler: () => void): void {
+    NocalhostWebviewPanel.disposeHandlerStack.push(handler);
+  }
+
+  public static onActive(handler: () => void): void {
+    NocalhostWebviewPanel.activeHandlerStack.push(handler);
+  }
+
+  public static onInactive(handler: () => void): void {
+    NocalhostWebviewPanel.inactiveHandlerStack.push(handler);
+  }
+
   private constructor(panel: vscode.WebviewPanel) {
     this.panel = panel;
     this.update();
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
     this.panel.onDidChangeViewState(
-      () => {
-        if (this.panel?.visible) {
-          this.update();
-        }
-      },
+      () => this.viewChange(),
       null,
       this.disposables
     );
@@ -71,6 +83,15 @@ export default class NocalhostWebviewPanel {
     );
   }
 
+  private viewChange(): void {
+    if (this.panel?.visible) {
+      this.update();
+      NocalhostWebviewPanel.activeHandlerStack.exec();
+    } else {
+      NocalhostWebviewPanel.inactiveHandlerStack.exec();
+    }
+  }
+
   public dispose(): void {
     NocalhostWebviewPanel.currentPanel = null;
     this.panel?.dispose();
@@ -80,6 +101,7 @@ export default class NocalhostWebviewPanel {
         item.dispose();
       }
     }
+    NocalhostWebviewPanel.disposeHandlerStack.exec();
   }
 
   public update(title?: string) {
