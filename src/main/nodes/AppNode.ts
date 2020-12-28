@@ -15,6 +15,7 @@ import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/storageFolder";
+import { ApplicationInfo } from "../api";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -28,7 +29,7 @@ export class AppNode extends NocalhostFolderNode {
   public helmNHConfig: string;
   public kubeConfig: string;
   public resourceDir: Array<string>;
-  public info?: any;
+  public info: ApplicationInfo;
   public parent: NocalhostRootNode;
   private nhctlAppInfo: AppInfo | undefined;
   constructor(
@@ -43,7 +44,7 @@ export class AppNode extends NocalhostFolderNode {
     status: number,
     installStatus: number,
     kubeConfig: string,
-    info?: any
+    info: ApplicationInfo // api info
   ) {
     super();
     this.installType = installType;
@@ -66,6 +67,20 @@ export class AppNode extends NocalhostFolderNode {
       : ["Workloads", "Networks", "Configurations", "storage"];
   }
 
+  get context() {
+    let context = this.info.context;
+    let jsonObj = JSON.parse(context);
+    return jsonObj;
+  }
+
+  get name() {
+    return this.context["application_name"];
+  }
+
+  get url() {
+    return this.context["application_url"];
+  }
+
   public async getApplicationInfo() {
     if (this.nhctlAppInfo) {
       return this.nhctlAppInfo;
@@ -75,7 +90,7 @@ export class AppNode extends NocalhostFolderNode {
 
   public async freshApplicationInfo() {
     let info = {} as AppInfo;
-    const infoStr = await nhctl.getAppInfo(this.label).catch((err) => {});
+    const infoStr = await nhctl.getAppInfo(this.name).catch((err) => {});
     if (infoStr) {
       info = yaml.parse(infoStr as string);
     }

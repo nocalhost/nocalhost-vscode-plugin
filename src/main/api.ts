@@ -71,7 +71,7 @@ export async function getUserinfo() {
   throw new Error("Fail to fetch user infomation.");
 }
 
-interface ApplicationInfo {
+export interface ApplicationInfo {
   id: number;
   context: string;
   status: number;
@@ -82,6 +82,8 @@ interface ApplicationInfo {
   namespace: string;
   clusterId: number;
   devspaceId: number;
+  spaceName: string;
+  storageClass: string;
 }
 
 export async function getApplication() {
@@ -101,6 +103,8 @@ export async function getApplication() {
       namespace: applications[i].namespace,
       clusterId: applications[i]["cluster_id"],
       devspaceId: applications[i]["devspace_id"],
+      spaceName: applications[i]["space_name"],
+      storageClass: applications[i]["storage_class"],
     };
     result.push(app);
   }

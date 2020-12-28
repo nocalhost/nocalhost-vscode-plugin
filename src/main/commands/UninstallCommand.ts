@@ -23,7 +23,7 @@ export default class UninstallCommand implements ICommand {
       return;
     }
     const result = await host.showInformationMessage(
-      `Uninstall application: ${appNode.label}?`,
+      `Uninstall application: ${appNode.name}?`,
       { modal: true },
       `OK`
     );
@@ -31,17 +31,17 @@ export default class UninstallCommand implements ICommand {
       return;
     }
 
-    state.setAppState(appNode.label, "uninstalling", true);
+    state.setAppState(appNode.name, "uninstalling", true);
     appNode.collapsis();
     vscode.commands.executeCommand("Nocalhost.refresh");
     await this.uninstall(
       host,
       appNode.getKUbeconfigPath(),
-      appNode.info.name,
+      appNode.name,
       appNode.id,
       appNode.devSpaceId
     ).finally(() => {
-      state.deleteAppState(appNode.label, "uninstalling");
+      state.deleteAppState(appNode.name, "uninstalling");
       vscode.commands.executeCommand("Nocalhost.refresh");
     });
   }

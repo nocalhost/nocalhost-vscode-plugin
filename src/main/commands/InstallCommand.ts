@@ -76,7 +76,7 @@ export default class InstallCommand implements ICommand {
         }
       }
     }
-    state.setAppState(appNode.label, "installing", true, {
+    state.setAppState(appNode.name, "installing", true, {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
     });
@@ -93,12 +93,12 @@ export default class InstallCommand implements ICommand {
     await this.install(
       host,
       appNode.getKUbeconfigPath(),
-      appNode.info.name,
+      appNode.name,
       appNode.id,
       appNode.appConfig,
       appNode.helmNHConfig ? appNode.getHelmHNConfigPath() : "",
       appNode.devSpaceId,
-      appNode.info.url,
+      appNode.url,
       appNode.installType,
       appNode.resourceDir,
       values,
@@ -111,17 +111,14 @@ export default class InstallCommand implements ICommand {
           "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
           "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
         ];
-        if (
-          bookInfoUrls.includes(appNode.info.url) &&
-          appNode.info.name === "bookinfo"
-        ) {
+        if (bookInfoUrls.includes(appNode.url) && appNode.name === "bookinfo") {
           this.checkStatus(appNode);
         }
       })
       .finally(() => {
         appNode.expanded();
         appNode.expandWorkloadNode();
-        state.deleteAppState(appNode.label, "installing", {
+        state.deleteAppState(appNode.name, "installing", {
           refresh: true,
           nodeStateId: appNode.getNodeStateId(),
         });

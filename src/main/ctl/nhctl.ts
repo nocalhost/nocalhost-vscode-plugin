@@ -43,6 +43,7 @@ export function install(
     } ${refOrVersion}`;
   }
 
+  host.log("cmd: " + installCommand, true);
   return vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,

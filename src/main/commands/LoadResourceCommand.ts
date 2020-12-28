@@ -30,7 +30,7 @@ export default class LoadResourceCommand implements ICommand {
         host.showInformationMessage(`${node.label} is not installed.`);
         return;
       }
-      const name = node.info.name;
+      const name = node.name;
       const uri = vscode.Uri.parse(
         `Nocalhost://nh/loadResource/${name}.yaml?&&time=${new Date()}`
       );

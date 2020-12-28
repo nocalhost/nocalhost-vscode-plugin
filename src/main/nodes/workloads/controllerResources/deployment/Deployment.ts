@@ -68,7 +68,7 @@ export class Deployment extends ControllerResourceNode {
   public async getStatus() {
     const appNode = this.getAppNode();
     let status = state.getAppState(
-      appNode.label,
+      appNode.name,
       `${this.getNodeStateId()}_status`
     );
     if (status) {
@@ -119,7 +119,7 @@ export class Deployment extends ControllerResourceNode {
   public async refreshSvcProfile() {
     const appNode = this.getAppNode();
     const infoStr = await nhctl
-      .getServiceConfig(appNode.label, this.name)
+      .getServiceConfig(appNode.name, this.name)
       .catch((err) => {});
     if (infoStr) {
       const serviceProfile = yaml.parse(infoStr as string) as ServiceProfile;
@@ -133,7 +133,7 @@ export class Deployment extends ControllerResourceNode {
     const appNode = this.getAppNode();
     if (!this.firstRender) {
       this.nocalhostService = await ConfigService.getWorkloadConfig(
-        appNode.label,
+        appNode.name,
         this.name
       );
     }

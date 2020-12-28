@@ -161,7 +161,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             }
           }
         } else if (type === "helm-value" && paths[2] === "app") {
-          // NocalhostRW://nh/helm-value/app/${appNode.label}.yaml
+          // NocalhostRW://nh/helm-value/app/${appNode.name}.yaml
           const appName = paths[3];
           const valuePath = path.resolve(
             HELM_VALUES_DIR,
@@ -241,7 +241,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         destData = Buffer.from(this.stringify(appInfo, "yaml") || "", "utf-8");
       }
     } else if (type === "helm-value" && paths[2] === "app") {
-      // NocalhostRW://nh/helm-value/app/${appNode.label}.yaml
+      // NocalhostRW://nh/helm-value/app/${appNode.name}.yaml
       const appName = paths[3];
       const valuePath = path.resolve(HELM_VALUES_DIR, `${appName}-values.yaml`);
       destDir = valuePath;

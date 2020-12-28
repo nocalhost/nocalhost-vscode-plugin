@@ -62,7 +62,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         this,
         obj.installType,
         obj.resourceDir,
-        obj.name || `app${app.id}`,
+        app.spaceName || obj.name || `app_${app.id}`,
         obj.appConfig || "",
         obj.nocalhostConfig || "",
         app.id,
@@ -70,7 +70,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         app.status,
         app.installStatus,
         app.kubeconfig,
-        obj
+        app
       );
     });
 

@@ -19,7 +19,7 @@ export default class WriteServiceConfigCommand implements ICommand {
     }
     const appNode = node.getAppNode();
     const uri = vscode.Uri.parse(
-      `NocalhostRW://nh/config/app/${appNode.label}/services/${
+      `NocalhostRW://nh/config/app/${appNode.name}/services/${
         node.name
       }.yaml?id=${node.getNodeStateId()}&&time=${new Date()}`
     );
