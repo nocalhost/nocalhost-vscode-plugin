@@ -10,6 +10,7 @@ import {
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
+  TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
 } from "../constants";
 import host, { Host } from "../host";
@@ -30,6 +31,7 @@ export interface ControllerNodeApi {
   getStatus: () => Promise<string> | string;
   getKubeConfigPath: () => string;
   getAppName: () => string;
+  getStorageClass: () => string | undefined;
 }
 
 export default class StartDevModeCommand implements ICommand {
@@ -211,7 +213,8 @@ export default class StartDevModeCommand implements ICommand {
             node.getKubeConfigPath(),
             appName,
             node.name,
-            dirs
+            dirs,
+            node.getStorageClass()
           );
           host.log("dev start end", true);
           host.log("", true);
@@ -282,6 +285,10 @@ export default class StartDevModeCommand implements ICommand {
     fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
     fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKUbeconfigPath());
+    const storageClass = node.getStorageClass();
+    if (storageClass) {
+      fileStore.set(TMP_STORAGE_CLASS, storageClass);
+    }
   }
 
   private async getSvcConfig(appName: string, workloadName: string) {

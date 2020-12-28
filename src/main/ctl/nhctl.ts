@@ -93,16 +93,20 @@ export async function devStart(
   kubeconfigPath: string,
   appName: string,
   workLoadName: string,
-  syncs?: Array<string>
+  syncs?: Array<string>,
+  storageClass?: string
 ) {
-  let syncOptions = "";
+  let options = "";
   if (syncs && syncs.length > 0) {
-    syncOptions = syncs.join(" -s ");
-    syncOptions = "-s " + syncOptions;
+    options = syncs.join(" -s ");
+    options = "-s " + options;
+  }
+  if (storageClass) {
+    options += ` --storage-class ${storageClass}`;
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
-    `dev start ${appName} -d ${workLoadName} ${syncOptions}`
+    `dev start ${appName} -d ${workLoadName} ${options}`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
   await execChildProcessAsync(host, devStartCommand, []);

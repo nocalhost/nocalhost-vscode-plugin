@@ -63,4 +63,9 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
     const appNode = this.getAppNode();
     return appNode.name;
   }
+
+  public getStorageClass() {
+    const appNode = this.getAppNode();
+    return appNode.info.storageClass;
+  }
 }
