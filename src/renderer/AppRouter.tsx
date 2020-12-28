@@ -3,7 +3,7 @@ import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
 import Layout from "./components/Layout";
 import Landing from "./modules/Landing";
 import Welcome from "./modules/Welcome";
-import Dashboard from "./modules/Dashboard";
+import Logs from "./modules/Logs";
 
 const AppRouter: React.FC = () => {
   return (
@@ -19,8 +19,8 @@ const AppRouter: React.FC = () => {
           <Route path="/welcome" exact>
             <Welcome />
           </Route>
-          <Route path="/dashboard" exact>
-            <Dashboard />
+          <Route path="/logs" exact>
+            <Logs />
           </Route>
         </Switch>
       </Layout>

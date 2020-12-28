@@ -1,7 +1,6 @@
-import * as vscode from "vscode";
 import messageDefaultHandler from "./messageDefaultHandler";
 
-export type MessageListener = (event: IMessage) => void;
+export type MessageListener = (message: IMessage) => void;
 export interface IMessage {
   type: string;
   payload?: {
@@ -10,19 +9,10 @@ export interface IMessage {
 }
 
 export default class MessageManager {
-  private panel: vscode.WebviewPanel;
   private listeners: MessageListener[] = [];
 
-  constructor(panel: vscode.WebviewPanel) {
-    this.panel = panel;
+  constructor() {
     this.listeners.push(messageDefaultHandler);
-    this.panel?.webview.onDidReceiveMessage((event: IMessage) => {
-      if (this.listeners.length > 0) {
-        this.listeners.forEach((listener: MessageListener) => {
-          listener.call(this, event);
-        });
-      }
-    });
   }
 
   private index(listener: MessageListener): number {
@@ -50,9 +40,11 @@ export default class MessageManager {
     this.listeners.splice(index, 1);
   }
 
-  postMessage(message: IMessage): void {
-    if (this.panel) {
-      this.panel?.webview.postMessage(message);
+  notify(message: IMessage): void {
+    if (this.listeners.length > 0) {
+      this.listeners.forEach((listener: MessageListener) => {
+        listener.call(this, message);
+      });
     }
   }
 }

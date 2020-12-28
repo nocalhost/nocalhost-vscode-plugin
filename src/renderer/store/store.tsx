@@ -6,6 +6,10 @@ import { ThemeType } from "../constants";
 const initialState: IStoreState = {
   url: "/landing",
   theme: ThemeType.dark,
+  logs: {
+    id: "",
+    items: [],
+  },
 };
 
 const store = createContext<IAppContext>({
