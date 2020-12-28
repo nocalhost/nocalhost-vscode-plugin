@@ -89,6 +89,11 @@
           "group": "inline@0"
         },
         {
+          "command": "Nocalhost.cleanPvc",
+          "when": "viewItem =~ /^(application|workload-deployment)/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.startDevMode",
           "when": "viewItem =~ /^workload-(deployment)-info-running/i",
           "group": "inline@0"
@@ -216,6 +221,10 @@
       {
         "command": "Nocalhost.portForward",
         "title": "%PortForward%"
+      },
+      {
+        "command": "Nocalhost.cleanPvc",
+        "title": "%CleanPvc%"
       },
       {
         "command": "Nocalhost.editServiceConfig",

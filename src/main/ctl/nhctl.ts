@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import { execAsync, execChildProcessAsync } from "./shell";
 import host, { Host } from "../host";
 import { spawn } from "child_process";
+import * as yaml from "yaml";
 
 export function install(
   host: Host,
@@ -229,6 +231,30 @@ export async function getTemplateConfig(appName: string, workloadName: string) {
   const configCommand = `nhctl config template ${appName} -d ${workloadName}`;
   const result = await execAsync(configCommand, []);
   return result.stdout;
+}
+
+interface PVCData {
+  name: string;
+  app_name: string;
+  service_name: string;
+  capacity: string;
+  status: string;
+}
+export async function listPVC(appName: string, workloadName?: string) {
+  const configCommand = `nhctl pvc list --app ${appName} ${
+    workloadName ? `--svc ${workloadName}` : ""
+  } --yaml`;
+  const result = await execAsync(configCommand, []);
+  const pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+  return pvcs;
+}
+
+export async function cleanPVC(appName: string, workloadName?: string) {
+  const cleanCommand = `nhctl pvc clean --app ${appName} ${
+    workloadName ? `--svc ${workloadName}` : ""
+  }`;
+  host.log(`[cmd] ${cleanCommand}`);
+  await execAsync(cleanCommand, []);
 }
 
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
