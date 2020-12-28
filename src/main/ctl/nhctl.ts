@@ -16,9 +16,11 @@ export function install(
   refOrVersion?: string
 ) {
   let resourcePath = "";
-  resourceDir.map((dir) => {
-    resourcePath += ` --resource-path ${dir}`;
-  });
+  if (resourceDir) {
+    resourceDir.map((dir) => {
+      resourcePath += ` --resource-path ${dir}`;
+    });
+  }
   let installCommand = nhctlCommand(
     kubeconfigPath,
     `install ${appName} -u ${gitUrl} -t ${installType} ${
