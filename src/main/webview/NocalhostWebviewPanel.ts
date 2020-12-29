@@ -83,15 +83,6 @@ export default class NocalhostWebviewPanel {
     );
   }
 
-  private viewChange(): void {
-    if (this.panel?.visible) {
-      this.update();
-      NocalhostWebviewPanel.activeHandlerStack.exec();
-    } else {
-      NocalhostWebviewPanel.inactiveHandlerStack.exec();
-    }
-  }
-
   public dispose(): void {
     NocalhostWebviewPanel.currentPanel = null;
     this.panel?.dispose();
@@ -121,6 +112,15 @@ export default class NocalhostWebviewPanel {
       if (message) {
         NocalhostWebviewPanel.postMessage(message);
       }
+    }
+  }
+
+  private viewChange(): void {
+    if (this.panel?.visible) {
+      this.update();
+      NocalhostWebviewPanel.activeHandlerStack.exec();
+    } else {
+      NocalhostWebviewPanel.inactiveHandlerStack.exec();
     }
   }
 

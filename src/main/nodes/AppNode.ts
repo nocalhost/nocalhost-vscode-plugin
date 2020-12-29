@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { KUBE_CONFIG_DIR } from "../constants";
+import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR } from "../constants";
 import * as nhctl from "../ctl/nhctl";
 import * as yaml from "yaml";
 import state from "../state";
@@ -24,6 +24,8 @@ export class AppNode extends NocalhostFolderNode {
   public status: number;
   public installStatus: number;
   public installType: string;
+  public appConfig: string;
+  public helmNHConfig: string;
   public kubeConfig: string;
   public resourceDir: Array<string>;
   public info?: any;
@@ -34,6 +36,8 @@ export class AppNode extends NocalhostFolderNode {
     installType: string,
     resourceDir: Array<string>,
     label: string,
+    appConfig: string,
+    helmNHConfig: string,
     id: number,
     devSpaceId: number,
     status: number,
@@ -46,6 +50,8 @@ export class AppNode extends NocalhostFolderNode {
     this.resourceDir = resourceDir;
     this.parent = parent;
     this.label = label;
+    this.appConfig = appConfig;
+    this.helmNHConfig = helmNHConfig;
     this.id = id;
     this.devSpaceId = devSpaceId;
     this.status = status;
@@ -105,6 +111,14 @@ export class AppNode extends NocalhostFolderNode {
       `${this.id}_${this.devSpaceId}_config`
     );
 
+    return path.normalize(kubeconfigPath);
+  }
+
+  public getHelmHNConfigPath() {
+    const kubeconfigPath = path.resolve(
+      HELM_NH_CONFIG_DIR,
+      `${this.id}_${this.devSpaceId}_config`
+    );
     return path.normalize(kubeconfigPath);
   }
 

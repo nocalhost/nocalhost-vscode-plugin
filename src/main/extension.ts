@@ -9,6 +9,7 @@ import {
   HELM_VALUES_DIR,
   JWT,
   KUBE_CONFIG_DIR,
+  HELM_NH_CONFIG_DIR,
   NH_CONFIG_DIR,
   PLUGIN_CONFIG_DIR,
   TMP_APP,
@@ -130,6 +131,7 @@ async function init(context: vscode.ExtensionContext) {
   fileStore.mkdir(PLUGIN_CONFIG_DIR);
   fileStore.mkdir(KUBE_CONFIG_DIR);
   fileStore.mkdir(HELM_VALUES_DIR);
+  fileStore.mkdir(HELM_NH_CONFIG_DIR);
   fileStore.initConfig();
   fileStore.set("extensionPath", context.extensionPath);
   updateServerConfigStatus();
