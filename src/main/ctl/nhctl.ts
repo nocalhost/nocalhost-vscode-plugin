@@ -257,7 +257,7 @@ export async function cleanPVC(
   const cleanCommand = `nhctl pvc clean --app ${appName} ${
     workloadName ? `--svc ${workloadName}` : ""
   } ${pvcName ? `--name ${pvcName}` : ""}`;
-  host.log(`[cmd] ${cleanCommand}`);
+  host.log(`[cmd] ${cleanCommand}`, true);
   await execAsync(cleanCommand, []);
 }
 
