@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import { execAsync, execChildProcessAsync } from "./shell";
 import host, { Host } from "../host";
@@ -235,8 +234,8 @@ export async function getTemplateConfig(appName: string, workloadName: string) {
 
 export interface PVCData {
   name: string;
-  app_name: string;
-  service_name: string;
+  appName: string;
+  serviceName: string;
   capacity: string;
   status: string;
   mountPath: string;

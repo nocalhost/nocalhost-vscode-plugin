@@ -34,7 +34,7 @@ export default class CleanPvcCommand implements ICommand {
     const pvcMap = new Map<string, string>();
     const pvcNames = new Array<string>();
     pvcs.map((p) => {
-      const key = `${p.app_name}-${p.service_name}:${p.mountPath}`;
+      const key = `${p.appName}-${p.serviceName}:${p.mountPath}`;
       pvcMap.set(key, p.name);
       pvcNames.push(key);
     });
