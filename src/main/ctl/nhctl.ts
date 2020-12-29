@@ -233,12 +233,13 @@ export async function getTemplateConfig(appName: string, workloadName: string) {
   return result.stdout;
 }
 
-interface PVCData {
+export interface PVCData {
   name: string;
   app_name: string;
   service_name: string;
   capacity: string;
   status: string;
+  mountPath: string;
 }
 export async function listPVC(appName: string, workloadName?: string) {
   const configCommand = `nhctl pvc list --app ${appName} ${
@@ -249,10 +250,14 @@ export async function listPVC(appName: string, workloadName?: string) {
   return pvcs;
 }
 
-export async function cleanPVC(appName: string, workloadName?: string) {
+export async function cleanPVC(
+  appName: string,
+  workloadName?: string,
+  pvcName?: string
+) {
   const cleanCommand = `nhctl pvc clean --app ${appName} ${
     workloadName ? `--svc ${workloadName}` : ""
-  }`;
+  } ${pvcName ? `--name ${pvcName}` : ""}`;
   host.log(`[cmd] ${cleanCommand}`);
   await execAsync(cleanCommand, []);
 }

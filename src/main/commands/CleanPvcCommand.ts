@@ -19,15 +19,37 @@ export default class CleanPvcCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
-    let appName: string | undefined, workloadName: string | undefined;
+    let appName: string, workloadName: string | undefined;
     if (node instanceof Deployment) {
       appName = node.getAppName();
       workloadName = node.name;
     } else if (node instanceof AppNode) {
       appName = node.name;
+    } else {
+      host.showInformationMessage("Not support the type");
+      return;
     }
-    if (appName) {
-      await nhctl.cleanPVC(appName, workloadName);
+
+    const pvcs = await nhctl.listPVC(appName, workloadName);
+    const pvcMap = new Map<string, string>();
+    const pvcNames = new Array<string>();
+    pvcs.map((p) => {
+      const key = `${p.app_name}-${p.service_name}:${p.mountPath}`;
+      pvcMap.set(key, p.name);
+      pvcNames.push(key);
+    });
+    pvcNames.unshift("ALL");
+    let result = await vscode.window.showQuickPick(pvcNames);
+    let pvcName: string | undefined;
+    if (!result) {
+      return;
     }
+
+    if (result === "ALL") {
+      pvcName = undefined;
+    } else {
+      pvcName = pvcMap.get(result);
+    }
+    await nhctl.cleanPVC(appName, workloadName, pvcName);
   }
 }
