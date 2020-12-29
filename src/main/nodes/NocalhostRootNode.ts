@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { getApplication } from "../api";
-import { KUBE_CONFIG_DIR, USERINFO } from "../constants";
+import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR, USERINFO } from "../constants";
 import { AppNode } from "./AppNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { ROOT } from "./nodeContants";
@@ -28,6 +28,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       let obj: {
         url?: string;
         name?: string;
+        appConfig?: string;
+        nocalhostConfig?: string;
         installType: string;
         resourceDir: Array<string>;
       } = {
@@ -38,6 +40,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         let jsonObj = JSON.parse(context);
         obj.url = jsonObj["application_url"];
         obj.name = jsonObj["application_name"];
+        obj.appConfig = jsonObj["application_config_path"];
+        obj.nocalhostConfig = jsonObj["nocalhost_config"];
         let originInstallType = jsonObj["install_type"];
         let source = jsonObj["source"];
         obj.installType = this.generateInstallType(source, originInstallType);
@@ -48,11 +52,19 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         `${app.id}_${app.devspaceId}_config`
       );
       fileUtil.writeFile(filePath, app.kubeconfig);
+
+      const nhConfigPath = path.resolve(
+        HELM_NH_CONFIG_DIR,
+        `${app.id}_${app.devspaceId}_config`
+      );
+      fileUtil.writeFile(nhConfigPath, obj.nocalhostConfig || "");
       return new AppNode(
         this,
         obj.installType,
         obj.resourceDir,
         obj.name || `app${app.id}`,
+        obj.appConfig || "",
+        obj.nocalhostConfig || "",
         app.id,
         app.devspaceId,
         app.status,
