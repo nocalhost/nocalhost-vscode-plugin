@@ -124,6 +124,11 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.resetApp",
+          "when": "viewItem =~ /^application-installed/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.log",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
           "group": "1"
@@ -203,6 +208,10 @@
       },
       {
         "command": "Nocalhost.reset",
+        "title": "%Reset%"
+      },
+      {
+        "command": "Nocalhost.resetApp",
         "title": "%Reset%"
       },
       {

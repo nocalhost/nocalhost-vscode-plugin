@@ -121,3 +121,7 @@ export async function updateAppInstallStatus(
     { status }
   );
 }
+
+export async function resetApp(devSpaceId: number) {
+  return axios.post(`/v1/plugin/${devSpaceId}/recreate`);
+}

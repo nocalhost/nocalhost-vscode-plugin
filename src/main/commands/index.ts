@@ -10,6 +10,7 @@ import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import PortForwardCommand from "./PortForwardCommand";
+import ResetAppCommand from "./ResetAppCommand";
 import ResetCommand from "./ResetCommand";
 import SignInCommand from "./SignInCommand";
 import SignOutCommand from "./SignOutCommand";
@@ -43,4 +44,5 @@ export default function initCommands(
   new ExecCommand(context);
   new ResetCommand(context);
   new CleanPvcCommand(context);
+  new ResetAppCommand(context);
 }
