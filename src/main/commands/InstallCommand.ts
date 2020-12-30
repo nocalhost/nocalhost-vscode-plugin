@@ -25,10 +25,10 @@ export default class InstallCommand implements ICommand {
     }
 
     const r = await host.showInformationMessage(
-      "Specified version or use default version",
+      "Which branch to install(Manifests in Git Repo)?",
       { modal: true },
-      "Specify one",
-      "Use Default"
+      "Default Branch",
+      "Specify one"
     );
     if (!r) {
       return;
@@ -40,7 +40,7 @@ export default class InstallCommand implements ICommand {
       if (appNode.installType === "helmRepo") {
         msg = "please input the version of chart";
       } else {
-        msg = "please input the ref of repository";
+        msg = "please input the branch of repository";
       }
       refOrVersion = await host.showInputBox({
         placeHolder: msg,

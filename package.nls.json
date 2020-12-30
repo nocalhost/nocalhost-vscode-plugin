@@ -14,7 +14,7 @@
   "Terminal": "Terminal",
   "Logs": "Logs",
   "PortForward": "Port Forward",
-  "CleanPvc": "Clean PVC",
+  "CleanPvc": "Clear persistent data",
   "loadResource": "Load Resource",
   "Config": "Config",
   "HelmValues": "Helm Values"
