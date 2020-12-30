@@ -83,8 +83,9 @@ const rendererConfig = {
   plugins: [
     new copyWebpackPlugin({
       patterns: [
-        { from: "./node_modules/highlight.js/styles/atom-one-light.css" },
-        { from: "./node_modules/highlight.js/styles/vs2015.css" },
+        { from: "./src/renderer/assets/css/atom-one-light.css" },
+        { from: "./src/renderer/assets/css/vs2015.css" },
+        { from: "./src/renderer/assets/fonts/DroidSansMono.ttf" },
       ],
     }),
   ],

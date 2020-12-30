@@ -22,6 +22,11 @@ export default class NocalhostWebviewPanel {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
     if (NocalhostWebviewPanel.currentPanel) {
+      NocalhostWebviewPanel.openStack.push(url);
+      NocalhostWebviewPanel.postMessageStack.push({
+        type: "location/redirect",
+        payload: { url },
+      });
       NocalhostWebviewPanel.currentPanel.update(title);
       NocalhostWebviewPanel.currentPanel.panel?.reveal(column);
       return;
@@ -142,6 +147,9 @@ export default class NocalhostWebviewPanel {
     const syntaxThemeDark: vscode.Uri = webview.asWebviewUri(
       vscode.Uri.file(path.join(extensionPath, "dist", "vs2015.css"))
     );
+    const fontPath: vscode.Uri = webview.asWebviewUri(
+      vscode.Uri.file(path.join(extensionPath, "dist", "DroidSansMono.ttf"))
+    );
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -150,6 +158,14 @@ export default class NocalhostWebviewPanel {
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <link id="syntax-theme" type="text/css" rel="stylesheet" data-light="${syntaxThemeLight}" data-dark="${syntaxThemeDark}" href="${syntaxThemeDark}" />
+          <style type="text/css">
+            @font-face {
+              font-family: 'droidsansmono';
+              src: url(${fontPath}) format("truetype");
+              font-weight: normal;
+              font-style: normal;
+            }
+          </style>
         </head>
         <body>
           <div id="root"></div>
