@@ -1,7 +1,9 @@
 import React, { useContext, useEffect, useRef } from "react";
 import { createStyles, makeStyles } from "@material-ui/core";
+import hljs from "highlight.js";
 import { store } from "../../store/store";
 import { CustomThemeOptions } from "../../themes";
+import { ThemeType } from "../../constants";
 
 const useStyles = makeStyles((theme: CustomThemeOptions) =>
   createStyles({
@@ -26,12 +28,22 @@ const useStyles = makeStyles((theme: CustomThemeOptions) =>
     list: {
       padding: 10,
     },
+    line: {
+      "&:before": {
+        display: "inline-block",
+        content: "attr(data-line)",
+        marginRight: 12,
+        color: theme.palette?.text?.hint,
+        minWidth: 25,
+        textAlign: "right",
+      },
+    },
   })
 );
 
 const Logs: React.FC = () => {
   const {
-    state: { logs },
+    state: { logs, theme },
   } = useContext(store);
   const elementRef: React.MutableRefObject<HTMLDivElement | null> = useRef(
     null
@@ -45,9 +57,18 @@ const Logs: React.FC = () => {
     return (
       <>
         <ul className={classes.list}>
-          {logs.items.map((text: string, i: number) => (
-            <li key={i}>{text}</li>
-          ))}
+          {logs.items.map((text: string, i: number) => {
+            hljs.configure({});
+            const result = hljs.highlight("haskell", text);
+            return (
+              <li
+                key={i}
+                data-line={i + 1}
+                dangerouslySetInnerHTML={{ __html: result.value }}
+                className={classes.line}
+              ></li>
+            );
+          })}
         </ul>
         <div className="logs-anthor" ref={elementRef}></div>
       </>
@@ -59,6 +80,19 @@ const Logs: React.FC = () => {
       elementRef.current.scrollIntoView({ behavior: "auto" });
     }
   }, [logs]);
+
+  useEffect(() => {
+    const $link = document.getElementById("syntax-theme");
+    if (!$link) {
+      return;
+    }
+    const { light, dark } = $link.dataset;
+    if (theme === ThemeType.light) {
+      $link.setAttribute("href", light);
+    } else {
+      $link.setAttribute("href", dark);
+    }
+  }, [theme]);
 
   return (
     <div className={classes.root}>

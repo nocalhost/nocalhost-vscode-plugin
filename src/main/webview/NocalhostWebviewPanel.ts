@@ -133,11 +133,15 @@ export default class NocalhostWebviewPanel {
     if (!webview || !extensionPath) {
       return "";
     }
-    const bundleUri: vscode.Uri = vscode.Uri.file(
-      path.join(extensionPath, "dist", "renderer.js")
+    const bundlePath: vscode.Uri = webview.asWebviewUri(
+      vscode.Uri.file(path.join(extensionPath, "dist", "renderer.js"))
     );
-    const bundlePath: vscode.Uri = webview.asWebviewUri(bundleUri);
-    const nonce = this.getNonce();
+    const syntaxThemeLight: vscode.Uri = webview.asWebviewUri(
+      vscode.Uri.file(path.join(extensionPath, "dist", "atom-one-light.css"))
+    );
+    const syntaxThemeDark: vscode.Uri = webview.asWebviewUri(
+      vscode.Uri.file(path.join(extensionPath, "dist", "vs2015.css"))
+    );
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -145,23 +149,13 @@ export default class NocalhostWebviewPanel {
           <title>Nocalhost</title>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
+          <link id="syntax-theme" type="text/css" rel="stylesheet" data-light="${syntaxThemeLight}" data-dark="${syntaxThemeDark}" href="${syntaxThemeDark}" />
         </head>
         <body>
           <div id="root"></div>
-          <script nonce="${nonce}" src="${bundlePath}"></script>
+          <script src="${bundlePath}"></script>
         </body>
       </html>
     `;
-  }
-
-  private getNonce() {
-    let text = "";
-    const possible =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 32; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
   }
 }
