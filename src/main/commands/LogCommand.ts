@@ -27,7 +27,7 @@ export default class LogCommand implements ICommand {
     ({ podName, containerName } = await this.getPodAndContainer(node));
 
     if (podName && containerName) {
-      NocalhostWebviewPanel.open("/logs", node.label);
+      NocalhostWebviewPanel.open("/logs", `${podName}/${containerName}`);
       NocalhostWebviewPanel.onDispose(() => this.clearTimer());
       const kubeConfig: string = node.getKubeConfigPath();
       this.openLogs(node.getNodeStateId(), podName, containerName, kubeConfig);
