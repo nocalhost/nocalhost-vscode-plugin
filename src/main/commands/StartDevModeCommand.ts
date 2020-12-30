@@ -204,16 +204,23 @@ export default class StartDevModeCommand implements ICommand {
           });
           host.log("dev start ...", true);
           const svc = await this.getSvcConfig(appName, node.name);
-          let dirs = new Array<string>();
+          let dirs: Array<string> | string = new Array<string>();
+          let isOld = false;
           if (svc && svc.syncDirs) {
+            isOld = true;
             dirs = svc.syncDirs.map((item) => path.resolve(currentUri, item));
+          } else {
+            dirs = currentUri;
           }
           await nhctl.devStart(
             host,
             node.getKubeConfigPath(),
             appName,
             node.name,
-            dirs,
+            {
+              isOld: isOld,
+              dirs: dirs,
+            },
             node.getStorageClass()
           );
           host.log("dev start end", true);
@@ -223,11 +230,16 @@ export default class StartDevModeCommand implements ICommand {
             message: "syncing file",
           });
           host.log("sync file ...", true);
+          let syncedPatterns = svc && svc.syncedPattern;
+          let ignoredPatterns = svc && svc.ignoredPattern;
           await nhctl.syncFile(
             host,
             node.getKubeConfigPath(),
             appName,
-            node.name
+            node.name,
+            syncedPatterns,
+            ignoredPatterns,
+            isOld
           );
           host.log("sync file end", true);
           host.log("", true);

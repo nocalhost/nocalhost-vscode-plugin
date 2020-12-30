@@ -94,13 +94,19 @@ export async function devStart(
   kubeconfigPath: string,
   appName: string,
   workLoadName: string,
-  syncs?: Array<string>,
+  sync: {
+    isOld: boolean;
+    dirs: string | Array<string>;
+  },
   storageClass?: string
 ) {
   let options = "";
-  if (syncs && syncs.length > 0) {
-    options = syncs.join(" -s ");
+  if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
+    let dirs = sync.dirs as Array<string>;
+    options = dirs.join(" -s ");
     options = "-s " + options;
+  } else if (!sync.isOld && sync.dirs) {
+    options = "-s " + sync.dirs;
   }
   if (storageClass) {
     options += ` --storage-class ${storageClass}`;
@@ -139,12 +145,26 @@ export async function syncFile(
   host: Host,
   kubeconfigPath: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  syncedPatterns: Array<string> | undefined,
+  ignoredPatterns: Array<string> | undefined,
+  isOld: boolean
 ) {
-  const syncFileCommand = nhctlCommand(
-    kubeconfigPath,
-    `sync ${appName} -d ${workloadName}`
-  );
+  let baseCommand = `sync ${appName} -d ${workloadName}`;
+  if (!isOld) {
+    if (syncedPatterns && syncedPatterns.length > 0) {
+      syncedPatterns.map((p) => {
+        baseCommand += ` -s ${p}`;
+      });
+    }
+    if (ignoredPatterns && ignoredPatterns.length > 0) {
+      ignoredPatterns.map((p) => {
+        baseCommand += ` -i ${p}`;
+      });
+    }
+  }
+  const syncFileCommand = nhctlCommand(kubeconfigPath, baseCommand);
+
   host.log(`[cmd] ${syncFileCommand}`, true);
   await execChildProcessAsync(host, syncFileCommand, []);
 }
