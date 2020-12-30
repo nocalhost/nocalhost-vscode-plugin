@@ -13,7 +13,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   public getStatus(): string | Promise<string> {
     const appNode = this.getAppNode();
     const status = state.getAppState(
-      appNode.label,
+      appNode.name,
       `${this.getNodeStateId()}_status`
     );
     return status;
@@ -28,7 +28,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     const appNode = this.getAppNode();
     if (status) {
       await state.setAppState(
-        appNode.label,
+        appNode.name,
         `${this.getNodeStateId()}_status`,
         status,
         {
@@ -38,7 +38,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
       );
     } else {
       await state.deleteAppState(
-        appNode.label,
+        appNode.name,
         `${this.getNodeStateId()}_status`,
         {
           refresh: true,

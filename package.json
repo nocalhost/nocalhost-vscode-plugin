@@ -89,6 +89,11 @@
           "group": "inline@0"
         },
         {
+          "command": "Nocalhost.cleanPvc",
+          "when": "viewItem =~ /^(application|workload-deployment)/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.startDevMode",
           "when": "viewItem =~ /^workload-(deployment)-info-running/i",
           "group": "inline@0"
@@ -117,6 +122,11 @@
           "command": "Nocalhost.reset",
           "when": "viewItem =~ /^workload-deployment/i",
           "group": "1"
+        },
+        {
+          "command": "Nocalhost.resetApp",
+          "when": "viewItem =~ /^application-installed/i",
+          "group": "navigation"
         },
         {
           "command": "Nocalhost.log",
@@ -201,6 +211,10 @@
         "title": "%Reset%"
       },
       {
+        "command": "Nocalhost.resetApp",
+        "title": "%Reset%"
+      },
+      {
         "command": "Nocalhost.exec",
         "title": "%Terminal%"
       },
@@ -216,6 +230,10 @@
       {
         "command": "Nocalhost.portForward",
         "title": "%PortForward%"
+      },
+      {
+        "command": "Nocalhost.cleanPvc",
+        "title": "%CleanPvc%"
       },
       {
         "command": "Nocalhost.editServiceConfig",

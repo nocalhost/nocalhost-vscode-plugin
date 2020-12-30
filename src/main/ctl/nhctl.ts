@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { execAsync, execChildProcessAsync } from "./shell";
 import host, { Host } from "../host";
 import { spawn } from "child_process";
+import * as yaml from "yaml";
 
 export function install(
   host: Host,
@@ -16,9 +17,11 @@ export function install(
   refOrVersion?: string
 ) {
   let resourcePath = "";
-  resourceDir.map((dir) => {
-    resourcePath += ` --resource-path ${dir}`;
-  });
+  if (resourceDir) {
+    resourceDir.map((dir) => {
+      resourcePath += ` --resource-path ${dir}`;
+    });
+  }
   let installCommand = nhctlCommand(
     kubeconfigPath,
     `install ${appName} -u ${gitUrl} -t ${installType} ${
@@ -41,6 +44,7 @@ export function install(
     } ${refOrVersion}`;
   }
 
+  host.log("cmd: " + installCommand, true);
   return vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -90,16 +94,20 @@ export async function devStart(
   kubeconfigPath: string,
   appName: string,
   workLoadName: string,
-  syncs?: Array<string>
+  syncs?: Array<string>,
+  storageClass?: string
 ) {
-  let syncOptions = "";
+  let options = "";
   if (syncs && syncs.length > 0) {
-    syncOptions = syncs.join(" -s ");
-    syncOptions = "-s " + syncOptions;
+    options = syncs.join(" -s ");
+    options = "-s " + options;
+  }
+  if (storageClass) {
+    options += ` --storage-class ${storageClass}`;
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
-    `dev start ${appName} -d ${workLoadName} ${syncOptions}`
+    `dev start ${appName} -d ${workLoadName} ${options}`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
   await execChildProcessAsync(host, devStartCommand, []);
@@ -222,6 +230,35 @@ export async function getTemplateConfig(appName: string, workloadName: string) {
   const configCommand = `nhctl config template ${appName} -d ${workloadName}`;
   const result = await execAsync(configCommand, []);
   return result.stdout;
+}
+
+export interface PVCData {
+  name: string;
+  appName: string;
+  serviceName: string;
+  capacity: string;
+  status: string;
+  mountPath: string;
+}
+export async function listPVC(appName: string, workloadName?: string) {
+  const configCommand = `nhctl pvc list --app ${appName} ${
+    workloadName ? `--svc ${workloadName}` : ""
+  } --yaml`;
+  const result = await execAsync(configCommand, []);
+  const pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+  return pvcs;
+}
+
+export async function cleanPVC(
+  appName: string,
+  workloadName?: string,
+  pvcName?: string
+) {
+  const cleanCommand = `nhctl pvc clean --app ${appName} ${
+    workloadName ? `--svc ${workloadName}` : ""
+  } ${pvcName ? `--name ${pvcName}` : ""}`;
+  host.log(`[cmd] ${cleanCommand}`, true);
+  await execAsync(cleanCommand, []);
 }
 
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {

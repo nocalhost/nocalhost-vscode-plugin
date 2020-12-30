@@ -14,8 +14,11 @@ export const SIGN_OUT = "Nocalhost.signout";
 
 export const INSTALL_APP = "Nocalhost.installApp";
 export const UNINSTALL_APP = "Nocalhost.uninstallApp";
+export const RESET_APP = "Nocalhost.resetApp";
 
 export const LOAD_RESOURCE = "Nocalhost.loadResource";
 export const LOG = "Nocalhost.log";
 export const PORT_FORWARD = "Nocalhost.portForward";
 export const EXEC = "Nocalhost.exec";
+
+export const CLEAN_PVC = "Nocalhost.cleanPvc";

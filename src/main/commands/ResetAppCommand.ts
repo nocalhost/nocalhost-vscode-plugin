@@ -1,19 +1,17 @@
 import * as vscode from "vscode";
-import * as path from "path";
 
 import ICommand from "./ICommand";
-import { UNINSTALL_APP } from "./constants";
+import { RESET_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import { KUBE_CONFIG_DIR } from "../constants";
 import * as fileStore from "../store/fileStore";
-import { updateAppInstallStatus } from "../api";
+import { updateAppInstallStatus, resetApp } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 
-export default class UninstallCommand implements ICommand {
-  command: string = UNINSTALL_APP;
+export default class ResetAppCommand implements ICommand {
+  command: string = RESET_APP;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
@@ -23,7 +21,7 @@ export default class UninstallCommand implements ICommand {
       return;
     }
     const result = await host.showInformationMessage(
-      `Uninstall application: ${appNode.name}?`,
+      `Reset application: ${appNode.name}?`,
       { modal: true },
       `OK`
     );
@@ -61,10 +59,6 @@ export default class UninstallCommand implements ICommand {
     state.delete(appName);
     host.log(`Application ${appName} uninstalled`, true);
     host.showInformationMessage(`Application ${appName} uninstalled`);
-  }
-
-  private getKubeConfigPath(appNode: AppNode): string {
-    const { id, devSpaceId } = appNode;
-    return path.resolve(KUBE_CONFIG_DIR, `${id}_${devSpaceId}_config`);
+    await resetApp(devSpaceId);
   }
 }

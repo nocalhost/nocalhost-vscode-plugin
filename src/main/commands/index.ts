@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import NocalhostAppProvider from "../appProvider";
+import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
 import ExecCommand from "./ExecCommand";
@@ -9,6 +10,7 @@ import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import PortForwardCommand from "./PortForwardCommand";
+import ResetAppCommand from "./ResetAppCommand";
 import ResetCommand from "./ResetCommand";
 import SignInCommand from "./SignInCommand";
 import SignOutCommand from "./SignOutCommand";
@@ -41,4 +43,6 @@ export default function initCommands(
   new PortForwardCommand(context);
   new ExecCommand(context);
   new ResetCommand(context);
+  new CleanPvcCommand(context);
+  new ResetAppCommand(context);
 }

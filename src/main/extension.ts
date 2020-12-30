@@ -16,6 +16,7 @@ import {
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
+  TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
   WELCOME_DID_SHOW,
 } from "./constants";
@@ -66,6 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const tmpStatusId = fileStore.get(TMP_STATUS);
   const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
   const tmpKubeConfigPath = fileStore.get(TMP_KUBECONFIG_PATH);
+  const tmpStorageClass = fileStore.get(TMP_STORAGE_CLASS);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     fileStore.remove(TMP_APP);
     fileStore.remove(TMP_WORKLOAD);
@@ -93,6 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
       getStatus: () => DeploymentStatus.developing,
       getKubeConfigPath: () => tmpKubeConfigPath,
       getAppName: () => tmpApp,
+      getStorageClass: () => tmpStorageClass,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }
