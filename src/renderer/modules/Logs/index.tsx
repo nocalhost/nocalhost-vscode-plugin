@@ -27,6 +27,8 @@ const useStyles = makeStyles((theme: CustomThemeOptions) =>
     },
     list: {
       padding: 10,
+      fontFamily: "droidsansmono",
+      fontSize: 12,
     },
     line: {
       "&:before": {
