@@ -22,6 +22,11 @@ export default class NocalhostWebviewPanel {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
     if (NocalhostWebviewPanel.currentPanel) {
+      NocalhostWebviewPanel.openStack.push(url);
+      NocalhostWebviewPanel.postMessageStack.push({
+        type: "location/redirect",
+        payload: { url },
+      });
       NocalhostWebviewPanel.currentPanel.update(title);
       NocalhostWebviewPanel.currentPanel.panel?.reveal(column);
       return;
