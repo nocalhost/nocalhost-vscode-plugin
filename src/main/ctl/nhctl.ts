@@ -145,24 +145,9 @@ export async function syncFile(
   host: Host,
   kubeconfigPath: string,
   appName: string,
-  workloadName: string,
-  syncedPatterns: Array<string> | undefined,
-  ignoredPatterns: Array<string> | undefined,
-  isOld: boolean
+  workloadName: string
 ) {
   let baseCommand = `sync ${appName} -d ${workloadName}`;
-  if (!isOld) {
-    if (syncedPatterns && syncedPatterns.length > 0) {
-      syncedPatterns.map((p) => {
-        baseCommand += ` -s ${p}`;
-      });
-    }
-    if (ignoredPatterns && ignoredPatterns.length > 0) {
-      ignoredPatterns.map((p) => {
-        baseCommand += ` -i ${p}`;
-      });
-    }
-  }
   const syncFileCommand = nhctlCommand(kubeconfigPath, baseCommand);
 
   host.log(`[cmd] ${syncFileCommand}`, true);

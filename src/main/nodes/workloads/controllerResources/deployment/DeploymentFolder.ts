@@ -35,9 +35,9 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     const appConfig = await ConfigService.getAppConfig(appNode.name);
     const result: Deployment[] = list.items.map((item) => {
       const status = item.status as ResourceStatus;
-      const svcProfiles = appInfo.svcProfile;
+      const svcProfiles = appInfo.svcProfile || [];
       let svcProfile: SvcProfile | undefined | null;
-      const nocalhostServices = appConfig.services;
+      const nocalhostServices = appConfig.services || [];
       let nocalhostService: NocalhostServiceConfig | undefined | null;
       for (let i = 0; i < svcProfiles.length; i++) {
         if (svcProfiles[i].name === item.metadata.name) {

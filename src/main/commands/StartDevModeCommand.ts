@@ -21,7 +21,6 @@ import * as nhctl from "../ctl/nhctl";
 import * as nls from "../../../package.nls.json";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import state from "../state";
 import { appTreeView } from "../extension";
 
 export interface ControllerNodeApi {
@@ -230,16 +229,11 @@ export default class StartDevModeCommand implements ICommand {
             message: "syncing file",
           });
           host.log("sync file ...", true);
-          let syncedPatterns = svc && svc.syncedPattern;
-          let ignoredPatterns = svc && svc.ignoredPattern;
           await nhctl.syncFile(
             host,
             node.getKubeConfigPath(),
             appName,
-            node.name,
-            syncedPatterns,
-            ignoredPatterns,
-            isOld
+            node.name
           );
           host.log("sync file end", true);
           host.log("", true);
