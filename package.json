@@ -125,7 +125,7 @@
         },
         {
           "command": "Nocalhost.resetApp",
-          "when": "viewItem =~ /^application-installed/i",
+          "when": "viewItem =~ /^application/i",
           "group": "navigation"
         },
         {
