@@ -32,7 +32,9 @@ export function install(
   if (installType === "helmRepo") {
     installCommand = nhctlCommand(
       kubeconfigPath,
-      `install ${appName} --helm-chart-name ${appName} -t ${installType} --helm-repo-url ${gitUrl} ${
+      `install ${appName} --helm-chart-name ${appName} -t ${installType} ${
+        values ? "-f " + values : ""
+      } --helm-repo-url ${gitUrl} ${
         helmNHConfigPath ? "--outer-config " + helmNHConfigPath : ""
       }`
     );
