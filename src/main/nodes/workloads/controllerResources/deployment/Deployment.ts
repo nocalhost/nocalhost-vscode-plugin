@@ -141,7 +141,7 @@ export class Deployment extends ControllerResourceNode {
       type: "object",
       required: ["gitUrl", "devContainerImage", "name"],
       properties: {
-        fundRaiseId: {
+        gitUrl: {
           type: "string",
           minLength: 1,
         },
