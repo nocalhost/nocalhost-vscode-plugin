@@ -24,8 +24,15 @@ export default class InstallCommand implements ICommand {
       return;
     }
 
+    let repoMsg = "";
+    if (appNode.installType === "helmRepo") {
+      repoMsg = "Which version to install?";
+    } else {
+      repoMsg = "Which branch to install(Manifests in Git Repo)?";
+    }
+
     const r = await host.showInformationMessage(
-      "Which branch to install(Manifests in Git Repo)?",
+      repoMsg,
       { modal: true },
       "Default Branch",
       "Specify one"
