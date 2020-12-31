@@ -95,9 +95,9 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           // Nocalhost://k8s/log/pod/container
           const node = state.getNode(id) as KubernetesResourceNode;
           const podName = paths[2];
-          const constainerName = paths[3];
+          const containerName = paths[3];
           const shellObj = await shell.execAsync(
-            `kubectl logs ${podName} -c ${constainerName} --kubeconfig ${node.getKubeConfigPath()}`,
+            `kubectl logs ${podName} -c ${containerName} --kubeconfig ${node.getKubeConfigPath()}`,
             []
           );
           if (shellObj.code === 0) {
@@ -161,7 +161,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             }
           }
         } else if (type === "helm-value" && paths[2] === "app") {
-          // NocalhostRW://nh/helm-value/app/${appNode.label}.yaml
+          // NocalhostRW://nh/helm-value/app/${appNode.name}.yaml
           const appName = paths[3];
           const valuePath = path.resolve(
             HELM_VALUES_DIR,
@@ -241,7 +241,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         destData = Buffer.from(this.stringify(appInfo, "yaml") || "", "utf-8");
       }
     } else if (type === "helm-value" && paths[2] === "app") {
-      // NocalhostRW://nh/helm-value/app/${appNode.label}.yaml
+      // NocalhostRW://nh/helm-value/app/${appNode.name}.yaml
       const appName = paths[3];
       const valuePath = path.resolve(HELM_VALUES_DIR, `${appName}-values.yaml`);
       destDir = valuePath;

@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -23,7 +23,7 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "icon": "images/icons/logo-light.svg",
+          "icon": "images/dark/logo-light.svg",
           "id": "NocalhostView",
           "title": "Nocalhost"
         }
@@ -89,6 +89,11 @@
           "group": "inline@0"
         },
         {
+          "command": "Nocalhost.cleanPvc",
+          "when": "viewItem =~ /^(application|workload-deployment)/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.startDevMode",
           "when": "viewItem =~ /^workload-(deployment)-info-running/i",
           "group": "inline@0"
@@ -110,7 +115,7 @@
         },
         {
           "command": "Nocalhost.exec",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running)/i",
           "group": "1"
         },
         {
@@ -119,13 +124,18 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.resetApp",
+          "when": "viewItem =~ /^application/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.log",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
           "group": "1"
         },
         {
           "command": "Nocalhost.portForward",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod-Running)/i",
           "group": "1"
         },
         {
@@ -181,17 +191,27 @@
       {
         "command": "Nocalhost.startDevMode",
         "title": "%Start.Develop%",
-        "icon": "images/icons/dev-start.svg",
+        "icon": {
+          "dark": "images/dark/dev-start.svg",
+          "light": "images/light/dev-start.svg"
+        },
         "category": "devSpace"
       },
       {
         "command": "Nocalhost.endDevMode",
         "title": "%End.Develop%",
-        "icon": "images/icons/dev-end.svg",
+        "icon": {
+          "dark": "images/dark/dev-end.svg",
+          "light": "images/light/dev-end.svg"
+        },
         "category": "devSpace"
       },
       {
         "command": "Nocalhost.reset",
+        "title": "%Reset%"
+      },
+      {
+        "command": "Nocalhost.resetApp",
         "title": "%Reset%"
       },
       {
@@ -212,14 +232,24 @@
         "title": "%PortForward%"
       },
       {
+        "command": "Nocalhost.cleanPvc",
+        "title": "%CleanPvc%"
+      },
+      {
         "command": "Nocalhost.editServiceConfig",
         "title": "%Config%",
-        "icon": "images/icons/setting-normal.svg"
+        "icon": {
+          "dark": "images/dark/setting-normal.svg",
+          "light": "images/light/setting-normal.svg"
+        }
       },
       {
         "command": "Nocalhost.writeServiceConfig",
         "title": "%Config%",
-        "icon": "images/icons/setting-warning.svg"
+        "icon": {
+          "dark": "images/dark/setting-warning.svg",
+          "light": "images/light/setting-warning.svg"
+        }
       },
       {
         "command": "Nocalhost.editHelmValues",
@@ -287,6 +317,7 @@
   "dependencies": {
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
+    "highlight.js": "^10.5.0",
     "rimraf": "^3.0.2",
     "shelljs": "^0.8.4",
     "uuid": "^8.3.1",

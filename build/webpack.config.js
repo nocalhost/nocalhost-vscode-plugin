@@ -80,5 +80,14 @@ const rendererConfig = {
       },
     ],
   },
+  plugins: [
+    new copyWebpackPlugin({
+      patterns: [
+        { from: "./src/renderer/assets/css/atom-one-light.css" },
+        { from: "./src/renderer/assets/css/vs2015.css" },
+        { from: "./src/renderer/assets/fonts/DroidSansMono.ttf" },
+      ],
+    }),
+  ],
 };
 module.exports = [extensionConfig, rendererConfig];

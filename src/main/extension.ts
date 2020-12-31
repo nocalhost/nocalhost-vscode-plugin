@@ -9,25 +9,26 @@ import {
   HELM_VALUES_DIR,
   JWT,
   KUBE_CONFIG_DIR,
+  HELM_NH_CONFIG_DIR,
   NH_CONFIG_DIR,
   PLUGIN_CONFIG_DIR,
   TMP_APP,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
+  TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
+  WELCOME_DID_SHOW,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
 import state from "./state";
-import { SHOW_DASHBOARD, START_DEV_MODE } from "./commands/constants";
+import { START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
-import { AppNode } from "./nodes/AppNode";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
-
-// import notification from "./notification";
+import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -56,7 +57,6 @@ export async function activate(context: vscode.ExtensionContext) {
   ];
 
   context.subscriptions.push(...subs);
-  vscode.commands.executeCommand(SHOW_DASHBOARD);
   const jwt = fileStore.get(JWT);
   if (jwt) {
     state.setLogin(true);
@@ -67,6 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const tmpStatusId = fileStore.get(TMP_STATUS);
   const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
   const tmpKubeConfigPath = fileStore.get(TMP_KUBECONFIG_PATH);
+  const tmpStorageClass = fileStore.get(TMP_STORAGE_CLASS);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     fileStore.remove(TMP_APP);
     fileStore.remove(TMP_WORKLOAD);
@@ -94,6 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
       getStatus: () => DeploymentStatus.developing,
       getKubeConfigPath: () => tmpKubeConfigPath,
       getAppName: () => tmpApp,
+      getStorageClass: () => tmpStorageClass,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }
@@ -103,10 +105,12 @@ export async function activate(context: vscode.ExtensionContext) {
     "extensionActivated",
     true
   );
+
+  // appTreeProvider.startRefreshInterval(10000);
 }
 
 export function deactivate() {
-  // TODO: DISPOSE
+  host.dispose();
 }
 
 export function checkCtl(name: string) {
@@ -130,9 +134,16 @@ async function init(context: vscode.ExtensionContext) {
   fileStore.mkdir(PLUGIN_CONFIG_DIR);
   fileStore.mkdir(KUBE_CONFIG_DIR);
   fileStore.mkdir(HELM_VALUES_DIR);
+  fileStore.mkdir(HELM_NH_CONFIG_DIR);
   fileStore.initConfig();
   fileStore.set("extensionPath", context.extensionPath);
   updateServerConfigStatus();
+
+  const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
+  if (!welcomeDidShow) {
+    NocalhostWebviewPanel.open("/welcome", "Welcome");
+    fileStore.set(WELCOME_DID_SHOW, true);
+  }
 }
 
 process.on("uncaughtException", (error) => {

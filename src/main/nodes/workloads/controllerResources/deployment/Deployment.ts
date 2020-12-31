@@ -18,7 +18,6 @@ import {
 import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
-import host from "../../../../host";
 
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
@@ -44,16 +43,16 @@ export class Deployment extends ControllerResourceNode {
     status = await this.getStatus();
     switch (status) {
       case "running":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/status-running.svg");
+        treeItem.iconPath = resolveVSCodeUri("status-running.svg");
         break;
       case "developing":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/dev-start.svg");
+        treeItem.iconPath = resolveVSCodeUri("dev-start.svg");
         break;
       case "starting":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/loading.svg");
+        treeItem.iconPath = resolveVSCodeUri("loading.svg");
         break;
       case "unknown":
-        treeItem.iconPath = resolveVSCodeUri("images/icons/status-unknown.svg");
+        treeItem.iconPath = resolveVSCodeUri("status-unknown.svg");
         break;
     }
     const check = await this.checkConfig();
@@ -69,7 +68,7 @@ export class Deployment extends ControllerResourceNode {
   public async getStatus() {
     const appNode = this.getAppNode();
     let status = state.getAppState(
-      appNode.label,
+      appNode.name,
       `${this.getNodeStateId()}_status`
     );
     if (status) {
@@ -120,7 +119,7 @@ export class Deployment extends ControllerResourceNode {
   public async refreshSvcProfile() {
     const appNode = this.getAppNode();
     const infoStr = await nhctl
-      .getServiceConfig(appNode.label, this.name)
+      .getServiceConfig(appNode.name, this.name)
       .catch((err) => {});
     if (infoStr) {
       const serviceProfile = yaml.parse(infoStr as string) as ServiceProfile;
@@ -134,7 +133,7 @@ export class Deployment extends ControllerResourceNode {
     const appNode = this.getAppNode();
     if (!this.firstRender) {
       this.nocalhostService = await ConfigService.getWorkloadConfig(
-        appNode.label,
+        appNode.name,
         this.name
       );
     }
@@ -142,7 +141,7 @@ export class Deployment extends ControllerResourceNode {
       type: "object",
       required: ["gitUrl", "devContainerImage", "name"],
       properties: {
-        fundRaiseId: {
+        gitUrl: {
           type: "string",
           minLength: 1,
         },

@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
-import { KUBE_CONFIG_DIR } from "../constants";
+import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR } from "../constants";
 import * as nhctl from "../ctl/nhctl";
 import * as yaml from "yaml";
-import { v4 as uuidv4 } from "uuid";
 import state from "../state";
 
 import { APP_FOLDER, ID_SPLIT } from "./nodeContants";
@@ -14,6 +13,9 @@ import { NetworkFolderNode } from "./networks/NetworkFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
+import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
+import { StorageFolder } from "./storage/storageFolder";
+import { ApplicationInfo } from "../api";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -23,9 +25,11 @@ export class AppNode extends NocalhostFolderNode {
   public status: number;
   public installStatus: number;
   public installType: string;
+  public appConfig: string;
+  public helmNHConfig: string;
   public kubeConfig: string;
   public resourceDir: Array<string>;
-  public info?: any;
+  public info: ApplicationInfo;
   public parent: NocalhostRootNode;
   private nhctlAppInfo: AppInfo | undefined;
   constructor(
@@ -33,18 +37,22 @@ export class AppNode extends NocalhostFolderNode {
     installType: string,
     resourceDir: Array<string>,
     label: string,
+    appConfig: string,
+    helmNHConfig: string,
     id: number,
     devSpaceId: number,
     status: number,
     installStatus: number,
     kubeConfig: string,
-    info?: any
+    info: ApplicationInfo // api info
   ) {
     super();
     this.installType = installType;
     this.resourceDir = resourceDir;
     this.parent = parent;
     this.label = label;
+    this.appConfig = appConfig;
+    this.helmNHConfig = helmNHConfig;
     this.id = id;
     this.devSpaceId = devSpaceId;
     this.status = status;
@@ -54,7 +62,23 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   private getDefaultChildrenNodes(): string[] {
-    return this.unInstalled() ? [] : ["Workloads", "Networks"];
+    return this.unInstalled()
+      ? []
+      : ["Workloads", "Networks", "Configurations", "storage"];
+  }
+
+  get context() {
+    let context = this.info.context;
+    let jsonObj = JSON.parse(context);
+    return jsonObj;
+  }
+
+  get name() {
+    return this.context["application_name"];
+  }
+
+  get url() {
+    return this.context["application_url"];
   }
 
   public async getApplicationInfo() {
@@ -66,7 +90,7 @@ export class AppNode extends NocalhostFolderNode {
 
   public async freshApplicationInfo() {
     let info = {} as AppInfo;
-    const infoStr = await nhctl.getAppInfo(this.label).catch((err) => {});
+    const infoStr = await nhctl.getAppInfo(this.name).catch((err) => {});
     if (infoStr) {
       info = yaml.parse(infoStr as string);
     }
@@ -76,16 +100,12 @@ export class AppNode extends NocalhostFolderNode {
 
   private updateIcon(treeItem: vscode.TreeItem) {
     if (this.installed() && !this.unInstalling()) {
-      return (treeItem.iconPath = resolveVSCodeUri(
-        "images/icons/app-connected.svg"
-      ));
+      return (treeItem.iconPath = resolveVSCodeUri("app-connected.svg"));
     }
     if (this.unInstalled() && !this.installing()) {
-      return (treeItem.iconPath = resolveVSCodeUri(
-        "images/icons/app-inactive.svg"
-      ));
+      return (treeItem.iconPath = resolveVSCodeUri("app-inactive.svg"));
     }
-    treeItem.iconPath = resolveVSCodeUri("images/icons/loading.svg");
+    treeItem.iconPath = resolveVSCodeUri("loading.svg");
   }
 
   private updateContext(treeItem: vscode.TreeItem) {
@@ -106,6 +126,14 @@ export class AppNode extends NocalhostFolderNode {
       `${this.id}_${this.devSpaceId}_config`
     );
 
+    return path.normalize(kubeconfigPath);
+  }
+
+  public getHelmHNConfigPath() {
+    const kubeconfigPath = path.resolve(
+      HELM_NH_CONFIG_DIR,
+      `${this.id}_${this.devSpaceId}_config`
+    );
     return path.normalize(kubeconfigPath);
   }
 
@@ -182,13 +210,19 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   createChild(type: string) {
-    let node: WorkloadFolderNode | NetworkFolderNode;
+    let node: BaseNocalhostNode;
     switch (type) {
       case "Workloads":
         node = new WorkloadFolderNode(this);
         break;
       case "Networks":
         node = new NetworkFolderNode(this);
+        break;
+      case "Configurations":
+        node = new ConfigurationFolderNode(this);
+        break;
+      case "storage":
+        node = new StorageFolder(this);
         break;
       default:
         throw new Error("not implement the resource");

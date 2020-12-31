@@ -2,34 +2,51 @@ import * as vscode from "vscode";
 import { execAsync, execChildProcessAsync } from "./shell";
 import host, { Host } from "../host";
 import { spawn } from "child_process";
+import * as yaml from "yaml";
 
 export function install(
   host: Host,
   kubeconfigPath: string,
   appName: string,
+  appConfig: string,
+  helmNHConfigPath: string,
   gitUrl: string,
   installType: string,
   resourceDir: Array<string>,
-  values?: string
+  values?: string,
+  refOrVersion?: string
 ) {
   let resourcePath = "";
-  resourceDir.map((dir) => {
-    resourcePath += ` --resource-path ${dir}`;
-  });
+  if (resourceDir) {
+    resourceDir.map((dir) => {
+      resourcePath += ` --resource-path ${dir}`;
+    });
+  }
   let installCommand = nhctlCommand(
     kubeconfigPath,
     `install ${appName} -u ${gitUrl} -t ${installType} ${
       values ? "-f " + values : ""
-    } ${resourcePath}`
+    } ${resourcePath} ${appConfig ? "--config " + appConfig : ""}`
   );
 
   if (installType === "helmRepo") {
     installCommand = nhctlCommand(
       kubeconfigPath,
-      `install ${appName} --helm-chart-name ${appName} -t ${installType} --helm-repo-url ${gitUrl}`
+      `install ${appName} --helm-chart-name ${appName} -t ${installType} ${
+        values ? "-f " + values : ""
+      } --helm-repo-url ${gitUrl} ${
+        helmNHConfigPath ? "--outer-config " + helmNHConfigPath : ""
+      }`
     );
   }
 
+  if (refOrVersion) {
+    installCommand += ` ${
+      installType === "helmRepo" ? "--helm-repo-version" : "-r"
+    } ${refOrVersion}`;
+  }
+
+  host.log("cmd: " + installCommand, true);
   return vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -79,16 +96,26 @@ export async function devStart(
   kubeconfigPath: string,
   appName: string,
   workLoadName: string,
-  syncs?: Array<string>
+  sync: {
+    isOld: boolean;
+    dirs: string | Array<string>;
+  },
+  storageClass?: string
 ) {
-  let syncOptions = "";
-  if (syncs && syncs.length > 0) {
-    syncOptions = syncs.join(" -s ");
-    syncOptions = "-s " + syncOptions;
+  let options = "";
+  if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
+    let dirs = sync.dirs as Array<string>;
+    options = dirs.join(" -s ");
+    options = "-s " + options;
+  } else if (!sync.isOld && sync.dirs) {
+    options = "-s " + sync.dirs;
+  }
+  if (storageClass) {
+    options += ` --storage-class ${storageClass}`;
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
-    `dev start ${appName} -d ${workLoadName} ${syncOptions}`
+    `dev start ${appName} -d ${workLoadName} ${options}`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
   await execChildProcessAsync(host, devStartCommand, []);
@@ -122,10 +149,9 @@ export async function syncFile(
   appName: string,
   workloadName: string
 ) {
-  const syncFileCommand = nhctlCommand(
-    kubeconfigPath,
-    `sync ${appName} -d ${workloadName}`
-  );
+  let baseCommand = `sync ${appName} -d ${workloadName}`;
+  const syncFileCommand = nhctlCommand(kubeconfigPath, baseCommand);
+
   host.log(`[cmd] ${syncFileCommand}`, true);
   await execChildProcessAsync(host, syncFileCommand, []);
 }
@@ -211,6 +237,35 @@ export async function getTemplateConfig(appName: string, workloadName: string) {
   const configCommand = `nhctl config template ${appName} -d ${workloadName}`;
   const result = await execAsync(configCommand, []);
   return result.stdout;
+}
+
+export interface PVCData {
+  name: string;
+  appName: string;
+  serviceName: string;
+  capacity: string;
+  status: string;
+  mountPath: string;
+}
+export async function listPVC(appName: string, workloadName?: string) {
+  const configCommand = `nhctl pvc list --app ${appName} ${
+    workloadName ? `--svc ${workloadName}` : ""
+  } --yaml`;
+  const result = await execAsync(configCommand, []);
+  const pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+  return pvcs;
+}
+
+export async function cleanPVC(
+  appName: string,
+  workloadName?: string,
+  pvcName?: string
+) {
+  const cleanCommand = `nhctl pvc clean --app ${appName} ${
+    workloadName ? `--svc ${workloadName}` : ""
+  } ${pvcName ? `--name ${pvcName}` : ""}`;
+  host.log(`[cmd] ${cleanCommand}`, true);
+  await execAsync(cleanCommand, []);
 }
 
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {

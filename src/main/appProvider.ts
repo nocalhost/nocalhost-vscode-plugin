@@ -2,22 +2,17 @@ import * as vscode from "vscode";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import nocalhostState from "./state";
-import nodeStore from "./store/nodeStore";
-// import notification from "./notification";
-
-const nodeMap: Map<string, BaseNocalhostNode> = nodeStore.getInstance();
 
 export default class NocalhostAppProvider
   implements vscode.TreeDataProvider<BaseNocalhostNode> {
+  public refreshTimeMS: number | null = null;
+  public refreshTimer: NodeJS.Timer | null = null;
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
     BaseNocalhostNode | undefined
   >();
-  // constructor() {
-  //   notification.on("refresh", (node: BaseNocalhostNode | undefined) => {
-  //     this.refresh(node);
-  //   });
-  //   notification.notify("refresh");
-  // }
+  constructor() {
+    vscode.window.onDidChangeActiveColorTheme(() => this.refresh());
+  }
   onDidChangeTreeData = this.onDidChangeTreeDataEventEmitter.event;
   async getTreeItem(element: BaseNocalhostNode): Promise<vscode.TreeItem> {
     let item: vscode.TreeItem | Thenable<vscode.TreeItem>;
@@ -48,5 +43,13 @@ export default class NocalhostAppProvider
 
   refresh(node?: BaseNocalhostNode) {
     this.onDidChangeTreeDataEventEmitter.fire(node);
+  }
+
+  startRefreshInterval(ms: number): void {
+    this.refreshTimeMS = ms;
+    this.refreshTimer = setTimeout(() => {
+      this.refresh();
+      this.startRefreshInterval(ms);
+    }, ms);
   }
 }

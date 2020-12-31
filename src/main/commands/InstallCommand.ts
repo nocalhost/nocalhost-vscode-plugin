@@ -23,67 +23,45 @@ export default class InstallCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
-    state.setAppState(appNode.label, "installing", true, {
-      refresh: true,
-      nodeStateId: appNode.getNodeStateId(),
-    });
-    // make siblings collapsis
-    const siblings: (
-      | AppNode
-      | NocalhostAccountNode
-    )[] = await appNode.siblings();
-    siblings.forEach((item) => {
-      const node = item as AppNode;
-      node.collapsis();
-    });
 
-    await this.install(
-      host,
-      appNode.getKUbeconfigPath(),
-      appNode.info.name,
-      appNode.id,
-      appNode.devSpaceId,
-      appNode.info.url,
-      appNode.installType,
-      appNode.resourceDir
-    )
-      .then(() => {
-        const bookInfoUrls = [
-          "https://github.com/nocalhost/bookinfo.git",
-          "git@github.com:nocalhost/bookinfo.git",
-          "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
-          "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
-        ];
-        if (
-          bookInfoUrls.includes(appNode.info.url) &&
-          appNode.info.name === "bookinfo"
-        ) {
-          this.checkStatus(appNode);
-        }
-      })
-      .finally(() => {
-        appNode.expanded();
-        appNode.expandWorkloadNode();
-        state.deleteAppState(appNode.label, "installing", {
-          refresh: true,
-          nodeStateId: appNode.getNodeStateId(),
-        });
+    let repoMsg = "";
+    let btMsg = "";
+    if (appNode.installType === "helmRepo") {
+      repoMsg = "Which version to install?";
+      btMsg = "Default Version";
+    } else {
+      repoMsg = "Which branch to install(Manifests in Git Repo)?";
+      btMsg = "Default Branch";
+    }
+
+    const r = await host.showInformationMessage(
+      repoMsg,
+      { modal: true },
+      btMsg,
+      "Specify one"
+    );
+    if (!r) {
+      return;
+    }
+    let refOrVersion: string | undefined;
+
+    if (r === "Specify one") {
+      let msg = "";
+      if (appNode.installType === "helmRepo") {
+        msg = "please input the version of chart";
+      } else {
+        msg = "please input the branch of repository";
+      }
+      refOrVersion = await host.showInputBox({
+        placeHolder: msg,
       });
-  }
 
-  private async install(
-    host: Host,
-    kubeconfigPath: string,
-    appName: string,
-    appId: number,
-    devSpaceId: number,
-    gitUrl: string,
-    installType: string,
-    resourceDir: Array<string>
-  ) {
-    // tips
+      if (!refOrVersion) {
+        return;
+      }
+    }
     let values: string | undefined;
-    if (["helmGit", "helmRepo"].includes(installType)) {
+    if (["helmGit", "helmRepo"].includes(appNode.installType)) {
       const res = await host.showInformationMessage(
         "Do you want to specify a values.yaml?",
         { modal: true },
@@ -108,15 +86,81 @@ export default class InstallCommand implements ICommand {
         }
       }
     }
+    state.setAppState(appNode.name, "installing", true, {
+      refresh: true,
+      nodeStateId: appNode.getNodeStateId(),
+    });
+    // make siblings collapsis
+    const siblings: (
+      | AppNode
+      | NocalhostAccountNode
+    )[] = await appNode.siblings();
+    siblings.forEach((item) => {
+      const node = item as AppNode;
+      node.collapsis();
+    });
+
+    await this.install(
+      host,
+      appNode.getKUbeconfigPath(),
+      appNode.name,
+      appNode.id,
+      appNode.appConfig,
+      appNode.helmNHConfig ? appNode.getHelmHNConfigPath() : "",
+      appNode.devSpaceId,
+      appNode.url,
+      appNode.installType,
+      appNode.resourceDir,
+      values,
+      refOrVersion
+    )
+      .then(() => {
+        const bookInfoUrls = [
+          "https://github.com/nocalhost/bookinfo.git",
+          "git@github.com:nocalhost/bookinfo.git",
+          "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
+          "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
+        ];
+        if (bookInfoUrls.includes(appNode.url) && appNode.name === "bookinfo") {
+          this.checkStatus(appNode);
+        }
+      })
+      .finally(() => {
+        appNode.expanded();
+        appNode.expandWorkloadNode();
+        state.deleteAppState(appNode.name, "installing", {
+          refresh: true,
+          nodeStateId: appNode.getNodeStateId(),
+        });
+      });
+  }
+
+  private async install(
+    host: Host,
+    kubeconfigPath: string,
+    appName: string,
+    appId: number,
+    appConfig: string,
+    helmNHConfigPath: string,
+    devSpaceId: number,
+    gitUrl: string,
+    installType: string,
+    resourceDir: Array<string>,
+    values: string | undefined,
+    refOrVersion: string | undefined
+  ) {
     host.log(`Installing application: ${appName}`, true);
     await nhctl.install(
       host,
       kubeconfigPath,
       appName,
+      appConfig,
+      helmNHConfigPath,
       gitUrl,
       installType,
       resourceDir,
-      values
+      values,
+      refOrVersion
     );
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});

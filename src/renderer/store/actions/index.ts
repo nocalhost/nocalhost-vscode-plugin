@@ -1,6 +1,22 @@
-import { ActionType, IRedirect } from "./actions.types";
+import { ILogs } from "../store.types";
+import {
+  ActionType,
+  IRedirect,
+  IToggleTheme,
+  IUpdateLogs,
+} from "./actions.types";
 
-export const redirect = (uri: string): IRedirect => ({
+export const redirect = (url: string): IRedirect => ({
   type: ActionType.redirect,
-  payload: { uri },
+  payload: { url },
+});
+
+export const toggleTheme = (theme: string): IToggleTheme => ({
+  type: ActionType.toggleTheme,
+  payload: { theme },
+});
+
+export const updateLogs = (logs: ILogs): IUpdateLogs => ({
+  type: ActionType.updateLogs,
+  payload: { logs },
 });

@@ -1,33 +1,29 @@
 import React from "react";
 import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
-import { makeStyles, createStyles } from "@material-ui/core/styles";
+import Layout from "./components/Layout";
+import Landing from "./modules/Landing";
 import Welcome from "./modules/Welcome";
-import Dashboard from "./modules/Dashboard";
-
-const useStyles = makeStyles(() =>
-  createStyles({
-    root: {},
-  })
-);
+import Logs from "./modules/Logs";
 
 const AppRouter: React.FC = () => {
-  const classes = useStyles();
-
   return (
     <HashRouter>
-      <div className={classes.root}>
+      <Layout>
         <Switch>
           <Route path="/" exact>
-            <Redirect to="/welcome" />
+            <Redirect to="/landing" />
+          </Route>
+          <Route path="/landing" exact>
+            <Landing />
           </Route>
           <Route path="/welcome" exact>
             <Welcome />
           </Route>
-          <Route path="/dashboard" exact>
-            <Dashboard />
+          <Route path="/logs" exact>
+            <Logs />
           </Route>
         </Switch>
-      </div>
+      </Layout>
     </HashRouter>
   );
 };

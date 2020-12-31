@@ -5,10 +5,10 @@ export const redirect = (
   state: IStoreState,
   action: IRedirect
 ): IStoreState => {
-  const { uri } = action.payload;
+  const { url } = action.payload;
   return {
     ...state,
-    uri,
+    url,
   };
 };
 
