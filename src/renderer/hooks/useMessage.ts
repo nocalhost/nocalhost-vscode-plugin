@@ -6,7 +6,6 @@ export default function useMessage() {
   const { dispatch } = useContext(store);
 
   const handleMessage = (event: MessageEvent) => {
-    console.log(event);
     const data = event.data;
     const { type, payload } = data;
     switch (type) {
