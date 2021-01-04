@@ -3,7 +3,8 @@ import { createStyles, makeStyles } from "@material-ui/core";
 import hljs from "highlight.js";
 import { store } from "../../store/store";
 import { CustomThemeOptions } from "../../themes";
-import { ThemeType } from "../../constants";
+import { ThemeType, LOG_INTERVAL_MS, LOG_TAIL_COUNT } from "../../constants";
+import { fetchLogs } from "../../services/index";
 
 const useStyles = makeStyles((theme: CustomThemeOptions) =>
   createStyles({
@@ -82,6 +83,15 @@ const Logs: React.FC = () => {
       elementRef.current.scrollIntoView({ behavior: "auto" });
     }
   }, [logs]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      fetchLogs(LOG_TAIL_COUNT);
+    }, LOG_INTERVAL_MS);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const $link = document.getElementById("syntax-theme");
