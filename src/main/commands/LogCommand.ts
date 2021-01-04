@@ -9,7 +9,7 @@ import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { Pod } from "../nodes/workloads/pod/Pod";
 import NocalhostWebviewPanel from "../webview/NocalhostWebviewPanel";
-import { LOG_INTERVAL_MS } from "../constants";
+import { LOG_INTERVAL_MS, LOG_TAIL_COUNT } from "../constants";
 
 export default class LogCommand implements ICommand {
   command: string = LOG;
@@ -82,7 +82,7 @@ export default class LogCommand implements ICommand {
   ): Promise<string[]> {
     let result: string = "";
     const shellObj = await shell.execAsync(
-      `kubectl logs ${podName} -c ${containerName} --kubeconfig ${kubeConfig}`,
+      `kubectl logs --tail=${LOG_TAIL_COUNT} ${podName} -c ${containerName} --kubeconfig ${kubeConfig}`,
       []
     );
     if (shellObj.code === 0) {

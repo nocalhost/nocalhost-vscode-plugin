@@ -38,3 +38,4 @@ export const TMP_KUBECONFIG_PATH = "tmpKubeconfigPath";
 export const TMP_STORAGE_CLASS = "tmpStorageClass";
 
 export const LOG_INTERVAL_MS = 3000;
+export const LOG_TAIL_COUNT = 3000;
