@@ -1,4 +1,4 @@
-import messageDefaultHandler from "./messageDefaultHandler";
+import messageDefaultHandler from "./handlers/index";
 
 export type MessageListener = (message: IMessage) => void;
 export interface IMessage {
