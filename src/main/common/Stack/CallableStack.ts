@@ -1,4 +1,4 @@
-import Stack from "./Stack";
+import Stack from ".";
 
 export default class CallableStack extends Stack {
   constructor(maxLength?: number) {

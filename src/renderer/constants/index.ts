@@ -26,3 +26,6 @@ export const enum Commands {
   portForward = "Nocalhost.portForward",
   exec = "Nocalhost.exec",
 }
+
+export const LOG_INTERVAL_MS = 3000;
+export const LOG_TAIL_COUNT = 3000;

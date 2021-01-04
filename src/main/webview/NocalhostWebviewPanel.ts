@@ -1,8 +1,12 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import MessageManager, { IMessage, MessageListener } from "./MessageManager";
-import Stack from "./Stack";
-import CallableStack from "./CallableStack";
+import * as qs from "qs";
+import MessageManager, {
+  IMessage,
+  MessageListener,
+} from "../common/MessageManager";
+import Stack from "../common/Stack";
+import CallableStack from "../common/Stack/CallableStack";
 import * as fileStore from "../store/fileStore";
 
 export default class NocalhostWebviewPanel {
@@ -17,10 +21,13 @@ export default class NocalhostWebviewPanel {
   private static readonly activeHandlerStack: CallableStack = new CallableStack();
   private static readonly inactiveHandlerStack: CallableStack = new CallableStack();
 
-  public static open(url: string, title = "Nocalhost") {
+  public static open(url: string, title = "Nocalhost", query = {}) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
+    if (Object.keys(query).length > 0) {
+      url = `${url}?${qs.stringify(query)}`;
+    }
     if (NocalhostWebviewPanel.currentPanel) {
       NocalhostWebviewPanel.openStack.push(url);
       NocalhostWebviewPanel.postMessageStack.push({
