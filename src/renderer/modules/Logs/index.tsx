@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef } from "react";
+import { useHistory } from "react-router-dom";
 import { createStyles, makeStyles } from "@material-ui/core";
 import qs from "qs";
 import hljs from "highlight.js";
@@ -6,7 +7,6 @@ import { store } from "../../store/store";
 import { CustomThemeOptions } from "../../themes";
 import { ThemeType, LOG_INTERVAL_MS, LOG_TAIL_COUNT } from "../../constants";
 import fetchLogs from "../../services/fetchLogs";
-import { useHistory } from "react-router-dom";
 
 const useStyles = makeStyles((theme: CustomThemeOptions) =>
   createStyles({

@@ -3,7 +3,7 @@ import * as shell from "../../../ctl/shell";
 import { IMessage } from "..";
 import fetchLogs from "./fetchLogs";
 
-export async function fetch(command: string): Promise<string> {
+export async function ctlFetch(command: string): Promise<string> {
   let result: string = "";
   const shellObj = await shell.execAsync(command, []);
   if (shellObj.code === 0) {
