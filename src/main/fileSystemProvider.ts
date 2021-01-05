@@ -173,6 +173,19 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           } else {
             result = await fileUtil.readFile(valuePath);
           }
+        } else if (type === "kubeConfig") {
+          // Nocalhost://nh/kubeConfig/{appName}.yaml?fsPath=xxx
+          const query = querystring.decode(uri.query);
+          let fsPath = "";
+          if (query) {
+            fsPath = query.fsPath as string;
+          }
+          const isExist = await fileUtil.isExist(fsPath);
+          if (!isExist) {
+            result = "";
+          } else {
+            result = await fileUtil.readFile(fsPath);
+          }
         }
         break;
       }

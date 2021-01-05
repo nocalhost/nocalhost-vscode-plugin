@@ -139,9 +139,19 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.associateLocalDirectory",
+          "when": "viewItem =~ /^workload-deployment/i",
+          "group": "1"
+        },
+        {
           "command": "Nocalhost.loadResource",
           "title": "%loadResource%",
           "when": "viewItem =~ /^application-installed/i"
+        },
+        {
+          "command": "Nocalhost.viewKubeConfig",
+          "when": "viewItem =~ /^application/i",
+          "group": "navigation"
         }
       ]
     },
@@ -183,6 +193,10 @@
         "command": "Nocalhost.uninstallApp",
         "title": "Uninstall App",
         "icon": "$(trash)"
+      },
+      {
+        "command": "Nocalhost.viewKubeConfig",
+        "title": "%ViewKubeConfig%"
       },
       {
         "command": "getWordloadList",
@@ -255,6 +269,10 @@
         "command": "Nocalhost.editHelmValues",
         "title": "$HelmValues$",
         "icon": "$(file)"
+      },
+      {
+        "command": "Nocalhost.associateLocalDirectory",
+        "title": "%AssociateLocalDir%"
       }
     ]
   },

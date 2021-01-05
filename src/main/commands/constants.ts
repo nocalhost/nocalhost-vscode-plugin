@@ -23,3 +23,5 @@ export const EXEC = "Nocalhost.exec";
 
 export const CLEAN_PVC = "Nocalhost.cleanPvc";
 export const LIST_DEPLOYMENTS = "Nocalhost.listDeployments";
+export const VIEW_KUBECONFIG = "Nocalhost.viewKubeConfig";
+export const ASSOCIATE_LOCAL_DIRECTORY = "Nocalhost.associateLocalDirectory";
