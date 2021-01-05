@@ -19,8 +19,7 @@ export default function registerCommand(
         state.setRunning(true);
         Promise.resolve(callback(...args))
           .catch((err) => {
-            const errMessage =
-              (err.message ? err.message : err) || "internal error";
+            const errMessage = err.message ? err.message : err;
             host.showErrorMessage(errMessage);
           })
           .finally(() => {
@@ -29,8 +28,7 @@ export default function registerCommand(
       } else {
         if (callback.then) {
           callback(...args).catch((err: any) => {
-            const errMessage =
-              (err.message ? err.message : err) || "internal error";
+            const errMessage = err.message ? err.message : err;
             host.showErrorMessage(errMessage);
           });
         } else {
