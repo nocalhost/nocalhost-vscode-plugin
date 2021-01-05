@@ -259,10 +259,6 @@ export default class StartDevModeCommand implements ICommand {
             host.log("", true);
           }
 
-          setTimeout(() => {
-            nhctl.printAppInfo(host, node.getKubeConfigPath(), appName);
-          }, 10 * 1000);
-
           progress.report({
             message: "DevMode Started.",
           });
