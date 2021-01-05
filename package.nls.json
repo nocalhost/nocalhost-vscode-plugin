@@ -18,5 +18,6 @@
   "loadResource": "Load Resource",
   "Config": "Config",
   "HelmValues": "Helm Values",
-  "ViewKubeConfig": "View KubeConfig"
+  "ViewKubeConfig": "View KubeConfig",
+  "AssociateLocalDir": "Associate Local Directory"
 }
