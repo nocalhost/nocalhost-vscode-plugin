@@ -22,3 +22,4 @@ export const PORT_FORWARD = "Nocalhost.portForward";
 export const EXEC = "Nocalhost.exec";
 
 export const CLEAN_PVC = "Nocalhost.cleanPvc";
+export const LIST_DEPLOYMENTS = "Nocalhost.listDeployments";

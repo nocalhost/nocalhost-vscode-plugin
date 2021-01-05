@@ -1,6 +1,7 @@
 import { useContext, useEffect } from "react";
-import { redirect, updateLogs } from "../store/actions";
+import { redirect, updateDeployments, updateLogs } from "../store/actions";
 import { store } from "../store/store";
+import { IDeployments } from "../store/store.types";
 
 export default function useMessage() {
   const { dispatch } = useContext(store);
@@ -10,15 +11,35 @@ export default function useMessage() {
     const { type, payload } = data;
     switch (type) {
       case "location/redirect": {
-        dispatch(redirect(payload.url));
-        break;
+        return dispatch(redirect(payload.url));
       }
       case "logs/update": {
-        dispatch(updateLogs(payload.logs));
-        break;
+        return dispatch(updateLogs(payload.logs));
+      }
+      case "deployments/update": {
+        const deployments: IDeployments = {
+          id: payload.deployments.id,
+          items: payload.deployments.items.map((item: any) => ({
+            name: item.metadata?.name || "",
+            namespace: item.metadata?.namespace || "",
+            pods: `${item.status?.readyReplicas}/${item.status?.replicas}`,
+            replicas: item.status?.replicas,
+            createdTime: item.metadata?.creationTimestamp,
+            conditions: item.status?.conditions?.reduce(
+              (acc: string[], condition: any) => {
+                return [
+                  ...acc,
+                  ...(condition.status === "True" ? [condition.type] : []),
+                ];
+              },
+              []
+            ),
+          })),
+        };
+        return dispatch(updateDeployments(deployments));
       }
       default:
-        break;
+        return;
     }
   };
 

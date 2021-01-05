@@ -36,3 +36,5 @@ export const TMP_WORKLOAD = "tmpWorkload";
 export const TMP_RESOURCE_TYPE = "tmpResourceType";
 export const TMP_KUBECONFIG_PATH = "tmpKubeconfigPath";
 export const TMP_STORAGE_CLASS = "tmpStorageClass";
+
+export const DATA_CENTER_INTERVAL_MS = 5000;

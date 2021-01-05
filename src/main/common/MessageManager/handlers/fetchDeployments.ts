@@ -6,15 +6,9 @@ import services from "../../DataCenter/services";
 
 const dataCenter = DataCenter.getInstance();
 
-export default async function fetchLogs(message: IMessage) {
+export default async function fetchDeployments(message: IMessage) {
   const { payload } = message;
-  if (
-    !payload ||
-    !payload.id ||
-    !payload.app ||
-    !payload.pod ||
-    !payload.container
-  ) {
+  if (!payload || !payload.id || !payload.app) {
     return;
   }
   const applicationMeta:
@@ -22,21 +16,21 @@ export default async function fetchLogs(message: IMessage) {
     | undefined = dataCenter.getApplicationMeta(payload.app);
   if (applicationMeta) {
     const kubeConfig: string = applicationMeta.kubeconfig;
-    const res: string = await services.fetchLogs(
-      payload.pod,
-      payload.container,
-      payload.tail,
-      kubeConfig
-    );
-    const items: string[] = res.split("\n");
-    NocalhostWebviewPanel.postMessage({
-      type: "logs/update",
-      payload: {
-        logs: {
-          id: payload.logId,
-          items,
+    const rawData: string = await services.fetchDeployments(kubeConfig);
+    try {
+      const data: any = JSON.parse(rawData);
+      const items: any[] = data.items;
+      NocalhostWebviewPanel.postMessage({
+        type: "deployments/update",
+        payload: {
+          deployments: {
+            id: payload.id,
+            items,
+          },
         },
-      },
-    });
+      });
+    } catch (e) {
+      console.log(e, rawData);
+    }
   }
 }

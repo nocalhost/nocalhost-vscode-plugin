@@ -28,10 +28,6 @@ export default class RefreshCommand implements ICommand {
       this.startTime = Date.now();
       this.flag = false;
     }
-    if (this.provider.refreshTimer && this.provider.refreshTimeMS) {
-      clearTimeout(this.provider.refreshTimer);
-      this.provider.startRefreshInterval(this.provider.refreshTimeMS);
-    }
     this.provider.refresh(node);
   }
 }

@@ -5,8 +5,6 @@ import nocalhostState from "./state";
 
 export default class NocalhostAppProvider
   implements vscode.TreeDataProvider<BaseNocalhostNode> {
-  public refreshTimeMS: number | null = null;
-  public refreshTimer: NodeJS.Timer | null = null;
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
     BaseNocalhostNode | undefined
   >();
@@ -42,14 +40,7 @@ export default class NocalhostAppProvider
   }
 
   refresh(node?: BaseNocalhostNode) {
+    console.log("> refresh...");
     this.onDidChangeTreeDataEventEmitter.fire(node);
-  }
-
-  startRefreshInterval(ms: number): void {
-    this.refreshTimeMS = ms;
-    this.refreshTimer = setTimeout(() => {
-      this.refresh();
-      this.startRefreshInterval(ms);
-    }, ms);
   }
 }

@@ -18,6 +18,7 @@ import StartDevModeCommand from "./StartDevModeCommand";
 import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
 import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
+import ListDeploymentsCommand from "./ListDeploymentsCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -45,4 +46,5 @@ export default function initCommands(
   new ResetCommand(context);
   new CleanPvcCommand(context);
   new ResetAppCommand(context);
+  new ListDeploymentsCommand(context);
 }

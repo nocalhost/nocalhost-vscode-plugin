@@ -1,9 +1,10 @@
-import { ILogs } from "../store.types";
+import { IDeployments, ILogs } from "../store.types";
 
 export enum ActionType {
   redirect = "redirect",
   toggleTheme = "theme/toggle",
   updateLogs = "logs/update",
+  updateDeployments = "deployments/update",
 }
 
 export interface IRedirect {
@@ -21,4 +22,13 @@ export interface IUpdateLogs {
   payload: { logs: ILogs };
 }
 
-export type Actions = IRedirect | IToggleTheme | IUpdateLogs;
+export interface IUpdateDeployments {
+  type: ActionType.updateDeployments;
+  payload: { deployments: IDeployments };
+}
+
+export type Actions =
+  | IRedirect
+  | IToggleTheme
+  | IUpdateLogs
+  | IUpdateDeployments;

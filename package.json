@@ -147,8 +147,8 @@
     },
     "commands": [
       {
-        "command": "Nocalhost.showDashboard",
-        "title": "Show Dashboard"
+        "command": "Nocalhost.listDeployments",
+        "title": "List Deployments"
       },
       {
         "command": "Nocalhost.switchEndPoint",
@@ -277,6 +277,7 @@
   },
   "devDependencies": {
     "@material-ui/core": "^4.11.0",
+    "@material-ui/data-grid": "^4.0.0-alpha.14",
     "@material-ui/icons": "^4.9.1",
     "@types/glob": "^7.1.3",
     "@types/mocha": "^8.0.0",
