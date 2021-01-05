@@ -119,7 +119,9 @@ export default class DataCenter {
     return this.dataStore.applications;
   }
 
-  public getApplicationMeta(applicationName: string): ApplicationMeta | undefined {
+  public getApplicationMeta(
+    applicationName: string
+  ): ApplicationMeta | undefined {
     return this.dataStore.applicationMetas.get(applicationName);
   }
 
