@@ -142,6 +142,11 @@
           "command": "Nocalhost.loadResource",
           "title": "%loadResource%",
           "when": "viewItem =~ /^application-installed/i"
+        },
+        {
+          "command": "Nocalhost.viewKubeConfig",
+          "when": "viewItem =~ /^application/i",
+          "group": "navigation"
         }
       ]
     },
@@ -183,6 +188,10 @@
         "command": "Nocalhost.uninstallApp",
         "title": "Uninstall App",
         "icon": "$(trash)"
+      },
+      {
+        "command": "Nocalhost.viewKubeConfig",
+        "title": "%ViewKubeConfig%"
       },
       {
         "command": "getWordloadList",
