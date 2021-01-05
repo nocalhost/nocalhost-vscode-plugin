@@ -98,8 +98,9 @@ export class Host {
     return vscode.window.showOpenDialog(options);
   }
 
-  showSelectFolderDialog(title: string) {
+  showSelectFolderDialog(title: string, defaultUri?: vscode.Uri) {
     return this.showOpenDialog({
+      defaultUri: defaultUri,
       canSelectFolders: true,
       canSelectFiles: false,
       canSelectMany: false,

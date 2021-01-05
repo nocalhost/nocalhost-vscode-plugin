@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import NocalhostAppProvider from "../appProvider";
+import AssociateLocalDirectoryCommand from "./AssociateDirectoryCommand";
 import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
@@ -47,4 +48,5 @@ export default function initCommands(
   new CleanPvcCommand(context);
   new ResetAppCommand(context);
   new ViewKubeConfigCommand(context);
+  new AssociateLocalDirectoryCommand(context);
 }
