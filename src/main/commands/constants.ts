@@ -22,7 +22,6 @@ export const PORT_FORWARD = "Nocalhost.portForward";
 export const EXEC = "Nocalhost.exec";
 
 export const CLEAN_PVC = "Nocalhost.cleanPvc";
-
+export const LOAD_WORKLOADS = "Nocalhost.loadWorkloads";
 export const VIEW_KUBECONFIG = "Nocalhost.viewKubeConfig";
-
 export const ASSOCIATE_LOCAL_DIRECTORY = "Nocalhost.associateLocalDirectory";

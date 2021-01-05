@@ -4,7 +4,6 @@ import { LOG } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import * as kubectl from "../ctl/kubectl";
-import * as shell from "../ctl/shell";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { Pod } from "../nodes/workloads/pod/Pod";
@@ -32,10 +31,10 @@ export default class LogCommand implements ICommand {
         title: `${podName}/${containerName}`,
         newTab: true,
         query: {
-          logId: node.getNodeStateId(),
+          id: node.getNodeStateId(),
+          app: node.getAppName(),
           pod: podName,
           container: containerName,
-          kubeConfig,
         },
       });
     }

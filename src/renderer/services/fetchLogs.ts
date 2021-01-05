@@ -1,17 +1,17 @@
 import { postMessage } from "../utils/index";
 
 export interface IFetchLogsParam {
-  logId: string;
+  id: string;
+  app: string;
   pod: string;
   container: string;
-  kubeConfig: string;
   tail?: number;
 }
 
 export default function fetchLogs(param: IFetchLogsParam): void {
-  const { logId, pod, container, kubeConfig, tail } = param;
+  const { id, app, pod, container, tail } = param;
   postMessage({
     type: "logs/fetch",
-    payload: { logId, pod, container, kubeConfig, tail },
+    payload: { id, app, pod, container, tail },
   });
 }

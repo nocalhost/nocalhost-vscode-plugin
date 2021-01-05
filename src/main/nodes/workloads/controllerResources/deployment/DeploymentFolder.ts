@@ -64,4 +64,18 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     });
     return result;
   }
+
+  getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
+    let treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.None
+    );
+    treeItem.label = this.label;
+    treeItem.command = {
+      command: "Nocalhost.listDeployments",
+      title: "listDeployments",
+      arguments: [this],
+    };
+    return treeItem;
+  }
 }

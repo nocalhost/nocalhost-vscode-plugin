@@ -271,6 +271,13 @@ export default class NocalhostWebviewPanel {
               font-style: normal;
             }
           </style>
+          <script>
+            window.process = {
+              env: {
+                NODE_ENV: "production",
+              }
+            }
+          </script>
         </head>
         <body>
           <div id="root"></div>

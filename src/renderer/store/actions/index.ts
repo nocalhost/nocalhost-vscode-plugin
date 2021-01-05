@@ -1,8 +1,9 @@
-import { ILogs } from "../store.types";
+import { IDeployments, ILogs } from "../store.types";
 import {
   ActionType,
   IRedirect,
   IToggleTheme,
+  IUpdateDeployments,
   IUpdateLogs,
 } from "./actions.types";
 
@@ -19,4 +20,11 @@ export const toggleTheme = (theme: string): IToggleTheme => ({
 export const updateLogs = (logs: ILogs): IUpdateLogs => ({
   type: ActionType.updateLogs,
   payload: { logs },
+});
+
+export const updateDeployments = (
+  deployments: IDeployments
+): IUpdateDeployments => ({
+  type: ActionType.updateDeployments,
+  payload: { deployments },
 });
