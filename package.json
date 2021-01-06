@@ -20,6 +20,12 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "yamlValidation": [
+      {
+        "fileMatch": ".nocalhost/*.yaml",
+        "url": "./schemas/nocalhost.config.json"
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -293,6 +299,9 @@
       "pre-commit": "yarn run prettier && yarn run lint && yarn run ts-compile-check"
     }
   },
+  "extensionDependencies": [
+    "redhat.vscode-yaml"
+  ],
   "devDependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",

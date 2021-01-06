@@ -1,0 +1,324 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Nocalhost config schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$",
+      "description": "Application name",
+      "examples": [
+        "hello"
+      ]
+    },
+    "manifestType": {
+      "type": "string",
+      "enum": [
+        "helmGit",
+        "helmRepo",
+        "rawManifest"
+      ],
+      "description": "Application k8s manifest type \n type: select，options：helmGit/helmRepo/rawManifest",
+      "$comment": "Application k8s manifest type \n type: select，options：helmGit/helmRepo/rawManifest",
+      "examples": [
+        "rawManifest"
+      ]
+    },
+    "resourcePath": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "helmGit: chart path: relative path of git repo root. \n helmRepo: no meaning \n rawManifest: manifest files path: multi relative paths of git repo root"
+    },
+    "minimalInstall": {
+      "type": "boolean",
+      "description": "Install application with minimal replica size (Not currently implemented)",
+      "default": false
+    },
+    "onPreInstall": {
+      "type": "array",
+      "description": "The jobs to be executed before application's installation.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Job yaml file, the relative path of the repo root",
+            "default": "job-1.yaml"
+          },
+          "name": {
+            "type": "string",
+            "description": "Job name",
+            "default": "xxx-job"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Order of execution of job, the smallest be executed firstly.",
+            "default": -1
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    },
+    "onPreUninstall": {
+      "type": "array",
+      "description": "The jobs to be executed before application's uninstallation. (Not currently implemented)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Job yaml file, the relative path of the repo root",
+            "default": "job-1.yaml"
+          },
+          "name": {
+            "type": "string",
+            "description": "Job name",
+            "default": "xxx-job"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Order of execution of job, the smallest be executed firstly.",
+            "default": -1
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    },
+    "onPostInstall": {
+      "type": "array",
+      "description": "The jobs to be executed after application's installation. (Not currently implemented)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Job yaml file, the relative path of the repo root",
+            "default": "job-1.yaml"
+          },
+          "name": {
+            "type": "string",
+            "description": "Job name",
+            "default": "xxx-job"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Order of execution of job, the smallest be executed firstly.",
+            "default": -1
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    },
+    "onPostUninstall": {
+      "type": "array",
+      "description": "The jobs to be executed after application's uninstallation. (Not currently implemented)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Job yaml file, the relative path of the repo root",
+            "default": "job-1.yaml"
+          },
+          "name": {
+            "type": "string",
+            "description": "Job name",
+            "default": "xxx-job"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Order of execution of job, the smallest be executed firstly.",
+            "default": -1
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    },
+    "services": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The Application's micro services",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of service, the name of workload in cluster",
+            "default": "test"
+          },
+          "serviceType": {
+            "type": "string",
+            "description": "The Kubernetes Workloads type corresponding to the service",
+            "enum": [
+              "deployment",
+              "statefulset",
+              "pod",
+              "job",
+              "cronjob",
+              "daemonset"
+            ],
+            "default": "deployment"
+          },
+          "gitUrl": {
+            "type": "string",
+            "description": "The git repository clone url of the service",
+            "default": "https://github.com/nocalhost/nocalhost.git"
+          },
+          "devContainerImage": {
+            "type": "string",
+            "description": "DevContainer Image of the micro service",
+            "default": "xxxx/xxxxx"
+          },
+          "devContainerShell": {
+            "type": "string",
+            "description": "The default shell of DevContainer (Not currently implemented)",
+            "default": "/bin/sh"
+          },
+          "syncType": {
+            "type": "string",
+            "description": "The synchronization file mode of the service (Not currently implemented) \n \"send\" specifies one-way synchronization to the container, \n \"sendreceive\" specifies two-way synchronization",
+            "enum": [
+              "send",
+              "sendreceive"
+            ],
+            "default": "send"
+          },
+          "syncFilePattern": {
+            "type": "array",
+            "description": "List of files and directories to be synchronized to DevContainer",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "."
+            ]
+          },
+          "ignoreFilePattern": {
+            "type": "array",
+            "description": "List of ignored files and directories to be synchronized to DevContainer",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "devPorts": {
+            "type": "array",
+            "description": "Ports to be forwarded to local when enter devMode",
+            "items": {
+              "type": "string",
+              "pattern": "^\\d*:\\d*$"
+            },
+            "default": []
+          },
+          "dependPodsLabelSelector": {
+            "type": "array",
+            "description": "Dependent Pods label selector (The service will not start until the Pods selected by selector being ready.)",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "dependJobsLabelSelector": {
+            "type": "array",
+            "description": "Dependent Jobs label selector (The service will not start until the Jobs selected by selector completed.)",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "workDir": {
+            "type": "string",
+            "description": "The work directory of DevContainer",
+            "default": "/home/nocalhost-dev"
+          },
+          "persistentVolumeDir": {
+            "type": "array",
+            "description": "Dirs to be persisted in DevContainer",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Dir to be persisted in DevContainer",
+                  "require": true
+                },
+                "capacity": {
+                  "type": "string",
+                  "description": "Capability of the dir",
+                  "default": "10Gi"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            },
+            "default": []
+          },
+          "buildCommand": {
+            "type": "array",
+            "description": "Build command of the service",
+            "items": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "runCommand": {
+            "type": "array",
+            "description": "Run command of the service",
+            "items": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "debugCommand": {
+            "type": "array",
+            "description": "Debug command of the service",
+            "items": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "hotReloadRunCommand": {
+            "type": "array",
+            "description": "Hot-reload run command of the service",
+            "items": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "remoteDebugPort": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65565,
+            "description": "Ports of remote debugging (Not currently implemented)"
+          },
+          "useDevContainer": {
+            "type": "boolean",
+            "description": "Use .dev-container of VSCode to specify DevContainer Image (Not currently implemented)"
+          }
+        },
+        "required": [
+          "name",
+          "serviceType",
+          "gitUrl",
+          "devContainerImage"
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "manifestType",
+    "resourcePath"
+  ]
+}
