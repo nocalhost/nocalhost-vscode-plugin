@@ -156,6 +156,14 @@ export class Host {
       }
     }, timeDuring || 5000);
   }
+
+  getCurrentRootPath() {
+    return (
+      vscode.workspace.workspaceFolders &&
+      vscode.workspace.workspaceFolders.length > 0 &&
+      vscode.workspace.workspaceFolders[0].uri.fsPath
+    );
+  }
 }
 
 export default new Host();
