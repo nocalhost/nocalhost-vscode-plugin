@@ -54,13 +54,11 @@ export default class UninstallCommand implements ICommand {
     devSpaceId: number
   ) {
     host.log(`Uninstalling application: ${appName}`, true);
-    host.showInformationMessage(`Uninstalling application: ${appName}`);
     await nhctl.uninstall(host, kubeconfigPath, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     fileStore.remove(appName);
     state.delete(appName);
     host.log(`Application ${appName} uninstalled`, true);
-    host.showInformationMessage(`Application ${appName} uninstalled`);
   }
 
   private getKubeConfigPath(appNode: AppNode): string {

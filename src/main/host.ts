@@ -42,13 +42,14 @@ export class Host {
   }
 
   public showProgressing(
+    title: string,
     aciton: (
       progress: Progress<{ message?: string; increment?: number }>
     ) => Thenable<unknown>
   ) {
     return vscode.window.withProgress(
       {
-        title: "Starting DevMode",
+        title,
         location: vscode.ProgressLocation.Notification,
         cancellable: false,
       },
