@@ -102,7 +102,7 @@ export default class StartDevModeCommand implements ICommand {
       });
       if (saveUris && saveUris.length > 0) {
         destDir = path.resolve(saveUris[0].fsPath, workloadName);
-        await host.showProgressing(async (progress) => {
+        await host.showProgressing("Starting DevMode", async (progress) => {
           progress.report({
             message: "cloning code",
           });

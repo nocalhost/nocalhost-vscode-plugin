@@ -83,12 +83,17 @@ export async function uninstall(
   kubeconfigPath: string,
   appName: string
 ) {
-  const uninstallCommand = nhctlCommand(
-    kubeconfigPath,
-    `uninstall ${appName} --force`
+  await host.showProgressing(
+    `Unnnstalling application: ${appName}`,
+    async (progress) => {
+      const uninstallCommand = nhctlCommand(
+        kubeconfigPath,
+        `uninstall ${appName} --force`
+      );
+      host.log(`[cmd] ${uninstallCommand}`, true);
+      await execChildProcessAsync(host, uninstallCommand, []);
+    }
   );
-  host.log(`[cmd] ${uninstallCommand}`, true);
-  await execChildProcessAsync(host, uninstallCommand, []);
 }
 
 export async function devStart(
