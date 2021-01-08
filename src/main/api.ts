@@ -87,7 +87,7 @@ export interface ApplicationInfo {
 }
 
 export async function getApplication() {
-  const response = await axios.get("/v1/plugin/applications");
+  const response = await axios.get("/v1/plugin/dev_space");
   const res = response.data as ResponseData;
   const applications = res.data;
   const result = new Array<ApplicationInfo>();
@@ -117,7 +117,7 @@ export async function updateAppInstallStatus(
   status: number
 ) {
   return axios.put(
-    `/v1/application/${appId}/dev_space/${devSpaceId}/plugin_sync`,
+    `/v1/plugin/application/${appId}/dev_space/${devSpaceId}/plugin_sync`,
     { status }
   );
 }
