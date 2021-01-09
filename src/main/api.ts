@@ -89,7 +89,7 @@ export interface ApplicationInfo {
 export async function getApplication() {
   const response = await axios.get("/v1/plugin/applications");
   const res = response.data as ResponseData;
-  const applications = res.data;
+  const applications = res.data || [];
   const result = new Array<ApplicationInfo>();
   for (let i = 0; i < applications.length; i++) {
     const app: ApplicationInfo = {
