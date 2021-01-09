@@ -12,6 +12,7 @@ import {
   TMP_STATUS,
   TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
+  TMP_WORKLOAD_PATH,
 } from "../constants";
 import host, { Host } from "../host";
 import * as path from "path";
@@ -76,7 +77,11 @@ export default class StartDevModeCommand implements ICommand {
     const uri = vscode.Uri.file(destDir);
     if (currentUri !== uri.fsPath) {
       vscode.commands.executeCommand("vscode.openFolder", uri, true);
-      this.setTmpStartRecord(appName, node as ControllerResourceNode);
+      this.setTmpStartRecord(
+        appName,
+        uri.fsPath,
+        node as ControllerResourceNode
+      );
     }
   }
 
@@ -97,7 +102,7 @@ export default class StartDevModeCommand implements ICommand {
       });
       if (saveUris && saveUris.length > 0) {
         destDir = path.resolve(saveUris[0].fsPath, workloadName);
-        await host.showProgressing(async (progress) => {
+        await host.showProgressing("Starting DevMode", async (progress) => {
           progress.report({
             message: "cloning code",
           });
@@ -280,13 +285,18 @@ export default class StartDevModeCommand implements ICommand {
     );
   }
 
-  private setTmpStartRecord(appName: string, node: ControllerResourceNode) {
+  private setTmpStartRecord(
+    appName: string,
+    workloadPath: string,
+    node: ControllerResourceNode
+  ) {
     const appNode = node.getAppNode();
     fileStore.set(TMP_APP, appName);
     fileStore.set(TMP_WORKLOAD, node.name);
     fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
     fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKUbeconfigPath());
+    fileStore.set(TMP_WORKLOAD_PATH, workloadPath);
     const storageClass = node.getStorageClass();
     if (storageClass) {
       fileStore.set(TMP_STORAGE_CLASS, storageClass);

@@ -33,6 +33,7 @@ export const WELCOME_DID_SHOW = "welcomeDidShow";
 export const TMP_STATUS = "tmpStatus";
 export const TMP_APP = "tmpApp";
 export const TMP_WORKLOAD = "tmpWorkload";
+export const TMP_WORKLOAD_PATH = "tmpWorkloadPath";
 export const TMP_RESOURCE_TYPE = "tmpResourceType";
 export const TMP_KUBECONFIG_PATH = "tmpKubeconfigPath";
 export const TMP_STORAGE_CLASS = "tmpStorageClass";
