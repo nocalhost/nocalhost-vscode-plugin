@@ -1,6 +1,6 @@
 import messageDefaultHandler from "./handlers/index";
 
-export type MessageListener = (message: IMessage) => void;
+export type MessageListener = (message: IMessage, id: number) => void;
 export interface IMessage {
   type: string;
   payload?: {
@@ -40,10 +40,10 @@ export default class MessageManager {
     this.listeners.splice(index, 1);
   }
 
-  notify(message: IMessage): void {
+  notify(message: IMessage, id: number): void {
     if (this.listeners.length > 0) {
       this.listeners.forEach((listener: MessageListener) => {
-        listener.call(this, message);
+        listener.call(this, message, id);
       });
     }
   }
