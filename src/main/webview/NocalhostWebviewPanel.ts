@@ -9,7 +9,7 @@ import Stack from "../common/Stack";
 import CallableStack from "../common/Stack/CallableStack";
 import * as fileStore from "../store/fileStore";
 
-interface IOpenProps {
+interface IWebviewOpenProps {
   url: string;
   title?: string;
   newTab?: boolean;
@@ -38,7 +38,7 @@ export default class NocalhostWebviewPanel {
   private activeHandlerStack: CallableStack = new CallableStack();
   private inactiveHandlerStack: CallableStack = new CallableStack();
 
-  public static open(props: IOpenProps) {
+  public static open(props: IWebviewOpenProps) {
     let url: string = props.url;
     const title: string = props.title || "Nocalhost";
     const newTab: boolean = props.newTab || false;
