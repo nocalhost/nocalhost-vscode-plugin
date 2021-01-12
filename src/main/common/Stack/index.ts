@@ -18,7 +18,7 @@ export default class Stack {
   }
 
   public pop(): any {
-    return this.dataStore[--this.top];
+    return this.length() > 0 ? this.dataStore[--this.top] : undefined;
   }
 
   public peek(): any {

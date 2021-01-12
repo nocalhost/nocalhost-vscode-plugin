@@ -4,7 +4,6 @@ import { LOG } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import * as kubectl from "../ctl/kubectl";
-import * as shell from "../ctl/shell";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { Pod } from "../nodes/workloads/pod/Pod";
@@ -26,11 +25,17 @@ export default class LogCommand implements ICommand {
     ({ podName, containerName } = await this.getPodAndContainer(node));
 
     if (podName && containerName) {
-      NocalhostWebviewPanel.open("/logs", `${podName}/${containerName}`, {
-        id: node.getNodeStateId(),
-        app: node.getAppName(),
-        pod: podName,
-        container: containerName,
+      const kubeConfig: string = node.getKubeConfigPath();
+      NocalhostWebviewPanel.open({
+        url: "/logs",
+        title: `${podName}/${containerName}`,
+        newTab: true,
+        query: {
+          id: node.getNodeStateId(),
+          app: node.getAppName(),
+          pod: podName,
+          container: containerName,
+        },
       });
     }
   }

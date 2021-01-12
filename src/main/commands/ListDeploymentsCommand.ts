@@ -18,9 +18,14 @@ export default class ListDeploymentsCommand implements ICommand {
     }
     const appName: string = node.getAppName();
     if (appName) {
-      NocalhostWebviewPanel.open("/deployments", `${appName}/deployments`, {
-        id: node.getNodeStateId(),
-        app: node.getAppName(),
+      NocalhostWebviewPanel.open({
+        url: "/deployments",
+        title: `${appName}/deployments`,
+        newTab: true,
+        query: {
+          id: node.getNodeStateId(),
+          app: node.getAppName(),
+        },
       });
     }
   }
