@@ -4,6 +4,7 @@ import { useHistory } from "react-router-dom";
 import useMessage from "../../hooks/useMessage";
 import useTheme from "../../hooks/useTheme";
 import { store } from "../../store/store";
+import updateURL from "../../services/updateURL";
 
 const useStyles = makeStyles(() =>
   createStyles({
@@ -28,6 +29,7 @@ export default function (props: { children: JSX.Element }): JSX.Element {
 
   useEffect(() => {
     history.push(url);
+    updateURL(url);
   }, [url]);
 
   return <div className={classes.root}>{props.children}</div>;

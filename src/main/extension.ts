@@ -157,7 +157,7 @@ async function init(context: vscode.ExtensionContext) {
 
   const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
   if (!welcomeDidShow) {
-    NocalhostWebviewPanel.open("/welcome", "Welcome");
+    NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
     fileStore.set(WELCOME_DID_SHOW, true);
   }
 }

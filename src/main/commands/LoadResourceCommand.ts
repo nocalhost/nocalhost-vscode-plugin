@@ -21,10 +21,10 @@ export default class LoadResourceCommand implements ICommand {
       const kind = node.resourceType;
       const name = node.name;
       const uri = vscode.Uri.parse(
-        `Nocalhost://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&&time=${new Date()}`
+        `Nocalhost://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&time=${+new Date()}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(doc, { preview: false });
+      await vscode.window.showTextDocument(doc, { preview: true });
     } else if (node instanceof AppNode) {
       if (!node.installed()) {
         host.showInformationMessage(`${node.label} is not installed.`);
@@ -32,10 +32,10 @@ export default class LoadResourceCommand implements ICommand {
       }
       const name = node.name;
       const uri = vscode.Uri.parse(
-        `Nocalhost://nh/loadResource/${name}.yaml?&&time=${new Date()}`
+        `Nocalhost://nh/loadResource/${name}.yaml?time=${+new Date()}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(doc, { preview: false });
+      await vscode.window.showTextDocument(doc, { preview: true });
     }
   }
 }

@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as shell from "../../../ctl/shell";
 import { IMessage } from "..";
 import fetchLogs from "./fetchLogs";
+import updateURL from "./updateURL";
 
 export async function ctlFetch(command: string): Promise<string> {
   let result: string = "";
@@ -14,15 +15,19 @@ export async function ctlFetch(command: string): Promise<string> {
   return result;
 }
 
-export default function (message: IMessage) {
+export default function (message: IMessage, id: number) {
   const { type } = message;
   switch (type) {
     case "executeCommand": {
       vscode.commands.executeCommand(message.payload?.command);
       break;
     }
+    case "url/update": {
+      updateURL(message, id);
+      break;
+    }
     case "logs/fetch": {
-      fetchLogs(message);
+      fetchLogs(message, id);
       break;
     }
     default:

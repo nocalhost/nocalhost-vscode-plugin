@@ -2,7 +2,7 @@ import { ctlFetch } from "./index";
 import { IMessage } from "..";
 import NocalhostWebviewPanel from "../../../webview/NocalhostWebviewPanel";
 
-export default async function fetchLogs(message: IMessage) {
+export default async function fetchLogs(message: IMessage, id: number) {
   const { payload } = message;
   if (
     !payload ||
@@ -18,13 +18,16 @@ export default async function fetchLogs(message: IMessage) {
   } ${payload.pod} -c ${payload.container} --kubeconfig ${payload.kubeConfig}`;
   const res: string = await ctlFetch(command);
   const items: string[] = res.split("\n");
-  NocalhostWebviewPanel.postMessage({
-    type: "logs/update",
-    payload: {
-      logs: {
-        id: payload.logId,
-        items,
+  NocalhostWebviewPanel.postMessage(
+    {
+      type: "logs/update",
+      payload: {
+        logs: {
+          id: payload.logId,
+          items,
+        },
       },
     },
-  });
+    id
+  );
 }
