@@ -6,7 +6,7 @@ interface ShellResult {
   stderr: string;
 }
 
-export async function execAsync(
+export async function execAsyncWithReturn(
   command: string,
   args: Array<any>
 ): Promise<ShellResult> {

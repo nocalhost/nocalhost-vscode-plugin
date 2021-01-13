@@ -46,7 +46,7 @@ export default class ExecCommand implements ICommand {
   ) {
     let defaultShell = "sh";
     for (let i = 0; i < ExecCommand.defaultShells.length; i++) {
-      const shellObj = await shell.execAsync(
+      const shellObj = await shell.execAsyncWithReturn(
         `kubectl exec ${podName} -c ${constainerName} --kubeconfig ${kubeConfigPath} -- which ${ExecCommand.defaultShells[i]}`,
         []
       );
