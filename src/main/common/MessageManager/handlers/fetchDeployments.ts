@@ -30,7 +30,8 @@ export default async function fetchDeployments(message: IMessage) {
         },
       });
     } catch (e) {
-      console.log(e, rawData);
+      console.log("[error] fetchDeployments: ", e);
+      console.log("[error] rawData: ", rawData);
     }
   }
 }
