@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { execAsync } from "./shell";
+import { execAsyncWithReturn } from "./shell";
 import * as shell from "shelljs";
 import {
   ControllerResource,
@@ -15,7 +15,7 @@ export async function exec(command: string, kubeconfigPath: string) {
     return;
   }
 
-  const res = await execAsync(
+  const res = await execAsyncWithReturn(
     `kubectl ${command} --kubeconfig ${kubeconfigPath}`,
     []
   );
