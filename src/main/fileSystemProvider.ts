@@ -96,7 +96,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           const node = state.getNode(id) as KubernetesResourceNode;
           const podName = paths[2];
           const containerName = paths[3];
-          const shellObj = await shell.execAsync(
+          const shellObj = await shell.execAsyncWithReturn(
             `kubectl logs ${podName} -c ${containerName} --kubeconfig ${node.getKubeConfigPath()}`,
             []
           );

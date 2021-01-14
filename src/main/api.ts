@@ -37,6 +37,7 @@ axios.interceptors.response.use(
       state.setLogin(false);
     }
     if (res.code !== 0) {
+      vscode.window.showErrorMessage(res.message || "");
       return Promise.reject(res);
     }
 
