@@ -120,7 +120,7 @@ const Logs: React.FC = () => {
   }, [theme]);
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} data-testid="logs">
       {logs.items.length > 0 ? renderList() : renderNoContent()}
     </div>
   );

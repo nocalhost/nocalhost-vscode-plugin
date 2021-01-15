@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import ICommand from "./ICommand";
-import { LIST_DEPLOYMENTS } from "./constants";
+import { LOAD_WORKLOADS } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import NocalhostWebviewPanel from "../webview/NocalhostWebviewPanel";
 import { DeploymentFolder } from "../nodes/workloads/controllerResources/deployment/DeploymentFolder";
 
-export default class ListDeploymentsCommand implements ICommand {
-  command: string = LIST_DEPLOYMENTS;
+export default class LoadWorkloadsCommand implements ICommand {
+  command: string = LOAD_WORKLOADS;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
@@ -19,12 +19,13 @@ export default class ListDeploymentsCommand implements ICommand {
     const appName: string = node.getAppName();
     if (appName) {
       NocalhostWebviewPanel.open({
-        url: "/deployments",
-        title: `${appName}/deployments`,
+        url: "/workloads",
+        title: `${appName}/workloads`,
         newTab: true,
         query: {
           id: node.getNodeStateId(),
           app: node.getAppName(),
+          type: node.label,
         },
       });
     }
