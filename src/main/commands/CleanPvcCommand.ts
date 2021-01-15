@@ -51,5 +51,6 @@ export default class CleanPvcCommand implements ICommand {
       pvcName = pvcMap.get(result);
     }
     await nhctl.cleanPVC(appName, workloadName, pvcName);
+    host.showInformationMessage("cleared pvc");
   }
 }
