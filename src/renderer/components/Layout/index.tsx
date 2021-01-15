@@ -28,7 +28,7 @@ export default function (props: { children: JSX.Element }): JSX.Element {
   useTheme();
 
   useEffect(() => {
-    history.push(url);
+    history.replace(url);
     updateURL(url);
   }, [url]);
 

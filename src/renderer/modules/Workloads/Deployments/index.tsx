@@ -1,13 +1,13 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useHistory } from "react-router-dom";
 import qs from "qs";
-import { DataGrid, RowsProp, ColDef } from "@material-ui/data-grid";
-import fetchDeployments from "../../services/fetchDeployments";
-import useInterval from "../../hooks/useInterval";
-import { store } from "../../store/store";
-import { IDeployment } from "../../store/store.types";
 import { createStyles, makeStyles } from "@material-ui/core";
-import { CustomThemeOptions } from "../../themes";
+import { DataGrid, RowsProp, ColDef } from "@material-ui/data-grid";
+import fetchDeployments from "../../../services/fetchDeployments";
+import useInterval from "../../../hooks/useInterval";
+import { store } from "../../../store/store";
+import { IDeployment } from "../../../store/store.types";
+import { CustomThemeOptions } from "../../../themes";
 
 const useStyles = makeStyles((theme: CustomThemeOptions) =>
   createStyles({
@@ -22,6 +22,7 @@ const Deployments: React.FC = () => {
     state: { deployments },
     dispatch,
   } = useContext(store);
+  const [tabValue, setTabValue] = useState(0);
   const history = useHistory();
   const search: string = history.location.search;
   const query: qs.ParsedQs = qs.parse(search, {
@@ -29,6 +30,7 @@ const Deployments: React.FC = () => {
   });
   const classes = useStyles();
 
+  console.log(history);
   useInterval(
     fetchDeployments,
     [

@@ -72,8 +72,8 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     );
     treeItem.label = this.label;
     treeItem.command = {
-      command: "Nocalhost.listDeployments",
-      title: "listDeployments",
+      command: "Nocalhost.loadWorkloads",
+      title: "loadWorkloads",
       arguments: [this],
     };
     return treeItem;
