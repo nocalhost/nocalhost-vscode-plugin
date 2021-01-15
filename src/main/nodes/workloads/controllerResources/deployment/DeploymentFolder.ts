@@ -65,17 +65,19 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     return result;
   }
 
-  getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
-    let treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.None
-    );
-    treeItem.label = this.label;
-    treeItem.command = {
-      command: "Nocalhost.loadWorkloads",
-      title: "loadWorkloads",
-      arguments: [this],
-    };
-    return treeItem;
-  }
+  // TODO: DO NOT DELETE, FOR: [webview integration]
+
+  // getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
+  //   let treeItem = new vscode.TreeItem(
+  //     this.label,
+  //     vscode.TreeItemCollapsibleState.None
+  //   );
+  //   treeItem.label = this.label;
+  //   treeItem.command = {
+  //     command: "Nocalhost.loadWorkloads",
+  //     title: "loadWorkloads",
+  //     arguments: [this],
+  //   };
+  //   return treeItem;
+  // }
 }

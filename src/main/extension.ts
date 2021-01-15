@@ -30,7 +30,7 @@ import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
-import DataCenter from "./common/DataCenter/index";
+// import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -38,8 +38,11 @@ export async function activate(context: vscode.ExtensionContext) {
   await init(context);
   let appTreeProvider = new NocalhostAppProvider();
   initCommands(context, appTreeProvider);
-  const dataCenter: DataCenter = DataCenter.getInstance();
-  dataCenter.addListener(() => appTreeProvider.refresh());
+
+  // TODO: DO NOT DELETE, FOR: [webview integration]
+  // const dataCenter: DataCenter = DataCenter.getInstance();
+  // dataCenter.addListener(() => appTreeProvider.refresh());
+
   let nocalhostFileSystemProvider = new NocalhostFileSystemProvider();
   appTreeView = vscode.window.createTreeView("Nocalhost", {
     treeDataProvider: appTreeProvider,
