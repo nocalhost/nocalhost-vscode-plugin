@@ -58,7 +58,7 @@ const extensionConfig = {
 
 const rendererConfig = {
   target: "node",
-  mode: "none",
+  mode: "production",
   entry: "./src/renderer/index.tsx",
   output: {
     path: path.resolve(__dirname, "..", "dist"),

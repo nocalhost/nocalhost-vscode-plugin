@@ -9,6 +9,15 @@ import Stack from "../common/Stack";
 import CallableStack from "../common/Stack/CallableStack";
 import * as fileStore from "../store/fileStore";
 
+interface IWebviewOpenProps {
+  url: string;
+  title?: string;
+  newTab?: boolean;
+  query?: {
+    [key: string]: any;
+  };
+}
+
 export default class NocalhostWebviewPanel {
   public static readonly viewType: string = "nocalhostWebview";
   public static currentPanel: NocalhostWebviewPanel | null = null;
@@ -29,12 +38,11 @@ export default class NocalhostWebviewPanel {
   private activeHandlerStack: CallableStack = new CallableStack();
   private inactiveHandlerStack: CallableStack = new CallableStack();
 
-  public static open({
-    url = "/",
-    title = "Nocalhost",
-    newTab = false,
-    query = {},
-  }) {
+  public static open(props: IWebviewOpenProps) {
+    let url: string = props.url;
+    const title: string = props.title || "Nocalhost";
+    const newTab: boolean = props.newTab || false;
+    const query = props.query || {};
     const column: vscode.ViewColumn | undefined = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
@@ -271,6 +279,13 @@ export default class NocalhostWebviewPanel {
               font-style: normal;
             }
           </style>
+          <script>
+            window.process = {
+              env: {
+                NODE_ENV: "production",
+              }
+            }
+          </script>
         </head>
         <body>
           <div id="root"></div>

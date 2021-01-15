@@ -10,6 +10,10 @@ const initialState: IStoreState = {
     id: "",
     items: [],
   },
+  deployments: {
+    id: "",
+    items: [],
+  },
 };
 
 const store = createContext<IAppContext>({

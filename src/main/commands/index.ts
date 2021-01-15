@@ -20,6 +20,7 @@ import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
 import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
+import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -47,6 +48,7 @@ export default function initCommands(
   new ResetCommand(context);
   new CleanPvcCommand(context);
   new ResetAppCommand(context);
+  new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
   new AssociateLocalDirectoryCommand(context);
 }
