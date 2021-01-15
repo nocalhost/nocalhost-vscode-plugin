@@ -6,16 +6,25 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { render, RenderResult } from "@testing-library/react";
 import { AppWrapper } from "../App";
 import AppRouter from "../AppRouter";
 import { Actions } from "../store/actions/actions.types";
 import { store } from "../store/store";
 
-type onMountHandler = (dispatch: React.Dispatch<Actions>) => void;
+type mountedHandler = (dispatch: React.Dispatch<Actions>) => void;
+type mockHandler = () => void;
 type TestRunner = () => void;
+export type NocalhostSnapshotWrapper = RenderResult;
 
 interface TesterProps {
-  onMount: onMountHandler;
+  mounted: mountedHandler;
+  mock?: mockHandler;
+}
+
+interface NocalhostTesterProps {
+  mounted: mountedHandler;
+  mock?: mockHandler;
 }
 
 const Tester = (props: TesterProps): JSX.Element => {
@@ -24,7 +33,7 @@ const Tester = (props: TesterProps): JSX.Element => {
   const elementRef: MutableRefObject<HTMLDivElement> = useRef<HTMLDivElement>(
     null
   );
-  const { onMount } = props;
+  const { mounted, mock } = props;
 
   const observe = (element: HTMLElement): MutationObserver => {
     const observer = new MutationObserver((mutations: MutationRecord[]) => {
@@ -45,7 +54,10 @@ const Tester = (props: TesterProps): JSX.Element => {
 
   useEffect(() => {
     const observer: MutationObserver = observe(elementRef.current);
-    onMount(dispatch);
+    if (mock) {
+      mock();
+    }
+    mounted(dispatch);
     setRenderedId(renderedId + 1);
     () => {
       observer.disconnect();
@@ -55,10 +67,35 @@ const Tester = (props: TesterProps): JSX.Element => {
   return <div ref={elementRef} data-rendered-id={renderedId}></div>;
 };
 
+class NocalhostSnapshotTester {
+  private wrapper: RenderResult | null = null;
+  private mounted: mountedHandler | null = null;
+  private mock: mockHandler | null = null;
+
+  constructor(mounted: mountedHandler, mock: mockHandler) {
+    this.mounted = mounted;
+    this.mock = mock;
+    this.wrapper = render(
+      <AppWrapper>
+        <>
+          <AppRouter />
+          <Tester mounted={this.mounted} mock={this.mock} />
+        </>
+      </AppWrapper>
+    );
+  }
+
+  getWrapper(): RenderResult | null {
+    return this.wrapper;
+  }
+}
+
 export default class NocalhostTester {
-  private wrapper: ReactWrapper | null = null;
   private static testRunner: TestRunner | null = null;
   private static delay: number = 30;
+  private wrapper: ReactWrapper | null = null;
+  private mounted: mountedHandler | null = null;
+  private mock: mockHandler | null = null;
 
   public static getRunner(): TestRunner | null {
     return NocalhostTester.testRunner;
@@ -68,12 +105,15 @@ export default class NocalhostTester {
     return NocalhostTester.delay;
   }
 
-  constructor(onMount: onMountHandler) {
+  constructor(props: NocalhostTesterProps) {
+    const { mounted, mock } = props;
+    this.mounted = mounted;
+    this.mock = mock;
     this.wrapper = mount(
       <AppWrapper>
         <>
           <AppRouter />
-          <Tester onMount={onMount} />
+          <Tester mounted={mounted} mock={mock} />
         </>
       </AppWrapper>
     );
@@ -86,5 +126,13 @@ export default class NocalhostTester {
   run(runner: TestRunner, delay = 30): void {
     NocalhostTester.testRunner = runner;
     NocalhostTester.delay = delay;
+  }
+
+  getSnapshotWrapper(): RenderResult {
+    const snapshotTester: NocalhostSnapshotTester = new NocalhostSnapshotTester(
+      this.mounted,
+      this.mock
+    );
+    return snapshotTester.getWrapper();
   }
 }
