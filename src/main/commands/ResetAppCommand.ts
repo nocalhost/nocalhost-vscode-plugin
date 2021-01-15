@@ -42,6 +42,7 @@ export default class ResetAppCommand implements ICommand {
       state.deleteAppState(appNode.name, "uninstalling");
       await resetApp(appNode.devSpaceId);
       vscode.commands.executeCommand("Nocalhost.refresh");
+      host.showInformationMessage(`reset ${appNode.name}`);
     });
   }
 
