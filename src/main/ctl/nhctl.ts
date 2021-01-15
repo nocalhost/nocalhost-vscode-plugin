@@ -55,6 +55,7 @@ export function install(
     },
     () =>
       new Promise((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const env = Object.assign(process.env, { DISABLE_SPINNER: true });
         const proc = spawn(installCommand, [], { shell: true, env });
         let errorStr = "";
