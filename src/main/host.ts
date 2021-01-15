@@ -42,13 +42,14 @@ export class Host {
   }
 
   public showProgressing(
+    title: string,
     aciton: (
       progress: Progress<{ message?: string; increment?: number }>
     ) => Thenable<unknown>
   ) {
     return vscode.window.withProgress(
       {
-        title: "Starting DevMode",
+        title,
         location: vscode.ProgressLocation.Notification,
         cancellable: false,
       },
@@ -98,8 +99,9 @@ export class Host {
     return vscode.window.showOpenDialog(options);
   }
 
-  showSelectFolderDialog(title: string) {
+  showSelectFolderDialog(title: string, defaultUri?: vscode.Uri) {
     return this.showOpenDialog({
+      defaultUri: defaultUri,
       canSelectFolders: true,
       canSelectFiles: false,
       canSelectMany: false,
@@ -154,6 +156,14 @@ export class Host {
         vscode.commands.executeCommand(command, ...args);
       }
     }, timeDuring || 5000);
+  }
+
+  getCurrentRootPath() {
+    return (
+      vscode.workspace.workspaceFolders &&
+      vscode.workspace.workspaceFolders.length > 0 &&
+      vscode.workspace.workspaceFolders[0].uri.fsPath
+    );
   }
 }
 

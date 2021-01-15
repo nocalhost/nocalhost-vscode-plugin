@@ -27,11 +27,16 @@ export default class LogCommand implements ICommand {
 
     if (podName && containerName) {
       const kubeConfig: string = node.getKubeConfigPath();
-      NocalhostWebviewPanel.open("/logs", `${podName}/${containerName}`, {
-        logId: node.getNodeStateId(),
-        pod: podName,
-        container: containerName,
-        kubeConfig,
+      NocalhostWebviewPanel.open({
+        url: "/logs",
+        title: `${podName}/${containerName}`,
+        newTab: true,
+        query: {
+          logId: node.getNodeStateId(),
+          pod: podName,
+          container: containerName,
+          kubeConfig,
+        },
       });
     }
   }

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { execAsync, execChildProcessAsync } from "./shell";
+import { execAsyncWithReturn, execChildProcessAsync } from "./shell";
 import host, { Host } from "../host";
 import { spawn } from "child_process";
 import * as yaml from "yaml";
@@ -55,7 +55,9 @@ export function install(
     },
     () =>
       new Promise((resolve, reject) => {
-        const proc = spawn(installCommand, [], { shell: true });
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+        const proc = spawn(installCommand, [], { shell: true, env });
         let errorStr = "";
         proc.on("close", (code) => {
           if (code === 0) {
@@ -83,12 +85,17 @@ export async function uninstall(
   kubeconfigPath: string,
   appName: string
 ) {
-  const uninstallCommand = nhctlCommand(
-    kubeconfigPath,
-    `uninstall ${appName} --force`
+  await host.showProgressing(
+    `Unnnstalling application: ${appName}`,
+    async (progress) => {
+      const uninstallCommand = nhctlCommand(
+        kubeconfigPath,
+        `uninstall ${appName} --force`
+      );
+      host.log(`[cmd] ${uninstallCommand}`, true);
+      await execChildProcessAsync(host, uninstallCommand, []);
+    }
   );
-  host.log(`[cmd] ${uninstallCommand}`, true);
-  await execChildProcessAsync(host, uninstallCommand, []);
 }
 
 export async function devStart(
@@ -174,19 +181,19 @@ export async function endDevMode(
 export async function loadResource(host: Host, appName: string) {
   const describeCommand = `nhctl describe ${appName}`;
   // host.log(`[cmd] ${describeCommand}`, true);
-  const result = await execAsync(describeCommand, []);
+  const result = await execAsyncWithReturn(describeCommand, []);
   return result.stdout;
 }
 
 export async function getAppInfo(appName: string) {
   const describeCommand = `nhctl plugin get ${appName}`;
-  const result = await execAsync(describeCommand, []);
+  const result = await execAsyncWithReturn(describeCommand, []);
   return result.stdout;
 }
 
 export async function getServiceConfig(appName: string, workloadName: string) {
   const describeCommand = `nhctl plugin get ${appName} -d ${workloadName}`;
-  const result = await execAsync(describeCommand, []);
+  const result = await execAsyncWithReturn(describeCommand, []);
   return result.stdout;
 }
 
@@ -204,7 +211,7 @@ export async function getConfig(appName: string, workloadName?: string) {
   const configCommand = `nhctl config get ${appName} ${
     workloadName ? `-d ${workloadName}` : ""
   }`;
-  const result = await execAsync(configCommand, []);
+  const result = await execAsyncWithReturn(configCommand, []);
   return result.stdout;
 }
 
@@ -216,7 +223,7 @@ export async function editConfig(
   const configCommand = `nhctl config edit ${appName} ${
     workloadName ? `-d ${workloadName}` : ""
   } -c ${contents}`;
-  const result = await execAsync(configCommand, []);
+  const result = await execAsyncWithReturn(configCommand, []);
   return result.stdout;
 }
 
@@ -235,7 +242,7 @@ export async function resetService(
 
 export async function getTemplateConfig(appName: string, workloadName: string) {
   const configCommand = `nhctl config template ${appName} -d ${workloadName}`;
-  const result = await execAsync(configCommand, []);
+  const result = await execAsyncWithReturn(configCommand, []);
   return result.stdout;
 }
 
@@ -251,7 +258,7 @@ export async function listPVC(appName: string, workloadName?: string) {
   const configCommand = `nhctl pvc list --app ${appName} ${
     workloadName ? `--svc ${workloadName}` : ""
   } --yaml`;
-  const result = await execAsync(configCommand, []);
+  const result = await execAsyncWithReturn(configCommand, []);
   const pvcs = yaml.parse(result.stdout) as Array<PVCData>;
   return pvcs;
 }
@@ -265,7 +272,7 @@ export async function cleanPVC(
     workloadName ? `--svc ${workloadName}` : ""
   } ${pvcName ? `--name ${pvcName}` : ""}`;
   host.log(`[cmd] ${cleanCommand}`, true);
-  await execAsync(cleanCommand, []);
+  await execChildProcessAsync(host, cleanCommand, []);
 }
 
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {

@@ -19,6 +19,7 @@ import {
   TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
   WELCOME_DID_SHOW,
+  TMP_WORKLOAD_PATH,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -54,6 +55,11 @@ export async function activate(context: vscode.ExtensionContext) {
       "NocalhostRW",
       nocalhostFileSystemProvider
     ),
+    vscode.window.onDidChangeWindowState((e) => {
+      if (e.focused) {
+        launchDevspace();
+      }
+    }),
   ];
 
   context.subscriptions.push(...subs);
@@ -62,6 +68,23 @@ export async function activate(context: vscode.ExtensionContext) {
     state.setLogin(true);
   }
   host.getOutputChannel().show(true);
+  await vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    true
+  );
+
+  launchDevspace();
+  // appTreeProvider.startRefreshInterval(10000);
+}
+
+function launchDevspace() {
+  const tmpWorkloadPath = fileStore.get(TMP_WORKLOAD_PATH);
+  console.log("currentUri: ", host.getCurrentRootPath());
+  if (tmpWorkloadPath !== host.getCurrentRootPath()) {
+    return;
+  }
+  console.log("launch devspace");
   const tmpApp = fileStore.get(TMP_APP);
   const tmpWorkload = fileStore.get(TMP_WORKLOAD);
   const tmpStatusId = fileStore.get(TMP_STATUS);
@@ -74,6 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
     fileStore.remove(TMP_STATUS);
     fileStore.remove(TMP_RESOURCE_TYPE);
     fileStore.remove(TMP_KUBECONFIG_PATH);
+    fileStore.remove(TMP_WORKLOAD_PATH);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -99,14 +123,6 @@ export async function activate(context: vscode.ExtensionContext) {
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }
-
-  await vscode.commands.executeCommand(
-    "setContext",
-    "extensionActivated",
-    true
-  );
-
-  // appTreeProvider.startRefreshInterval(10000);
 }
 
 export function deactivate() {
@@ -141,7 +157,7 @@ async function init(context: vscode.ExtensionContext) {
 
   const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
   if (!welcomeDidShow) {
-    NocalhostWebviewPanel.open("/welcome", "Welcome");
+    NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
     fileStore.set(WELCOME_DID_SHOW, true);
   }
 }

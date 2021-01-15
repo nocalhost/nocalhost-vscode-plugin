@@ -96,7 +96,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           const node = state.getNode(id) as KubernetesResourceNode;
           const podName = paths[2];
           const containerName = paths[3];
-          const shellObj = await shell.execAsync(
+          const shellObj = await shell.execAsyncWithReturn(
             `kubectl logs ${podName} -c ${containerName} --kubeconfig ${node.getKubeConfigPath()}`,
             []
           );
@@ -172,6 +172,19 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             result = "";
           } else {
             result = await fileUtil.readFile(valuePath);
+          }
+        } else if (type === "kubeConfig") {
+          // Nocalhost://nh/kubeConfig/{appName}.yaml?fsPath=xxx
+          const query = querystring.decode(uri.query);
+          let fsPath = "";
+          if (query) {
+            fsPath = query.fsPath as string;
+          }
+          const isExist = await fileUtil.isExist(fsPath);
+          if (!isExist) {
+            result = "";
+          } else {
+            result = await fileUtil.readFile(fsPath);
           }
         }
         break;

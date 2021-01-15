@@ -17,5 +17,7 @@
   "CleanPvc": "Clear persistent data",
   "loadResource": "Load Resource",
   "Config": "Config",
-  "HelmValues": "Helm Values"
+  "HelmValues": "Helm Values",
+  "ViewKubeConfig": "View KubeConfig",
+  "AssociateLocalDir": "Associate Local Directory"
 }

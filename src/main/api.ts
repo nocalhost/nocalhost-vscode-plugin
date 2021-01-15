@@ -37,6 +37,7 @@ axios.interceptors.response.use(
       state.setLogin(false);
     }
     if (res.code !== 0) {
+      vscode.window.showErrorMessage(res.message || "");
       return Promise.reject(res);
     }
 
@@ -89,7 +90,7 @@ export interface ApplicationInfo {
 export async function getApplication() {
   const response = await axios.get("/v1/plugin/dev_space");
   const res = response.data as ResponseData;
-  const applications = res.data;
+  const applications = res.data || [];
   const result = new Array<ApplicationInfo>();
   for (let i = 0; i < applications.length; i++) {
     const app: ApplicationInfo = {

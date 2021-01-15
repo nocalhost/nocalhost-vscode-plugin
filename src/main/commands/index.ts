@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import NocalhostAppProvider from "../appProvider";
+import AssociateLocalDirectoryCommand from "./AssociateDirectoryCommand";
 import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
@@ -17,6 +18,7 @@ import SignOutCommand from "./SignOutCommand";
 import StartDevModeCommand from "./StartDevModeCommand";
 import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
+import ViewKubeConfigCommand from "./ViewKubeConfig";
 import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
 
 export default function initCommands(
@@ -45,4 +47,6 @@ export default function initCommands(
   new ResetCommand(context);
   new CleanPvcCommand(context);
   new ResetAppCommand(context);
+  new ViewKubeConfigCommand(context);
+  new AssociateLocalDirectoryCommand(context);
 }
