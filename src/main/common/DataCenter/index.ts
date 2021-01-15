@@ -25,7 +25,7 @@ export default class DataCenter {
 
   public static async ctlFetch(command: string): Promise<string> {
     let result: string = "";
-    const shellObj = await shell.execAsync(command, []);
+    const shellObj = await shell.execAsyncWithReturn(command, []);
     if (shellObj.code === 0) {
       result = shellObj.stdout;
     } else {

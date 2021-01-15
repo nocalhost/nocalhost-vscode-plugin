@@ -6,7 +6,7 @@ import services from "../../DataCenter/services";
 
 const dataCenter = DataCenter.getInstance();
 
-export default async function fetchDeployments(message: IMessage) {
+export default async function fetchDeployments(message: IMessage, id: number) {
   const { payload } = message;
   if (!payload || !payload.id || !payload.app) {
     return;
@@ -20,15 +20,18 @@ export default async function fetchDeployments(message: IMessage) {
     try {
       const data: any = JSON.parse(rawData);
       const items: any[] = data.items;
-      NocalhostWebviewPanel.postMessage({
-        type: "deployments/update",
-        payload: {
-          deployments: {
-            id: payload.id,
-            items,
+      NocalhostWebviewPanel.postMessage(
+        {
+          type: "deployments/update",
+          payload: {
+            deployments: {
+              id: payload.id,
+              items,
+            },
           },
         },
-      });
+        id
+      );
     } catch (e) {
       console.log("[error] fetchDeployments: ", e);
       console.log("[error] rawData: ", rawData);
