@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as os from "os";
 
 import ICommand from "./ICommand";
 
@@ -28,7 +29,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     let destDir = workloadConfig.directory;
     const selectUri = await host.showSelectFolderDialog(
       "Associate local directory",
-      vscode.Uri.file(destDir || currentUri)
+      vscode.Uri.file(destDir || currentUri || os.homedir())
     );
     if (selectUri && selectUri.length > 0) {
       workloadConfig.directory = selectUri[0].fsPath;
