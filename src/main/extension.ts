@@ -30,6 +30,7 @@ import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
+import TextDocumentContentProvider from "./textDocumentContentProvider";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -48,6 +49,8 @@ export async function activate(context: vscode.ExtensionContext) {
     treeDataProvider: appTreeProvider,
   });
 
+  const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
+
   let subs = [
     {
       dispose: appTreeView.dispose,
@@ -60,6 +63,10 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.registerFileSystemProvider(
       "NocalhostRW",
       nocalhostFileSystemProvider
+    ),
+    vscode.workspace.registerTextDocumentContentProvider(
+      "nhtext",
+      textDocumentContentProvider
     ),
     vscode.window.onDidChangeWindowState((e) => {
       if (e.focused) {
