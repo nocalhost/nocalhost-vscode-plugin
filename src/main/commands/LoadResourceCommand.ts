@@ -6,6 +6,7 @@ import registerCommand from "./register";
 import host from "../host";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { AppNode } from "../nodes/AppNode";
+import TextDocumentContentProvider from "../textDocumentContentProvider";
 
 export default class LoadResourceCommand implements ICommand {
   command: string = LOAD_RESOURCE;
@@ -18,24 +19,27 @@ export default class LoadResourceCommand implements ICommand {
       return;
     }
     if (node instanceof KubernetesResourceNode) {
-      const kind = node.resourceType;
-      const name = node.name;
-      const uri = vscode.Uri.parse(
-        `Nocalhost://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&time=${+new Date()}`
+      const kind: string = node.resourceType;
+      const name: string = node.name;
+      const kubeConfig: string = node.getKubeConfigPath();
+      const uri: vscode.Uri = vscode.Uri.parse(
+        `nhtext://loadresource/${name}.yaml?type=k8s&kind=${kind}&name=${name}&kubeConfig=${kubeConfig}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: true });
+      TextDocumentContentProvider.getInstance().update(uri);
     } else if (node instanceof AppNode) {
       if (!node.installed()) {
         host.showInformationMessage(`${node.label} is not installed.`);
         return;
       }
-      const name = node.name;
-      const uri = vscode.Uri.parse(
-        `Nocalhost://nh/loadResource/${name}.yaml?time=${+new Date()}`
+      const name: string = node.name;
+      const uri: vscode.Uri = vscode.Uri.parse(
+        `nhtext://loadresource/${name}.yaml?type=nh&name=${name}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: true });
+      TextDocumentContentProvider.getInstance().update(uri);
     }
   }
 }
