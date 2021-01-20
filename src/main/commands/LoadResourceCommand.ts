@@ -26,7 +26,10 @@ export default class LoadResourceCommand implements ICommand {
         `nhtext://loadresource/${name}.yaml?type=k8s&kind=${kind}&name=${name}&kubeConfig=${kubeConfig}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: true });
+      await vscode.window.showTextDocument(doc, {
+        preview: false,
+        preserveFocus: true,
+      });
       TextDocumentContentProvider.getInstance().update(uri);
     } else if (node instanceof AppNode) {
       if (!node.installed()) {
