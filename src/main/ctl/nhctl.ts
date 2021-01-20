@@ -61,7 +61,6 @@ export function install(
         let errorStr = "";
         proc.on("close", (code) => {
           if (code === 0) {
-            host.showInformationMessage(`Application ${appName} installed`);
             resolve(null);
           } else {
             reject(errorStr);
@@ -73,7 +72,7 @@ export function install(
         });
 
         proc.stderr.on("data", function (data) {
-          errorStr = data + "";
+          errorStr += data + "";
           host.log("" + data, true);
         });
       })
