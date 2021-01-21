@@ -34,7 +34,7 @@ export interface SvcProfile {
   remoteSyncthingGUIPort: number;
   localSyncthingPort: number;
   localSyncthingGUIPort: number;
-  localAbsoluteSyncDirFromDevStartPlugin: any;
+  localAbsoluteSyncDirFromDevStartPlugin: Array<string>;
   devPortList: Array<string>;
 }
 

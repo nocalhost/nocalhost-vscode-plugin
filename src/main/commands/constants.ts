@@ -28,3 +28,5 @@ export const ASSOCIATE_LOCAL_DIRECTORY = "Nocalhost.associateLocalDirectory";
 
 export const APPLY_KUBERNETES_OBJECT = "Nocalhost.applyKubernetesObject";
 export const DELETE_KUBERNETES_OBJECT = "Nocalhost.deleteKubernetesObject";
+export const SYNC_SERVICE = "Nocalhost.syncService";
+export const OVERRIDE_SYNC = "Nocalhost.overrideSync";

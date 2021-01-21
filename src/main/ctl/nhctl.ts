@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
-import { execAsyncWithReturn, execChildProcessAsync } from "./shell";
+import {
+  execAsyncWithReturn,
+  execChildProcessAsync,
+  ShellResult,
+} from "./shell";
 import host, { Host } from "../host";
 import { spawn } from "child_process";
 import * as yaml from "yaml";
@@ -272,6 +276,30 @@ export async function cleanPVC(
   } ${pvcName ? `--name ${pvcName}` : ""}`;
   host.log(`[cmd] ${cleanCommand}`, true);
   await execChildProcessAsync(host, cleanCommand, []);
+}
+
+export async function getSyncStatus(appName: string, workloadName: string) {
+  const syncCommand = `nhctl sync-status ${appName} -d ${workloadName}`;
+  let result: ShellResult = {
+    stdout: "",
+    stderr: "",
+    code: 0,
+  };
+  result = (await execAsyncWithReturn(
+    syncCommand,
+    []
+  ).catch(() => {})) as ShellResult;
+
+  return result.stdout;
+}
+
+export async function overrideSyncFolders(
+  appName: string,
+  workloadName: string
+) {
+  const overrideSyncCommand = `nhctl sync-status ${appName} -d ${workloadName} --override`;
+  host.log(`[cmd] ${overrideSyncCommand}`);
+  await execChildProcessAsync(host, overrideSyncCommand, []);
 }
 
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {

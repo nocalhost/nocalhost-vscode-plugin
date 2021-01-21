@@ -16,6 +16,8 @@ import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
 import { ApplicationInfo } from "../api";
+import host from "../host";
+import { SYNC_SERVICE } from "../commands/constants";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -165,7 +167,30 @@ export class AppNode extends NocalhostFolderNode {
     //   title: "loadResource",
     //   arguments: [this],
     // };
+    this.updateSyncStatus();
     return treeItem;
+  }
+
+  updateSyncStatus() {
+    if (!this.installed()) {
+      return;
+    }
+    const svcProfiles =
+      (this.nhctlAppInfo && this.nhctlAppInfo.svcProfile) || [];
+    for (const service of svcProfiles) {
+      if (
+        service.developing &&
+        service.localAbsoluteSyncDirFromDevStartPlugin.length > 0 &&
+        service.localAbsoluteSyncDirFromDevStartPlugin[0] ===
+          host.getCurrentRootPath()
+      ) {
+        vscode.commands.executeCommand(SYNC_SERVICE, {
+          app: this.name,
+          service: service.name,
+        });
+        break;
+      }
+    }
   }
 
   installed(): boolean {
