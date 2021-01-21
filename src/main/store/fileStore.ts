@@ -26,8 +26,12 @@ export function initConfig() {
 }
 
 export function getAllConfig() {
-  const bf = fs.readFileSync(USER_CONFIG_FULLPATH);
-  return JSON.parse(bf.toString());
+  try {
+    const bf = fs.readFileSync(USER_CONFIG_FULLPATH);
+    return JSON.parse(bf.toString());
+  } catch (e) {
+    return {};
+  }
 }
 
 function store(config: any) {
