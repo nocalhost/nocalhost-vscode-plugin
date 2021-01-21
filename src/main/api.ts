@@ -88,11 +88,6 @@ export interface ApplicationInfo {
 }
 
 export async function getApplication() {
-  const jwt: string | undefined = fileStore.get(JWT);
-  const baseURL: string | undefined = fileStore.get(BASE_URL);
-  if (!jwt || !baseURL) {
-    return [];
-  }
   const response = await axios.get("/v1/plugin/dev_space");
   const res = response.data as ResponseData;
   const applications = res.data || [];

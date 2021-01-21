@@ -4,10 +4,9 @@ import DataCenter from "../../DataCenter";
 import ApplicationMeta from "../../DataCenter/model/ApplicationMeta";
 import services from "../../DataCenter/services";
 
-const dataCenter = DataCenter.getInstance();
-
 export default async function fetchDeployments(message: IMessage, id: number) {
   const { payload } = message;
+  const dataCenter = DataCenter.getInstance();
   if (!payload || !payload.id || !payload.app) {
     return;
   }
