@@ -3,7 +3,7 @@ import * as os from "os";
 
 import ICommand from "./ICommand";
 import * as fileStore from "../store/fileStore";
-import { EXEC, START_DEV_MODE } from "./constants";
+import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import {
   TMP_APP,
@@ -275,6 +275,11 @@ export default class StartDevModeCommand implements ICommand {
         }
       }
     );
+
+    vscode.commands.executeCommand(SYNC_SERVICE, {
+      app: appName,
+      service: node.name,
+    });
   }
 
   private getCurrentRootPath() {

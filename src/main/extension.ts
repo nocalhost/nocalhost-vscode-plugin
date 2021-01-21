@@ -52,6 +52,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
 
   let subs = [
+    host,
     {
       dispose: appTreeView.dispose,
     },

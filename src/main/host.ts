@@ -1,10 +1,17 @@
 import * as vscode from "vscode";
 import { Progress } from "vscode";
-import nocalhostState from "./state";
 
-export class Host {
+export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
+  );
+  public outSyncStatusBar = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    101
+  );
+  public statusBar = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    100
   );
   private newTerminal!: vscode.Terminal | null;
   private debugDisposes: Array<{ dispose: () => any }> = [];
@@ -141,21 +148,13 @@ export class Host {
   }
 
   dispose() {
+    this.statusBar.dispose();
     this.outputChannel.dispose();
     this.disposeDebug();
     this.disposeBookInfo();
     if (this.newTerminal) {
       this.newTerminal.dispose();
     }
-  }
-
-  timer(command: string, args: [], timeDuring?: number) {
-    return setInterval(() => {
-      const islogin = nocalhostState.isLogin();
-      if (islogin) {
-        vscode.commands.executeCommand(command, ...args);
-      }
-    }, timeDuring || 5000);
   }
 
   getCurrentRootPath() {

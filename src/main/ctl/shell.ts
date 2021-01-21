@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import host, { Host } from "../host";
-interface ShellResult {
+export interface ShellResult {
   code: number;
   stdout: string;
   stderr: string;

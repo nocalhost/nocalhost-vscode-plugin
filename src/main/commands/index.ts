@@ -23,6 +23,8 @@ import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
 import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
 import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
+import SyncServiceCommand from "./SyncServiceCommand";
+import OverrideSyncCommand from "./OverrideSyncCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -56,4 +58,6 @@ export default function initCommands(
 
   new ApplyKubernetesObjectCommand(context);
   new DeleteKubernetesObjectCommand(context);
+  new SyncServiceCommand(context);
+  new OverrideSyncCommand(context);
 }
