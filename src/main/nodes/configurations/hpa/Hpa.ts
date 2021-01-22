@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
+import { ConfigurationResourceNode } from "../ConfigurationResourceNode";
 import { HPA } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 
-export class HPANode extends KubernetesResourceNode {
+export class HPANode extends ConfigurationResourceNode {
   type = HPA;
   public resourceType = "hpa";
   constructor(

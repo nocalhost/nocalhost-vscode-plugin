@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import { NETWORK_POLICIES } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
+import { NetworkResourceNode } from "../NetworkResourceNode";
 
-export class NetworkPolicy extends KubernetesResourceNode {
+export class NetworkPolicy extends NetworkResourceNode {
   type = NETWORK_POLICIES;
   public resourceType = "NetworkPolicy";
   constructor(

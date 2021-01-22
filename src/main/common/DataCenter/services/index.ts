@@ -1,8 +1,12 @@
-import DataCenter from "../index";
+import DataCenter, { IExecCommandResult } from "../index";
 
-async function fetchApplicationMeta(applicationName: string): Promise<string> {
+export type ServiceResult = IExecCommandResult;
+
+async function fetchApplicationMeta(
+  applicationName: string
+): Promise<ServiceResult> {
   const command: string = `nhctl plugin get ${applicationName}`;
-  return await DataCenter.ctlFetch(command);
+  return await DataCenter.execCommand(command);
 }
 
 async function fetchLogs(
@@ -10,36 +14,58 @@ async function fetchLogs(
   container: string,
   tail: number,
   kubeConfig: string
-): Promise<string> {
+): Promise<ServiceResult> {
   const command: string = `kubectl logs ${
     tail ? "--tail=" + tail : ""
   } ${pod} -c ${container} --kubeconfig ${kubeConfig}`;
-  return await DataCenter.ctlFetch(command);
+  return await DataCenter.execCommand(command);
 }
 
-async function fetchDeployments(kubeConfig: string): Promise<string> {
+async function fetchDeployments(kubeConfig: string): Promise<ServiceResult> {
   const command: string = `kubectl get Deployments -o json --kubeconfig ${kubeConfig}`;
-  return await DataCenter.ctlFetch(command);
+  return await DataCenter.execCommand(command);
 }
 
-async function fetchK8SResource(
+async function fetchKubernetesResource(
   kind: string,
   name: string,
   kubeConfig: string
-): Promise<string> {
+): Promise<ServiceResult> {
   const command: string = `kubectl get ${kind} ${name} -o yaml --kubeconfig ${kubeConfig}`;
-  return await DataCenter.ctlFetch(command);
+  return await DataCenter.execCommand(command);
 }
 
-async function fetchNHResource(name: string): Promise<string> {
+async function fetchNHResource(name: string): Promise<ServiceResult> {
   const command: string = `nhctl describe ${name}`;
-  return await DataCenter.ctlFetch(command);
+  return await DataCenter.execCommand(command);
+}
+
+async function applyKubernetesObject(
+  filePath: string,
+  kubeConfig: string
+): Promise<ServiceResult> {
+  const command: string = `kubectl apply -f ${filePath} --kubeconfig ${kubeConfig}`;
+  console.log(command);
+  return await DataCenter.execCommand(command);
+}
+
+async function deleteKubernetesObject(
+  kind: string,
+  objectName: string,
+  namespace: string,
+  kubeConfig: string
+): Promise<ServiceResult> {
+  const command: string = `kubectl delete ${kind} ${objectName} -n ${namespace} --kubeconfig ${kubeConfig}`;
+  console.log(command);
+  return await DataCenter.execCommand(command);
 }
 
 export default {
   fetchApplicationMeta,
   fetchLogs,
   fetchDeployments,
-  fetchK8SResource,
+  fetchKubernetesResource,
   fetchNHResource,
+  applyKubernetesObject,
+  deleteKubernetesObject,
 };

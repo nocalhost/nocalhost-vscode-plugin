@@ -66,6 +66,31 @@
       }
     ],
     "menus": {
+      "editor/context": [
+        {
+          "submenu": "nocalhost.editor.context",
+          "group": "nocalhost"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "submenu": "nocalhost.editor.title.context",
+          "group": "nocalhost"
+        }
+      ],
+      "nocalhost.editor.context": [
+        {
+          "command": "Nocalhost.applyKubernetesObject",
+          "when": "editorTextFocus",
+          "group": "nocalhost"
+        }
+      ],
+      "nocalhost.editor.title.context": [
+        {
+          "command": "Nocalhost.applyKubernetesObject",
+          "group": "nocalhost"
+        }
+      ],
       "view/title": [
         {
           "command": "Nocalhost.refresh",
@@ -155,16 +180,53 @@
           "when": "viewItem =~ /^application-installed/i"
         },
         {
+          "command": "Nocalhost.editKubernetesObject",
+          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(running|starting|unknown))?$/i",
+          "group": "2"
+        },
+        {
+          "command": "Nocalhost.applyKubernetesObject",
+          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(running|starting|unknown))?$/i",
+          "group": "2"
+        },
+        {
+          "command": "Nocalhost.deleteKubernetesObject",
+          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(running|starting|unknown))?$/i",
+          "group": "2"
+        },
+        {
           "command": "Nocalhost.viewKubeConfig",
           "when": "viewItem =~ /^application/i",
           "group": "navigation"
         }
       ]
     },
+    "submenus": [
+      {
+        "id": "nocalhost.editor.context",
+        "label": "%nocalhost.editor.context.label%"
+      },
+      {
+        "id": "nocalhost.editor.title.context",
+        "label": "%nocalhost.editor.title.context.label%"
+      }
+    ],
     "commands": [
       {
         "command": "Nocalhost.loadWorkloads",
         "title": "Load Workloads"
+      },
+      {
+        "command": "Nocalhost.editKubernetesObject",
+        "title": "Edit"
+      },
+      {
+        "command": "Nocalhost.applyKubernetesObject",
+        "title": "Apply"
+      },
+      {
+        "command": "Nocalhost.deleteKubernetesObject",
+        "title": "Delete"
       },
       {
         "command": "Nocalhost.switchEndPoint",

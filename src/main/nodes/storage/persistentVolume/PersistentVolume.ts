@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
+import { StorageResourceNode } from "../StorageResourceNode";
 import { PERSISTENT_VOLUME } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 
-export class PersistentVolume extends KubernetesResourceNode {
+export class PersistentVolume extends StorageResourceNode {
   type = PERSISTENT_VOLUME;
   public resourceType = "PersistentVolume";
   constructor(

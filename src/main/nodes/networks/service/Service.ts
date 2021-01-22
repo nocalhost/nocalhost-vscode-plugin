@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
-import { SERVICE, ID_SPLIT } from "../../nodeContants";
+import { SERVICE } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
+import { NetworkResourceNode } from "../NetworkResourceNode";
 
-export class Service extends KubernetesResourceNode {
+export class Service extends NetworkResourceNode {
   type = SERVICE;
   public resourceType = "Service";
   constructor(

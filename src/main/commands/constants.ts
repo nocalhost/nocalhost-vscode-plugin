@@ -25,3 +25,7 @@ export const CLEAN_PVC = "Nocalhost.cleanPvc";
 export const LOAD_WORKLOADS = "Nocalhost.loadWorkloads";
 export const VIEW_KUBECONFIG = "Nocalhost.viewKubeConfig";
 export const ASSOCIATE_LOCAL_DIRECTORY = "Nocalhost.associateLocalDirectory";
+
+export const EDIT_KUBERNETES_OBJECT = "Nocalhost.editKubernetesObject";
+export const APPLY_KUBERNETES_OBJECT = "Nocalhost.applyKubernetesObject";
+export const DELETE_KUBERNETES_OBJECT = "Nocalhost.deleteKubernetesObject";

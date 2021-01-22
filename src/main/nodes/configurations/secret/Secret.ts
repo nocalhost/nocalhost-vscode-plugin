@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
+import { ConfigurationResourceNode } from "../ConfigurationResourceNode";
 import { SECRET } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 
-export class Secret extends KubernetesResourceNode {
+export class Secret extends ConfigurationResourceNode {
   type = SECRET;
   public resourceType = "secret";
   constructor(

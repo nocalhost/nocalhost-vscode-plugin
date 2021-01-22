@@ -19,5 +19,7 @@
   "Config": "Config",
   "HelmValues": "Helm Values",
   "ViewKubeConfig": "View KubeConfig",
-  "AssociateLocalDir": "Associate Local Directory"
+  "AssociateLocalDir": "Associate Local Directory",
+  "nocalhost.editor.context.label": "Nocalhost",
+  "nocalhost.editor.title.context.label": "Nocalhost"
 }

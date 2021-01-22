@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
+import { ConfigurationResourceNode } from "../ConfigurationResourceNode";
 import { RESOURCE_QUOTA } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 
-export class ResourceQuota extends KubernetesResourceNode {
+export class ResourceQuota extends ConfigurationResourceNode {
   type = RESOURCE_QUOTA;
   public resourceType = "ResourceQuota";
   constructor(

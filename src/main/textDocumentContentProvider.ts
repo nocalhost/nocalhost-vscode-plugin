@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as querystring from "querystring";
-import services from "./common/DataCenter/services/index";
+import services, { ServiceResult } from "./common/DataCenter/services/index";
+import host from "./host";
 
 let instance: TextDocumentContentProvider | null = null;
 
@@ -39,11 +40,25 @@ export default class TextDocumentContentProvider
       const kubeConfig: string = queryObj.kubeConfig as string;
       switch (type) {
         case "k8s": {
-          content = await services.fetchK8SResource(kind, name, kubeConfig);
+          const result: ServiceResult = await services.fetchKubernetesResource(
+            kind,
+            name,
+            kubeConfig
+          );
+          if (!result.success) {
+            host.showErrorMessage(result.value);
+          } else {
+            content = result.value;
+          }
           break;
         }
         case "nh": {
-          content = await services.fetchNHResource(name);
+          const result: ServiceResult = await services.fetchNHResource(name);
+          if (!result.success) {
+            host.showErrorMessage(result.value);
+          } else {
+            content = result.value;
+          }
           break;
         }
         default: {
@@ -51,7 +66,6 @@ export default class TextDocumentContentProvider
         }
       }
     }
-
     return content;
   }
 }

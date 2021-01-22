@@ -19,6 +19,15 @@ export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   HOME_DIR,
   ".kube/config"
 );
+export const KUBE_RESOURCE_DIR = path.resolve(
+  PLUGIN_CONFIG_DIR,
+  "kubeResources"
+);
+export const KUBE_RESOURCE_SOURCEMAP = path.resolve(
+  PLUGIN_CONFIG_DIR,
+  "kubeResources",
+  "source.map"
+);
 
 // USER INFO
 export const USERNAME = "username";

@@ -14,7 +14,7 @@ import { NocalhostRootNode } from "./NocalhostRootNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
-import { StorageFolder } from "./storage/storageFolder";
+import { StorageFolder } from "./storage/StorageFolder";
 import { ApplicationInfo } from "../api";
 
 export class AppNode extends NocalhostFolderNode {
@@ -79,6 +79,10 @@ export class AppNode extends NocalhostFolderNode {
 
   get url() {
     return this.context["application_url"];
+  }
+
+  get namespace() {
+    return this.info.namespace;
   }
 
   public async getApplicationInfo() {
