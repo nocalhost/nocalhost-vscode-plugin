@@ -170,6 +170,11 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.portForwardList",
+          "when": "viewItem =~ /^workload-(deployment)/i",
+          "group": "1"
+        },
+        {
           "command": "Nocalhost.associateLocalDirectory",
           "when": "viewItem =~ /^workload-deployment/i",
           "group": "1"
@@ -303,6 +308,10 @@
       {
         "command": "Nocalhost.portForward",
         "title": "%PortForward%"
+      },
+      {
+        "command": "Nocalhost.portForwardList",
+        "title": "%PortForwardList%"
       },
       {
         "command": "Nocalhost.cleanPvc",
