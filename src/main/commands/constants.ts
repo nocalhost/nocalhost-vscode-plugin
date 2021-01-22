@@ -21,6 +21,7 @@ export const LOG = "Nocalhost.log";
 export const PORT_FORWARD = "Nocalhost.portForward";
 export const PORT_FORWARD_LIST = "Nocalhost.portForwardList";
 export const EXEC = "Nocalhost.exec";
+export const COPY_TERMINAL = "Nocalhost.copyTerminal";
 
 export const CLEAN_PVC = "Nocalhost.cleanPvc";
 export const LOAD_WORKLOADS = "Nocalhost.loadWorkloads";
