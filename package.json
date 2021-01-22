@@ -121,7 +121,7 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^(application|workload-deployment)/i",
+          "when": "viewItem =~ /^(application-installed|workload-deployment)/i",
           "group": "navigation"
         },
         {
