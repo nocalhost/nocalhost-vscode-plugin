@@ -19,6 +19,7 @@ export const RESET_APP = "Nocalhost.resetApp";
 export const LOAD_RESOURCE = "Nocalhost.loadResource";
 export const LOG = "Nocalhost.log";
 export const PORT_FORWARD = "Nocalhost.portForward";
+export const PORT_FORWARD_LIST = "Nocalhost.portForwardList";
 export const EXEC = "Nocalhost.exec";
 
 export const CLEAN_PVC = "Nocalhost.cleanPvc";

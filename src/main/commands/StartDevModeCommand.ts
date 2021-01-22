@@ -258,6 +258,7 @@ export default class StartDevModeCommand implements ICommand {
               node.getKubeConfigPath(),
               appName,
               node.name,
+              "devPorts",
               svc.devPorts
             );
             host.log("port forward end", true);

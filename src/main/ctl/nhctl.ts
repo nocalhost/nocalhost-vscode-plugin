@@ -136,7 +136,9 @@ export async function startPortForward(
   kubeconfigPath: string,
   appName: string,
   workloadName: string,
-  ports?: Array<string>
+  way: "manual" | "devPorts",
+  ports?: Array<string>,
+  pod?: string
 ) {
   let portOptions = "";
   if (ports && ports.length > 0) {
@@ -145,12 +147,43 @@ export async function startPortForward(
   }
   const portForwardCommand = nhctlCommand(
     kubeconfigPath,
-    `port-forward ${appName} -d ${workloadName} ${portOptions}`
+    `port-forward start ${appName} -d ${workloadName} ${portOptions} ${
+      pod ? `--pod ${pod}` : ""
+    } --way ${way}`
   );
 
   host.log(`[cmd] ${portForwardCommand}`, true);
 
   await execChildProcessAsync(host, portForwardCommand, []);
+}
+
+export async function endPortForward(
+  appName: string,
+  workloadName: string,
+  port: string
+) {
+  // nhctl port-forward end coding-agile -d nginx -p 5006:5005
+  const endPortForwardCommand = `nhctl port-forward end ${appName} -d ${workloadName} -p ${port}`;
+
+  host.log(`[cmd] ${endPortForwardCommand}`, true);
+
+  await execChildProcessAsync(host, endPortForwardCommand, []);
+}
+
+interface PortForwordData {
+  devPortList: Array<string>;
+  portForwardStatusList: Array<string>;
+  portForwardPidList: Array<string>;
+}
+
+export async function listPortForward(appName: string, workloadName: string) {
+  const describeCommand = `nhctl describe ${appName} -d ${workloadName}`;
+
+  const result = await execAsyncWithReturn(describeCommand, []);
+
+  const portforwardData = yaml.parse(result.stdout) as PortForwordData;
+
+  return portforwardData;
 }
 
 export async function syncFile(

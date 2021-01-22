@@ -25,6 +25,7 @@ import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
 import SyncServiceCommand from "./SyncServiceCommand";
 import OverrideSyncCommand from "./OverrideSyncCommand";
+import PortForwardListCommand from "./PortForwardListCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -48,6 +49,7 @@ export default function initCommands(
   new LoadResourceCommand(context);
   new LogCommand(context);
   new PortForwardCommand(context);
+  new PortForwardListCommand(context);
   new ExecCommand(context);
   new ResetCommand(context);
   new CleanPvcCommand(context);
