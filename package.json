@@ -150,6 +150,11 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.copyTerminal",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running)/i",
+          "group": "1"
+        },
+        {
           "command": "Nocalhost.reset",
           "when": "viewItem =~ /^workload-deployment/i",
           "group": "1"
@@ -295,6 +300,10 @@
       {
         "command": "Nocalhost.exec",
         "title": "%Terminal%"
+      },
+      {
+        "command": "Nocalhost.copyTerminal",
+        "title": "%CopyTerminal%"
       },
       {
         "command": "Nocalhost.loadResource",

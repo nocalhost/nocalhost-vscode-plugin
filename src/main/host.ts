@@ -116,6 +116,10 @@ export class Host implements vscode.Disposable {
     });
   }
 
+  copyTextToclipboard(text: string) {
+    vscode.env.clipboard.writeText(text);
+  }
+
   getOutputChannel() {
     return this.outputChannel;
   }

@@ -12,6 +12,7 @@
   "End.Develop": "End Develop",
   "Reset": "Reset",
   "Terminal": "Terminal",
+  "CopyTerminal": "Copy Terminal",
   "Logs": "Logs",
   "PortForward": "Port Forward",
   "PortForwardList": "Port Forward List",
