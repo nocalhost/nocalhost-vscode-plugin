@@ -12,6 +12,7 @@ import { DEPLOYMENT } from "../../../nodeContants";
 import {
   BaseNocalhostNode,
   DeploymentStatus,
+  PortForwardData,
   ServiceProfile,
   SvcProfile,
 } from "../../../types/nodeType";
@@ -30,6 +31,7 @@ export class Deployment extends ControllerResourceNode {
     public name: string,
     private conditionsStatus: Array<Status> | string,
     private svcProfile: SvcProfile | undefined | null,
+    private svcStatusInfo: (SvcProfile & PortForwardData) | undefined | null,
     private nocalhostService: NocalhostServiceConfig | undefined | null,
     public info?: any
   ) {
@@ -41,12 +43,19 @@ export class Deployment extends ControllerResourceNode {
     let treeItem = await super.getTreeItem();
     let status = "";
     status = await this.getStatus();
+    const portForwardStatus = await this.getPortForwardStatus();
     switch (status) {
       case "running":
         treeItem.iconPath = resolveVSCodeUri("status-running.svg");
+        if (portForwardStatus) {
+          treeItem.iconPath = resolveVSCodeUri("Normal_Port_Forwarding.svg");
+        }
         break;
       case "developing":
         treeItem.iconPath = resolveVSCodeUri("dev-start.svg");
+        if (portForwardStatus) {
+          treeItem.iconPath = resolveVSCodeUri("Dev_Port_Forwarding.svg");
+        }
         break;
       case "starting":
         treeItem.iconPath = resolveVSCodeUri("loading.svg");
@@ -114,6 +123,23 @@ export class Deployment extends ControllerResourceNode {
       status = "unknown";
     }
     return status;
+  }
+
+  public async getPortForwardStatus() {
+    if (!this.firstRender) {
+      const appNode = this.getAppNode();
+      this.svcStatusInfo = await nhctl.getCurrentServiceStatusInfo(
+        appNode.name,
+        this.name
+      );
+    }
+    if (
+      this.svcStatusInfo &&
+      this.svcStatusInfo.portForwardStatusList.length > 0
+    ) {
+      return true;
+    }
+    return false;
   }
 
   public async refreshSvcProfile() {

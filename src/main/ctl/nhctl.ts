@@ -7,6 +7,7 @@ import {
 import host, { Host } from "../host";
 import { spawn } from "child_process";
 import * as yaml from "yaml";
+import { PortForwardData, SvcProfile } from "../nodes/types/nodeType";
 
 export function install(
   host: Host,
@@ -170,18 +171,16 @@ export async function endPortForward(
   await execChildProcessAsync(host, endPortForwardCommand, []);
 }
 
-interface PortForwordData {
-  devPortList: Array<string>;
-  portForwardStatusList: Array<string>;
-  portForwardPidList: Array<string>;
-}
-
-export async function listPortForward(appName: string, workloadName: string) {
+export async function getCurrentServiceStatusInfo(
+  appName: string,
+  workloadName: string
+) {
   const describeCommand = `nhctl describe ${appName} -d ${workloadName}`;
 
   const result = await execAsyncWithReturn(describeCommand, []);
 
-  const portforwardData = yaml.parse(result.stdout) as PortForwordData;
+  const portforwardData = yaml.parse(result.stdout) as SvcProfile &
+    PortForwardData;
 
   return portforwardData;
 }
