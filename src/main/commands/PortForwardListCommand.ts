@@ -18,7 +18,7 @@ export default class PortForwardListCommand implements ICommand {
       return;
     }
 
-    const portforwardData = await nhctl.listPortForward(
+    const portforwardData = await nhctl.getCurrentServiceStatusInfo(
       node.getAppName(),
       node.name
     );
