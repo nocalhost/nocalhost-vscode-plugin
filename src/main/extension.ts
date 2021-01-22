@@ -20,6 +20,7 @@ import {
   TMP_WORKLOAD,
   WELCOME_DID_SHOW,
   TMP_WORKLOAD_PATH,
+  KUBE_RESOURCE_DIR,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -88,7 +89,6 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   launchDevspace();
-  // appTreeProvider.startRefreshInterval(10000);
 }
 
 function launchDevspace() {
@@ -164,6 +164,7 @@ async function init(context: vscode.ExtensionContext) {
   fileStore.mkdir(KUBE_CONFIG_DIR);
   fileStore.mkdir(HELM_VALUES_DIR);
   fileStore.mkdir(HELM_NH_CONFIG_DIR);
+  fileStore.mkdir(KUBE_RESOURCE_DIR);
   fileStore.initConfig();
   fileStore.set("extensionPath", context.extensionPath);
   updateServerConfigStatus();

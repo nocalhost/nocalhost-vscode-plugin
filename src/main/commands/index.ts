@@ -21,6 +21,9 @@ import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
 import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
 import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
+import EditKubernetesObjectCommand from "./EditKubernetesObjectCommand";
+import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
+import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -51,4 +54,8 @@ export default function initCommands(
   new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
   new AssociateLocalDirectoryCommand(context);
+
+  new EditKubernetesObjectCommand(context);
+  new ApplyKubernetesObjectCommand(context);
+  new DeleteKubernetesObjectCommand(context);
 }

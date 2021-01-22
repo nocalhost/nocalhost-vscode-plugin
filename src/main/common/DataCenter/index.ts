@@ -4,12 +4,16 @@ import Application from "./model/Application";
 import ApplicationContext from "./model/ApplicationContext";
 import ApplicationMeta from "./model/ApplicationMeta";
 import * as shell from "../../ctl/shell";
-import services from "./services";
+import services, { ServiceResult } from "./services";
 import { DATA_CENTER_INTERVAL_MS } from "../../constants";
 
 interface IDataStore {
   applications: Application[];
   applicationMetas: Map<string, ApplicationMeta>;
+}
+export interface IExecCommandResult {
+  success: boolean;
+  value: string;
 }
 let instance: DataCenter | null = null;
 
@@ -23,15 +27,14 @@ export default class DataCenter {
     return instance;
   }
 
-  public static async ctlFetch(command: string): Promise<string> {
-    let result: string = "";
+  public static async execCommand(
+    command: string
+  ): Promise<IExecCommandResult> {
     const shellObj = await shell.execAsyncWithReturn(command, []);
-    if (shellObj.code === 0) {
-      result = shellObj.stdout;
-    } else {
-      result = shellObj.stderr;
-    }
-    return result;
+    const success: boolean = shellObj.code === 0;
+    const value: string =
+      shellObj.code === 0 ? shellObj.stdout : shellObj.stderr;
+    return { success, value };
   }
 
   private dataStore: IDataStore = {
@@ -89,9 +92,10 @@ export default class DataCenter {
   }
 
   private async fetchApplicationMeta(applicationName: string): Promise<void> {
-    const rawData: string = await services.fetchApplicationMeta(
+    const result: ServiceResult = await services.fetchApplicationMeta(
       applicationName
     );
+    const rawData: string = result.success ? result.value : "";
     if (rawData) {
       const data: any = yaml.parse(rawData);
       if (typeof data !== "string") {

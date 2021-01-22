@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import { INGRESS } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
+import { NetworkResourceNode } from "../NetworkResourceNode";
 
-export class Ingress extends KubernetesResourceNode {
+export class Ingress extends NetworkResourceNode {
   type = INGRESS;
   public resourceType = "Ingress";
   constructor(
