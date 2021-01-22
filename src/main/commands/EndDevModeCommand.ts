@@ -21,8 +21,6 @@ export default class EndDevModeCommand implements ICommand {
     }
     const appNode = node.getAppNode();
     host.getOutputChannel().show(true);
-    host.showInformationMessage("Ending DevMode.");
-    host.log("Ending DevMode ...", true);
     await nhctl.endDevMode(
       host,
       node.getKubeConfigPath(),
@@ -30,8 +28,6 @@ export default class EndDevModeCommand implements ICommand {
       node.name
     );
     await node.setStatus("");
-    host.showInformationMessage("DevMode Ended.");
     vscode.commands.executeCommand(SYNC_SERVICE, {});
-    host.log("DevMode Ended", true);
   }
 }

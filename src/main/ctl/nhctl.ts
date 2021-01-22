@@ -205,13 +205,18 @@ export async function endDevMode(
   appName: string,
   workLoadName: string
 ) {
-  const end = nhctlCommand(
-    kubeconfigPath,
-    `dev end ${appName} -d ${workLoadName} `
+  await host.showProgressing(
+    `Ending DevMode: ${appName}/${workLoadName}`,
+    async (progress) => {
+      const end = nhctlCommand(
+        kubeconfigPath,
+        `dev end ${appName} -d ${workLoadName} `
+      );
+      host.log(`[cmd] ${end}`, true);
+      host.disposeDebug();
+      await execChildProcessAsync(host, end, []);
+    }
   );
-  host.log(`[cmd] ${end}`, true);
-  host.disposeDebug();
-  await execChildProcessAsync(host, end, []);
 }
 
 export async function loadResource(host: Host, appName: string) {
