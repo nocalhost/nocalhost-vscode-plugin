@@ -45,7 +45,6 @@ async function applyKubernetesObject(
   kubeConfig: string
 ): Promise<ServiceResult> {
   const command: string = `kubectl apply -f ${filePath} --kubeconfig ${kubeConfig}`;
-  console.log(command);
   return await DataCenter.execCommand(command);
 }
 
@@ -56,7 +55,6 @@ async function deleteKubernetesObject(
   kubeConfig: string
 ): Promise<ServiceResult> {
   const command: string = `kubectl delete ${kind} ${objectName} -n ${namespace} --kubeconfig ${kubeConfig}`;
-  console.log(command);
   return await DataCenter.execCommand(command);
 }
 

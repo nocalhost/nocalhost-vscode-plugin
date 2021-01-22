@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-
 import ICommand from "./ICommand";
 import { LOAD_RESOURCE } from "./constants";
 import registerCommand from "./register";
@@ -19,18 +18,22 @@ export default class LoadResourceCommand implements ICommand {
       return;
     }
     if (node instanceof KubernetesResourceNode) {
+      if (!node) {
+        host.showWarnMessage("A task is running, please try again later");
+        return;
+      }
       const kind: string = node.resourceType;
       const name: string = node.name;
-      const kubeConfig: string = node.getKubeConfigPath();
       const uri: vscode.Uri = vscode.Uri.parse(
-        `nhtext://loadresource/${name}.yaml?type=k8s&kind=${kind}&name=${name}&kubeConfig=${kubeConfig}`
+        `NocalhostRW://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}`
       );
-      let doc = await vscode.workspace.openTextDocument(uri);
+      const doc: vscode.TextDocument = await vscode.workspace.openTextDocument(
+        uri
+      );
       await vscode.window.showTextDocument(doc, {
         preview: false,
-        preserveFocus: true,
+        preserveFocus: false,
       });
-      TextDocumentContentProvider.getInstance().update(uri);
     } else if (node instanceof AppNode) {
       if (!node.installed()) {
         host.showInformationMessage(`${node.label} is not installed.`);

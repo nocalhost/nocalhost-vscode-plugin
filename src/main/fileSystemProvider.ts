@@ -12,16 +12,14 @@ import {
 import * as yaml from "yaml";
 import * as path from "path";
 import * as querystring from "querystring";
-
 import * as kubectl from "./ctl/kubectl";
 import * as nhctl from "./ctl/nhctl";
 import * as shell from "./ctl/shell";
-import host from "./host";
-
 import * as fileUtil from "./utils/fileUtil";
+import host from "./host";
+import state from "./state";
 import ConfigService from "./service/configService";
 import { HELM_VALUES_DIR } from "./constants";
-import state from "./state";
 import { KubernetesResourceNode } from "./nodes/abstract/KubernetesResourceNode";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
@@ -91,6 +89,9 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
               name,
               output
             )) || "";
+          if (result) {
+            result = this.sanitizeResource(result);
+          }
         } else if (type === "log") {
           // Nocalhost://k8s/log/pod/container
           const node = state.getNode(id) as KubernetesResourceNode;
@@ -311,6 +312,23 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
       );
     }
   }
+
+  private sanitizeResource(content: string): string {
+    try {
+      const resource: any = yaml.parse(content);
+      delete resource.status;
+      delete resource.metadata?.resourceVersion;
+      const annotations = resource.metadata?.annotations;
+      if (annotations) {
+        delete annotations["kubectl.kubernetes.io/last-applied-configuration"];
+      }
+      return yaml.stringify(resource);
+    } catch (e) {
+      console.error(e);
+    }
+    return content;
+  }
+
   delete(uri: Uri, options: { recursive: boolean }): void | Thenable<void> {}
   rename(
     oldUri: Uri,
