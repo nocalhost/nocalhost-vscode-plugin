@@ -29,6 +29,14 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
     } else {
       const scheme: string = target.scheme;
       switch (scheme) {
+        case "Nocalhost": {
+          result = {
+            success: false,
+            value:
+              "Cannot apply to a developing deployment, please exit the dev mode before apply.",
+          };
+          break;
+        }
         case "NocalhostRW": {
           result = await this.applyVirtualDocument(target);
           break;
@@ -64,16 +72,16 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
     const kubeConfig: string = node.getKubeConfigPath();
     const appNode: AppNode = node.getAppNode();
     const namespace: string = appNode.namespace;
-    let isDeveloping: boolean = false;
-    if (node instanceof Deployment) {
-      isDeveloping = (await node.getStatus()) === "developing";
-    }
-    if (isDeveloping) {
-      return {
-        success: false,
-        value: "Unable to apply, please exit the dev mode first.",
-      };
-    }
+    // let isDeveloping: boolean = false;
+    // if (node instanceof Deployment) {
+    //   isDeveloping = (await node.getStatus()) === "developing";
+    // }
+    // if (isDeveloping) {
+    //   return {
+    //     success: false,
+    //     value: "Unable to apply, please exit the dev mode first.",
+    //   };
+    // }
     const editor: vscode.TextEditor | undefined =
       vscode.window.activeTextEditor;
     if (!editor) {
@@ -115,8 +123,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       (acc, applicaiton: AppNode | NocalhostAccountNode) => {
         return {
           ...acc,
-          ...(applicaiton instanceof AppNode &&
-          applicaiton.developingNodes.length === 0
+          ...(applicaiton instanceof AppNode
             ? { [applicaiton.label]: applicaiton.getKubeConfigPath() }
             : {}),
         };

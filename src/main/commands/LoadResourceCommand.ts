@@ -7,6 +7,7 @@ import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode
 import { AppNode } from "../nodes/AppNode";
 import TextDocumentContentProvider from "../textDocumentContentProvider";
 import EventCenter from "../common/EventCenter";
+import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 
 export default class LoadResourceCommand implements ICommand {
   command: string = LOAD_RESOURCE;
@@ -26,8 +27,16 @@ export default class LoadResourceCommand implements ICommand {
       }
       const kind: string = node.resourceType;
       const name: string = node.name;
+      let scheme: string = "NocalhostRW";
+      let isDeveloping: boolean = false;
+      if (node instanceof Deployment) {
+        isDeveloping = (await node.getStatus()) === "developing";
+      }
+      if (isDeveloping) {
+        scheme = "Nocalhost";
+      }
       const uri: vscode.Uri = vscode.Uri.parse(
-        `NocalhostRW://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}`
+        `${scheme}://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}`
       );
       const doc: vscode.TextDocument = await vscode.workspace.openTextDocument(
         uri

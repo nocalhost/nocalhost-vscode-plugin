@@ -196,7 +196,7 @@
         },
         {
           "command": "Nocalhost.applyKubernetesObject",
-          "when": "viewItem =~ /^application-(installed|notInstalled)(-helm)?$/i",
+          "when": "viewItem =~ /^application-installed/i",
           "group": "navigation"
         },
         {
