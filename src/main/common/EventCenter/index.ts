@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 
-export type CloseTextDocumentListener = (doc: vscode.TextDocument) => void;
+export type SaveTextDocumentListener = (
+  doc: vscode.TextDocument
+) => void | Promise<void>;
 
 let instance: EventCenter | null = null;
 
@@ -11,28 +13,28 @@ export default class EventCenter {
     }
     return instance;
   }
-  private closeTextDocumentListeners: CloseTextDocumentListener[] = [];
+  private saveTextDocumentListeners: SaveTextDocumentListener[] = [];
 
   constructor() {
-    vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => {
-      this.closeTextDocumentListeners.forEach(
-        (listener: CloseTextDocumentListener) => {
+    vscode.workspace.onDidSaveTextDocument((doc: vscode.TextDocument) => {
+      this.saveTextDocumentListeners.forEach(
+        (listener: SaveTextDocumentListener) => {
           listener.call(null, doc);
         }
       );
     });
   }
 
-  addCloseTextDocumentListener(listener: CloseTextDocumentListener): void {
-    const index: number = this.closeTextDocumentListeners.indexOf(listener);
+  addSaveTextDocumentListener(listener: SaveTextDocumentListener): void {
+    const index: number = this.saveTextDocumentListeners.indexOf(listener);
     if (index === -1) {
-      this.closeTextDocumentListeners.push(listener);
+      this.saveTextDocumentListeners.push(listener);
     }
   }
-  removeCloseTextDocumentListener(listener: CloseTextDocumentListener): void {
-    const index: number = this.closeTextDocumentListeners.indexOf(listener);
+  removeSaveTextDocumentListener(listener: SaveTextDocumentListener): void {
+    const index: number = this.saveTextDocumentListeners.indexOf(listener);
     if (index !== -1) {
-      this.closeTextDocumentListeners.splice(index, 1);
+      this.saveTextDocumentListeners.splice(index, 1);
     }
   }
 }

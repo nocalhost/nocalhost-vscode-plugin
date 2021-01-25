@@ -175,19 +175,19 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.deleteKubernetesObject",
+          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(running|starting|unknown))?$/i",
+          "group": "1"
+        },
+        {
           "command": "Nocalhost.loadResource",
           "title": "%loadResource%",
           "when": "viewItem =~ /^application-installed/i"
         },
         {
           "command": "Nocalhost.applyKubernetesObject",
-          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(running|starting|unknown))?$/i",
-          "group": "2"
-        },
-        {
-          "command": "Nocalhost.deleteKubernetesObject",
-          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(running|starting|unknown))?$/i",
-          "group": "2"
+          "when": "viewItem =~ /^application/i",
+          "group": "navigation"
         },
         {
           "command": "Nocalhost.viewKubeConfig",
