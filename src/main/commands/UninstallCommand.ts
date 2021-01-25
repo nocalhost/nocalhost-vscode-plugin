@@ -58,7 +58,6 @@ export default class UninstallCommand implements ICommand {
     await updateAppInstallStatus(appId, devSpaceId, 0);
     fileStore.remove(appName);
     state.delete(appName);
-    host.log(`Application ${appName} uninstalled`, true);
   }
 
   private getKubeConfigPath(appNode: AppNode): string {
