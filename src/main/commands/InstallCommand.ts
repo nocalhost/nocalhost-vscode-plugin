@@ -102,7 +102,7 @@ export default class InstallCommand implements ICommand {
 
     await this.install(
       host,
-      appNode.getKUbeconfigPath(),
+      appNode.getKubeConfigPath(),
       appNode.name,
       appNode.id,
       appNode.appConfig,
@@ -180,7 +180,7 @@ export default class InstallCommand implements ICommand {
 
   private async checkBookInfoStatus(appNode: AppNode) {
     const res = await kubectl.getResourceList(
-      appNode.getKUbeconfigPath(),
+      appNode.getKubeConfigPath(),
       "Deployments"
     );
     const list = JSON.parse(res as string) as List;
@@ -216,7 +216,7 @@ export default class InstallCommand implements ICommand {
       "services/productpage",
       "39080:9080",
     ];
-    terminalCommands.push("--kubeconfig", appNode.getKUbeconfigPath());
+    terminalCommands.push("--kubeconfig", appNode.getKubeConfigPath());
     const shellPath = "kubectl";
     const terminalDisposed = host.invokeInNewTerminalSpecialShell(
       terminalCommands,
