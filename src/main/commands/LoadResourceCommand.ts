@@ -1,17 +1,19 @@
 import * as vscode from "vscode";
 import ICommand from "./ICommand";
-import { LOAD_RESOURCE } from "./constants";
+import { LOAD_RESOURCE, APPLY_KUBERNETES_OBJECT } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { AppNode } from "../nodes/AppNode";
 import TextDocumentContentProvider from "../textDocumentContentProvider";
+import EventCenter from "../common/EventCenter";
 
 export default class LoadResourceCommand implements ICommand {
   command: string = LOAD_RESOURCE;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
+
   async execCommand(node: KubernetesResourceNode | AppNode) {
     if (!node) {
       host.showWarnMessage("A task is running, please try again later");
@@ -34,6 +36,9 @@ export default class LoadResourceCommand implements ICommand {
         preview: false,
         preserveFocus: false,
       });
+
+      const eventCeneter: EventCenter = EventCenter.getInstance();
+      eventCeneter.addSaveTextDocumentListener(this.handleSaveTextDocument);
     } else if (node instanceof AppNode) {
       if (!node.installed()) {
         host.showInformationMessage(`${node.label} is not installed.`);
@@ -46,6 +51,25 @@ export default class LoadResourceCommand implements ICommand {
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: true });
       TextDocumentContentProvider.getInstance().update(uri);
+    }
+  }
+
+  async handleSaveTextDocument(doc: vscode.TextDocument): Promise<void> {
+    const uri: vscode.Uri = doc.uri;
+    const { scheme, authority } = uri;
+    if (scheme === "NocalhostRW" && authority === "k8s") {
+      const confirm:
+        | string
+        | undefined = await vscode.window.showInformationMessage(
+        `Apply this resource?`,
+        {
+          modal: true,
+        },
+        "OK"
+      );
+      if (confirm === "OK") {
+        vscode.commands.executeCommand(APPLY_KUBERNETES_OBJECT, uri);
+      }
     }
   }
 }
