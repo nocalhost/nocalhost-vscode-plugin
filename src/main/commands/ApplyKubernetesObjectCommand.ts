@@ -11,6 +11,7 @@ import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 import { APPLY_KUBERNETES_OBJECT } from "./constants";
+import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 
 export default class ApplyKubernetesObjectCommand implements ICommand {
   command: string = APPLY_KUBERNETES_OBJECT;
@@ -71,6 +72,16 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
     const kubeConfig: string = node.getKubeConfigPath();
     const appNode: AppNode = node.getAppNode();
     const namespace: string = appNode.namespace;
+    // let isDeveloping: boolean = false;
+    // if (node instanceof Deployment) {
+    //   isDeveloping = (await node.getStatus()) === "developing";
+    // }
+    // if (isDeveloping) {
+    //   return {
+    //     success: false,
+    //     value: "Unable to apply, please exit the dev mode first.",
+    //   };
+    // }
     const editor: vscode.TextEditor | undefined =
       vscode.window.activeTextEditor;
     if (!editor) {

@@ -67,14 +67,14 @@ export default class PortForwardCommand implements ICommand {
     if (node instanceof Deployment) {
       // new Port Forward
       const ports = portMap.split(",").filter((str) => {
-        let reg = /[0-9]+:[0-9]+/g;
+        let reg = /([0-9]+)?:[0-9]+/g;
         if (reg.exec(str)) {
           return true;
         }
         return false;
       });
-      if (ports.length < 0) {
-        host.showInformationMessage("Please input correct content!");
+      if (ports.length <= 0) {
+        host.showErrorMessage("Please input correct content!");
         return;
       }
       await nhctl.startPortForward(
