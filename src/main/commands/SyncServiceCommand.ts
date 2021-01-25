@@ -44,24 +44,26 @@ export default class SyncServiceCommand implements ICommand {
         host.outSyncStatusBar.hide();
       } else {
         // update status bar
-        let r: SyncMsg;
-        r = JSON.parse(result) as SyncMsg;
-        if (r.outOfSync) {
-          const overrideSyncCommand: vscode.Command = {
-            title: OVERRIDE_SYNC,
-            command: OVERRIDE_SYNC,
-            arguments: [syncData],
-          };
-          host.outSyncStatusBar.text = "$(warning)";
-          host.outSyncStatusBar.command = overrideSyncCommand;
-          host.outSyncStatusBar.tooltip = r.outOfSync;
-          host.outSyncStatusBar.show();
-        } else {
-          host.outSyncStatusBar.hide();
-        }
-        host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
-        host.statusBar.tooltip = r.tips;
-        host.statusBar.show();
+        try {
+          let r: SyncMsg;
+          r = JSON.parse(result) as SyncMsg;
+          if (r.outOfSync) {
+            const overrideSyncCommand: vscode.Command = {
+              title: OVERRIDE_SYNC,
+              command: OVERRIDE_SYNC,
+              arguments: [syncData],
+            };
+            host.outSyncStatusBar.text = "$(warning)";
+            host.outSyncStatusBar.command = overrideSyncCommand;
+            host.outSyncStatusBar.tooltip = r.outOfSync;
+            host.outSyncStatusBar.show();
+          } else {
+            host.outSyncStatusBar.hide();
+          }
+          host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
+          host.statusBar.tooltip = r.tips;
+          host.statusBar.show();
+        } catch (e) {}
       }
     }, 500);
   }
