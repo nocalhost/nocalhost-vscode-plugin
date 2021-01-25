@@ -86,6 +86,8 @@ export default class PortForwardCommand implements ICommand {
         ports,
         podName
       );
+      // refresh status
+      node.setStatus("");
       host.showInformationMessage("Started Port Forward");
     } else {
       const terminalCommands = ["port-forward", podName, portMap];

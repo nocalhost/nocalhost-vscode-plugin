@@ -158,7 +158,10 @@ export async function startPortForward(
 
   host.log(`[cmd] ${portForwardCommand}`, true);
 
-  await execChildProcessAsync(host, portForwardCommand, []);
+  await host.showProgressing(`Starting port-forward`, async (progress) => {
+    await execChildProcessAsync(host, portForwardCommand, []);
+    await host.delay(2500);
+  });
 }
 
 export async function endPortForward(

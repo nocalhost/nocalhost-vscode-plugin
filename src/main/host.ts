@@ -168,6 +168,14 @@ export class Host implements vscode.Disposable {
       vscode.workspace.workspaceFolders[0].uri.fsPath
     );
   }
+
+  delay(time: number) {
+    return new Promise<void>((res, rej) => {
+      setTimeout(() => {
+        res();
+      }, time);
+    });
+  }
 }
 
 export default new Host();
