@@ -111,7 +111,8 @@ export async function devStart(
     isOld: boolean;
     dirs: string | Array<string>;
   },
-  storageClass?: string
+  storageClass?: string,
+  devStartAppendCommand?: string
 ) {
   let options = "";
   if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
@@ -126,7 +127,9 @@ export async function devStart(
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
-    `dev start ${appName} -d ${workLoadName} ${options}`
+    `dev start ${appName} -d ${workLoadName} ${options} ${
+      devStartAppendCommand ? devStartAppendCommand : ""
+    }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
   await execChildProcessAsync(host, devStartCommand, []);

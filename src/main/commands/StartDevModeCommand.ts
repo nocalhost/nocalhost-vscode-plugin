@@ -7,6 +7,7 @@ import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import {
   TMP_APP,
+  TMP_DEVSTART_APPEND_COMMAND,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
@@ -32,6 +33,7 @@ export interface ControllerNodeApi {
   getKubeConfigPath: () => string;
   getAppName: () => string;
   getStorageClass: () => string | undefined;
+  getDevStartAppendCommand: () => string | undefined;
 }
 
 export default class StartDevModeCommand implements ICommand {
@@ -225,7 +227,8 @@ export default class StartDevModeCommand implements ICommand {
               isOld: isOld,
               dirs: dirs,
             },
-            node.getStorageClass()
+            node.getStorageClass(),
+            node.getDevStartAppendCommand()
           );
           host.log("dev start end", true);
           host.log("", true);
@@ -307,6 +310,11 @@ export default class StartDevModeCommand implements ICommand {
     const storageClass = node.getStorageClass();
     if (storageClass) {
       fileStore.set(TMP_STORAGE_CLASS, storageClass);
+    }
+
+    const devStartAppendCommand = node.getDevStartAppendCommand();
+    if (devStartAppendCommand) {
+      fileStore.set(TMP_DEVSTART_APPEND_COMMAND, devStartAppendCommand);
     }
   }
 

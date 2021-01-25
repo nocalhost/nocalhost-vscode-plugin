@@ -20,6 +20,7 @@ import {
   TMP_WORKLOAD,
   WELCOME_DID_SHOW,
   TMP_WORKLOAD_PATH,
+  TMP_DEVSTART_APPEND_COMMAND,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -104,6 +105,7 @@ function launchDevspace() {
   const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
   const tmpKubeConfigPath = fileStore.get(TMP_KUBECONFIG_PATH);
   const tmpStorageClass = fileStore.get(TMP_STORAGE_CLASS);
+  const tmpDevstartAppendCommand = fileStore.get(TMP_DEVSTART_APPEND_COMMAND);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     fileStore.remove(TMP_APP);
     fileStore.remove(TMP_WORKLOAD);
@@ -111,6 +113,7 @@ function launchDevspace() {
     fileStore.remove(TMP_RESOURCE_TYPE);
     fileStore.remove(TMP_KUBECONFIG_PATH);
     fileStore.remove(TMP_WORKLOAD_PATH);
+    fileStore.remove(TMP_DEVSTART_APPEND_COMMAND);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -133,6 +136,7 @@ function launchDevspace() {
       getKubeConfigPath: () => tmpKubeConfigPath,
       getAppName: () => tmpApp,
       getStorageClass: () => tmpStorageClass,
+      getDevStartAppendCommand: () => tmpDevstartAppendCommand,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }
