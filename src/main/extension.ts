@@ -20,6 +20,7 @@ import {
   TMP_WORKLOAD,
   WELCOME_DID_SHOW,
   TMP_WORKLOAD_PATH,
+  TMP_DEVSTART_APPEND_COMMAND,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -30,6 +31,8 @@ import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
+import TextDocumentContentProvider from "./textDocumentContentProvider";
+// import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -37,12 +40,20 @@ export async function activate(context: vscode.ExtensionContext) {
   await init(context);
   let appTreeProvider = new NocalhostAppProvider();
   initCommands(context, appTreeProvider);
+
+  // TODO: DO NOT DELETE, FOR: [webview integration]
+  // const dataCenter: DataCenter = DataCenter.getInstance();
+  // dataCenter.addListener(() => appTreeProvider.refresh());
+
   let nocalhostFileSystemProvider = new NocalhostFileSystemProvider();
   appTreeView = vscode.window.createTreeView("Nocalhost", {
     treeDataProvider: appTreeProvider,
   });
 
+  const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
+
   let subs = [
+    host,
     {
       dispose: appTreeView.dispose,
     },
@@ -54,6 +65,10 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.registerFileSystemProvider(
       "NocalhostRW",
       nocalhostFileSystemProvider
+    ),
+    vscode.workspace.registerTextDocumentContentProvider(
+      "nhtext",
+      textDocumentContentProvider
     ),
     vscode.window.onDidChangeWindowState((e) => {
       if (e.focused) {
@@ -75,7 +90,6 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   launchDevspace();
-  // appTreeProvider.startRefreshInterval(10000);
 }
 
 function launchDevspace() {
@@ -91,6 +105,7 @@ function launchDevspace() {
   const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
   const tmpKubeConfigPath = fileStore.get(TMP_KUBECONFIG_PATH);
   const tmpStorageClass = fileStore.get(TMP_STORAGE_CLASS);
+  const tmpDevstartAppendCommand = fileStore.get(TMP_DEVSTART_APPEND_COMMAND);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     fileStore.remove(TMP_APP);
     fileStore.remove(TMP_WORKLOAD);
@@ -98,6 +113,7 @@ function launchDevspace() {
     fileStore.remove(TMP_RESOURCE_TYPE);
     fileStore.remove(TMP_KUBECONFIG_PATH);
     fileStore.remove(TMP_WORKLOAD_PATH);
+    fileStore.remove(TMP_DEVSTART_APPEND_COMMAND);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -120,6 +136,7 @@ function launchDevspace() {
       getKubeConfigPath: () => tmpKubeConfigPath,
       getAppName: () => tmpApp,
       getStorageClass: () => tmpStorageClass,
+      getDevStartAppendCommand: () => tmpDevstartAppendCommand,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }

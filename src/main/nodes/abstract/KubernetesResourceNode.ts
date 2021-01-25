@@ -56,7 +56,7 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
 
   public getKubeConfigPath() {
     const appNode = this.getAppNode();
-    return appNode.getKUbeconfigPath();
+    return appNode.getKubeConfigPath();
   }
 
   public getAppName() {
@@ -67,5 +67,10 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
   public getStorageClass() {
     const appNode = this.getAppNode();
     return appNode.info.storageClass;
+  }
+
+  public getDevStartAppendCommand() {
+    const appNode = this.getAppNode();
+    return appNode.info.devStartAppendCommand;
   }
 }

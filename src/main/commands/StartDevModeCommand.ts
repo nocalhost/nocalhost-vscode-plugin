@@ -3,10 +3,11 @@ import * as os from "os";
 
 import ICommand from "./ICommand";
 import * as fileStore from "../store/fileStore";
-import { EXEC, START_DEV_MODE } from "./constants";
+import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import {
   TMP_APP,
+  TMP_DEVSTART_APPEND_COMMAND,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
@@ -32,6 +33,7 @@ export interface ControllerNodeApi {
   getKubeConfigPath: () => string;
   getAppName: () => string;
   getStorageClass: () => string | undefined;
+  getDevStartAppendCommand: () => string | undefined;
 }
 
 export default class StartDevModeCommand implements ICommand {
@@ -225,7 +227,8 @@ export default class StartDevModeCommand implements ICommand {
               isOld: isOld,
               dirs: dirs,
             },
-            node.getStorageClass()
+            node.getStorageClass(),
+            node.getDevStartAppendCommand()
           );
           host.log("dev start end", true);
           host.log("", true);
@@ -258,6 +261,7 @@ export default class StartDevModeCommand implements ICommand {
               node.getKubeConfigPath(),
               appName,
               node.name,
+              "devPorts",
               svc.devPorts
             );
             host.log("port forward end", true);
@@ -267,14 +271,18 @@ export default class StartDevModeCommand implements ICommand {
           progress.report({
             message: "DevMode Started.",
           });
-          await node.setStatus("");
-
+          node.setStatus("");
           await vscode.commands.executeCommand(EXEC, node);
         } catch (error) {
           node.setStatus("");
         }
       }
     );
+
+    vscode.commands.executeCommand(SYNC_SERVICE, {
+      app: appName,
+      service: node.name,
+    });
   }
 
   private getCurrentRootPath() {
@@ -295,11 +303,16 @@ export default class StartDevModeCommand implements ICommand {
     fileStore.set(TMP_WORKLOAD, node.name);
     fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
-    fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKUbeconfigPath());
+    fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     fileStore.set(TMP_WORKLOAD_PATH, workloadPath);
     const storageClass = node.getStorageClass();
     if (storageClass) {
       fileStore.set(TMP_STORAGE_CLASS, storageClass);
+    }
+
+    const devStartAppendCommand = node.getDevStartAppendCommand();
+    if (devStartAppendCommand) {
+      fileStore.set(TMP_DEVSTART_APPEND_COMMAND, devStartAppendCommand);
     }
   }
 

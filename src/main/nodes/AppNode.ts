@@ -7,15 +7,18 @@ import state from "../state";
 import { APP_FOLDER, ID_SPLIT } from "./nodeContants";
 import { resolveVSCodeUri } from "../utils/fileUtil";
 import * as path from "path";
-import { BaseNocalhostNode, AppInfo } from "./types/nodeType";
+import { BaseNocalhostNode, AppInfo, CurrentAppStatus } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NetworkFolderNode } from "./networks/NetworkFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
-import { StorageFolder } from "./storage/storageFolder";
+import { StorageFolder } from "./storage/StorageFolder";
 import { ApplicationInfo } from "../api";
+import host from "../host";
+import { SYNC_SERVICE } from "../commands/constants";
+import services, { ServiceResult } from "../common/DataCenter/services";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -31,7 +34,9 @@ export class AppNode extends NocalhostFolderNode {
   public resourceDir: Array<string>;
   public info: ApplicationInfo;
   public parent: NocalhostRootNode;
+  // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
+  private currentAppStatus: CurrentAppStatus | undefined;
   constructor(
     parent: NocalhostRootNode,
     installType: string,
@@ -81,11 +86,34 @@ export class AppNode extends NocalhostFolderNode {
     return this.context["application_url"];
   }
 
+  get namespace() {
+    return this.info.namespace;
+  }
+
   public async getApplicationInfo() {
     if (this.nhctlAppInfo) {
       return this.nhctlAppInfo;
     }
     return this.freshApplicationInfo();
+  }
+
+  public async getCurrentAppStatus() {
+    if (this.currentAppStatus) {
+      return this.currentAppStatus;
+    }
+    return this.freshCurrentAppStatus();
+  }
+
+  public async freshCurrentAppStatus() {
+    let info = {} as CurrentAppStatus;
+    const infoStr = await nhctl
+      .loadResource(host, this.name)
+      .catch((err) => {});
+    if (infoStr) {
+      info = yaml.parse(infoStr as string);
+    }
+    this.currentAppStatus = info;
+    return this.currentAppStatus;
   }
 
   public async freshApplicationInfo() {
@@ -97,6 +125,19 @@ export class AppNode extends NocalhostFolderNode {
     this.nhctlAppInfo = info;
     return this.nhctlAppInfo;
   }
+
+  // public async getDevelopingNodes(): Promise<Array<any>> {
+  //   const result: ServiceResult = await services.fetchNHResource(this.name);
+  //   if (result.success && result.value) {
+  //     try {
+  //       const obj = yaml.parse(result.value);
+  //       this.developingNodes = obj.svcProfile.filter((n: any) => n.developing);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   }
+  //   return this.developingNodes;
+  // }
 
   private updateIcon(treeItem: vscode.TreeItem) {
     if (this.installed() && !this.unInstalling()) {
@@ -116,11 +157,14 @@ export class AppNode extends NocalhostFolderNode {
       treeItem.contextValue = "application-installed";
     }
     if (["helmGit", "helmRepo"].includes(this.installType)) {
-      treeItem.contextValue += `${treeItem.contextValue}-helm`;
+      treeItem.contextValue = `${treeItem.contextValue}-helm`;
     }
+    // if (this.developingNodes.length > 0) {
+    //   treeItem.contextValue = `${treeItem.contextValue}-developing`;
+    // }
   }
 
-  public getKUbeconfigPath() {
+  public getKubeConfigPath() {
     const kubeconfigPath = path.resolve(
       KUBE_CONFIG_DIR,
       `${this.id}_${this.devSpaceId}_config`
@@ -145,6 +189,9 @@ export class AppNode extends NocalhostFolderNode {
   async getTreeItem() {
     const info = await this.getApplicationInfo();
     this.installStatus = info.installed ? 1 : 0;
+    if (info.installed) {
+      await this.getCurrentAppStatus();
+    }
     let collapseState: vscode.TreeItemCollapsibleState;
     if (this.unInstalled()) {
       collapseState = vscode.TreeItemCollapsibleState.None;
@@ -153,15 +200,34 @@ export class AppNode extends NocalhostFolderNode {
         state.get(this.getNodeStateId()) ||
         vscode.TreeItemCollapsibleState.Collapsed;
     }
+    // await this.getDevelopingNodes();
     let treeItem = new vscode.TreeItem(this.label, collapseState);
     this.updateIcon(treeItem);
     this.updateContext(treeItem);
-    // treeItem.command = {
-    //   command: "Nocalhost.loadResource",
-    //   title: "loadResource",
-    //   arguments: [this],
-    // };
+    this.updateSyncStatus();
     return treeItem;
+  }
+
+  updateSyncStatus() {
+    if (!this.installed()) {
+      return;
+    }
+    const svcProfiles =
+      (this.nhctlAppInfo && this.nhctlAppInfo.svcProfile) || [];
+    for (const service of svcProfiles) {
+      if (
+        service.developing &&
+        service.localAbsoluteSyncDirFromDevStartPlugin.length > 0 &&
+        service.localAbsoluteSyncDirFromDevStartPlugin[0] ===
+          host.getCurrentRootPath()
+      ) {
+        vscode.commands.executeCommand(SYNC_SERVICE, {
+          app: this.name,
+          service: service.name,
+        });
+        break;
+      }
+    }
   }
 
   installed(): boolean {

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import ICommand from "./ICommand";
-import { END_DEV_MODE } from "./constants";
+import { END_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
@@ -21,8 +21,6 @@ export default class EndDevModeCommand implements ICommand {
     }
     const appNode = node.getAppNode();
     host.getOutputChannel().show(true);
-    host.showInformationMessage("Ending DevMode.");
-    host.log("Ending DevMode ...", true);
     await nhctl.endDevMode(
       host,
       node.getKubeConfigPath(),
@@ -30,7 +28,6 @@ export default class EndDevModeCommand implements ICommand {
       node.name
     );
     await node.setStatus("");
-    host.showInformationMessage("DevMode Ended.");
-    host.log("DevMode Ended", true);
+    vscode.commands.executeCommand(SYNC_SERVICE, {});
   }
 }

@@ -1,11 +1,11 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import { ENDPOINT } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
+import { NetworkResourceNode } from "../NetworkResourceNode";
 
-export class Endpoint extends KubernetesResourceNode {
+export class Endpoint extends NetworkResourceNode {
   type = ENDPOINT;
-  public resourceType = "Endpoints";
+  public resourceType = "ep";
   constructor(
     public parent: BaseNocalhostNode,
     public label: string,

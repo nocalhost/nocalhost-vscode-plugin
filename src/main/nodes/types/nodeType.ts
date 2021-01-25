@@ -11,6 +11,18 @@ export interface AppInfo {
   resourcePath: string;
 }
 
+export interface CurrentAppStatus {
+  name: string;
+  releasename: string;
+  namespace: string;
+  kubeconfig: string;
+  dependencyConfigMapName: string;
+  appType: string;
+  svcProfile: Array<SvcProfile & PortForwardData>;
+  installed: boolean;
+  resourcePath: string;
+}
+
 // include application info
 export interface ServiceProfile {
   name: string;
@@ -24,6 +36,7 @@ export interface ServiceProfile {
 }
 
 export interface SvcProfile {
+  actualName: string;
   name: string;
   type: string;
   developing: boolean;
@@ -34,8 +47,14 @@ export interface SvcProfile {
   remoteSyncthingGUIPort: number;
   localSyncthingPort: number;
   localSyncthingGUIPort: number;
-  localAbsoluteSyncDirFromDevStartPlugin: any;
+  localAbsoluteSyncDirFromDevStartPlugin: Array<string>;
   devPortList: Array<string>;
+}
+
+export interface PortForwardData {
+  devPortList: Array<string>;
+  portForwardStatusList: Array<string>;
+  portForwardPidList: Array<string>;
 }
 
 export interface BaseNocalhostNode {

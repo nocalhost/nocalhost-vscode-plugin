@@ -34,7 +34,7 @@ export default class ResetAppCommand implements ICommand {
     vscode.commands.executeCommand("Nocalhost.refresh");
     await this.uninstall(
       host,
-      appNode.getKUbeconfigPath(),
+      appNode.getKubeConfigPath(),
       appNode.name,
       appNode.id,
       appNode.devSpaceId

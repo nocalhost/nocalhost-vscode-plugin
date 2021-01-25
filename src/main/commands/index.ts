@@ -20,6 +20,13 @@ import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
 import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
+import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
+import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
+import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
+import SyncServiceCommand from "./SyncServiceCommand";
+import OverrideSyncCommand from "./OverrideSyncCommand";
+import PortForwardListCommand from "./PortForwardListCommand";
+import CopyTerminalCommand from "./CopyTerminalCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -43,10 +50,18 @@ export default function initCommands(
   new LoadResourceCommand(context);
   new LogCommand(context);
   new PortForwardCommand(context);
+  new PortForwardListCommand(context);
   new ExecCommand(context);
+  new CopyTerminalCommand(context);
   new ResetCommand(context);
   new CleanPvcCommand(context);
   new ResetAppCommand(context);
+  new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
   new AssociateLocalDirectoryCommand(context);
+
+  new ApplyKubernetesObjectCommand(context);
+  new DeleteKubernetesObjectCommand(context);
+  new SyncServiceCommand(context);
+  new OverrideSyncCommand(context);
 }

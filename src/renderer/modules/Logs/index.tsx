@@ -5,8 +5,9 @@ import qs from "qs";
 import hljs from "highlight.js";
 import { store } from "../../store/store";
 import { CustomThemeOptions } from "../../themes";
-import { ThemeType, LOG_INTERVAL_MS, LOG_TAIL_COUNT } from "../../constants";
+import { ThemeType, LOG_TAIL_COUNT } from "../../constants";
 import fetchLogs from "../../services/fetchLogs";
+import useInterval from "../../hooks/useInterval";
 
 const useStyles = makeStyles((theme: CustomThemeOptions) =>
   createStyles({
@@ -52,6 +53,9 @@ const Logs: React.FC = () => {
   } = useContext(store);
   const history = useHistory();
   const search: string = history.location.search;
+  const query: qs.ParsedQs = qs.parse(search, {
+    ignoreQueryPrefix: true,
+  });
   const elementRef: React.MutableRefObject<HTMLDivElement | null> = useRef(
     null
   );
@@ -82,36 +86,25 @@ const Logs: React.FC = () => {
     );
   };
 
+  useInterval(
+    fetchLogs,
+    [
+      {
+        id: query.id as string,
+        app: query.app as string,
+        pod: query.pod as string,
+        container: query.container as string,
+        tail: LOG_TAIL_COUNT,
+      },
+    ],
+    [search]
+  );
+
   useEffect(() => {
     if (elementRef.current) {
       elementRef.current.scrollIntoView({ behavior: "auto" });
     }
   }, [logs]);
-
-  useEffect(() => {
-    const query: qs.ParsedQs = qs.parse(search, {
-      ignoreQueryPrefix: true,
-    });
-    fetchLogs({
-      logId: query.logId as string,
-      pod: query.pod as string,
-      container: query.container as string,
-      kubeConfig: query.kubeConfig as string,
-      tail: LOG_TAIL_COUNT,
-    });
-    const timer = setInterval(() => {
-      fetchLogs({
-        logId: query.logId as string,
-        pod: query.pod as string,
-        container: query.container as string,
-        kubeConfig: query.kubeConfig as string,
-        tail: LOG_TAIL_COUNT,
-      });
-    }, LOG_INTERVAL_MS);
-    return () => {
-      clearInterval(timer);
-    };
-  }, [search]);
 
   useEffect(() => {
     const $link = document.getElementById("syntax-theme");
@@ -127,7 +120,7 @@ const Logs: React.FC = () => {
   }, [theme]);
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} data-testid="logs">
       {logs.items.length > 0 ? renderList() : renderNoContent()}
     </div>
   );

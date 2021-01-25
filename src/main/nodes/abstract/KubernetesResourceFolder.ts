@@ -30,8 +30,13 @@ export abstract class KubernetesResourceFolder extends NocalhostFolderNode {
     }
   }
 
+  public getAppName() {
+    const appNode = this.getAppNode();
+    return appNode.name;
+  }
+
   public getKubeConfigPath() {
     const appNode = this.getAppNode();
-    return appNode.getKUbeconfigPath();
+    return appNode.getKubeConfigPath();
   }
 }

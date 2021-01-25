@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as vscode from "vscode";
-
 import { getApplication } from "../api";
 import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR, USERINFO } from "../constants";
 import { AppNode } from "./AppNode";
@@ -11,6 +10,11 @@ import * as fileUtil from "../utils/fileUtil";
 import * as fileStore from "../store/fileStore";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
+  private static childNodes: Array<AppNode | NocalhostAccountNode> = [];
+  public static getChildNodes(): Array<AppNode | NocalhostAccountNode> {
+    return NocalhostRootNode.childNodes;
+  }
+
   public label: string = "Nocalhost";
   public type = ROOT;
   constructor(public parent: BaseNocalhostNode | null) {}
@@ -23,7 +27,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     parent?: BaseNocalhostNode
   ): Promise<Array<AppNode | NocalhostAccountNode>> {
     const res = await getApplication();
-    let result: Array<AppNode | NocalhostAccountNode> = res.map((app) => {
+    let all: Array<Promise<any>> = [];
+    NocalhostRootNode.childNodes = res.map((app) => {
       let context = app.context;
       let obj: {
         url?: string;
@@ -51,7 +56,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         KUBE_CONFIG_DIR,
         `${app.id}_${app.devspaceId}_config`
       );
-      fileUtil.writeFile(filePath, app.kubeconfig);
+      all.push(fileUtil.writeFile(filePath, app.kubeconfig));
 
       const nhConfigPath = path.resolve(
         HELM_NH_CONFIG_DIR,
@@ -74,12 +79,16 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       );
     });
 
+    await Promise.all(all);
+
     const userinfo = fileStore.get(USERINFO);
 
-    if (result.length > 0) {
-      result.unshift(new NocalhostAccountNode(this, `Hi, ${userinfo.name}`));
+    if (NocalhostRootNode.childNodes.length > 0) {
+      NocalhostRootNode.childNodes.unshift(
+        new NocalhostAccountNode(this, `Hi, ${userinfo.name}`)
+      );
     }
-    return result;
+    return NocalhostRootNode.childNodes;
   }
 
   private generateInstallType(source: string, originInstallType: string) {

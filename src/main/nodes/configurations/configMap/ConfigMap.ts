@@ -1,9 +1,9 @@
 import state from "../../../state";
-import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
+import { ConfigurationResourceNode } from "../ConfigurationResourceNode";
 import { CONFIG_MAP } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
 
-export class ConfigMap extends KubernetesResourceNode {
+export class ConfigMap extends ConfigurationResourceNode {
   type = CONFIG_MAP;
   public resourceType = "configMap";
   constructor(

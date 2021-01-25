@@ -41,7 +41,7 @@ const Welcome: React.FC = () => {
   };
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} data-testid="welcome">
       <h1>Welcome to Nocalhost</h1>
       <div className={classes.divider}></div>
       <p className={classes.paragraph}>

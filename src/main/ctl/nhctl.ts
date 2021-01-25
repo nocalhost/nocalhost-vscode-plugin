@@ -1,8 +1,13 @@
 import * as vscode from "vscode";
-import { execAsyncWithReturn, execChildProcessAsync } from "./shell";
+import {
+  execAsyncWithReturn,
+  execChildProcessAsync,
+  ShellResult,
+} from "./shell";
 import host, { Host } from "../host";
 import { spawn } from "child_process";
 import * as yaml from "yaml";
+import { PortForwardData, SvcProfile } from "../nodes/types/nodeType";
 
 export function install(
   host: Host,
@@ -61,7 +66,6 @@ export function install(
         let errorStr = "";
         proc.on("close", (code) => {
           if (code === 0) {
-            host.showInformationMessage(`Application ${appName} installed`);
             resolve(null);
           } else {
             reject(errorStr);
@@ -73,7 +77,7 @@ export function install(
         });
 
         proc.stderr.on("data", function (data) {
-          errorStr = data + "";
+          errorStr += data + "";
           host.log("" + data, true);
         });
       })
@@ -86,7 +90,7 @@ export async function uninstall(
   appName: string
 ) {
   await host.showProgressing(
-    `Unnnstalling application: ${appName}`,
+    `Uninstalling application: ${appName}`,
     async (progress) => {
       const uninstallCommand = nhctlCommand(
         kubeconfigPath,
@@ -107,7 +111,8 @@ export async function devStart(
     isOld: boolean;
     dirs: string | Array<string>;
   },
-  storageClass?: string
+  storageClass?: string,
+  devStartAppendCommand?: string
 ) {
   let options = "";
   if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
@@ -122,7 +127,9 @@ export async function devStart(
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
-    `dev start ${appName} -d ${workLoadName} ${options}`
+    `dev start ${appName} -d ${workLoadName} ${options} ${
+      devStartAppendCommand ? devStartAppendCommand : ""
+    }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
   await execChildProcessAsync(host, devStartCommand, []);
@@ -133,7 +140,9 @@ export async function startPortForward(
   kubeconfigPath: string,
   appName: string,
   workloadName: string,
-  ports?: Array<string>
+  way: "manual" | "devPorts",
+  ports?: Array<string>,
+  pod?: string
 ) {
   let portOptions = "";
   if (ports && ports.length > 0) {
@@ -142,12 +151,44 @@ export async function startPortForward(
   }
   const portForwardCommand = nhctlCommand(
     kubeconfigPath,
-    `port-forward ${appName} -d ${workloadName} ${portOptions}`
+    `port-forward start ${appName} -d ${workloadName} ${portOptions} ${
+      pod ? `--pod ${pod}` : ""
+    } --way ${way}`
   );
 
   host.log(`[cmd] ${portForwardCommand}`, true);
 
-  await execChildProcessAsync(host, portForwardCommand, []);
+  await host.showProgressing(`Starting port-forward`, async (progress) => {
+    await execChildProcessAsync(host, portForwardCommand, []);
+    await host.delay(2500);
+  });
+}
+
+export async function endPortForward(
+  appName: string,
+  workloadName: string,
+  port: string
+) {
+  // nhctl port-forward end coding-agile -d nginx -p 5006:5005
+  const endPortForwardCommand = `nhctl port-forward end ${appName} -d ${workloadName} -p ${port}`;
+
+  host.log(`[cmd] ${endPortForwardCommand}`, true);
+
+  await execChildProcessAsync(host, endPortForwardCommand, []);
+}
+
+export async function getCurrentServiceStatusInfo(
+  appName: string,
+  workloadName: string
+) {
+  const describeCommand = `nhctl describe ${appName} -d ${workloadName}`;
+
+  const result = await execAsyncWithReturn(describeCommand, []);
+
+  const portforwardData = yaml.parse(result.stdout) as SvcProfile &
+    PortForwardData;
+
+  return portforwardData;
 }
 
 export async function syncFile(
@@ -169,13 +210,18 @@ export async function endDevMode(
   appName: string,
   workLoadName: string
 ) {
-  const end = nhctlCommand(
-    kubeconfigPath,
-    `dev end ${appName} -d ${workLoadName} `
+  await host.showProgressing(
+    `Ending DevMode: ${appName}/${workLoadName}`,
+    async (progress) => {
+      const end = nhctlCommand(
+        kubeconfigPath,
+        `dev end ${appName} -d ${workLoadName} `
+      );
+      host.log(`[cmd] ${end}`, true);
+      host.disposeDebug();
+      await execChildProcessAsync(host, end, []);
+    }
   );
-  host.log(`[cmd] ${end}`, true);
-  host.disposeDebug();
-  await execChildProcessAsync(host, end, []);
 }
 
 export async function loadResource(host: Host, appName: string) {
@@ -273,6 +319,30 @@ export async function cleanPVC(
   } ${pvcName ? `--name ${pvcName}` : ""}`;
   host.log(`[cmd] ${cleanCommand}`, true);
   await execChildProcessAsync(host, cleanCommand, []);
+}
+
+export async function getSyncStatus(appName: string, workloadName: string) {
+  const syncCommand = `nhctl sync-status ${appName} -d ${workloadName}`;
+  let result: ShellResult = {
+    stdout: "",
+    stderr: "",
+    code: 0,
+  };
+  result = (await execAsyncWithReturn(
+    syncCommand,
+    []
+  ).catch(() => {})) as ShellResult;
+
+  return result.stdout;
+}
+
+export async function overrideSyncFolders(
+  appName: string,
+  workloadName: string
+) {
+  const overrideSyncCommand = `nhctl sync-status ${appName} -d ${workloadName} --override`;
+  host.log(`[cmd] ${overrideSyncCommand}`);
+  await execChildProcessAsync(host, overrideSyncCommand, []);
 }
 
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
