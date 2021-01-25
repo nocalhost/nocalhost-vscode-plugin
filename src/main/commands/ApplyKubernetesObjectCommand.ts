@@ -11,6 +11,7 @@ import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 import { APPLY_KUBERNETES_OBJECT } from "./constants";
+import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 
 export default class ApplyKubernetesObjectCommand implements ICommand {
   command: string = APPLY_KUBERNETES_OBJECT;
@@ -60,8 +61,19 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       id
     ) as KubernetesResourceNode;
     const nodeName: string = node.name;
-    const namespace: string = node.getAppNode().namespace;
     const kubeConfig: string = node.getKubeConfigPath();
+    const appNode: AppNode = node.getAppNode();
+    const namespace: string = appNode.namespace;
+    let isDeveloping: boolean = false;
+    if (node instanceof Deployment) {
+      isDeveloping = (await node.getStatus()) === "developing";
+    }
+    if (isDeveloping) {
+      return {
+        success: false,
+        value: "Unable to apply, please exit the dev mode first.",
+      };
+    }
     const editor: vscode.TextEditor | undefined =
       vscode.window.activeTextEditor;
     if (!editor) {
@@ -103,7 +115,8 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       (acc, applicaiton: AppNode | NocalhostAccountNode) => {
         return {
           ...acc,
-          ...(applicaiton instanceof AppNode
+          ...(applicaiton instanceof AppNode &&
+          applicaiton.developingNodes.length === 0
             ? { [applicaiton.label]: applicaiton.getKubeConfigPath() }
             : {}),
         };
