@@ -34,7 +34,7 @@ export class AppNode extends NocalhostFolderNode {
   public resourceDir: Array<string>;
   public info: ApplicationInfo;
   public parent: NocalhostRootNode;
-  public developingNodes: any[] = [];
+  // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
   private currentAppStatus: CurrentAppStatus | undefined;
   constructor(
@@ -126,18 +126,18 @@ export class AppNode extends NocalhostFolderNode {
     return this.nhctlAppInfo;
   }
 
-  public async getDevelopingNodes(): Promise<Array<any>> {
-    const result: ServiceResult = await services.fetchNHResource(this.name);
-    if (result.success && result.value) {
-      try {
-        const obj = yaml.parse(result.value);
-        this.developingNodes = obj.svcProfile.filter((n: any) => n.developing);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return this.developingNodes;
-  }
+  // public async getDevelopingNodes(): Promise<Array<any>> {
+  //   const result: ServiceResult = await services.fetchNHResource(this.name);
+  //   if (result.success && result.value) {
+  //     try {
+  //       const obj = yaml.parse(result.value);
+  //       this.developingNodes = obj.svcProfile.filter((n: any) => n.developing);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   }
+  //   return this.developingNodes;
+  // }
 
   private updateIcon(treeItem: vscode.TreeItem) {
     if (this.installed() && !this.unInstalling()) {
@@ -159,9 +159,9 @@ export class AppNode extends NocalhostFolderNode {
     if (["helmGit", "helmRepo"].includes(this.installType)) {
       treeItem.contextValue = `${treeItem.contextValue}-helm`;
     }
-    if (this.developingNodes.length > 0) {
-      treeItem.contextValue = `${treeItem.contextValue}-developing`;
-    }
+    // if (this.developingNodes.length > 0) {
+    //   treeItem.contextValue = `${treeItem.contextValue}-developing`;
+    // }
   }
 
   public getKubeConfigPath() {
@@ -200,7 +200,7 @@ export class AppNode extends NocalhostFolderNode {
         state.get(this.getNodeStateId()) ||
         vscode.TreeItemCollapsibleState.Collapsed;
     }
-    await this.getDevelopingNodes();
+    // await this.getDevelopingNodes();
     let treeItem = new vscode.TreeItem(this.label, collapseState);
     this.updateIcon(treeItem);
     this.updateContext(treeItem);
