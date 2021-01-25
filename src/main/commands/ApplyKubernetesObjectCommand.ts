@@ -131,7 +131,6 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
   }
 
   private async applyNode(target: AppNode): Promise<ServiceResult> {
-    console.log(111, target);
     const kubeConfig: string = target.getKubeConfigPath();
     const paths: vscode.Uri[] | undefined = await host.showOpenDialog({
       canSelectMany: false,
