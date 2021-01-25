@@ -27,6 +27,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     parent?: BaseNocalhostNode
   ): Promise<Array<AppNode | NocalhostAccountNode>> {
     const res = await getApplication();
+    let all: Array<Promise<any>> = [];
     NocalhostRootNode.childNodes = res.map((app) => {
       let context = app.context;
       let obj: {
@@ -55,7 +56,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         KUBE_CONFIG_DIR,
         `${app.id}_${app.devspaceId}_config`
       );
-      fileUtil.writeFile(filePath, app.kubeconfig);
+      all.push(fileUtil.writeFile(filePath, app.kubeconfig));
 
       const nhConfigPath = path.resolve(
         HELM_NH_CONFIG_DIR,
@@ -77,6 +78,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         app
       );
     });
+
+    await Promise.all(all);
 
     const userinfo = fileStore.get(USERINFO);
 
