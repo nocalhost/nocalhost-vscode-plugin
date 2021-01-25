@@ -90,7 +90,7 @@ export async function uninstall(
   appName: string
 ) {
   await host.showProgressing(
-    `Unnnstalling application: ${appName}`,
+    `Uninstalling application: ${appName}`,
     async (progress) => {
       const uninstallCommand = nhctlCommand(
         kubeconfigPath,
