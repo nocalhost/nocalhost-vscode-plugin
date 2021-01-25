@@ -271,10 +271,8 @@ export default class StartDevModeCommand implements ICommand {
           progress.report({
             message: "DevMode Started.",
           });
-          setTimeout(async () => {
-            node.setStatus("");
-            await vscode.commands.executeCommand(EXEC, node);
-          }, 1000);
+          node.setStatus("");
+          await vscode.commands.executeCommand(EXEC, node);
         } catch (error) {
           node.setStatus("");
         }
