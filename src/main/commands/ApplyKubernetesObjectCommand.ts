@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import * as vscode from "vscode";
 import * as querystring from "querystring";
 import * as tempy from "tempy";
@@ -24,7 +23,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       value: "",
     };
 
-    if (target instanceof KubernetesResourceNode) {
+    if (target instanceof AppNode) {
       result = await this.applyNode(target);
     } else {
       const scheme: string = target.scheme;
@@ -105,7 +104,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
         return {
           ...acc,
           ...(applicaiton instanceof AppNode
-            ? { [applicaiton.label]: applicaiton.getKUbeconfigPath() }
+            ? { [applicaiton.label]: applicaiton.getKubeConfigPath() }
             : {}),
         };
       },
@@ -131,9 +130,8 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
     return result;
   }
 
-  private async applyNode(
-    target: KubernetesResourceNode
-  ): Promise<ServiceResult> {
+  private async applyNode(target: AppNode): Promise<ServiceResult> {
+    console.log(111, target);
     const kubeConfig: string = target.getKubeConfigPath();
     const paths: vscode.Uri[] | undefined = await host.showOpenDialog({
       canSelectMany: false,

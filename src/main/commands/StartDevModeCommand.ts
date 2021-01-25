@@ -305,7 +305,7 @@ export default class StartDevModeCommand implements ICommand {
     fileStore.set(TMP_WORKLOAD, node.name);
     fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
-    fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKUbeconfigPath());
+    fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     fileStore.set(TMP_WORKLOAD_PATH, workloadPath);
     const storageClass = node.getStorageClass();
     if (storageClass) {

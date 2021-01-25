@@ -146,7 +146,7 @@ export class AppNode extends NocalhostFolderNode {
     }
   }
 
-  public getKUbeconfigPath() {
+  public getKubeConfigPath() {
     const kubeconfigPath = path.resolve(
       KUBE_CONFIG_DIR,
       `${this.id}_${this.devSpaceId}_config`
