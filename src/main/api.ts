@@ -85,6 +85,7 @@ export interface ApplicationInfo {
   devspaceId: number;
   spaceName: string;
   storageClass: string;
+  devStartAppendCommand: string;
 }
 
 export async function getApplication() {
@@ -106,6 +107,7 @@ export async function getApplication() {
       devspaceId: applications[i]["devspace_id"],
       spaceName: applications[i]["space_name"],
       storageClass: applications[i]["storage_class"],
+      devStartAppendCommand: applications[i]["dev_start_append_command"],
     };
     result.push(app);
   }
