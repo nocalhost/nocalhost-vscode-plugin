@@ -42,9 +42,10 @@ async function fetchNHResource(name: string): Promise<ServiceResult> {
 
 async function applyKubernetesObject(
   filePath: string,
-  kubeConfig: string
+  kubeConfig: string,
+  isDir = false
 ): Promise<ServiceResult> {
-  const command: string = `kubectl apply -f ${filePath} --kubeconfig ${kubeConfig}`;
+  const command: string = `kubectl apply ${isDir ? "-k" : "-f"} ${filePath} --kubeconfig ${kubeConfig}`;
   return await DataCenter.execCommand(command);
 }
 
