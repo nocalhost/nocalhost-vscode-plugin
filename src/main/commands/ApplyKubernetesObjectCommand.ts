@@ -51,11 +51,11 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
 
     if (result.success) {
       if (result.value) {
-        vscode.window.showInformationMessage(result.value)
+        vscode.window.showInformationMessage(result.value);
       }
     } else {
       if (result.value) {
-        vscode.window.showWarningMessage(result.value)
+        vscode.window.showWarningMessage(result.value);
       }
     }
   }
@@ -163,11 +163,13 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       };
     }
 
-    const applyList: Promise<ServiceResult>[] = uris.map(async (uri: vscode.Uri) => {
-      const path: string = uri.fsPath || uri.path;
-      const isDir: boolean = fs.lstatSync(path).isDirectory();
-      return (await services.applyKubernetesObject(path, kubeConfig, isDir));
-    })
+    const applyList: Promise<ServiceResult>[] = uris.map(
+      async (uri: vscode.Uri) => {
+        const path: string = uri.fsPath || uri.path;
+        const isDir: boolean = fs.lstatSync(path).isDirectory();
+        return await services.applyKubernetesObject(path, kubeConfig, isDir);
+      }
+    );
 
     const applyResults: ServiceResult[] = await Promise.all(applyList);
     const successMessage: string[] = [];
@@ -182,17 +184,21 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       }
     }
     if (successMessage.length > 0) {
-      value += applyResults.length > 1 ?
-        `${successMessage.length} success: ${successMessage.join(",")}.` : `${successMessage.join(",")}.`;
+      value +=
+        applyResults.length > 1
+          ? `${successMessage.length} success: ${successMessage.join(",")}.`
+          : `${successMessage.join(",")}.`;
     }
     if (failureMessage.length > 0) {
-      value += applyResults.length > 1 ?
-        `${failureMessage.length} failure: ${failureMessage.join(",")}.` : `${failureMessage.join(",")}.`;
+      value +=
+        applyResults.length > 1
+          ? `${failureMessage.length} failure: ${failureMessage.join(",")}.`
+          : `${failureMessage.join(",")}.`;
     }
 
     return {
       success: failureMessage.length === 0,
       value,
-    }
+    };
   }
 }
