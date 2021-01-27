@@ -1,8 +1,7 @@
 import { IMessage } from "..";
-import host from "../../../host";
 import NocalhostWebviewPanel from "../../../webview/NocalhostWebviewPanel";
 import DataCenter from "../../DataCenter";
-import ApplicationMeta from "../../DataCenter/model/ApplicationMeta";
+import { IApplicationMeta } from "../../DataCenter/index.types";
 import services, { ServiceResult } from "../../DataCenter/services";
 
 export default async function fetchDeployments(message: IMessage, id: number) {
@@ -12,10 +11,10 @@ export default async function fetchDeployments(message: IMessage, id: number) {
     return;
   }
   const applicationMeta:
-    | ApplicationMeta
+    | IApplicationMeta
     | undefined = dataCenter.getApplicationMeta(payload.app);
   if (applicationMeta) {
-    const kubeConfig: string = applicationMeta.kubeconfig;
+    const kubeConfig: string = applicationMeta.kubeConfig;
     const result: ServiceResult = await services.fetchDeployments(kubeConfig);
     const content: string = result.success ? result.value : "{}";
     try {
