@@ -9,6 +9,16 @@ async function fetchApplicationMeta(
   return await DataCenter.execCommand(command);
 }
 
+async function describeApplication(name: string): Promise<ServiceResult> {
+  const command: string = `nhctl describe ${name}`;
+  return await DataCenter.execCommand(command);
+}
+
+async function fetchApplicationConfig(name: string): Promise<ServiceResult> {
+  const command: string = `nhctl config get ${name}`;
+  return await DataCenter.execCommand(command);
+}
+
 async function fetchLogs(
   pod: string,
   container: string,
@@ -35,17 +45,14 @@ async function fetchKubernetesResource(
   return await DataCenter.execCommand(command);
 }
 
-async function fetchNHResource(name: string): Promise<ServiceResult> {
-  const command: string = `nhctl describe ${name}`;
-  return await DataCenter.execCommand(command);
-}
-
 async function applyKubernetesObject(
   filePath: string,
   kubeConfig: string,
   isDir = false
 ): Promise<ServiceResult> {
-  const command: string = `kubectl apply ${isDir ? "-k" : "-f"} ${filePath} --kubeconfig ${kubeConfig}`;
+  const command: string = `kubectl apply ${
+    isDir ? "-k" : "-f"
+  } ${filePath} --kubeconfig ${kubeConfig}`;
   return await DataCenter.execCommand(command);
 }
 
@@ -64,7 +71,8 @@ export default {
   fetchLogs,
   fetchDeployments,
   fetchKubernetesResource,
-  fetchNHResource,
+  fetchApplicationConfig,
+  describeApplication,
   applyKubernetesObject,
   deleteKubernetesObject,
 };

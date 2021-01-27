@@ -53,7 +53,9 @@ export default class TextDocumentContentProvider
           break;
         }
         case "nh": {
-          const result: ServiceResult = await services.fetchNHResource(name);
+          const result: ServiceResult = await services.fetchApplicationMeta(
+            name
+          );
           if (!result.success) {
             host.showErrorMessage(result.value);
           } else {
