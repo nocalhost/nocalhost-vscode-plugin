@@ -90,16 +90,56 @@ export default class PortForwardCommand implements ICommand {
       node.setStatus("");
       host.showInformationMessage("Started Port Forward");
     } else {
-      const terminalCommands = ["port-forward", podName, portMap];
+      let terminalCommands = ["port-forward", podName, portMap];
       terminalCommands.push("--kubeconfig", node.getKubeConfigPath());
-      const shellPath = "kubectl";
+      let shellPath = "kubectl";
+
+      let reg = /([0-9]+)|:([0-9]+)|([0-9]+):([0-9]+)/;
+      const match = reg.exec(portMap);
+      let sudo;
+      if (match) {
+        let localPort = match[3] || match[1];
+
+        if (localPort && Number(localPort) < 1024) {
+          sudo = this.getSudo();
+        }
+        console.log(match);
+      } else {
+        host.showErrorMessage("please input correct content");
+        return;
+      }
+      if (sudo) {
+        if (!host.isWindow()) {
+          terminalCommands.unshift(shellPath);
+          host.showInformationMessage("Please input your password");
+        } else {
+          // const username = await host.showInputBox({placeHolder: "Please input a super administrator account"});
+          // if (!username) {
+          //   return;
+          // }
+          // const command = `"${shellPath} ${terminalCommands.join(" ")}"`;
+          // terminalCommands = [`/user:${username}`, command];
+        }
+      }
       const terminalDisposed = host.invokeInNewTerminalSpecialShell(
         terminalCommands,
-        process.platform === "win32" ? `${shellPath}.exe` : shellPath,
+        this.getShellPath(sudo, shellPath),
         "kubectl"
       );
       terminalDisposed.show();
     }
     host.getOutputChannel().show(true);
+  }
+
+  getSudo() {
+    return host.isWindow() ? "kubectl.exe" : "sudo";
+  }
+
+  getShellPath(isSudo: string | undefined, shellPath: string) {
+    if (isSudo) {
+      return this.getSudo();
+    }
+
+    return host.isWindow() ? `${shellPath}.exe` : shellPath;
   }
 }

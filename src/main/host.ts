@@ -176,6 +176,10 @@ export class Host implements vscode.Disposable {
       }, time);
     });
   }
+
+  isWindow() {
+    return process.platform === "win32";
+  }
 }
 
 export default new Host();
