@@ -50,12 +50,12 @@ export async function execChildProcessAsync(
     });
 
     proc.stdout.on("data", function (data) {
-      host.log("" + data, true);
+      host.log("" + data);
     });
 
     proc.stderr.on("data", function (data) {
       errorStr = data + "";
-      host.log("" + data, true);
+      host.log("" + data);
     });
   });
 }
