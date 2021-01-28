@@ -73,12 +73,12 @@ export function install(
         });
 
         proc.stdout.on("data", function (data) {
-          host.log("" + data, true);
+          host.log("" + data);
         });
 
         proc.stderr.on("data", function (data) {
           errorStr += data + "";
-          host.log("" + data, true);
+          host.log("" + data);
         });
       })
   );
@@ -278,12 +278,17 @@ export async function resetService(
   appName: string,
   workloadName: string
 ) {
-  const resetCommand = nhctlCommand(
-    kubeConfigPath,
-    `dev reset ${appName} -d ${workloadName}`
+  await host.showProgressing(
+    `Reset : ${appName}/${workloadName}`,
+    async (progress) => {
+      const resetCommand = nhctlCommand(
+        kubeConfigPath,
+        `dev reset ${appName} -d ${workloadName}`
+      );
+      host.log(`[cmd] ${resetCommand}`, true);
+      await execChildProcessAsync(host, resetCommand, []);
+    }
   );
-  host.log(`[cmd] ${resetCommand}`, true);
-  await execChildProcessAsync(host, resetCommand, []);
 }
 
 export async function getTemplateConfig(appName: string, workloadName: string) {

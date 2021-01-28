@@ -1,9 +1,9 @@
+import * as fs from "fs";
 import * as vscode from "vscode";
 import * as querystring from "querystring";
 import * as tempy from "tempy";
 import ICommand from "./ICommand";
 import registerCommand from "./register";
-import host from "../host";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import state from "../state";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
@@ -11,7 +11,6 @@ import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 import { APPLY_KUBERNETES_OBJECT } from "./constants";
-import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 
 export default class ApplyKubernetesObjectCommand implements ICommand {
   command: string = APPLY_KUBERNETES_OBJECT;
@@ -42,7 +41,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
           break;
         }
         case "file": {
-          result = await this.applyFile(target);
+          result = await this.applyLocalFile(target);
           break;
         }
         default:
@@ -52,11 +51,11 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
 
     if (result.success) {
       if (result.value) {
-        host.showInformationMessage(result.value);
+        vscode.window.showInformationMessage(result.value);
       }
     } else {
       if (result.value) {
-        host.showErrorMessage(result.value);
+        vscode.window.showWarningMessage(result.value);
       }
     }
   }
@@ -102,14 +101,14 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
     return result;
   }
 
-  private async applyFile(target: any): Promise<ServiceResult> {
+  private async applyLocalFile(target: any): Promise<ServiceResult> {
     if (!state.isLogin()) {
       return {
         success: false,
         value: `Please sign in to nocalhost first.`,
       };
     }
-    const path: string = target.fsPath;
+    const path: string = target.fsPath || target.path;
     const applications: Array<
       AppNode | NocalhostAccountNode
     > = NocalhostRootNode.getChildNodes();
@@ -152,20 +151,54 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
 
   private async applyNode(target: AppNode): Promise<ServiceResult> {
     const kubeConfig: string = target.getKubeConfigPath();
-    const paths: vscode.Uri[] | undefined = await host.showOpenDialog({
-      canSelectMany: false,
+    const uris: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
+      canSelectMany: true,
+      canSelectFolders: true,
+      canSelectFiles: true,
     });
-    if (!paths) {
+    if (!uris) {
       return {
         success: false,
         value: "",
       };
     }
-    const path: string = paths[0].fsPath;
-    const result: ServiceResult = await services.applyKubernetesObject(
-      path,
-      kubeConfig
+
+    const applyList: Promise<ServiceResult>[] = uris.map(
+      async (uri: vscode.Uri) => {
+        const path: string = uri.fsPath || uri.path;
+        const isDir: boolean = fs.lstatSync(path).isDirectory();
+        return await services.applyKubernetesObject(path, kubeConfig, isDir);
+      }
     );
-    return result;
+
+    const applyResults: ServiceResult[] = await Promise.all(applyList);
+    const successMessage: string[] = [];
+    const failureMessage: string[] = [];
+    let value: string = "";
+    for (let i = 0, len = applyResults.length; i < len; i++) {
+      let applyResult: ServiceResult = applyResults[i];
+      if (applyResult.success) {
+        successMessage.push(applyResult.value);
+      } else {
+        failureMessage.push(applyResult.value);
+      }
+    }
+    if (successMessage.length > 0) {
+      value +=
+        applyResults.length > 1
+          ? `${successMessage.length} success: ${successMessage.join(",")}.`
+          : `${successMessage.join(",")}.`;
+    }
+    if (failureMessage.length > 0) {
+      value +=
+        applyResults.length > 1
+          ? `${failureMessage.length} failure: ${failureMessage.join(",")}.`
+          : `${failureMessage.join(",")}.`;
+    }
+
+    return {
+      success: failureMessage.length === 0,
+      value,
+    };
   }
 }
