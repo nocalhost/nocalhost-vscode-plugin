@@ -243,7 +243,6 @@ export default class DataCenter {
     const rawData: string = result.success ? result.value : "";
     if (rawData) {
       const data: any = yaml.parse(rawData);
-      console.log(111, data);
       if (typeof data !== "string") {
         const services: IApplicationConfigService[] =
           data.services && Array.isArray(data.services)

@@ -28,7 +28,7 @@ export default async function fetchLogs(message: IMessage, id: number) {
       kubeConfig
     );
     const content: string = result.success ? result.value : "";
-    const items: string[] = content.split("\n");
+    const items: string[] = content ? content.split("\n") : [];
     NocalhostWebviewPanel.postMessage(
       {
         type: "logs/update",
