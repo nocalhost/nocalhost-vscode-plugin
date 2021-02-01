@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { Progress } from "vscode";
-
+import * as shell from "./ctl/shell";
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
@@ -179,6 +179,16 @@ export class Host implements vscode.Disposable {
 
   isWindow() {
     return process.platform === "win32";
+  }
+
+  check() {
+    const tools = ["kubectl", "nhctl"];
+    tools.forEach((tool) => {
+      const exist = shell.which(tool);
+      if (!exist) {
+        throw new Error(`Not found: ${tool}`);
+      }
+    });
   }
 }
 

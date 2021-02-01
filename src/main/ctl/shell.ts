@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
 import host, { Host } from "../host";
+import * as shell from "shelljs";
 export interface ShellResult {
   code: number;
   stdout: string;
@@ -58,4 +59,13 @@ export async function execChildProcessAsync(
       host.log("" + data);
     });
   });
+}
+
+export function which(name: string) {
+  const result = shell.which(name);
+  if (result && result.code === 0) {
+    return true;
+  }
+
+  return false;
 }
