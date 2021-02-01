@@ -35,7 +35,8 @@ export async function execAsyncWithReturn(
 export async function execChildProcessAsync(
   host: Host,
   command: string,
-  args: Array<any>
+  args: Array<any>,
+  errorTips?: string
 ) {
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -46,7 +47,7 @@ export async function execChildProcessAsync(
       if (code === 0) {
         resolve(null);
       } else {
-        reject(errorStr);
+        reject(errorStr || errorTips || `execute command fail: ${command}`);
       }
     });
 
@@ -55,7 +56,7 @@ export async function execChildProcessAsync(
     });
 
     proc.stderr.on("data", function (data) {
-      errorStr = data + "";
+      errorStr += data + "";
       host.log("" + data);
     });
   });
