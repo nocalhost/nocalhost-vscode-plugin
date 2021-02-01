@@ -11,6 +11,7 @@ export default function registerCommand(
   const dispose = vscode.commands.registerCommand(
     command,
     async (...args: any[]) => {
+      host.check();
       if (isLock) {
         if (state.isRunning()) {
           host.showWarnMessage("A task is running, please try again later");
