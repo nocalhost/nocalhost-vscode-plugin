@@ -18,30 +18,23 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(target: any) {
-    let result: ServiceResult = {
-      success: false,
-      value: "",
-    };
-
     if (target instanceof AppNode) {
-      result = await this.applyNode(target);
+      await this.applyNode(target);
     } else {
       const scheme: string = target.scheme;
       switch (scheme) {
         case "Nocalhost": {
-          result = {
-            success: false,
-            value:
-              "Cannot apply to a developing deployment, please exit the dev mode before apply.",
-          };
+          await vscode.window.showInformationMessage(
+            "Cannot apply to a developing deployment, please exit the dev mode before apply."
+          );
           break;
         }
         case "NocalhostRW": {
-          result = await this.applyVirtualDocument(target);
+          await this.applyVirtualDocument(target);
           break;
         }
         case "file": {
-          result = await this.applyLocalFile(target);
+          await this.applyLocalFile(target);
           break;
         }
         default:
@@ -49,81 +42,88 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       }
     }
 
-    if (result.success) {
-      if (result.value) {
-        vscode.window.showInformationMessage(result.value);
-      }
-    } else {
-      if (result.value) {
-        vscode.window.showWarningMessage(result.value);
-      }
-    }
+    // if (result.success) {
+    //   if (result.value) {
+    //     vscode.window.showInformationMessage(result.value);
+    //   }
+    // } else {
+    //   if (result.value) {
+    //     vscode.window.showWarningMessage(result.value);
+    //   }
+    // }
   }
 
-  private async applyVirtualDocument(target: any): Promise<ServiceResult> {
-    const query: string = target.query;
-    const queryObj: querystring.ParsedUrlQuery = querystring.parse(query);
-    const id: string = queryObj.id as string;
-    const node: KubernetesResourceNode = state.getNode(
-      id
-    ) as KubernetesResourceNode;
-    const nodeName: string = node.name;
-    const kubeConfig: string = node.getKubeConfigPath();
-    const appNode: AppNode = node.getAppNode();
-    const namespace: string = appNode.namespace;
-    // let isDeveloping: boolean = false;
-    // if (node instanceof Deployment) {
-    //   isDeveloping = (await node.getStatus()) === "developing";
-    // }
-    // if (isDeveloping) {
-    //   return {
-    //     success: false,
-    //     value: "Unable to apply, please exit the dev mode first.",
-    //   };
-    // }
-    const editor: vscode.TextEditor | undefined =
-      vscode.window.activeTextEditor;
-    if (!editor) {
-      return {
-        success: false,
-        value: "",
-      };
-    }
-    const doc: vscode.TextDocument = editor.document;
-    const content: string = doc.getText();
-    const path: string = tempy.writeSync(content, {
-      name: `${nodeName}-${namespace}.yaml`,
-    });
-    const result: ServiceResult = await services.applyKubernetesObject(
-      path,
-      kubeConfig
+  private async applyVirtualDocument(target: any): Promise<void> {
+    await vscode.window.withProgress(
+      {
+        title: "Applying, please wait...",
+        location: vscode.ProgressLocation.Notification,
+        cancellable: false,
+      },
+      async (progress) => {
+        const query: string = target.query;
+        const queryObj: querystring.ParsedUrlQuery = querystring.parse(query);
+        const id: string = queryObj.id as string;
+        const node: KubernetesResourceNode = state.getNode(
+          id
+        ) as KubernetesResourceNode;
+        const nodeName: string = node.name;
+        const kubeConfig: string = node.getKubeConfigPath();
+        const appNode: AppNode = node.getAppNode();
+        const namespace: string = appNode.namespace;
+        // let isDeveloping: boolean = false;
+        // if (node instanceof Deployment) {
+        //   isDeveloping = (await node.getStatus()) === "developing";
+        // }
+        // if (isDeveloping) {
+        //   return {
+        //     success: false,
+        //     value: "Unable to apply, please exit the dev mode first.",
+        //   };
+        // }
+        const editor: vscode.TextEditor | undefined =
+          vscode.window.activeTextEditor;
+        if (!editor) {
+          return;
+        }
+        const doc: vscode.TextDocument = editor.document;
+        const content: string = doc.getText();
+        const path: string = tempy.writeSync(content, {
+          name: `${nodeName}-${namespace}.yaml`,
+        });
+        const result: ServiceResult = await services.applyKubernetesObject(
+          path,
+          kubeConfig
+        );
+        const { success, value } = result;
+        if (success) {
+          vscode.window.showInformationMessage(value);
+        } else {
+          vscode.window.showWarningMessage(value);
+        }
+      }
     );
-    return result;
   }
 
-  private async applyLocalFile(target: any): Promise<ServiceResult> {
+  private async applyLocalFile(target: any): Promise<void> {
     if (!state.isLogin()) {
-      return {
-        success: false,
-        value: `Please sign in to nocalhost first.`,
-      };
+      vscode.window.showWarningMessage("Please sign in to nocalhost first.");
+      return;
     }
     const path: string = target.fsPath || target.path;
     const applications: Array<
       AppNode | NocalhostAccountNode
     > = NocalhostRootNode.getChildNodes();
     if (applications.length === 0) {
-      return {
-        success: false,
-        value: `No applicaiton found.`,
-      };
+      vscode.window.showWarningMessage("No application found.");
+      return;
     }
     const options: { [key: string]: string } = applications.reduce(
-      (acc, applicaiton: AppNode | NocalhostAccountNode) => {
+      (acc, application: AppNode | NocalhostAccountNode) => {
         return {
           ...acc,
-          ...(applicaiton instanceof AppNode
-            ? { [applicaiton.label]: applicaiton.getKubeConfigPath() }
+          ...(application instanceof AppNode && application.installed()
+            ? { [application.label]: application.getKubeConfigPath() }
             : {}),
         };
       },
@@ -136,20 +136,31 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       }
     );
     if (!selected) {
-      return {
-        success: false,
-        value: "",
-      };
+      return;
     }
     const kubeConfig: string = options[selected];
-    const result: ServiceResult = await services.applyKubernetesObject(
-      path,
-      kubeConfig
+    await vscode.window.withProgress(
+      {
+        title: "Applying, please wait...",
+        location: vscode.ProgressLocation.Notification,
+        cancellable: false,
+      },
+      async (progress) => {
+        const result: ServiceResult = await services.applyKubernetesObject(
+          path,
+          kubeConfig
+        );
+        const { success, value } = result;
+        if (success) {
+          vscode.window.showInformationMessage(value);
+        } else {
+          vscode.window.showWarningMessage(value);
+        }
+      }
     );
-    return result;
   }
 
-  private async applyNode(target: AppNode): Promise<ServiceResult> {
+  private async applyNode(target: AppNode): Promise<void> {
     const kubeConfig: string = target.getKubeConfigPath();
     const uris: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
       canSelectMany: true,
@@ -157,48 +168,59 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       canSelectFiles: true,
     });
     if (!uris) {
-      return {
-        success: false,
-        value: "",
-      };
+      return;
     }
 
-    const applyList: Promise<ServiceResult>[] = uris.map(
-      async (uri: vscode.Uri) => {
-        const path: string = uri.fsPath || uri.path;
-        const isDir: boolean = fs.lstatSync(path).isDirectory();
-        return await services.applyKubernetesObject(path, kubeConfig, isDir);
+    await vscode.window.withProgress(
+      {
+        title: "Applying, please wait...",
+        location: vscode.ProgressLocation.Notification,
+        cancellable: false,
+      },
+      async (progress) => {
+        const applyList: Promise<ServiceResult>[] = uris.map(
+          async (uri: vscode.Uri) => {
+            const path: string = uri.fsPath || uri.path;
+            const isDir: boolean = fs.lstatSync(path).isDirectory();
+            return await services.applyKubernetesObject(
+              path,
+              kubeConfig,
+              isDir
+            );
+          }
+        );
+
+        const applyResults: ServiceResult[] = await Promise.all(applyList);
+        const successMessage: string[] = [];
+        const failureMessage: string[] = [];
+        let value: string = "";
+        for (let i = 0, len = applyResults.length; i < len; i++) {
+          let applyResult: ServiceResult = applyResults[i];
+          if (applyResult.success) {
+            successMessage.push(applyResult.value);
+          } else {
+            failureMessage.push(applyResult.value);
+          }
+        }
+        if (successMessage.length > 0) {
+          value +=
+            applyResults.length > 1
+              ? `${successMessage.length} success: ${successMessage.join(",")}.`
+              : `${successMessage.join(",")}.`;
+        }
+        if (failureMessage.length > 0) {
+          value +=
+            applyResults.length > 1
+              ? `${failureMessage.length} failure: ${failureMessage.join(",")}.`
+              : `${failureMessage.join(",")}.`;
+        }
+        const success: boolean = failureMessage.length === 0;
+        if (success) {
+          vscode.window.showInformationMessage(value);
+        } else {
+          vscode.window.showWarningMessage(value);
+        }
       }
     );
-
-    const applyResults: ServiceResult[] = await Promise.all(applyList);
-    const successMessage: string[] = [];
-    const failureMessage: string[] = [];
-    let value: string = "";
-    for (let i = 0, len = applyResults.length; i < len; i++) {
-      let applyResult: ServiceResult = applyResults[i];
-      if (applyResult.success) {
-        successMessage.push(applyResult.value);
-      } else {
-        failureMessage.push(applyResult.value);
-      }
-    }
-    if (successMessage.length > 0) {
-      value +=
-        applyResults.length > 1
-          ? `${successMessage.length} success: ${successMessage.join(",")}.`
-          : `${successMessage.join(",")}.`;
-    }
-    if (failureMessage.length > 0) {
-      value +=
-        applyResults.length > 1
-          ? `${failureMessage.length} failure: ${failureMessage.join(",")}.`
-          : `${failureMessage.join(",")}.`;
-    }
-
-    return {
-      success: failureMessage.length === 0,
-      value,
-    };
   }
 }
