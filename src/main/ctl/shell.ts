@@ -47,7 +47,7 @@ export async function execChildProcessAsync(
       if (code === 0) {
         resolve(null);
       } else {
-        reject(errorStr || errorTips || `execute command fail: ${command}`);
+        reject(errorTips || `execute command fail: ${command}`);
       }
     });
 
@@ -57,6 +57,9 @@ export async function execChildProcessAsync(
 
     proc.stderr.on("data", function (data) {
       errorStr += data + "";
+      if (errorStr) {
+        host.showErrorMessage(errorStr);
+      }
       host.log("" + data);
     });
   });
