@@ -83,7 +83,13 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     const userinfo = fileStore.get(USERINFO);
 
-    if (NocalhostRootNode.childNodes.length > 0) {
+    const hasAccountNode: boolean = NocalhostRootNode.childNodes.some(
+      (node: AppNode | NocalhostAccountNode) => {
+        return node instanceof NocalhostAccountNode;
+      }
+    );
+
+    if (NocalhostRootNode.childNodes.length > 0 && !hasAccountNode) {
       NocalhostRootNode.childNodes.unshift(
         new NocalhostAccountNode(this, `Hi, ${userinfo.name}`)
       );
