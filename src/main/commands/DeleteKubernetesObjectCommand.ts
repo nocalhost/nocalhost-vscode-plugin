@@ -30,17 +30,27 @@ export default class DeleteKubernetesObjectCommand implements ICommand {
     if (confirm !== "OK") {
       return;
     }
-    const result: ServiceResult = await services.deleteKubernetesObject(
-      kind,
-      nodeName,
-      namespace,
-      kubeConfig
+    await vscode.window.withProgress(
+      {
+        title: `Deleting, please wait...`,
+        location: vscode.ProgressLocation.Notification,
+        cancellable: false,
+      },
+      async (progress) => {
+        const result: ServiceResult = await services.deleteKubernetesObject(
+          kind,
+          nodeName,
+          namespace,
+          kubeConfig
+        );
+        const { success, value } = result;
+        if (success) {
+          host.showInformationMessage(value);
+          vscode.commands.executeCommand("Nocalhost.refresh");
+        } else {
+          host.showErrorMessage(value);
+        }
+      }
     );
-    if (result.success) {
-      host.showInformationMessage(result.value);
-      vscode.commands.executeCommand("Nocalhost.refresh");
-    } else {
-      host.showErrorMessage(result.value);
-    }
   }
 }
