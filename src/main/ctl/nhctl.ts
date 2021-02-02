@@ -100,6 +100,7 @@ export async function devStart(
     isOld: boolean;
     dirs: string | Array<string>;
   },
+  container?: string,
   storageClass?: string,
   devStartAppendCommand?: string
 ) {
@@ -113,6 +114,10 @@ export async function devStart(
   }
   if (storageClass) {
     options += ` --storage-class ${storageClass}`;
+  }
+
+  if (container) {
+    options += ` --container ${container}`;
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
@@ -159,7 +164,6 @@ export async function startPortForward(
       [],
       `Port-forward (${appName}/${workloadName}) fail`
     );
-    await host.delay(2500);
   });
 }
 

@@ -28,6 +28,7 @@ export default class EndDevModeCommand implements ICommand {
       node.name
     );
     await node.setStatus("");
+    await node.setContainer("");
     vscode.commands.executeCommand(SYNC_SERVICE, {});
   }
 }
