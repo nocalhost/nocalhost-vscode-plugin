@@ -214,9 +214,11 @@ export default class StartDevModeCommand implements ICommand {
           let isOld = false;
           if (svc && svc.syncDirs) {
             isOld = true;
-            dirs = svc.syncDirs.map((item) => path.resolve(currentUri, item));
+            dirs = svc.syncDirs.map((item) =>
+              host.formalizePath(path.resolve(currentUri, item))
+            );
           } else {
-            dirs = currentUri;
+            dirs = host.formalizePath(currentUri);
           }
           await nhctl.devStart(
             host,

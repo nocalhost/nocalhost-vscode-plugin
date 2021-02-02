@@ -34,6 +34,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     if (selectUri && selectUri.length > 0) {
       workloadConfig.directory = selectUri[0].fsPath;
       fileStore.set(appName, appConfig);
+      host.showInformationMessage("Directory successfully linked");
     }
   }
 
