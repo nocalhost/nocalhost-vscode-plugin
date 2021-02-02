@@ -21,6 +21,7 @@ import {
   WELCOME_DID_SHOW,
   TMP_WORKLOAD_PATH,
   TMP_DEVSTART_APPEND_COMMAND,
+  TMP_ID,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -100,6 +101,7 @@ function launchDevspace() {
   }
   console.log("launch devspace");
   const tmpApp = fileStore.get(TMP_APP);
+  const tmpId = fileStore.get(TMP_ID);
   const tmpWorkload = fileStore.get(TMP_WORKLOAD);
   const tmpStatusId = fileStore.get(TMP_STATUS);
   const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
@@ -114,6 +116,7 @@ function launchDevspace() {
     fileStore.remove(TMP_KUBECONFIG_PATH);
     fileStore.remove(TMP_WORKLOAD_PATH);
     fileStore.remove(TMP_DEVSTART_APPEND_COMMAND);
+    fileStore.remove(TMP_ID);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -122,17 +125,31 @@ function launchDevspace() {
         if (status) {
           await state.setAppState(tmpApp, `${tmpStatusId}`, status, {
             refresh: true,
-            nodeStateId: tmpStatusId,
+            nodeStateId: tmpId,
           });
         } else {
           await state.deleteAppState(tmpApp, `${tmpStatusId}`, {
             refresh: true,
-            nodeStateId: tmpStatusId,
+            nodeStateId: tmpId,
           });
         }
         return Promise.resolve();
       },
       getStatus: () => DeploymentStatus.developing,
+      setContainer: async (container: string) => {
+        if (container) {
+          await state.setAppState(tmpApp, `${tmpId}_container`, container, {
+            refresh: true,
+            nodeStateId: tmpId,
+          });
+        } else {
+          await state.deleteAppState(tmpApp, `${tmpId}_container`, {
+            refresh: true,
+            nodeStateId: tmpId,
+          });
+        }
+        return Promise.resolve();
+      },
       getKubeConfigPath: () => tmpKubeConfigPath,
       getAppName: () => tmpApp,
       getStorageClass: () => tmpStorageClass,

@@ -25,18 +25,23 @@ export default class ExecCommand implements ICommand {
   }
 
   async exec(node: ControllerNodeApi | Pod) {
+    const result = await this.getPodAndContainer(node);
+    if (!result || !result.containerName || !result.podName) {
+      return;
+    }
     if (!(node instanceof Pod)) {
       const status = await node.getStatus();
       if (status === DeploymentStatus.developing) {
         await this.opendevSpaceExec(
           node.getAppName(),
           node.name,
+          null,
           node.getKubeConfigPath()
         );
         return;
       }
     }
-    this.openExec(node);
+    this.openExec(node, result.podName, result.containerName);
   }
 
   private async getDefaultShell(
@@ -62,6 +67,7 @@ export default class ExecCommand implements ICommand {
   async opendevSpaceExec(
     appName: string,
     workloadName: string,
+    container: string | null,
     kubeConfigPath: string
   ) {
     host.log("Opening DevSpace terminal", true);
@@ -69,6 +75,9 @@ export default class ExecCommand implements ICommand {
 
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
+    if (container) {
+      terminalCommands.push("--container", container);
+    }
     terminalCommands.push("--kubeconfig", kubeConfigPath);
     const shellPath = "nhctl";
     const terminalDisposed = host.invokeInNewTerminalSpecialShell(
@@ -114,9 +123,18 @@ export default class ExecCommand implements ICommand {
    * @param type
    * @param workloadName
    */
-  async openExec(node: ControllerNodeApi | Pod) {
+  async openExec(
+    node: ControllerNodeApi | Pod,
+    podName: string,
+    container: string
+  ) {
+    await this.execCore(node.getKubeConfigPath(), podName, container);
+  }
+
+  async getPodAndContainer(node: ControllerNodeApi | Pod) {
     const kubeConfigPath = node.getKubeConfigPath();
     let podName: string | undefined;
+    let status = "";
     if (node instanceof Pod) {
       podName = node.name;
     } else {
@@ -126,7 +144,8 @@ export default class ExecCommand implements ICommand {
         kubeConfigPath
       );
       podName = podNameArr[0];
-      if (podNameArr.length > 1) {
+      status = await node.getStatus();
+      if (status !== DeploymentStatus.developing && podNameArr.length > 1) {
         podName = await vscode.window.showQuickPick(podNameArr);
       }
     }
@@ -138,12 +157,13 @@ export default class ExecCommand implements ICommand {
       kubeConfigPath
     );
     let containerName: string | undefined = containerNameArr[0];
-    if (containerNameArr.length > 1) {
+    if (status !== DeploymentStatus.developing && containerNameArr.length > 1) {
       containerName = await vscode.window.showQuickPick(containerNameArr);
     }
     if (!containerName) {
       return;
     }
-    await this.execCore(kubeConfigPath, podName, containerName);
+
+    return { containerName, podName };
   }
 }
