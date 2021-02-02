@@ -164,7 +164,6 @@ export default class InstallCommand implements ICommand {
     );
     await updateAppInstallStatus(appId, devSpaceId, 1);
     fileStore.set(appName, {});
-    host.log(`Application ${appName} installed`, true);
   }
 
   private async checkStatus(appNode: AppNode) {
