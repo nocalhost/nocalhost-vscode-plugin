@@ -8,6 +8,7 @@ import registerCommand from "./register";
 import {
   TMP_APP,
   TMP_DEVSTART_APPEND_COMMAND,
+  TMP_ID,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
@@ -20,6 +21,7 @@ import * as path from "path";
 import git from "../ctl/git";
 import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
+import * as kubectl from "../ctl/kubectl";
 import * as nls from "../../../package.nls.json";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
@@ -30,6 +32,7 @@ export interface ControllerNodeApi {
   resourceType: string;
   setStatus: (status: string) => Promise<void>;
   getStatus: () => Promise<string> | string;
+  setContainer: (container: string) => Promise<void>;
   getKubeConfigPath: () => string;
   getAppName: () => string;
   getStorageClass: () => string | undefined;
@@ -220,6 +223,12 @@ export default class StartDevModeCommand implements ICommand {
           } else {
             dirs = host.formalizePath(currentUri);
           }
+          const result = await this.getPodAndContainer(node);
+          if (!result || !result.containerName) {
+            return;
+          }
+          // update deployment label
+          node.setContainer(result.containerName);
           await nhctl.devStart(
             host,
             node.getKubeConfigPath(),
@@ -229,6 +238,7 @@ export default class StartDevModeCommand implements ICommand {
               isOld: isOld,
               dirs: dirs,
             },
+            result.containerName,
             node.getStorageClass(),
             node.getDevStartAppendCommand()
           );
@@ -301,6 +311,7 @@ export default class StartDevModeCommand implements ICommand {
     node: ControllerResourceNode
   ) {
     const appNode = node.getAppNode();
+    fileStore.set(TMP_ID, node.getNodeStateId());
     fileStore.set(TMP_APP, appName);
     fileStore.set(TMP_WORKLOAD, node.name);
     fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
@@ -336,5 +347,32 @@ export default class StartDevModeCommand implements ICommand {
         return gitUrl;
       }
     }
+  }
+
+  async getPodAndContainer(node: ControllerNodeApi) {
+    const kubeConfigPath = node.getKubeConfigPath();
+    let podName: string | undefined;
+    const podNameArr = await kubectl.getPodNames(
+      node.name,
+      node.resourceType,
+      kubeConfigPath
+    );
+    podName = podNameArr[0];
+    if (!podName) {
+      return;
+    }
+    const containerNameArr = await kubectl.getContainerNames(
+      podName,
+      kubeConfigPath
+    );
+    let containerName: string | undefined = containerNameArr[0];
+    if (containerNameArr.length > 1) {
+      containerName = await vscode.window.showQuickPick(containerNameArr);
+    }
+    if (!containerName) {
+      return;
+    }
+
+    return { containerName, podName };
   }
 }

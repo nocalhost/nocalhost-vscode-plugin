@@ -48,6 +48,39 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
   }
 
+  public async getContainer() {
+    const appNode = this.getAppNode();
+    const status = state.getAppState(
+      appNode.name,
+      `${this.getNodeStateId()}_container`
+    );
+    return status;
+  }
+
+  public async setContainer(container: string) {
+    const appNode = this.getAppNode();
+    if (container) {
+      await state.setAppState(
+        appNode.name,
+        `${this.getNodeStateId()}_container`,
+        container,
+        {
+          refresh: true,
+          nodeStateId: this.getNodeStateId(),
+        }
+      );
+    } else {
+      await state.deleteAppState(
+        appNode.name,
+        `${this.getNodeStateId()}_container`,
+        {
+          refresh: true,
+          nodeStateId: this.getNodeStateId(),
+        }
+      );
+    }
+  }
+
   public checkConfig() {
     return Promise.resolve(true);
   }
