@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as semver from "semver";
 import {
   execAsyncWithReturn,
   execChildProcessAsync,
@@ -7,6 +8,9 @@ import {
 import host, { Host } from "../host";
 import * as yaml from "yaml";
 import { PortForwardData, SvcProfile } from "../nodes/types/nodeType";
+import * as packageJson from "../../../package.json";
+import { NOCALHOST_INSTALLATION_LINK } from "../constants";
+import services, { ServiceResult } from "../common/DataCenter/services";
 
 export function install(
   host: Host,
@@ -376,6 +380,54 @@ export async function overrideSyncFolders(
   const overrideSyncCommand = `nhctl sync-status ${appName} -d ${workloadName} --override`;
   host.log(`[cmd] ${overrideSyncCommand}`);
   await execChildProcessAsync(host, overrideSyncCommand, []);
+}
+
+export async function checkVersion() {
+  let requiredVersion: string = packageJson.nhctl?.version;
+  const result: ServiceResult = await services.fetchNhctlVersion();
+  if (!requiredVersion) {
+    return;
+  }
+  if (result.success) {
+    let currentVersion: string = "";
+    let pass: boolean = false;
+    const matched: string[] | null = result.value.match(
+      /Version: \s*v(\d+\.\d+\.\d+)/
+    );
+    if (matched) {
+      currentVersion = matched[1];
+    }
+    const isGte: boolean = requiredVersion.charAt(0) === "^";
+    if (isGte) {
+      requiredVersion = requiredVersion.slice(1);
+      pass = semver.gte(currentVersion, requiredVersion);
+    } else {
+      pass = semver.eq(currentVersion, requiredVersion);
+    }
+    if (!pass) {
+      const result:
+        | string
+        | undefined = await vscode.window.showInformationMessage(
+        `Nocalhost required nhctl(${
+          isGte ? ">= " : " "
+        }v${requiredVersion}), please upgrade your nhctl to the specify version.`,
+        "Get nhctl"
+      );
+      if (result === "Get nhctl") {
+        vscode.env.openExternal(vscode.Uri.parse(NOCALHOST_INSTALLATION_LINK));
+      }
+    }
+  }
+}
+
+export async function handleNhctlNotFound() {
+  const result: string | undefined = await vscode.window.showInformationMessage(
+    "nhctl not found, please install nhctl first.",
+    "Get nhctl"
+  );
+  if (result === "Get nhctl") {
+    vscode.env.openExternal(vscode.Uri.parse(NOCALHOST_INSTALLATION_LINK));
+  }
 }
 
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {

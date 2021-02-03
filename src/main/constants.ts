@@ -41,3 +41,6 @@ export const TMP_STORAGE_CLASS = "tmpStorageClass";
 export const TMP_DEVSTART_APPEND_COMMAND = "tmpDevstartAppendCommand";
 
 export const DATA_CENTER_INTERVAL_MS = 5000;
+
+export const NOCALHOST_INSTALLATION_LINK =
+  "https://nocalhost.dev/installation/";
