@@ -383,34 +383,26 @@ export async function overrideSyncFolders(
 }
 
 export async function checkVersion() {
-  let requiredVersion: string = packageJson.nhctl?.version;
+  const requiredVersion: string = packageJson.nhctl?.version;
   const result: ServiceResult = await services.fetchNhctlVersion();
   if (!requiredVersion) {
     return;
   }
   if (result.success) {
     let currentVersion: string = "";
-    let pass: boolean = false;
     const matched: string[] | null = result.value.match(
       /Version: \s*v(\d+\.\d+\.\d+)/
     );
-    if (matched) {
-      currentVersion = matched[1];
+    if (!matched) {
+      return;
     }
-    const isGte: boolean = requiredVersion.charAt(0) === "^";
-    if (isGte) {
-      requiredVersion = requiredVersion.slice(1);
-      pass = semver.gte(currentVersion, requiredVersion);
-    } else {
-      pass = semver.eq(currentVersion, requiredVersion);
-    }
+    currentVersion = matched[1];
+    const pass: boolean = semver.satisfies(currentVersion, requiredVersion);
     if (!pass) {
       const result:
         | string
         | undefined = await vscode.window.showInformationMessage(
-        `Nocalhost required nhctl(${
-          isGte ? ">= " : ""
-        }v${requiredVersion}), please upgrade your nhctl to the specify version.`,
+        `Nocalhost required nhctl(${requiredVersion}), current version is v${currentVersion}, please upgrade your nhctl to the specify version.`,
         "Get nhctl"
       );
       if (result === "Get nhctl") {
