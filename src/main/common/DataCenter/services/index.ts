@@ -19,6 +19,11 @@ async function fetchApplicationConfig(name: string): Promise<ServiceResult> {
   return await DataCenter.execCommand(command);
 }
 
+async function fetchNhctlVersion(): Promise<ServiceResult> {
+  const command: string = `nhctl version`;
+  return await DataCenter.execCommand(command);
+}
+
 async function fetchLogs(
   pod: string,
   container: string,
@@ -68,6 +73,7 @@ async function deleteKubernetesObject(
 
 export default {
   fetchApplicationMeta,
+  fetchNhctlVersion,
   fetchLogs,
   fetchDeployments,
   fetchKubernetesResource,

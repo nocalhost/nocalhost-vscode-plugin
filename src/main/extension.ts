@@ -33,6 +33,7 @@ import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
 import TextDocumentContentProvider from "./textDocumentContentProvider";
+import { checkVersion, handleNhctlNotFound } from "./ctl/nhctl";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -188,6 +189,7 @@ async function init(context: vscode.ExtensionContext) {
   fileStore.initConfig();
   fileStore.set("extensionPath", context.extensionPath);
   updateServerConfigStatus();
+  checkVersion();
 
   const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
   if (!welcomeDidShow) {
@@ -197,9 +199,17 @@ async function init(context: vscode.ExtensionContext) {
 }
 
 process.on("uncaughtException", (error) => {
-  vscode.window.showErrorMessage(error.message);
+  if (/Not\sfound:\snhctl/.test(error.message)) {
+    handleNhctlNotFound();
+  } else {
+    vscode.window.showErrorMessage(error.message);
+  }
 });
 
 process.on("unhandledRejection", (error: any) => {
-  vscode.window.showErrorMessage((error && error.message) || error);
+  if (/Not\sfound:\snhctl/.test((error && error.message) || error)) {
+    handleNhctlNotFound();
+  } else {
+    vscode.window.showErrorMessage((error && error.message) || error);
+  }
 });
