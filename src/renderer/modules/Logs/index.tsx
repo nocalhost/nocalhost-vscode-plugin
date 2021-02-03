@@ -96,7 +96,7 @@ const Logs: React.FC = () => {
   };
   const renderSkeleton = () => (
     <div className={classes.skeletonContainer}>
-      {new Array(30).fill("").map((item, i) => (
+      {new Array(7).fill("").map((item, i) => (
         <div className={classes.skeletonItem} key={i} id="logs-skeleton">
           <Skeleton animation="wave" />
         </div>
