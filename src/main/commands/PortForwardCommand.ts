@@ -86,7 +86,6 @@ export default class PortForwardCommand implements ICommand {
         ports,
         podName
       );
-      await host.delay(2000);
       // refresh status
       node.setStatus("");
       host.showInformationMessage("Started Port Forward");
