@@ -409,7 +409,7 @@ export async function checkVersion() {
         | string
         | undefined = await vscode.window.showInformationMessage(
         `Nocalhost required nhctl(${
-          isGte ? ">= " : " "
+          isGte ? ">= " : ""
         }v${requiredVersion}), please upgrade your nhctl to the specify version.`,
         "Get nhctl"
       );
