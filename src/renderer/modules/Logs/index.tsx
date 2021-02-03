@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
-import { createStyles, makeStyles } from "@material-ui/core";
 import qs from "qs";
 import hljs from "highlight.js";
+import { createStyles, makeStyles } from "@material-ui/core";
+import { Skeleton } from "@material-ui/lab";
 import { store } from "../../store/store";
 import { CustomThemeOptions } from "../../themes";
 import { ThemeType, LOG_TAIL_COUNT } from "../../constants";
@@ -43,6 +44,14 @@ const useStyles = makeStyles((theme: CustomThemeOptions) =>
         minWidth: 25,
         textAlign: "right",
       },
+    },
+    skeletonContainer: {
+      padding: 20,
+      height: "100%",
+      overflow: "hidden",
+    },
+    skeletonItem: {
+      marginBottom: 8,
     },
   })
 );
@@ -85,6 +94,15 @@ const Logs: React.FC = () => {
       </>
     );
   };
+  const renderSkeleton = () => (
+    <div className={classes.skeletonContainer}>
+      {new Array(30).fill("").map((item, i) => (
+        <div className={classes.skeletonItem}>
+          <Skeleton animation="wave" key={i} />
+        </div>
+      ))}
+    </div>
+  );
 
   useInterval(
     fetchLogs,
@@ -121,7 +139,11 @@ const Logs: React.FC = () => {
 
   return (
     <div className={classes.root} data-testid="logs">
-      {logs.items.length > 0 ? renderList() : renderNoContent()}
+      {logs.items
+        ? logs.items.length > 0
+          ? renderList()
+          : renderNoContent()
+        : renderSkeleton()}
     </div>
   );
 };
