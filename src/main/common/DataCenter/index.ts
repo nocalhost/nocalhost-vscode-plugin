@@ -59,7 +59,7 @@ export default class DataCenter {
     this.setApplications(timeout);
   }
 
-  private async setApplications(timeout?: number): Promise<void> {
+  public async setApplications(timeout?: number): Promise<void> {
     const results: any[] = await getApplication();
     const applications: Promise<IApplication>[] = results.map(
       async (result: any) => {
