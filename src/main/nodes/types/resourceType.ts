@@ -26,6 +26,7 @@ export interface Resource {
 
 export interface ResourceStatus {
   conditions: Array<Status>;
+  phase: string;
 }
 
 export interface ControllerResource extends Resource {

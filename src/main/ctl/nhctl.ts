@@ -5,7 +5,6 @@ import {
   ShellResult,
 } from "./shell";
 import host, { Host } from "../host";
-import { spawn } from "child_process";
 import * as yaml from "yaml";
 import { PortForwardData, SvcProfile } from "../nodes/types/nodeType";
 
@@ -58,29 +57,14 @@ export function install(
       title: `Installing application: ${appName}`,
       cancellable: false,
     },
-    () =>
-      new Promise((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        const env = Object.assign(process.env, { DISABLE_SPINNER: true });
-        const proc = spawn(installCommand, [], { shell: true, env });
-        let errorStr = "";
-        proc.on("close", (code) => {
-          if (code === 0) {
-            resolve(null);
-          } else {
-            reject(errorStr);
-          }
-        });
-
-        proc.stdout.on("data", function (data) {
-          host.log("" + data);
-        });
-
-        proc.stderr.on("data", function (data) {
-          errorStr += data + "";
-          host.log("" + data);
-        });
-      })
+    () => {
+      return execChildProcessAsync(
+        host,
+        installCommand,
+        [],
+        `Install application (${appName}) fail`
+      );
+    }
   );
 }
 
@@ -97,7 +81,12 @@ export async function uninstall(
         `uninstall ${appName} --force`
       );
       host.log(`[cmd] ${uninstallCommand}`, true);
-      await execChildProcessAsync(host, uninstallCommand, []);
+      await execChildProcessAsync(
+        host,
+        uninstallCommand,
+        [],
+        `Uninstall application (${appName}) fail`
+      );
     }
   );
 }
@@ -111,6 +100,7 @@ export async function devStart(
     isOld: boolean;
     dirs: string | Array<string>;
   },
+  container?: string,
   storageClass?: string,
   devStartAppendCommand?: string
 ) {
@@ -125,6 +115,10 @@ export async function devStart(
   if (storageClass) {
     options += ` --storage-class ${storageClass}`;
   }
+
+  if (container) {
+    options += ` --container ${container}`;
+  }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
     `dev start ${appName} -d ${workLoadName} ${options} ${
@@ -132,7 +126,12 @@ export async function devStart(
     }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
-  await execChildProcessAsync(host, devStartCommand, []);
+  await execChildProcessAsync(
+    host,
+    devStartCommand,
+    [],
+    `Start devMode (${appName}/${workLoadName}) fail`
+  );
 }
 
 export async function startPortForward(
@@ -159,8 +158,12 @@ export async function startPortForward(
   host.log(`[cmd] ${portForwardCommand}`, true);
 
   await host.showProgressing(`Starting port-forward`, async (progress) => {
-    await execChildProcessAsync(host, portForwardCommand, []);
-    await host.delay(2500);
+    await execChildProcessAsync(
+      host,
+      portForwardCommand,
+      [],
+      `Port-forward (${appName}/${workloadName}) fail`
+    );
   });
 }
 
@@ -174,7 +177,12 @@ export async function endPortForward(
 
   host.log(`[cmd] ${endPortForwardCommand}`, true);
 
-  await execChildProcessAsync(host, endPortForwardCommand, []);
+  await execChildProcessAsync(
+    host,
+    endPortForwardCommand,
+    [],
+    `End port-forward (${appName}/${workloadName}) fail`
+  );
 }
 
 export async function getCurrentServiceStatusInfo(
@@ -201,7 +209,12 @@ export async function syncFile(
   const syncFileCommand = nhctlCommand(kubeconfigPath, baseCommand);
 
   host.log(`[cmd] ${syncFileCommand}`, true);
-  await execChildProcessAsync(host, syncFileCommand, []);
+  await execChildProcessAsync(
+    host,
+    syncFileCommand,
+    [],
+    `Syncronize file (${appName}/${workloadName}) fail`
+  );
 }
 
 export async function endDevMode(
@@ -219,7 +232,12 @@ export async function endDevMode(
       );
       host.log(`[cmd] ${end}`, true);
       host.disposeDebug();
-      await execChildProcessAsync(host, end, []);
+      await execChildProcessAsync(
+        host,
+        end,
+        [],
+        `End devMode (${appName}/${workLoadName}) fail`
+      );
     }
   );
 }
@@ -286,7 +304,12 @@ export async function resetService(
         `dev reset ${appName} -d ${workloadName}`
       );
       host.log(`[cmd] ${resetCommand}`, true);
-      await execChildProcessAsync(host, resetCommand, []);
+      await execChildProcessAsync(
+        host,
+        resetCommand,
+        [],
+        `reset (${appName}/${workloadName}) fail`
+      );
     }
   );
 }
@@ -323,7 +346,12 @@ export async function cleanPVC(
     workloadName ? `--svc ${workloadName}` : ""
   } ${pvcName ? `--name ${pvcName}` : ""}`;
   host.log(`[cmd] ${cleanCommand}`, true);
-  await execChildProcessAsync(host, cleanCommand, []);
+  await execChildProcessAsync(
+    host,
+    cleanCommand,
+    [],
+    `Clear pvc (${appName}/${workloadName}) fail`
+  );
 }
 
 export async function getSyncStatus(appName: string, workloadName: string) {

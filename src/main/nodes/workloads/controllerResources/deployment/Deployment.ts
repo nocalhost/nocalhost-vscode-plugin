@@ -53,6 +53,10 @@ export class Deployment extends ControllerResourceNode {
         break;
       case "developing":
         treeItem.iconPath = resolveVSCodeUri("dev-start.svg");
+        const container = await this.getContainer();
+        if (container) {
+          treeItem.label = `${this.label}(${container})`;
+        }
         if (portForwardStatus) {
           treeItem.iconPath = resolveVSCodeUri("Dev_Port_Forwarding.svg");
         }
