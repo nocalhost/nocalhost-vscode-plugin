@@ -8,7 +8,11 @@ export const updateLogs = (
   let thisLogs: ILogs = state.logs;
   const { logs } = action.payload;
   const { id, items } = logs;
-  if (id !== thisLogs.id || items.length !== thisLogs.items.length) {
+  if (
+    !thisLogs.items ||
+    id !== thisLogs.id ||
+    items.length !== thisLogs.items.length
+  ) {
     thisLogs = logs;
   }
   return {

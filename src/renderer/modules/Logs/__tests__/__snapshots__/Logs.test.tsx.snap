@@ -6,14 +6,14 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="makeStyles-root-12"
+        class="makeStyles-root-44"
       >
         <div
-          class="makeStyles-root-13"
+          class="makeStyles-root-45"
           data-testid="logs"
         >
           <div
-            class="makeStyles-noContent-14"
+            class="makeStyles-noContent-46"
           >
             No Content.
           </div>
@@ -26,14 +26,14 @@ Object {
   </body>,
   "container": <div>
     <div
-      class="makeStyles-root-12"
+      class="makeStyles-root-44"
     >
       <div
-        class="makeStyles-root-13"
+        class="makeStyles-root-45"
         data-testid="logs"
       >
         <div
-          class="makeStyles-noContent-14"
+          class="makeStyles-noContent-46"
         >
           No Content.
         </div>
@@ -103,17 +103,17 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="makeStyles-root-32"
+        class="makeStyles-root-72"
       >
         <div
-          class="makeStyles-root-33"
+          class="makeStyles-root-73"
           data-testid="logs"
         >
           <ul
-            class="makeStyles-list-35"
+            class="makeStyles-list-75"
           >
             <li
-              class="makeStyles-line-36"
+              class="makeStyles-line-76"
               data-line="1"
             >
               <span
@@ -123,7 +123,7 @@ Object {
               </span>
             </li>
             <li
-              class="makeStyles-line-36"
+              class="makeStyles-line-76"
               data-line="2"
             >
               <span
@@ -133,7 +133,7 @@ Object {
               </span>
             </li>
             <li
-              class="makeStyles-line-36"
+              class="makeStyles-line-76"
               data-line="3"
             >
               <span
@@ -155,17 +155,17 @@ Object {
   </body>,
   "container": <div>
     <div
-      class="makeStyles-root-32"
+      class="makeStyles-root-72"
     >
       <div
-        class="makeStyles-root-33"
+        class="makeStyles-root-73"
         data-testid="logs"
       >
         <ul
-          class="makeStyles-list-35"
+          class="makeStyles-list-75"
         >
           <li
-            class="makeStyles-line-36"
+            class="makeStyles-line-76"
             data-line="1"
           >
             <span
@@ -175,7 +175,7 @@ Object {
             </span>
           </li>
           <li
-            class="makeStyles-line-36"
+            class="makeStyles-line-76"
             data-line="2"
           >
             <span
@@ -185,7 +185,7 @@ Object {
             </span>
           </li>
           <li
-            class="makeStyles-line-36"
+            class="makeStyles-line-76"
             data-line="3"
           >
             <span
@@ -198,6 +198,581 @@ Object {
         <div
           class="logs-anthor"
         />
+      </div>
+    </div>
+    <div
+      data-rendered-id="2"
+    />
+  </div>,
+  "debug": [Function],
+  "findAllByAltText": [Function],
+  "findAllByDisplayValue": [Function],
+  "findAllByLabelText": [Function],
+  "findAllByPlaceholderText": [Function],
+  "findAllByRole": [Function],
+  "findAllByTestId": [Function],
+  "findAllByText": [Function],
+  "findAllByTitle": [Function],
+  "findByAltText": [Function],
+  "findByDisplayValue": [Function],
+  "findByLabelText": [Function],
+  "findByPlaceholderText": [Function],
+  "findByRole": [Function],
+  "findByTestId": [Function],
+  "findByText": [Function],
+  "findByTitle": [Function],
+  "getAllByAltText": [Function],
+  "getAllByDisplayValue": [Function],
+  "getAllByLabelText": [Function],
+  "getAllByPlaceholderText": [Function],
+  "getAllByRole": [Function],
+  "getAllByTestId": [Function],
+  "getAllByText": [Function],
+  "getAllByTitle": [Function],
+  "getByAltText": [Function],
+  "getByDisplayValue": [Function],
+  "getByLabelText": [Function],
+  "getByPlaceholderText": [Function],
+  "getByRole": [Function],
+  "getByTestId": [Function],
+  "getByText": [Function],
+  "getByTitle": [Function],
+  "queryAllByAltText": [Function],
+  "queryAllByDisplayValue": [Function],
+  "queryAllByLabelText": [Function],
+  "queryAllByPlaceholderText": [Function],
+  "queryAllByRole": [Function],
+  "queryAllByTestId": [Function],
+  "queryAllByText": [Function],
+  "queryAllByTitle": [Function],
+  "queryByAltText": [Function],
+  "queryByDisplayValue": [Function],
+  "queryByLabelText": [Function],
+  "queryByPlaceholderText": [Function],
+  "queryByRole": [Function],
+  "queryByTestId": [Function],
+  "queryByText": [Function],
+  "queryByTitle": [Function],
+  "rerender": [Function],
+  "unmount": [Function],
+}
+`;
+
+exports[`Test <Logs /> should render skeleton 1`] = `
+Object {
+  "asFragment": [Function],
+  "baseElement": <body>
+    <div>
+      <div
+        class="makeStyles-root-16"
+      >
+        <div
+          class="makeStyles-root-17"
+          data-testid="logs"
+        >
+          <div
+            class="makeStyles-skeletonContainer-21"
+          >
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+            <div
+              class="makeStyles-skeletonItem-22"
+              id="logs-skeleton"
+            >
+              <span
+                class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        data-rendered-id="2"
+      />
+    </div>
+  </body>,
+  "container": <div>
+    <div
+      class="makeStyles-root-16"
+    >
+      <div
+        class="makeStyles-root-17"
+        data-testid="logs"
+      >
+        <div
+          class="makeStyles-skeletonContainer-21"
+        >
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+          <div
+            class="makeStyles-skeletonItem-22"
+            id="logs-skeleton"
+          >
+            <span
+              class="MuiSkeleton-root MuiSkeleton-text MuiSkeleton-wave"
+            />
+          </div>
+        </div>
       </div>
     </div>
     <div
