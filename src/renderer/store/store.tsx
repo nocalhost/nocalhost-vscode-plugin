@@ -8,7 +8,7 @@ const initialState: IStoreState = {
   theme: ThemeType.dark,
   logs: {
     id: "",
-    items: [],
+    items: null,
   },
   deployments: {
     id: "",
