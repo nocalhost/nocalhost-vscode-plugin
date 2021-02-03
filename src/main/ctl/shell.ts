@@ -28,6 +28,7 @@ export async function execAsyncWithReturn(
 
     proc.stderr.on("data", function (data) {
       stderr += data;
+      reject(data);
     });
   });
 }
