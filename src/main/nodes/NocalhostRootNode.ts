@@ -8,6 +8,7 @@ import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import * as fileUtil from "../utils/fileUtil";
 import * as fileStore from "../store/fileStore";
+import DataCenter from "../common/DataCenter";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<AppNode | NocalhostAccountNode> = [];
@@ -26,6 +27,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<Array<AppNode | NocalhostAccountNode>> {
+    DataCenter.getInstance().setApplications();
+
     const res = await getApplication();
     let all: Array<Promise<any>> = [];
     NocalhostRootNode.childNodes = res.map((app) => {
