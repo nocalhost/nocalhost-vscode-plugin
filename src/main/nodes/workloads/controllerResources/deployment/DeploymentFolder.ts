@@ -8,11 +8,7 @@ import ConfigService, {
 import state from "../../../../state";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { DEPLOYMENT_FOLDER } from "../../../nodeContants";
-import {
-  BaseNocalhostNode,
-  PortForwardData,
-  SvcProfile,
-} from "../../../types/nodeType";
+import { BaseNocalhostNode, SvcProfile } from "../../../types/nodeType";
 import { List, ResourceStatus } from "../../../types/resourceType";
 import { Deployment } from "./Deployment";
 
@@ -36,28 +32,16 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     const list = JSON.parse(res as string) as List;
     const appNode = this.getAppNode();
     const appInfo = await appNode.getApplicationInfo();
-    const currentAppStatus = await appNode.getCurrentAppStatus();
     const appConfig = await ConfigService.getAppConfig(appNode.name);
     const result: Deployment[] = list.items.map((item) => {
       const status = item.status as ResourceStatus;
       const svcProfiles = appInfo.svcProfile || [];
-      const svcStatusInfos = currentAppStatus.svcProfile || [];
       let svcProfile: SvcProfile | undefined | null;
-      let svcStatusInfo: (SvcProfile & PortForwardData) | undefined | null;
       const nocalhostServices = appConfig.services || [];
       let nocalhostService: NocalhostServiceConfig | undefined | null;
       for (let i = 0; i < svcProfiles.length; i++) {
-        if (svcProfiles[i].name === item.metadata.name) {
+        if (svcProfiles[i].actualName === item.metadata.name) {
           svcProfile = svcProfiles[i];
-          break;
-        }
-      }
-      for (let i = 0; i < svcStatusInfos.length; i++) {
-        if (
-          svcStatusInfos[i] &&
-          svcStatusInfos[i].actualName === item.metadata.name
-        ) {
-          svcStatusInfo = svcStatusInfos[i];
           break;
         }
       }
@@ -73,7 +57,6 @@ export class DeploymentFolder extends KubernetesResourceFolder {
         item.metadata.name,
         status.conditions || ((status as unknown) as string),
         svcProfile,
-        svcStatusInfo,
         nocalhostService,
         item
       );

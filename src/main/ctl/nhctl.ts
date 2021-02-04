@@ -7,10 +7,10 @@ import {
 } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
-import { PortForwardData, SvcProfile } from "../nodes/types/nodeType";
 import * as packageJson from "../../../package.json";
 import { NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
+import { SvcProfile } from "../nodes/types/nodeType";
 
 export function install(
   host: Host,
@@ -189,20 +189,6 @@ export async function endPortForward(
   );
 }
 
-export async function getCurrentServiceStatusInfo(
-  appName: string,
-  workloadName: string
-) {
-  const describeCommand = `nhctl describe ${appName} -d ${workloadName}`;
-
-  const result = await execAsyncWithReturn(describeCommand, []);
-
-  const portforwardData = yaml.parse(result.stdout) as SvcProfile &
-    PortForwardData;
-
-  return portforwardData;
-}
-
 export async function syncFile(
   host: Host,
   kubeconfigPath: string,
@@ -254,15 +240,20 @@ export async function loadResource(host: Host, appName: string) {
 }
 
 export async function getAppInfo(appName: string) {
-  const describeCommand = `nhctl plugin get ${appName}`;
+  const describeCommand = `nhctl describe ${appName}`;
   const result = await execAsyncWithReturn(describeCommand, []);
   return result.stdout;
 }
 
 export async function getServiceConfig(appName: string, workloadName: string) {
-  const describeCommand = `nhctl plugin get ${appName} -d ${workloadName}`;
+  const describeCommand = `nhctl describe ${appName} -d ${workloadName}`;
   const result = await execAsyncWithReturn(describeCommand, []);
-  return result.stdout;
+  let svcProfile: SvcProfile | null = null;
+  if (result && result.stdout) {
+    svcProfile = yaml.parse(result.stdout) as SvcProfile;
+  }
+
+  return svcProfile;
 }
 
 export async function printAppInfo(

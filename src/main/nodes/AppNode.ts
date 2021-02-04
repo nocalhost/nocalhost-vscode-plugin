@@ -7,7 +7,7 @@ import state from "../state";
 import { APP_FOLDER, ID_SPLIT } from "./nodeContants";
 import { resolveVSCodeUri } from "../utils/fileUtil";
 import * as path from "path";
-import { BaseNocalhostNode, AppInfo, CurrentAppStatus } from "./types/nodeType";
+import { BaseNocalhostNode, AppInfo } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NetworkFolderNode } from "./networks/NetworkFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
@@ -36,7 +36,6 @@ export class AppNode extends NocalhostFolderNode {
   public parent: NocalhostRootNode;
   // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
-  private currentAppStatus: CurrentAppStatus | undefined;
   constructor(
     parent: NocalhostRootNode,
     installType: string,
@@ -95,25 +94,6 @@ export class AppNode extends NocalhostFolderNode {
       return this.nhctlAppInfo;
     }
     return this.freshApplicationInfo();
-  }
-
-  public async getCurrentAppStatus() {
-    if (this.currentAppStatus) {
-      return this.currentAppStatus;
-    }
-    return this.freshCurrentAppStatus();
-  }
-
-  public async freshCurrentAppStatus() {
-    let info = {} as CurrentAppStatus;
-    const infoStr = await nhctl
-      .loadResource(host, this.name)
-      .catch((err) => {});
-    if (infoStr) {
-      info = yaml.parse(infoStr as string);
-    }
-    this.currentAppStatus = info;
-    return this.currentAppStatus;
   }
 
   public async freshApplicationInfo() {
@@ -189,9 +169,6 @@ export class AppNode extends NocalhostFolderNode {
   async getTreeItem() {
     const info = await this.getApplicationInfo();
     this.installStatus = info.installed ? 1 : 0;
-    if (info.installed) {
-      await this.getCurrentAppStatus();
-    }
     let collapseState: vscode.TreeItemCollapsibleState;
     if (this.unInstalled()) {
       collapseState = vscode.TreeItemCollapsibleState.None;
@@ -223,7 +200,7 @@ export class AppNode extends NocalhostFolderNode {
       ) {
         vscode.commands.executeCommand(SYNC_SERVICE, {
           app: this.name,
-          service: service.name,
+          service: service.actualName,
         });
         break;
       }

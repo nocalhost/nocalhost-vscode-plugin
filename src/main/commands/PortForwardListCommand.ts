@@ -18,18 +18,23 @@ export default class PortForwardListCommand implements ICommand {
       return;
     }
 
-    const portforwardData = await nhctl.getCurrentServiceStatusInfo(
+    const svcProfile = await nhctl.getServiceConfig(
       node.getAppName(),
       node.name
     );
 
-    if (portforwardData.portForwardStatusList.length < 1) {
+    if (!svcProfile) {
+      host.showErrorMessage("not get service config");
+      return;
+    }
+
+    if (svcProfile.portForwardStatusList.length < 1) {
       host.showInformationMessage("No Port Forward");
       return;
     }
 
     const endPort = await vscode.window.showQuickPick(
-      portforwardData.portForwardStatusList
+      svcProfile.portForwardStatusList
     );
 
     if (!endPort) {
@@ -56,7 +61,7 @@ export default class PortForwardListCommand implements ICommand {
 
     const assoPortForwardsMap = new Map<string, Array<string>>();
     let pid = "";
-    portforwardData.portForwardPidList.forEach((str) => {
+    svcProfile.portForwardPidList.forEach((str: string) => {
       const portPid = str.split("-");
       if (portPid[0] === match[1]) {
         pid = portPid[1];
