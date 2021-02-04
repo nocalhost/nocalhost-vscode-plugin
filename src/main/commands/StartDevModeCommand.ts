@@ -55,7 +55,7 @@ export default class StartDevModeCommand implements ICommand {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
     const result = await this.getPodAndContainer(node);
-    if (!result || !result.containerName) {
+    if (!result) {
       return;
     }
     const appName = node.getAppName();
@@ -406,12 +406,12 @@ export default class StartDevModeCommand implements ICommand {
       podName,
       kubeConfigPath
     );
-    let containerName: string | undefined = containerNameArr[0];
+    let containerName: string | undefined = "";
     if (containerNameArr.length > 1) {
       containerName = await vscode.window.showQuickPick(containerNameArr);
-    }
-    if (!containerName) {
-      return;
+      if (!containerName) {
+        return;
+      }
     }
 
     return { containerName, podName };
