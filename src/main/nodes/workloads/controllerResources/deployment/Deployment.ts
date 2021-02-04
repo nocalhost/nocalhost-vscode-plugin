@@ -153,12 +153,8 @@ export class Deployment extends ControllerResourceNode {
           type: "array",
           items: {
             type: "object",
-            required: ["dev", "name"],
+            required: ["dev"],
             properties: {
-              name: {
-                type: "string",
-                minLength: 1,
-              },
               dev: {
                 type: "object",
                 required: ["gitUrl", "image"],
