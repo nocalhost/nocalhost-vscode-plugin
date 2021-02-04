@@ -29,7 +29,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       return;
     }
     const result = await this.getPodAndContainer(node);
-    if (!result || !result.containerName) {
+    if (!result) {
       return;
     }
     const containerName = result.containerName;
@@ -75,12 +75,12 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       podName,
       kubeConfigPath
     );
-    let containerName: string | undefined = containerNameArr[0];
+    let containerName: string | undefined = "";
     if (containerNameArr.length > 1) {
       containerName = await vscode.window.showQuickPick(containerNameArr);
-    }
-    if (!containerName) {
-      return;
+      if (!containerName) {
+        return;
+      }
     }
 
     return { containerName, podName };

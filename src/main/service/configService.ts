@@ -94,6 +94,9 @@ export default class ConfigService {
     const config = yaml.parse(configStr) as NocalhostServiceConfig;
     let containerConfig: ContainerConfig | null = null;
     for (const container of config.containers) {
+      if (!container.name) {
+        container.name = "";
+      }
       if (container.name === containerName) {
         containerConfig = container;
       }
