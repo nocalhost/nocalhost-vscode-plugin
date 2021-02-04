@@ -54,29 +54,40 @@ export default class StartDevModeCommand implements ICommand {
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
+    const result = await this.getPodAndContainer(node);
+    if (!result || !result.containerName) {
+      return;
+    }
     const appName = node.getAppName();
-    const destDir = await this.cloneOrGetFolderDir(appName, node);
+    const destDir = await this.cloneOrGetFolderDir(
+      appName,
+      node,
+      result.containerName
+    );
     if (
       destDir === true ||
       (destDir && destDir === this.getCurrentRootPath())
     ) {
       host.disposeBookInfo();
-      await this.startDevMode(host, appName, node);
+      await this.startDevMode(host, appName, node, result.containerName);
     } else if (destDir) {
       host.disposeBookInfo();
-      this.saveAndOpenFolder(appName, node, destDir);
+      this.saveAndOpenFolder(appName, node, destDir, result.containerName);
     }
   }
 
   private saveAndOpenFolder(
     appName: string,
     node: ControllerNodeApi,
-    destDir: string
+    destDir: string,
+    containerName: string
   ) {
     let appConfig = fileStore.get(appName) || {};
     let workloadConfig = appConfig[node.name] || {};
+    let containerConfig = workloadConfig[containerName] || {};
     const currentUri = this.getCurrentRootPath();
-    workloadConfig.directory = destDir;
+    containerConfig.directory = destDir;
+    workloadConfig[containerName] = containerConfig;
     appConfig[node.name] = workloadConfig;
     fileStore.set(appName, appConfig);
     const uri = vscode.Uri.file(destDir);
@@ -90,9 +101,18 @@ export default class StartDevModeCommand implements ICommand {
     }
   }
 
-  private async cloneCode(host: Host, appName: string, workloadName: string) {
+  private async cloneCode(
+    host: Host,
+    appName: string,
+    workloadName: string,
+    containerName: string
+  ) {
     let destDir: string | undefined;
-    let gitUrl = await this.getGitUrl(appName, workloadName);
+    let gitUrl: string | undefined = await this.getGitUrl(
+      appName,
+      workloadName,
+      containerName
+    );
     if (!gitUrl) {
       gitUrl = await host.showInputBox({
         placeHolder: "please input your git url",
@@ -118,7 +138,11 @@ export default class StartDevModeCommand implements ICommand {
     return destDir;
   }
 
-  private async firstOpen(appName: string, node: ControllerNodeApi) {
+  private async firstOpen(
+    appName: string,
+    node: ControllerNodeApi,
+    containerName: string
+  ) {
     let destDir: string | undefined;
     const result = await host.showInformationMessage(
       nls["tips.clone"],
@@ -130,7 +154,7 @@ export default class StartDevModeCommand implements ICommand {
       return;
     }
     if (result === nls["bt.clone"]) {
-      destDir = await this.cloneCode(host, appName, node.name);
+      destDir = await this.cloneCode(host, appName, node.name, containerName);
     } else if (result === nls["bt.open.dir"]) {
       const uris = await host.showOpenDialog({
         canSelectFiles: false,
@@ -145,10 +169,15 @@ export default class StartDevModeCommand implements ICommand {
     return destDir;
   }
 
-  private async getTargetDirectory(appName: string, node: ControllerNodeApi) {
+  private async getTargetDirectory(
+    appName: string,
+    node: ControllerNodeApi,
+    containerName: string
+  ) {
     let destDir: string | undefined;
     let appConfig = fileStore.get(appName);
     let workloadConfig = appConfig[node.name];
+    let containerConfig = workloadConfig[containerName] || {};
 
     const result = await host.showInformationMessage(
       nls["tips.open"],
@@ -166,36 +195,48 @@ export default class StartDevModeCommand implements ICommand {
         destDir = uris[0].fsPath;
       }
     } else if (result === nls["bt.open.dir"]) {
-      destDir = workloadConfig.directory;
+      destDir = containerConfig.directory;
     }
 
     return destDir;
   }
 
-  private async cloneOrGetFolderDir(appName: string, node: ControllerNodeApi) {
+  private async cloneOrGetFolderDir(
+    appName: string,
+    node: ControllerNodeApi,
+    containerName: string
+  ) {
     let destDir: string | undefined | boolean;
     let appConfig = fileStore.get(appName) || {};
     const currentUri = this.getCurrentRootPath();
     let workloadConfig = appConfig[node.name] || {};
+    let containerConfig = workloadConfig[containerName] || {};
+    workloadConfig[containerName] = containerConfig;
     appConfig[node.name] = workloadConfig;
+
     fileStore.set(appName, appConfig);
-    if (!workloadConfig.directory) {
-      destDir = await this.firstOpen(appName, node);
-    } else if (currentUri !== workloadConfig.directory) {
-      destDir = await this.getTargetDirectory(appName, node);
+    if (!containerConfig.directory) {
+      destDir = await this.firstOpen(appName, node, containerName);
+    } else if (currentUri !== containerConfig.directory) {
+      destDir = await this.getTargetDirectory(appName, node, containerName);
     } else {
       destDir = true;
     }
 
     if (destDir && destDir !== true) {
-      workloadConfig.directory = destDir;
+      containerConfig.directory = destDir;
       fileStore.set(appName, appConfig);
     }
 
     return destDir;
   }
 
-  async startDevMode(host: Host, appName: string, node: ControllerNodeApi) {
+  async startDevMode(
+    host: Host,
+    appName: string,
+    node: ControllerNodeApi,
+    containerName: string
+  ) {
     const currentUri = this.getCurrentRootPath() || os.homedir();
 
     await vscode.window.withProgress(
@@ -215,20 +256,9 @@ export default class StartDevModeCommand implements ICommand {
           const svc = await this.getSvcConfig(appName, node.name);
           let dirs: Array<string> | string = new Array<string>();
           let isOld = false;
-          if (svc && svc.syncDirs) {
-            isOld = true;
-            dirs = svc.syncDirs.map((item) =>
-              host.formalizePath(path.resolve(currentUri, item))
-            );
-          } else {
-            dirs = host.formalizePath(currentUri);
-          }
-          const result = await this.getPodAndContainer(node);
-          if (!result || !result.containerName) {
-            return;
-          }
+          dirs = host.formalizePath(currentUri);
           // update deployment label
-          node.setContainer(result.containerName);
+          node.setContainer(containerName);
           await nhctl.devStart(
             host,
             node.getKubeConfigPath(),
@@ -238,7 +268,7 @@ export default class StartDevModeCommand implements ICommand {
               isOld: isOld,
               dirs: dirs,
             },
-            result.containerName,
+            containerName,
             node.getStorageClass(),
             node.getDevStartAppendCommand()
           );
@@ -257,12 +287,16 @@ export default class StartDevModeCommand implements ICommand {
           );
           host.log("sync file end", true);
           host.log("", true);
-
+          const container = await ConfigService.getContaienrConfig(
+            appName,
+            node.name,
+            containerName
+          );
           if (
-            svc &&
-            svc.devPorts &&
-            svc.devPorts.length &&
-            svc.devPorts.length > 0
+            container &&
+            container.dev.portForward &&
+            container.dev.portForward.length &&
+            container.dev.portForward.length > 0
           ) {
             progress.report({
               message: "port forwarding",
@@ -274,7 +308,7 @@ export default class StartDevModeCommand implements ICommand {
               appName,
               node.name,
               "devPorts",
-              svc.devPorts
+              container.dev.portForward
             );
             host.log("port forward end", true);
             host.log("", true);
@@ -338,15 +372,22 @@ export default class StartDevModeCommand implements ICommand {
     return workloadConfig;
   }
 
-  private async getGitUrl(appName: string, workloadName: string) {
-    const config = await ConfigService.getAppConfig(appName);
-    const arr = config.services;
-    for (let i = 0; i < arr.length; i++) {
-      const { gitUrl, name } = arr[i];
-      if (name === workloadName) {
-        return gitUrl;
-      }
+  private async getGitUrl(
+    appName: string,
+    workloadName: string,
+    containerName: string
+  ) {
+    const config = await ConfigService.getContaienrConfig(
+      appName,
+      workloadName,
+      containerName
+    );
+    let gitUrl = "";
+    if (config) {
+      gitUrl = config.dev.gitUrl;
     }
+
+    return gitUrl;
   }
 
   async getPodAndContainer(node: ControllerNodeApi) {

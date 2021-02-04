@@ -11,26 +11,38 @@ export interface NocalhostServiceConfig {
   name: string;
   nameRegex?: string;
   serviceType: string;
-  gitUrl: string;
-  devContainerImage: string;
-  devContainerShell?: string;
-  syncType?: string;
-  syncDirs?: Array<string>; // default ["."]
-  ignoreDirs?: Array<string>;
-  syncedPattern?: Array<string>;
-  ignoredPattern?: Array<string>;
-  devPorts?: Array<string>;
-  dependPodsLabelSelector?: Array<string>;
-  dependJobsLabelSelector?: Array<string>;
-  workDir?: string; // default value: "/home/nocalhost-dev"
-  persistentVolumeDir?: string;
-  buildCommand?: string;
-  runCommand?: string;
-  debugCommand?: string;
-  hotReloadRunCommand?: string;
-  hotReloadDebugCommand?: string;
-  remoteDebugPort?: number;
-  useDevContainer?: string;
+  dependLabelSelector: any;
+  containers: Array<ContainerConfig>;
+}
+export interface ContainerConfig {
+  name: string;
+  install: boolean;
+  dev: {
+    gitUrl: string;
+    image: string;
+    shell?: string;
+    resources?: any;
+    sync: {
+      type?: string;
+      filePattern?: Array<string>;
+      ignoreFilePattern?: Array<string>;
+    };
+    env: Array<string>;
+    envFrom?: any;
+    portForward: Array<string>;
+    workDir?: string; // default value: "/home/nocalhost-dev"
+    persistentVolumeDirs?: Array<string>;
+    command: {
+      build?: Array<string>;
+      run?: Array<string>;
+      debug?: Array<string>;
+      hotReloadRun?: Array<string>;
+      hotReloadDebug?: Array<string>;
+    };
+    debug: any;
+    remoteDebugPort?: number;
+    useDevContainer?: boolean;
+  };
 }
 
 export interface NocalhostConfig {
@@ -71,5 +83,21 @@ export default class ConfigService {
     const config = yaml.parse(configStr) as NocalhostServiceConfig;
 
     return config;
+  }
+
+  static async getContaienrConfig(
+    appName: string,
+    workloadName: string,
+    containerName: string
+  ) {
+    const configStr = await nhctl.getConfig(appName, workloadName);
+    const config = yaml.parse(configStr) as NocalhostServiceConfig;
+    let containerConfig: ContainerConfig | null = null;
+    for (const container of config.containers) {
+      if (container.name === containerName) {
+        containerConfig = container;
+      }
+    }
+    return containerConfig;
   }
 }
