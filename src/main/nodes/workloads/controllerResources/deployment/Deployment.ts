@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as yaml from "yaml";
 
 import * as kubectl from "../../../../ctl/kubectl";
 import * as nhctl from "../../../../ctl/nhctl";
@@ -12,8 +11,6 @@ import { DEPLOYMENT } from "../../../nodeContants";
 import {
   BaseNocalhostNode,
   DeploymentStatus,
-  PortForwardData,
-  ServiceProfile,
   SvcProfile,
 } from "../../../types/nodeType";
 import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
@@ -31,7 +28,6 @@ export class Deployment extends ControllerResourceNode {
     public name: string,
     private conditionsStatus: Array<Status> | string,
     private svcProfile: SvcProfile | undefined | null,
-    private svcStatusInfo: (SvcProfile & PortForwardData) | undefined | null,
     private nocalhostService: NocalhostServiceConfig | undefined | null,
     public info?: any
   ) {
@@ -130,17 +126,7 @@ export class Deployment extends ControllerResourceNode {
   }
 
   public async getPortForwardStatus() {
-    if (!this.firstRender) {
-      const appNode = this.getAppNode();
-      this.svcStatusInfo = await nhctl.getCurrentServiceStatusInfo(
-        appNode.name,
-        this.name
-      );
-    }
-    if (
-      this.svcStatusInfo &&
-      this.svcStatusInfo.portForwardStatusList.length > 0
-    ) {
+    if (this.svcProfile && this.svcProfile.portForwardStatusList.length > 0) {
       return true;
     }
     return false;
@@ -148,15 +134,7 @@ export class Deployment extends ControllerResourceNode {
 
   public async refreshSvcProfile() {
     const appNode = this.getAppNode();
-    const infoStr = await nhctl
-      .getServiceConfig(appNode.name, this.name)
-      .catch((err) => {});
-    if (infoStr) {
-      const serviceProfile = yaml.parse(infoStr as string) as ServiceProfile;
-      if (serviceProfile) {
-        this.svcProfile = serviceProfile.svcProfile;
-      }
-    }
+    this.svcProfile = await nhctl.getServiceConfig(appNode.name, this.name);
   }
 
   public async checkConfig() {

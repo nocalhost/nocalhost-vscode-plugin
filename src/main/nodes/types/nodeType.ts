@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 export interface AppInfo {
   name: string;
+  releasename: string;
   namespace: string;
   kubeconfig: string;
   dependencyConfigMapName: string;
@@ -11,47 +12,31 @@ export interface AppInfo {
   resourcePath: string;
 }
 
-export interface CurrentAppStatus {
-  name: string;
-  releasename: string;
-  namespace: string;
-  kubeconfig: string;
-  dependencyConfigMapName: string;
-  appType: string;
-  svcProfile: Array<SvcProfile & PortForwardData>;
-  installed: boolean;
-  resourcePath: string;
-}
-
-// include application info
-export interface ServiceProfile {
-  name: string;
-  namespace: string;
-  kubeconfig: string;
-  dependencyConfigMapName: string;
-  appType: string;
-  svcProfile: SvcProfile;
-  installed: boolean;
-  resourcePath: string;
-}
-
 export interface SvcProfile {
+  rawConfig: {
+    name: string;
+    serviceType: string;
+    gitUrl: string;
+    devContainerImage: string;
+    syncDirs: Array<string>;
+    persistentVolumeDirs: Array<string>;
+    devContainerShell: string;
+    ignores: Array<string>;
+    devContainerResources: any;
+    devPorts: Array<string>;
+    dependPodsLabelSelector: Array<string>;
+    syncFilePattern: [];
+    ignoreFilePattern: [];
+  };
   actualName: string;
-  name: string;
-  type: string;
   developing: boolean;
   portForwarded: boolean;
   syncing: boolean;
-  workDir: string;
   remoteSyncthingPort: number;
   remoteSyncthingGUIPort: number;
   localSyncthingPort: number;
   localSyncthingGUIPort: number;
   localAbsoluteSyncDirFromDevStartPlugin: Array<string>;
-  devPortList: Array<string>;
-}
-
-export interface PortForwardData {
   devPortList: Array<string>;
   portForwardStatusList: Array<string>;
   portForwardPidList: Array<string>;

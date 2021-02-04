@@ -19,7 +19,11 @@ export async function execAsyncWithReturn(
     let stdout = "";
     let stderr = "";
     proc.on("close", (code) => {
-      resolve({ stdout, stderr, code });
+      if (code === 0) {
+        resolve({ stdout, stderr, code });
+      } else {
+        reject(stderr);
+      }
     });
 
     proc.stdout.on("data", function (data) {
