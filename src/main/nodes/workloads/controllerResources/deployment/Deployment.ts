@@ -147,19 +147,34 @@ export class Deployment extends ControllerResourceNode {
     }
     const schema = {
       type: "object",
-      required: ["gitUrl", "devContainerImage", "name"],
+      required: ["containers"],
       properties: {
-        gitUrl: {
-          type: "string",
-          minLength: 1,
-        },
-        devContainerImage: {
-          type: "string",
-          minLength: 1,
-        },
-        name: {
-          type: "string",
-          minLength: 1,
+        containers: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["dev", "name"],
+            properties: {
+              name: {
+                type: "string",
+                minLength: 1,
+              },
+              dev: {
+                type: "object",
+                required: ["gitUrl", "image"],
+                properties: {
+                  image: {
+                    type: "string",
+                    minLength: 1,
+                  },
+                  gitUrl: {
+                    type: "string",
+                    minLength: 1,
+                  },
+                },
+              },
+            },
+          },
         },
       },
     };
