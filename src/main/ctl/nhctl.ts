@@ -403,16 +403,6 @@ export async function checkVersion() {
   }
 }
 
-export async function handleNhctlNotFound() {
-  const result: string | undefined = await vscode.window.showInformationMessage(
-    "nhctl not found, please install nhctl first.",
-    "Get nhctl"
-  );
-  if (result === "Get nhctl") {
-    vscode.env.openExternal(vscode.Uri.parse(NOCALHOST_INSTALLATION_LINK));
-  }
-}
-
 function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfigPath}`;
 }
