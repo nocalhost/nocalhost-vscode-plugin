@@ -4,7 +4,6 @@ import * as shell from "./ctl/shell";
 import { NOCALHOST_INSTALLATION_LINK } from "./constants";
 
 export class Host implements vscode.Disposable {
-  private hasChecked: boolean = false;
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
   );
@@ -193,9 +192,6 @@ export class Host implements vscode.Disposable {
   }
 
   async check() {
-    if (this.hasChecked) {
-      return;
-    }
     const tools = ["kubectl", "nhctl"];
     for (let i = 0; i < tools.length; i++) {
       const exist = shell.which(tools[i]);
@@ -224,7 +220,6 @@ export class Host implements vscode.Disposable {
         }
       }
     }
-    this.hasChecked = true;
   }
 }
 
