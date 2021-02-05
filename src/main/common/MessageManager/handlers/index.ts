@@ -5,6 +5,7 @@ import fetchDeployments from "./fetchDeployments";
 import updateURL from "./updateURL";
 
 export default function (message: IMessage, id: number) {
+  console.log(`> receive message from webview: ${id},`, message);
   const { type } = message;
   switch (type) {
     case "executeCommand":

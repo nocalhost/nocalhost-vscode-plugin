@@ -73,7 +73,7 @@ export default class DataCenter {
           applicationConfigPath: contextObj["application_config_path"] || "",
           nocalhostConfig: contextObj["nocalhost_config"] || "",
         };
-        await this.fetchApplicationMeta(context.applicationName);
+        // await this.fetchApplicationMeta(context.applicationName);
         await this.fetchApplicationDescribe(context.applicationName);
         await this.fetchApplicationConfig(context.applicationName);
         return {

@@ -1,7 +1,10 @@
 import { IMessage } from "..";
 import NocalhostWebviewPanel from "../../../webview/NocalhostWebviewPanel";
 import DataCenter from "../../DataCenter";
-import { IApplicationMeta } from "../../DataCenter/index.types";
+import {
+  IApplicationDescribe,
+  IApplicationMeta,
+} from "../../DataCenter/index.types";
 import services, { ServiceResult } from "../../DataCenter/services";
 
 export default async function fetchLogs(message: IMessage, id: number) {
@@ -16,11 +19,11 @@ export default async function fetchLogs(message: IMessage, id: number) {
   ) {
     return;
   }
-  const applicationMeta:
-    | IApplicationMeta
-    | undefined = dataCenter.getApplicationMeta(payload.app);
-  if (applicationMeta) {
-    const kubeConfig: string = applicationMeta.kubeConfig;
+  const applicationDescribe:
+    | IApplicationDescribe
+    | undefined = dataCenter.getApplicationDescribe(payload.app);
+  if (applicationDescribe) {
+    const kubeConfig: string = applicationDescribe.kubeConfig;
     const result: ServiceResult = await services.fetchLogs(
       payload.pod,
       payload.container,
