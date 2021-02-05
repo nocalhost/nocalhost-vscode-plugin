@@ -214,7 +214,7 @@ export default class NocalhostWebviewPanel {
       null,
       this.disposables
     );
-    setTimeout(this.update.bind(this), 30);
+    process.nextTick(this.update.bind(this));
   }
 
   private didDispose(): void {
