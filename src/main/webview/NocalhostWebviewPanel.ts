@@ -201,7 +201,6 @@ export default class NocalhostWebviewPanel {
     this.url = url;
     this.openStack.push(url);
     this.panel = panel;
-    this.update();
     this.panel.onDidDispose(() => this.didDispose(), null, this.disposables);
     this.panel.onDidChangeViewState(
       () => this.viewChange(),
@@ -215,6 +214,7 @@ export default class NocalhostWebviewPanel {
       null,
       this.disposables
     );
+    process.nextTick(this.update.bind(this));
   }
 
   private didDispose(): void {

@@ -53,7 +53,7 @@ export default class TextDocumentContentProvider
           break;
         }
         case "nh": {
-          const result: ServiceResult = await services.fetchApplicationMeta(
+          const result: ServiceResult = await services.describeApplication(
             name
           );
           if (!result.success) {

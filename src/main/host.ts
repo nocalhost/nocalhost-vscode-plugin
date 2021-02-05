@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import { Progress } from "vscode";
 import * as shell from "./ctl/shell";
+import { NOCALHOST_INSTALLATION_LINK } from "./constants";
+
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
@@ -189,14 +191,35 @@ export class Host implements vscode.Disposable {
     }
   }
 
-  check() {
+  async check() {
     const tools = ["kubectl", "nhctl"];
-    tools.forEach((tool) => {
-      const exist = shell.which(tool);
+    for (let i = 0; i < tools.length; i++) {
+      const exist = shell.which(tools[i]);
       if (!exist) {
-        throw new Error(`Not found: ${tool}`);
+        switch (tools[i]) {
+          case "kubectl": {
+            vscode.window.showErrorMessage(
+              "kubectl not found, please install kubectl first."
+            );
+            break;
+          }
+          case "nhctl": {
+            const result:
+              | string
+              | undefined = await vscode.window.showErrorMessage(
+              "nhctl not found, please install nhctl first.",
+              "Get nhctl"
+            );
+            if (result === "Get nhctl") {
+              vscode.env.openExternal(
+                vscode.Uri.parse(NOCALHOST_INSTALLATION_LINK)
+              );
+            }
+            break;
+          }
+        }
       }
-    });
+    }
   }
 }
 
