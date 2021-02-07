@@ -118,6 +118,16 @@ export class Host implements vscode.Disposable {
     });
   }
 
+  showSelectFileDialog(title: string, defaultUri?: vscode.Uri) {
+    return this.showOpenDialog({
+      defaultUri: defaultUri,
+      canSelectFolders: false,
+      canSelectFiles: true,
+      canSelectMany: false,
+      title: title,
+    });
+  }
+
   copyTextToclipboard(text: string) {
     vscode.env.clipboard.writeText(text);
   }

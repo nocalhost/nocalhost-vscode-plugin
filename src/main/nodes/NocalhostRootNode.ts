@@ -107,6 +107,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       type = "rawManifest";
     } else if (source === "git" && originInstallType === "helm_chart") {
       type = "helmGit";
+    } else if (source === "local") {
+      type = originInstallType;
     }
     return type;
   }
