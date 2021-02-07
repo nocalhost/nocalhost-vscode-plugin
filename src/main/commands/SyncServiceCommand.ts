@@ -40,6 +40,10 @@ export default class SyncServiceCommand implements ICommand {
       const result = await nhctl.getSyncStatus(syncData.app, syncData.service);
       if (!result) {
         // hide status bar
+        if (this._id) {
+          clearInterval(this._id);
+          this._id = null;
+        }
         host.statusBar.hide();
         host.outSyncStatusBar.hide();
       } else {
