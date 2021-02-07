@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
 
 import ICommand from "./ICommand";
 import { INSTALL_APP, REFRESH } from "./constants";
@@ -24,44 +26,104 @@ export default class InstallCommand implements ICommand {
       return;
     }
 
-    let repoMsg = "";
-    let btMsg = "";
-    if (appNode.installType === "helmRepo") {
-      repoMsg = "Which version to install?";
-      btMsg = "Default Version";
-    } else {
-      repoMsg = "Which branch to install(Manifests in Git Repo)?";
-      btMsg = "Default Branch";
-    }
-
-    const r = await host.showInformationMessage(
-      repoMsg,
-      { modal: true },
-      btMsg,
-      "Specify one"
-    );
-    if (!r) {
-      return;
-    }
     let refOrVersion: string | undefined;
-
-    if (r === "Specify one") {
-      let msg = "";
-      if (appNode.installType === "helmRepo") {
-        msg = "please input the version of chart";
-      } else {
-        msg = "please input the branch of repository";
-      }
-      refOrVersion = await host.showInputBox({
-        placeHolder: msg,
-      });
-
-      if (!refOrVersion) {
+    let values: string | undefined;
+    let local:
+      | {
+          localPath: string;
+          config: string;
+        }
+      | undefined = undefined;
+    if (["helmLocal", "rawManifestLocal"].includes(appNode.installType)) {
+      let confirm = await host.showInformationMessage(
+        appNode.installType === "rawManifestLocal"
+          ? "Please choose application manifest root directory"
+          : "Please choose unpacked application heml chart root directory",
+        { modal: true },
+        "confirm"
+      );
+      if (confirm !== "confirm") {
         return;
       }
+      let localPath = await host.showSelectFolderDialog(
+        "Please select your local application"
+      );
+      if (!localPath) {
+        return;
+      }
+      const configs = this.getAllConfig(
+        path.resolve(localPath[0].fsPath, ".nocalhost")
+      );
+      let configPath: string | undefined = "";
+      if (configs.length > 1) {
+        // show select
+        configPath = await vscode.window.showQuickPick(configs);
+      } else if (configs.length === 0) {
+        // select one
+        let confirm = await host.showInformationMessage(
+          "Please select your configuration file",
+          { modal: true },
+          "confirm"
+        );
+        if (confirm !== "confirm") {
+          return;
+        }
+        const configUri = await host.showSelectFileDialog(
+          "Please select your configuration file",
+          vscode.Uri.file(localPath[0].fsPath)
+        );
+        if (configUri) {
+          configPath = configUri[0].fsPath;
+        }
+      } else {
+        configPath = configs[0];
+      }
+      if (!configPath) {
+        return;
+      }
+
+      local = {
+        localPath: localPath[0].fsPath,
+        config: configPath,
+      };
+    } else {
+      let repoMsg = "";
+      let btMsg = "";
+      if (appNode.installType === "helmRepo") {
+        repoMsg = "Which version to install?";
+        btMsg = "Default Version";
+      } else {
+        repoMsg = "Which branch to install(Manifests in Git Repo)?";
+        btMsg = "Default Branch";
+      }
+
+      const r = await host.showInformationMessage(
+        repoMsg,
+        { modal: true },
+        btMsg,
+        "Specify one"
+      );
+      if (!r) {
+        return;
+      }
+
+      if (r === "Specify one") {
+        let msg = "";
+        if (appNode.installType === "helmRepo") {
+          msg = "please input the version of chart";
+        } else {
+          msg = "please input the branch of repository";
+        }
+        refOrVersion = await host.showInputBox({
+          placeHolder: msg,
+        });
+
+        if (!refOrVersion) {
+          return;
+        }
+      }
     }
-    let values: string | undefined;
-    if (["helmGit", "helmRepo"].includes(appNode.installType)) {
+    if (["helmGit", "helmRepo", "helmLocal"].includes(appNode.installType)) {
       const res = await host.showInformationMessage(
         "Do you want to specify a values.yaml?",
         { modal: true },
@@ -112,7 +174,8 @@ export default class InstallCommand implements ICommand {
       appNode.installType,
       appNode.resourceDir,
       values,
-      refOrVersion
+      refOrVersion,
+      local
     )
       .then(() => {
         const bookInfoUrls = [
@@ -147,7 +210,13 @@ export default class InstallCommand implements ICommand {
     installType: string,
     resourceDir: Array<string>,
     values: string | undefined,
-    refOrVersion: string | undefined
+    refOrVersion: string | undefined,
+    local:
+      | {
+          localPath: string;
+          config: string;
+        }
+      | undefined
   ) {
     host.log(`Installing application: ${appName}`, true);
     await nhctl.install(
@@ -159,6 +228,7 @@ export default class InstallCommand implements ICommand {
       gitUrl,
       installType,
       resourceDir,
+      local,
       values,
       refOrVersion
     );
@@ -234,5 +304,22 @@ export default class InstallCommand implements ICommand {
       const uri = vscode.Uri.parse("http://127.0.0.1:39080/productpage");
       vscode.env.openExternal(uri);
     }
+  }
+
+  private getAllConfig(localPath: string) {
+    const files = fs.readdirSync(localPath);
+    const configs = new Array<string>();
+    files.forEach((filePath) => {
+      const fullPath = path.resolve(localPath, filePath);
+      const stat = fs.statSync(fullPath);
+      if (stat.isFile()) {
+        const extname = path.extname(fullPath);
+        if ([".yaml", ".yml"].includes(extname)) {
+          configs.push(fullPath);
+        }
+      }
+    });
+
+    return configs;
   }
 }

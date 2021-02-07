@@ -21,6 +21,12 @@ export function install(
   gitUrl: string,
   installType: string,
   resourceDir: Array<string>,
+  local:
+    | {
+        localPath: string;
+        config: string;
+      }
+    | undefined,
   values?: string,
   refOrVersion?: string
 ) {
@@ -44,6 +50,15 @@ export function install(
         values ? "-f " + values : ""
       } --helm-repo-url ${gitUrl} ${
         helmNHConfigPath ? "--outer-config " + helmNHConfigPath : ""
+      }`
+    );
+  } else if (["helmLocal", "rawManifestLocal"].includes(installType)) {
+    installCommand = nhctlCommand(
+      kubeconfigPath,
+      `install ${appName} -t ${installType} ${
+        values ? "-f " + values : ""
+      } --local-path=${local && local.localPath}  --outer-config=${
+        local && local.config
       }`
     );
   }
