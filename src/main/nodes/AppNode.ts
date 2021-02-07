@@ -136,7 +136,7 @@ export class AppNode extends NocalhostFolderNode {
     if (this.installed() && !this.unInstalling() && !this.installing()) {
       treeItem.contextValue = "application-installed";
     }
-    if (["helmGit", "helmRepo"].includes(this.installType)) {
+    if (["helmGit", "helmRepo", "helmLocal"].includes(this.installType)) {
       treeItem.contextValue = `${treeItem.contextValue}-helm`;
     }
     // if (this.developingNodes.length > 0) {
