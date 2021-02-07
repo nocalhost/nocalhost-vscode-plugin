@@ -22,7 +22,7 @@ export async function execAsyncWithReturn(
       if (code === 0) {
         resolve({ stdout, stderr, code });
       } else {
-        reject(stderr);
+        reject(new Error(stderr));
       }
     });
 

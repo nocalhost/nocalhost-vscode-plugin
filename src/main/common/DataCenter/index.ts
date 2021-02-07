@@ -40,10 +40,13 @@ export default class DataCenter {
   public static async execCommand(
     command: string
   ): Promise<IExecCommandResult> {
-    const shellObj = await shell.execAsyncWithReturn(command, []);
-    const success: boolean = shellObj.code === 0;
-    const value: string =
-      shellObj.code === 0 ? shellObj.stdout : shellObj.stderr;
+    let success: boolean = false;
+    let value: string = "";
+    try {
+      const shellObj = await shell.execAsyncWithReturn(command, []);
+      success = true;
+      value = shellObj.stdout;
+    } catch (e) {}
     return { success, value };
   }
 
