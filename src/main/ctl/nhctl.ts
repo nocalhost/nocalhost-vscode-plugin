@@ -356,10 +356,14 @@ export async function getSyncStatus(appName: string, workloadName: string) {
     stderr: "",
     code: 0,
   };
-  result = (await execAsyncWithReturn(
+  const r = (await execAsyncWithReturn(
     syncCommand,
     []
   ).catch(() => {})) as ShellResult;
+
+  if (r) {
+    result = r;
+  }
 
   return result.stdout;
 }
