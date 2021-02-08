@@ -35,7 +35,7 @@ export default class ExecCommand implements ICommand {
         await this.opendevSpaceExec(
           node.getAppName(),
           node.name,
-          null,
+          "nocalhost-dev",
           node.getKubeConfigPath()
         );
         return;

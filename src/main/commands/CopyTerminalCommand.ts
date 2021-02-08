@@ -67,6 +67,7 @@ export default class CopyTerminalCommand implements ICommand {
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
     terminalCommands.push("--kubeconfig", kubeConfigPath);
+    terminalCommands.push("-c", "nocalhost-dev");
     const shellPath = "nhctl";
     host.copyTextToclipboard(`${shellPath} ${terminalCommands.join(" ")}`);
     host.showInformationMessage("Copyed Terminal");
