@@ -20,7 +20,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "^0.2.5"
+    "version": "^0.2.9"
   },
   "contributes": {
     "yamlValidation": [
