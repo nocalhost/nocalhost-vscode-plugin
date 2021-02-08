@@ -22,6 +22,7 @@ import {
   TMP_WORKLOAD_PATH,
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
+  TMP_CONTAINER,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -109,6 +110,7 @@ function launchDevspace() {
   const tmpKubeConfigPath = fileStore.get(TMP_KUBECONFIG_PATH);
   const tmpStorageClass = fileStore.get(TMP_STORAGE_CLASS);
   const tmpDevstartAppendCommand = fileStore.get(TMP_DEVSTART_APPEND_COMMAND);
+  const tmpContainer = fileStore.get(TMP_CONTAINER);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     fileStore.remove(TMP_APP);
     fileStore.remove(TMP_WORKLOAD);
@@ -118,6 +120,7 @@ function launchDevspace() {
     fileStore.remove(TMP_WORKLOAD_PATH);
     fileStore.remove(TMP_DEVSTART_APPEND_COMMAND);
     fileStore.remove(TMP_ID);
+    fileStore.remove(TMP_CONTAINER);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -151,6 +154,7 @@ function launchDevspace() {
         }
         return Promise.resolve();
       },
+      getContainer: () => Promise.resolve(tmpContainer),
       getKubeConfigPath: () => tmpKubeConfigPath,
       getAppName: () => tmpApp,
       getStorageClass: () => tmpStorageClass,

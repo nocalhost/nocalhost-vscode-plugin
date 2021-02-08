@@ -7,6 +7,7 @@ import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import {
   TMP_APP,
+  TMP_CONTAINER,
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_KUBECONFIG_PATH,
@@ -33,6 +34,7 @@ export interface ControllerNodeApi {
   setStatus: (status: string) => Promise<void>;
   getStatus: () => Promise<string> | string;
   setContainer: (container: string) => Promise<void>;
+  getContainer: () => Promise<string>;
   getKubeConfigPath: () => string;
   getAppName: () => string;
   getStorageClass: () => string | undefined;
@@ -352,6 +354,7 @@ export default class StartDevModeCommand implements ICommand {
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
     fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     fileStore.set(TMP_WORKLOAD_PATH, workloadPath);
+    fileStore.set(TMP_CONTAINER, node.getContainer());
     const storageClass = node.getStorageClass();
     if (storageClass) {
       fileStore.set(TMP_STORAGE_CLASS, storageClass);
@@ -402,15 +405,19 @@ export default class StartDevModeCommand implements ICommand {
     if (!podName) {
       return;
     }
-    const containerNameArr = await kubectl.getContainerNames(
-      podName,
-      kubeConfigPath
-    );
-    let containerName: string | undefined = "";
-    if (containerNameArr.length > 1) {
-      containerName = await vscode.window.showQuickPick(containerNameArr);
-      if (!containerName) {
-        return;
+    let containerName: string | undefined = (await node.getContainer()) || "";
+
+    if (!containerName) {
+      const containerNameArr = await kubectl.getContainerNames(
+        podName,
+        kubeConfigPath
+      );
+
+      if (containerNameArr.length > 1) {
+        containerName = await vscode.window.showQuickPick(containerNameArr);
+        if (!containerName) {
+          return;
+        }
       }
     }
 
