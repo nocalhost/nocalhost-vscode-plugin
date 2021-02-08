@@ -307,8 +307,12 @@ export default class InstallCommand implements ICommand {
   }
 
   private getAllConfig(localPath: string) {
-    const files = fs.readdirSync(localPath);
     const configs = new Array<string>();
+    const isExist = fs.existsSync(localPath);
+    if (!isExist) {
+      return configs;
+    }
+    const files = fs.readdirSync(localPath);
     files.forEach((filePath) => {
       const fullPath = path.resolve(localPath, filePath);
       const stat = fs.statSync(fullPath);
