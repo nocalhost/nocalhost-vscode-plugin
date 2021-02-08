@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { Progress } from "vscode";
 import * as shell from "./ctl/shell";
 import { NOCALHOST_INSTALLATION_LINK } from "./constants";
+import { checkVersion } from "./ctl/nhctl"
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -230,6 +231,7 @@ export class Host implements vscode.Disposable {
         }
       }
     }
+    checkVersion();
   }
 }
 
