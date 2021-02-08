@@ -40,7 +40,8 @@ export async function execChildProcessAsync(
   host: Host,
   command: string,
   args: Array<any>,
-  errorTips?: string
+  errorTips?: string,
+  notShow?: boolean
 ) {
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -61,7 +62,7 @@ export async function execChildProcessAsync(
 
     proc.stderr.on("data", function (data) {
       errorStr += data + "";
-      if (errorStr) {
+      if (errorStr && !notShow) {
         host.showErrorMessage(errorStr);
       }
       host.log("" + data);
