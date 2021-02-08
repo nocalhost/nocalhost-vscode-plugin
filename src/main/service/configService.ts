@@ -93,14 +93,19 @@ export default class ConfigService {
     const configStr = await nhctl.getConfig(appName, workloadName);
     const config = yaml.parse(configStr) as NocalhostServiceConfig;
     let containerConfig: ContainerConfig | null = null;
-    for (const container of config.containers) {
-      if (!container.name) {
-        container.name = "";
+    if (config.containers.length > 1) {
+      for (const container of config.containers) {
+        if (!container.name) {
+          container.name = "";
+        }
+        if (container.name === containerName) {
+          containerConfig = container;
+        }
       }
-      if (container.name === containerName) {
-        containerConfig = container;
-      }
+    } else {
+      containerConfig = config.containers[0];
     }
+
     return containerConfig;
   }
 }
