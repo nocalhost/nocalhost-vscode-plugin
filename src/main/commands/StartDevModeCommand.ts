@@ -98,7 +98,8 @@ export default class StartDevModeCommand implements ICommand {
       this.setTmpStartRecord(
         appName,
         uri.fsPath,
-        node as ControllerResourceNode
+        node as ControllerResourceNode,
+        containerName
       );
     }
   }
@@ -215,7 +216,6 @@ export default class StartDevModeCommand implements ICommand {
     let containerConfig = workloadConfig[containerName] || {};
     workloadConfig[containerName] = containerConfig;
     appConfig[node.name] = workloadConfig;
-
     fileStore.set(appName, appConfig);
     if (!containerConfig.directory) {
       destDir = await this.firstOpen(appName, node, containerName);
@@ -344,7 +344,8 @@ export default class StartDevModeCommand implements ICommand {
   private setTmpStartRecord(
     appName: string,
     workloadPath: string,
-    node: ControllerResourceNode
+    node: ControllerResourceNode,
+    containerName: string
   ) {
     const appNode = node.getAppNode();
     fileStore.set(TMP_ID, node.getNodeStateId());
@@ -354,7 +355,7 @@ export default class StartDevModeCommand implements ICommand {
     fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
     fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     fileStore.set(TMP_WORKLOAD_PATH, workloadPath);
-    fileStore.set(TMP_CONTAINER, node.getContainer());
+    fileStore.set(TMP_CONTAINER, containerName);
     const storageClass = node.getStorageClass();
     if (storageClass) {
       fileStore.set(TMP_STORAGE_CLASS, storageClass);
