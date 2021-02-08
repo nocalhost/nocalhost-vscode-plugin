@@ -149,7 +149,8 @@ export async function devStart(
     host,
     devStartCommand,
     [],
-    `Start devMode (${appName}/${workLoadName}) fail`
+    `Start devMode (${appName}/${workLoadName}) fail`,
+    true
   );
 }
 
