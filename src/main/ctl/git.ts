@@ -1,6 +1,7 @@
 import { spawn } from "child_process";
 import { Host } from "../host";
 import axios from "axios";
+import logger from "../utils/logger";
 
 class Git {
   public async clone(host: Host, gitUrl: string, args: Array<string>) {
@@ -65,6 +66,7 @@ class Git {
   // TODO: HTTP SSH
   public async exec(host: Host, command: string) {
     host.log(`[cmd] ${command}`, true);
+    logger.info(`[cmd] ${command}`);
     return new Promise((resolve, reject) => {
       const proc = spawn(`${command}`, [], { shell: true });
       let errorStr = "";
@@ -83,6 +85,7 @@ class Git {
       proc.stderr.on("data", function (data) {
         errorStr = data + "";
         host.log("" + data, true);
+        logger.error(`[cmd] ${command} error: ${data}`);
       });
     });
   }

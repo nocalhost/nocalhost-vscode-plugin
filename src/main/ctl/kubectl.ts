@@ -1,6 +1,4 @@
-import * as vscode from "vscode";
 import { execAsyncWithReturn } from "./shell";
-import * as shell from "shelljs";
 import {
   ControllerResource,
   List,
@@ -12,10 +10,6 @@ import * as fileStore from "../store/fileStore";
 import { DEFAULT_KUBE_CONFIG_FULLPATH } from "../constants";
 
 export async function exec(command: string, kubeconfigPath: string) {
-  if (!checkKubectl()) {
-    return;
-  }
-
   const res = await execAsyncWithReturn(
     `kubectl ${command} --kubeconfig ${kubeconfigPath}`,
     []
@@ -25,7 +19,7 @@ export async function exec(command: string, kubeconfigPath: string) {
     return res.stdout;
   }
 
-  return Promise.reject(res.stderr);
+  return Promise.reject(new Error(res.stderr));
 }
 
 function getKubectlCommand(args: Array<string>) {
@@ -131,15 +125,4 @@ export async function getPodNames(
     return res.metadata.name;
   });
   return podNameArr;
-}
-
-function checkKubectl() {
-  const res = shell.which("kubectl");
-  if (res.code === 0) {
-    return true;
-  }
-
-  vscode.window.showErrorMessage("not found kubectl");
-
-  return false;
 }
