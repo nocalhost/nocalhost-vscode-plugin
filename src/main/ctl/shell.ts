@@ -1,6 +1,7 @@
 import { spawn } from "child_process";
 import host, { Host } from "../host";
 import * as shell from "shelljs";
+import logger from "../utils/logger";
 export interface ShellResult {
   code: number;
   stdout: string;
@@ -15,6 +16,7 @@ export async function execAsyncWithReturn(
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+    logger.info(`[cmd] ${command}`);
     const proc = spawn(command, args, { shell: true, env });
     let stdout = "";
     let stderr = "";
@@ -46,6 +48,7 @@ export async function execChildProcessAsync(
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+    logger.info(`[cmd] ${command}`);
     const proc = spawn(command, args, { shell: true, env });
     let errorStr = "";
     proc.on("close", (code) => {
@@ -66,6 +69,7 @@ export async function execChildProcessAsync(
         host.showErrorMessage(errorStr);
       }
       host.log("" + data);
+      logger.error(`[cmd] ${command} error: ${data}`);
     });
   });
 }

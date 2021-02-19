@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import state from "../state";
 import host from "../host";
+import logger from "../utils/logger";
 
 export default function registerCommand(
   context: vscode.ExtensionContext,
@@ -8,10 +9,12 @@ export default function registerCommand(
   isLock: boolean,
   callback: any
 ) {
+  logger.info(`[vscode Command] register command: ${command}`);
   const dispose = vscode.commands.registerCommand(
     command,
     async (...args: any[]) => {
       host.check();
+      logger.info(`[vscode Command] exec command: ${command}`);
       if (isLock) {
         if (state.isRunning()) {
           host.showWarnMessage("A task is running, please try again later");
