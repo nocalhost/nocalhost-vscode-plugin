@@ -6,7 +6,7 @@ import {
   Resource,
   ResourceStatus,
 } from "../nodes/types/resourceType";
-import * as fileStore from "../store/fileStore";
+import host from "../host";
 import { DEFAULT_KUBE_CONFIG_FULLPATH } from "../constants";
 
 export async function exec(command: string, kubeconfigPath: string) {
@@ -51,7 +51,7 @@ export async function loadResource(
 ) {
   const result = await exec(
     `get ${kind} ${name} -o ${outputType}`,
-    kubeconfigPath || fileStore.get(DEFAULT_KUBE_CONFIG_FULLPATH)
+    kubeconfigPath || host.getGlobalState(DEFAULT_KUBE_CONFIG_FULLPATH)
   );
   return result;
 }

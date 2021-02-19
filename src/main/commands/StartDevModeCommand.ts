@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as os from "os";
 
 import ICommand from "./ICommand";
-import * as fileStore from "../store/fileStore";
 import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import {
@@ -84,14 +83,14 @@ export default class StartDevModeCommand implements ICommand {
     destDir: string,
     containerName: string
   ) {
-    let appConfig = fileStore.get(appName) || {};
+    let appConfig = host.getGlobalState(appName) || {};
     let workloadConfig = appConfig[node.name] || {};
     let containerConfig = workloadConfig[containerName] || {};
     const currentUri = this.getCurrentRootPath();
     containerConfig.directory = destDir;
     workloadConfig[containerName] = containerConfig;
     appConfig[node.name] = workloadConfig;
-    fileStore.set(appName, appConfig);
+    host.setGlobalState(appName, appConfig);
     const uri = vscode.Uri.file(destDir);
     if (currentUri !== uri.fsPath) {
       vscode.commands.executeCommand("vscode.openFolder", uri, true);
@@ -178,7 +177,7 @@ export default class StartDevModeCommand implements ICommand {
     containerName: string
   ) {
     let destDir: string | undefined;
-    let appConfig = fileStore.get(appName);
+    let appConfig = host.getGlobalState(appName);
     let workloadConfig = appConfig[node.name];
     let containerConfig = workloadConfig[containerName] || {};
 
@@ -210,13 +209,13 @@ export default class StartDevModeCommand implements ICommand {
     containerName: string
   ) {
     let destDir: string | undefined | boolean;
-    let appConfig = fileStore.get(appName) || {};
+    let appConfig = host.getGlobalState(appName) || {};
     const currentUri = this.getCurrentRootPath();
     let workloadConfig = appConfig[node.name] || {};
     let containerConfig = workloadConfig[containerName] || {};
     workloadConfig[containerName] = containerConfig;
     appConfig[node.name] = workloadConfig;
-    fileStore.set(appName, appConfig);
+    host.setGlobalState(appName, appConfig);
     if (!containerConfig.directory) {
       destDir = await this.firstOpen(appName, node, containerName);
     } else if (currentUri !== containerConfig.directory) {
@@ -227,7 +226,7 @@ export default class StartDevModeCommand implements ICommand {
 
     if (destDir && destDir !== true) {
       containerConfig.directory = destDir;
-      fileStore.set(appName, appConfig);
+      host.setGlobalState(appName, appConfig);
     }
 
     return destDir;
@@ -348,22 +347,22 @@ export default class StartDevModeCommand implements ICommand {
     containerName: string
   ) {
     const appNode = node.getAppNode();
-    fileStore.set(TMP_ID, node.getNodeStateId());
-    fileStore.set(TMP_APP, appName);
-    fileStore.set(TMP_WORKLOAD, node.name);
-    fileStore.set(TMP_STATUS, `${node.getNodeStateId()}_status`);
-    fileStore.set(TMP_RESOURCE_TYPE, node.resourceType);
-    fileStore.set(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
-    fileStore.set(TMP_WORKLOAD_PATH, workloadPath);
-    fileStore.set(TMP_CONTAINER, containerName);
+    host.setGlobalState(TMP_ID, node.getNodeStateId());
+    host.setGlobalState(TMP_APP, appName);
+    host.setGlobalState(TMP_WORKLOAD, node.name);
+    host.setGlobalState(TMP_STATUS, `${node.getNodeStateId()}_status`);
+    host.setGlobalState(TMP_RESOURCE_TYPE, node.resourceType);
+    host.setGlobalState(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
+    host.setGlobalState(TMP_WORKLOAD_PATH, workloadPath);
+    host.setGlobalState(TMP_CONTAINER, containerName);
     const storageClass = node.getStorageClass();
     if (storageClass) {
-      fileStore.set(TMP_STORAGE_CLASS, storageClass);
+      host.setGlobalState(TMP_STORAGE_CLASS, storageClass);
     }
 
     const devStartAppendCommand = node.getDevStartAppendCommand();
     if (devStartAppendCommand) {
-      fileStore.set(TMP_DEVSTART_APPEND_COMMAND, devStartAppendCommand);
+      host.setGlobalState(TMP_DEVSTART_APPEND_COMMAND, devStartAppendCommand);
     }
   }
 

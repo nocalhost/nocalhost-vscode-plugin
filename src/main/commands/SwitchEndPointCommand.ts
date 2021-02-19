@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 
 import ICommand from "./ICommand";
-import * as fileStore from "../store/fileStore";
 import { SWITCH_END_POINT } from "./constants";
 import registerCommand from "./register";
 
@@ -16,14 +15,14 @@ export default class SwitchEndPointCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand() {
-    const value: string = fileStore.get(BASE_URL);
+    const value: string = host.getGlobalState(BASE_URL);
     const options: vscode.InputBoxOptions = {
       placeHolder: "input your api server url",
       ...(value ? { value } : {}),
     };
     const newValue: string | undefined = await host.showInputBox(options);
     if (newValue) {
-      fileStore.set(BASE_URL, newValue);
+      host.setGlobalState(BASE_URL, newValue);
       await vscode.commands.executeCommand("setContext", "serverConfig", true);
       host.showInformationMessage("configured api server");
     }

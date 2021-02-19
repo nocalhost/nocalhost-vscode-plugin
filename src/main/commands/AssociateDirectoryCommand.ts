@@ -7,7 +7,6 @@ import { ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
 import registerCommand from "./register";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
-import * as fileStore from "../store/fileStore";
 import * as kubectl from "../ctl/kubectl";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
@@ -33,7 +32,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       return;
     }
     const containerName = result.containerName;
-    let appConfig = fileStore.get(appName) || {};
+    let appConfig = host.getGlobalState(appName) || {};
     let workloadConfig = appConfig[node.name] || {};
     let containerConfig = workloadConfig[containerName] || {};
     workloadConfig[containerName] = containerConfig;
@@ -46,7 +45,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     );
     if (selectUri && selectUri.length > 0) {
       containerConfig.directory = selectUri[0].fsPath;
-      fileStore.set(appName, appConfig);
+      host.setGlobalState(appName, appConfig);
       host.showInformationMessage("Directory successfully linked");
     }
   }

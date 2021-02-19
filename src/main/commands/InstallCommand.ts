@@ -7,7 +7,6 @@ import { INSTALL_APP, REFRESH } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import * as kubectl from "../ctl/kubectl";
@@ -233,7 +232,7 @@ export default class InstallCommand implements ICommand {
       refOrVersion
     );
     await updateAppInstallStatus(appId, devSpaceId, 1);
-    fileStore.set(appName, {});
+    host.setGlobalState(appName, {});
   }
 
   private async checkStatus(appNode: AppNode) {
