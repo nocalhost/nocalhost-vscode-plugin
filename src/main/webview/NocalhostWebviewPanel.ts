@@ -7,7 +7,7 @@ import MessageManager, {
 } from "../common/MessageManager";
 import Stack from "../common/Stack";
 import CallableStack from "../common/Stack/CallableStack";
-import * as fileStore from "../store/fileStore";
+import host from "../host";
 
 interface IWebviewOpenProps {
   url: string;
@@ -247,7 +247,7 @@ export default class NocalhostWebviewPanel {
       return "";
     }
     const webview: vscode.Webview = this.panel.webview;
-    const extensionPath: string = fileStore.get("extensionPath");
+    const extensionPath: string = host.getGlobalState("extensionPath");
     if (!webview || !extensionPath) {
       return "";
     }

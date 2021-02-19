@@ -3,7 +3,6 @@
 import * as vscode from "vscode";
 
 import NocalhostAppProvider from "./appProvider";
-import * as fileStore from "./store/fileStore";
 import {
   BASE_URL,
   HELM_VALUES_DIR,
@@ -36,6 +35,7 @@ import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
 import TextDocumentContentProvider from "./textDocumentContentProvider";
 import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
+import * as fileUtil from "./utils/fileUtil";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -82,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext) {
   ];
 
   context.subscriptions.push(...subs);
-  const jwt = fileStore.get(JWT);
+  const jwt = host.getGlobalState(JWT);
   if (jwt) {
     state.setLogin(true);
   }
@@ -97,31 +97,33 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 function launchDevspace() {
-  const tmpWorkloadPath = fileStore.get(TMP_WORKLOAD_PATH);
+  const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);
   console.log("currentUri: ", host.getCurrentRootPath());
   if (tmpWorkloadPath !== host.getCurrentRootPath()) {
     return;
   }
   console.log("launch devspace");
-  const tmpApp = fileStore.get(TMP_APP);
-  const tmpId = fileStore.get(TMP_ID);
-  const tmpWorkload = fileStore.get(TMP_WORKLOAD);
-  const tmpStatusId = fileStore.get(TMP_STATUS);
-  const tmpResourceType = fileStore.get(TMP_RESOURCE_TYPE);
-  const tmpKubeConfigPath = fileStore.get(TMP_KUBECONFIG_PATH);
-  const tmpStorageClass = fileStore.get(TMP_STORAGE_CLASS);
-  const tmpDevstartAppendCommand = fileStore.get(TMP_DEVSTART_APPEND_COMMAND);
-  const tmpContainer = fileStore.get(TMP_CONTAINER);
+  const tmpApp = host.getGlobalState(TMP_APP);
+  const tmpId = host.getGlobalState(TMP_ID);
+  const tmpWorkload = host.getGlobalState(TMP_WORKLOAD);
+  const tmpStatusId = host.getGlobalState(TMP_STATUS);
+  const tmpResourceType = host.getGlobalState(TMP_RESOURCE_TYPE);
+  const tmpKubeConfigPath = host.getGlobalState(TMP_KUBECONFIG_PATH);
+  const tmpStorageClass = host.getGlobalState(TMP_STORAGE_CLASS);
+  const tmpDevstartAppendCommand = host.getGlobalState(
+    TMP_DEVSTART_APPEND_COMMAND
+  );
+  const tmpContainer = host.getGlobalState(TMP_CONTAINER);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
-    fileStore.remove(TMP_APP);
-    fileStore.remove(TMP_WORKLOAD);
-    fileStore.remove(TMP_STATUS);
-    fileStore.remove(TMP_RESOURCE_TYPE);
-    fileStore.remove(TMP_KUBECONFIG_PATH);
-    fileStore.remove(TMP_WORKLOAD_PATH);
-    fileStore.remove(TMP_DEVSTART_APPEND_COMMAND);
-    fileStore.remove(TMP_ID);
-    fileStore.remove(TMP_CONTAINER);
+    host.removeGlobalState(TMP_APP);
+    host.removeGlobalState(TMP_WORKLOAD);
+    host.removeGlobalState(TMP_STATUS);
+    host.removeGlobalState(TMP_RESOURCE_TYPE);
+    host.removeGlobalState(TMP_KUBECONFIG_PATH);
+    host.removeGlobalState(TMP_WORKLOAD_PATH);
+    host.removeGlobalState(TMP_DEVSTART_APPEND_COMMAND);
+    host.removeGlobalState(TMP_ID);
+    host.removeGlobalState(TMP_CONTAINER);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -181,25 +183,28 @@ export async function updateServerConfigStatus() {
   await vscode.commands.executeCommand(
     "setContext",
     "serverConfig",
-    fileStore.get(BASE_URL)
+    host.getGlobalState(BASE_URL)
   );
 }
 
 async function init(context: vscode.ExtensionContext) {
-  fileStore.mkdir(NH_CONFIG_DIR);
-  fileStore.mkdir(PLUGIN_CONFIG_DIR);
-  fileStore.mkdir(KUBE_CONFIG_DIR);
-  fileStore.mkdir(HELM_VALUES_DIR);
-  fileStore.mkdir(HELM_NH_CONFIG_DIR);
-  fileStore.initConfig();
-  fileStore.set("extensionPath", context.extensionPath);
+  host.setContext(context);
+  fileUtil.mkdir(NH_CONFIG_DIR);
+  fileUtil.mkdir(PLUGIN_CONFIG_DIR);
+  fileUtil.mkdir(KUBE_CONFIG_DIR);
+  fileUtil.mkdir(HELM_VALUES_DIR);
+  fileUtil.mkdir(HELM_NH_CONFIG_DIR);
+  // fileStore.initConfig();
+  host.setGlobalState("extensionPath", context.extensionPath);
   updateServerConfigStatus();
   checkVersion();
 
-  const welcomeDidShow: boolean | undefined = fileStore.get(WELCOME_DID_SHOW);
+  const welcomeDidShow: boolean | undefined = host.getGlobalState(
+    WELCOME_DID_SHOW
+  );
   if (!welcomeDidShow) {
     NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
-    fileStore.set(WELCOME_DID_SHOW, true);
+    host.setGlobalState(WELCOME_DID_SHOW, true);
   }
 }
 

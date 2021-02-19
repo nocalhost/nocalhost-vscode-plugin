@@ -7,7 +7,7 @@ import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import * as fileUtil from "../utils/fileUtil";
-import * as fileStore from "../store/fileStore";
+import host from "../host";
 import DataCenter from "../common/DataCenter";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
@@ -84,7 +84,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     await Promise.all(all);
 
-    const userinfo = fileStore.get(USERINFO);
+    const userinfo = host.getGlobalState(USERINFO);
 
     const hasAccountNode: boolean = NocalhostRootNode.childNodes.some(
       (node: AppNode | NocalhostAccountNode) => {

@@ -7,7 +7,6 @@ import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
 import { KUBE_CONFIG_DIR } from "../constants";
-import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
@@ -57,7 +56,7 @@ export default class UninstallCommand implements ICommand {
     host.getOutputChannel().show(true);
     await nhctl.uninstall(host, kubeconfigPath, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
-    fileStore.remove(appName);
+    host.removeGlobalState(appName);
     state.delete(appName);
   }
 
