@@ -5,7 +5,6 @@ import { RESET_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import * as fileStore from "../store/fileStore";
 import { updateAppInstallStatus, resetApp } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
@@ -57,7 +56,7 @@ export default class ResetAppCommand implements ICommand {
     host.showInformationMessage(`Uninstalling application: ${appName}`);
     await nhctl.uninstall(host, kubeconfigPath, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
-    fileStore.remove(appName);
+    host.removeGlobalState(appName);
     state.delete(appName);
     host.log(`Application ${appName} uninstalled`, true);
     host.showInformationMessage(`Application ${appName} uninstalled`);

@@ -21,6 +21,60 @@ export class Host implements vscode.Disposable {
 
   private bookInfoDisposes: Array<{ dispose: () => any }> = [];
 
+  private context: vscode.ExtensionContext | null = null;
+
+  public setContext(context: vscode.ExtensionContext) {
+    this.context = context;
+  }
+
+  public setGlobalState(key: string, state: any) {
+    if (!this.context) {
+      throw new Error("not initialized extension");
+    }
+
+    this.context.globalState.update(key, state);
+  }
+
+  public getGlobalState(key: string) {
+    if (!this.context) {
+      throw new Error("not initialized extension");
+    }
+
+    return this.context.globalState.get(key) as any;
+  }
+
+  public removeGlobalState(key: string) {
+    if (!this.context) {
+      throw new Error("not initialized extension");
+    }
+
+    return this.context.globalState.update(key, null);
+  }
+
+  public setWorkspaceState(key: string, state: any) {
+    if (!this.context) {
+      throw new Error("not initialized extension");
+    }
+
+    this.context.workspaceState.update(key, state);
+  }
+
+  public getWorkspaceState(key: string) {
+    if (!this.context) {
+      throw new Error("not initialized extension");
+    }
+
+    return this.context.workspaceState.get(key);
+  }
+
+  public removeWorkspaceState(key: string) {
+    if (!this.context) {
+      throw new Error("not initialized extension");
+    }
+
+    return this.context.workspaceState.update(key, null);
+  }
+
   public pushDebugDispose(item: { dispose: () => any }) {
     this.debugDisposes.push(item);
   }

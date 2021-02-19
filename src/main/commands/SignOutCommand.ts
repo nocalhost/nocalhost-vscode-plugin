@@ -5,7 +5,7 @@ import { SIGN_OUT } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import { JWT, EMAIL, KUBE_CONFIG_DIR } from "../constants";
-import * as fileStore from "../store/fileStore";
+import host from "../host";
 import * as fs from "fs";
 
 export default class SignOutCommand implements ICommand {
@@ -14,8 +14,8 @@ export default class SignOutCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand() {
-    fileStore.remove(JWT);
-    fileStore.remove(EMAIL);
+    host.removeGlobalState(JWT);
+    host.removeGlobalState(EMAIL);
     // remove kubeconfig
     this.removeAllKubeconfig();
     state.setLogin(false);

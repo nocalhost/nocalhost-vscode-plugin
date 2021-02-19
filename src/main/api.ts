@@ -2,7 +2,7 @@ import { AxiosResponse } from "axios";
 import axios from "axios";
 import * as vscode from "vscode";
 import state from "./state";
-import * as fileStore from "./store/fileStore";
+import host from "./host";
 import { BASE_URL, JWT, USERINFO } from "./constants";
 
 axios.defaults.headers.post["Content-Type"] = "application/json";
@@ -20,8 +20,8 @@ interface ResponseData {
 }
 
 axios.interceptors.request.use(function (config) {
-  const jwt = fileStore.get(JWT);
-  config.baseURL = fileStore.get(BASE_URL);
+  const jwt = host.getGlobalState(JWT) as string;
+  config.baseURL = host.getGlobalState(BASE_URL) as string;
   if (!config.baseURL) {
     throw new Error("please config your api server");
   }
@@ -55,7 +55,7 @@ export async function login(loginInfo: LoginInfo) {
     .data as ResponseData;
   if (response.data && response.data.token) {
     const jwt = response.data.token;
-    fileStore.set(JWT, jwt);
+    host.setGlobalState(JWT, jwt);
     return jwt;
   }
 
@@ -66,7 +66,7 @@ export async function getUserinfo() {
   const response = await axios.get("/v1/me");
   if (response.status === 200 && response.data) {
     const { data } = response.data;
-    fileStore.set(USERINFO, data);
+    host.setGlobalState(USERINFO, data);
     return data;
   }
   throw new Error("Fail to fetch user infomation.");
