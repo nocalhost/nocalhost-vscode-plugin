@@ -110,17 +110,6 @@ export async function getPodNames(
   if (resArr && resArr.length <= 0) {
     return podNameArr;
   }
-  // filter
-  resArr = (resArr as Array<Resource>).filter((res) => {
-    if (res.status) {
-      const status = res.status as ResourceStatus;
-      if (status.phase === "Running") {
-        return true;
-      }
-    }
-
-    return false;
-  });
   podNameArr = (resArr as Array<Resource>).map((res) => {
     return res.metadata.name;
   });
