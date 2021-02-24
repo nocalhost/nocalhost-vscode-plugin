@@ -37,9 +37,15 @@ export interface SvcProfile {
   localSyncthingPort: number;
   localSyncthingGUIPort: number;
   localAbsoluteSyncDirFromDevStartPlugin: Array<string>;
-  devPortList: Array<string>;
-  portForwardStatusList: Array<string>;
-  portForwardPidList: Array<string>;
+  devPortForwardList: Array<{
+    localport: number;
+    remoteport: number;
+    way: string;
+    status: string;
+    reason: string;
+    updated: string;
+    pid: number;
+  }>;
 }
 
 export interface BaseNocalhostNode {

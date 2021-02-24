@@ -28,14 +28,16 @@ export default class PortForwardListCommand implements ICommand {
       return;
     }
 
-    if (svcProfile.portForwardStatusList.length < 1) {
+    if (svcProfile.devPortForwardList.length < 1) {
       host.showInformationMessage("No Port Forward");
       return;
     }
 
-    const endPort = await vscode.window.showQuickPick(
-      svcProfile.portForwardStatusList
-    );
+    const portList = svcProfile.devPortForwardList.map((item) => {
+      return `${item.localport}:${item.remoteport}`;
+    });
+
+    const endPort = await vscode.window.showQuickPick(portList);
 
     if (!endPort) {
       return;
@@ -51,23 +53,15 @@ export default class PortForwardListCommand implements ICommand {
       return;
     }
 
-    let reg = /([0-9]+:[0-9]+)/g;
-
-    const match = reg.exec(endPort);
-
-    if (!match) {
-      return;
-    }
-
-    const assoPortForwardsMap = new Map<string, Array<string>>();
-    let pid = "";
-    svcProfile.portForwardPidList.forEach((str: string) => {
-      const portPid = str.split("-");
-      if (portPid[0] === match[1]) {
-        pid = portPid[1];
-      }
-      const result = assoPortForwardsMap.get(portPid[1]) || [];
-      assoPortForwardsMap.set(portPid[1], result.concat([portPid[0]]));
+    const assoPortForwardsMap = new Map<number, Array<string>>();
+    let pid = 0;
+    svcProfile.devPortForwardList.forEach((item) => {
+      pid = item.pid;
+      const result = assoPortForwardsMap.get(pid) || [];
+      assoPortForwardsMap.set(
+        pid,
+        result.concat(`${item.localport}:${item.remoteport}`)
+      );
     });
 
     const assoPortForwards = assoPortForwardsMap.get(pid);
@@ -84,11 +78,9 @@ export default class PortForwardListCommand implements ICommand {
         return;
       }
     }
-    if (match && match[1]) {
-      await nhctl.endPortForward(node.getAppName(), node.name, match[1]);
-      await vscode.commands.executeCommand("Nocalhost.refresh", node);
-      host.showInformationMessage(`Ended Port Forward ${match[1]}`);
-    }
+    await nhctl.endPortForward(node.getAppName(), node.name, endPort);
+    await vscode.commands.executeCommand("Nocalhost.refresh", node);
+    host.showInformationMessage(`Ended Port Forward ${endPort}`);
     host.getOutputChannel().show(true);
   }
 }

@@ -15,6 +15,7 @@ export const SIGN_OUT = "Nocalhost.signout";
 export const INSTALL_APP = "Nocalhost.installApp";
 export const UNINSTALL_APP = "Nocalhost.uninstallApp";
 export const RESET_APP = "Nocalhost.resetApp";
+export const UPGRADE_APP = "Nocalhost.upgradeApp";
 
 export const LOAD_RESOURCE = "Nocalhost.loadResource";
 export const LOG = "Nocalhost.log";
