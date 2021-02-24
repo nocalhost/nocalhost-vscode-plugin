@@ -27,6 +27,7 @@ import SyncServiceCommand from "./SyncServiceCommand";
 import OverrideSyncCommand from "./OverrideSyncCommand";
 import PortForwardListCommand from "./PortForwardListCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
+import UpgradeCommand from "./UpgradeCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -64,4 +65,5 @@ export default function initCommands(
   new DeleteKubernetesObjectCommand(context);
   new SyncServiceCommand(context);
   new OverrideSyncCommand(context);
+  new UpgradeCommand(context);
 }

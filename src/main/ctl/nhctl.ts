@@ -28,6 +28,7 @@ export function install(
       }
     | undefined,
   values?: string,
+  valuesStr?: string,
   refOrVersion?: string
 ) {
   let resourcePath = "";
@@ -40,7 +41,9 @@ export function install(
     kubeconfigPath,
     `install ${appName} -u ${gitUrl} -t ${installType} ${
       values ? "-f " + values : ""
-    } ${resourcePath} ${appConfig ? "--config " + appConfig : ""}`
+    } ${valuesStr ? "--set " + valuesStr : ""} ${resourcePath} ${
+      appConfig ? "--config " + appConfig : ""
+    }`
   );
 
   if (installType === "helmRepo") {
@@ -48,7 +51,7 @@ export function install(
       kubeconfigPath,
       `install ${appName} --helm-chart-name ${appName} -t ${installType} ${
         values ? "-f " + values : ""
-      } --helm-repo-url ${gitUrl} ${
+      } ${valuesStr ? "--set " + valuesStr : ""} --helm-repo-url ${gitUrl} ${
         helmNHConfigPath ? "--outer-config " + helmNHConfigPath : ""
       }`
     );
@@ -82,6 +85,58 @@ export function install(
         installCommand,
         [],
         `Install application (${appName}) fail`
+      );
+    }
+  );
+}
+
+export async function upgrade(
+  kubeconfigPath: string,
+  appName: string,
+  gitUrl: string,
+  appType: string,
+  local:
+    | {
+        localPath: string;
+        config: string;
+      }
+    | undefined,
+  refOrVersion?: string
+) {
+  let upgradeCommand = nhctlCommand(
+    kubeconfigPath,
+    `upgrade ${appName} -u ${gitUrl}`
+  );
+
+  if (appType === "helmRepo") {
+    upgradeCommand = nhctlCommand(
+      kubeconfigPath,
+      `upgrade ${appName} --helm-chart-name ${appName} --helm-repo-url ${gitUrl}`
+    );
+  } else if (["helmLocal", "rawManifestLocal"].includes(appType)) {
+    //
+    return;
+  }
+
+  if (refOrVersion) {
+    upgradeCommand += ` ${
+      appType === "helmRepo" ? "--helm-repo-version" : "-r"
+    } ${refOrVersion}`;
+  }
+
+  host.log("cmd: " + upgradeCommand, true);
+  return vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Upgrade application: ${appName}`,
+      cancellable: false,
+    },
+    () => {
+      return execChildProcessAsync(
+        host,
+        upgradeCommand,
+        [],
+        `upgrade application (${appName}) fail`
       );
     }
   );
