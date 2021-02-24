@@ -137,6 +137,8 @@ export default class UpgradeCommand implements ICommand {
         appNode.name,
         appNode.url,
         appNode.installType,
+        appNode.resourceDir,
+        appNode.appConfig,
         local,
         refOrVersion
       )
