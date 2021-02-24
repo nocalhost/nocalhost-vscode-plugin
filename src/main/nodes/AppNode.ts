@@ -120,13 +120,15 @@ export class AppNode extends NocalhostFolderNode {
   // }
 
   private updateIcon(treeItem: vscode.TreeItem) {
-    if (this.installed() && !this.unInstalling()) {
+    if (this.unInstalling() || this.installing() || this.upgradeing()) {
+      return (treeItem.iconPath = resolveVSCodeUri("loading.svg"));
+    }
+    if (this.installed()) {
       return (treeItem.iconPath = resolveVSCodeUri("app-connected.svg"));
     }
-    if (this.unInstalled() && !this.installing()) {
+    if (this.unInstalled()) {
       return (treeItem.iconPath = resolveVSCodeUri("app-inactive.svg"));
     }
-    treeItem.iconPath = resolveVSCodeUri("loading.svg");
   }
 
   private updateContext(treeItem: vscode.TreeItem) {
@@ -216,11 +218,15 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   installing(): boolean {
-    return !!state.getAppState(this.label, "installing");
+    return !!state.getAppState(this.name, "installing");
   }
 
   unInstalling(): boolean {
-    return !!state.getAppState(this.label, "uninstalling");
+    return !!state.getAppState(this.name, "uninstalling");
+  }
+
+  upgradeing(): boolean {
+    return !!state.getAppState(this.name, "upgrading");
   }
 
   getNodeStateId(): string {

@@ -27,6 +27,7 @@ export default class InstallCommand implements ICommand {
 
     let refOrVersion: string | undefined;
     let values: string | undefined;
+    let valuesStr: string | undefined;
     let local:
       | {
           localPath: string;
@@ -124,15 +125,16 @@ export default class InstallCommand implements ICommand {
     }
     if (["helmGit", "helmRepo", "helmLocal"].includes(appNode.installType)) {
       const res = await host.showInformationMessage(
-        "Do you want to specify a values.yaml?",
+        "Do you want to specify values?",
         { modal: true },
-        "Specify One",
+        "Specify One values.yaml",
+        "Specify values",
         "Use Default values"
       );
       if (!res) {
         return;
       }
-      if (res === "Specify One") {
+      if (res === "Specify One values.yaml") {
         const valuesUri = await host.showOpenDialog({
           canSelectFiles: true,
           canSelectFolders: false,
@@ -145,6 +147,10 @@ export default class InstallCommand implements ICommand {
         } else {
           return;
         }
+      } else if (res === "Specify values") {
+        valuesStr = await host.showInputBox({
+          placeHolder: "eg: key1=val1,key2=val2",
+        });
       }
     }
     state.setAppState(appNode.name, "installing", true, {
@@ -173,6 +179,7 @@ export default class InstallCommand implements ICommand {
       appNode.installType,
       appNode.resourceDir,
       values,
+      valuesStr,
       refOrVersion,
       local
     )
@@ -209,6 +216,7 @@ export default class InstallCommand implements ICommand {
     installType: string,
     resourceDir: Array<string>,
     values: string | undefined,
+    valuesStr: string | undefined,
     refOrVersion: string | undefined,
     local:
       | {
@@ -229,6 +237,7 @@ export default class InstallCommand implements ICommand {
       resourceDir,
       local,
       values,
+      valuesStr,
       refOrVersion
     );
     await updateAppInstallStatus(appId, devSpaceId, 1);

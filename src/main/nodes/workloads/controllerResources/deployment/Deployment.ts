@@ -126,7 +126,7 @@ export class Deployment extends ControllerResourceNode {
   }
 
   public async getPortForwardStatus() {
-    if (this.svcProfile && this.svcProfile.portForwardStatusList.length > 0) {
+    if (this.svcProfile && this.svcProfile.devPortForwardList.length > 0) {
       return true;
     }
     return false;
