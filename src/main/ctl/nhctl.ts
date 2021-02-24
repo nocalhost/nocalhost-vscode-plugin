@@ -95,6 +95,8 @@ export async function upgrade(
   appName: string,
   gitUrl: string,
   appType: string,
+  resourceDir: Array<string>,
+  appConfig: string,
   local:
     | {
         localPath: string;
@@ -103,9 +105,17 @@ export async function upgrade(
     | undefined,
   refOrVersion?: string
 ) {
+  let resourcePath = "";
+  if (resourceDir) {
+    resourceDir.map((dir) => {
+      resourcePath += ` --resource-path ${dir}`;
+    });
+  }
   let upgradeCommand = nhctlCommand(
     kubeconfigPath,
-    `upgrade ${appName} -u ${gitUrl}`
+    `upgrade ${appName} -u ${gitUrl} ${resourcePath} ${
+      appConfig ? "--config " + appConfig : ""
+    }`
   );
 
   if (appType === "helmRepo") {
