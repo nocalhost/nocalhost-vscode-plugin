@@ -41,12 +41,16 @@ export default class DataCenter {
     command: string
   ): Promise<IExecCommandResult> {
     let success: boolean = false;
-    let value: string = "";
+    let value: string = "apply error";
     try {
       const shellObj = await shell.execAsyncWithReturn(command, []);
       success = true;
       value = shellObj.stdout;
-    } catch (e) {}
+    } catch (e) {
+      if (e.message) {
+        value = e.message;
+      }
+    }
     return { success, value };
   }
 

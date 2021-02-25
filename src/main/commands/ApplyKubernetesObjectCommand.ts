@@ -123,7 +123,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
         return {
           ...acc,
           ...(application instanceof AppNode && application.installed()
-            ? { [application.label]: application.getKubeConfigPath() }
+            ? { [application.name]: application.getKubeConfigPath() }
             : {}),
         };
       },
