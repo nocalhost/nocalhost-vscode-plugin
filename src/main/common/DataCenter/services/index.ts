@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import DataCenter, { IExecCommandResult } from "../index";
 
 export type ServiceResult = IExecCommandResult;
@@ -55,9 +57,27 @@ async function applyKubernetesObject(
   kubeConfig: string,
   isDir = false
 ): Promise<ServiceResult> {
-  const command: string = `kubectl apply ${
-    isDir ? "-k" : "-f"
-  } ${filePath} --kubeconfig ${kubeConfig}`;
+  let applyPaths = [filePath];
+  if (isDir) {
+    applyPaths = [];
+    const files = fs.readdirSync(filePath);
+    for (const fileName of files) {
+      const fileFullPath = path.resolve(filePath, fileName);
+      const stat = fs.statSync(fileFullPath);
+      if (stat.isFile && path.extname(fileFullPath) === ".yaml") {
+        applyPaths.push(fileFullPath);
+      }
+    }
+  }
+  if (applyPaths.length < 1) {
+    return {
+      success: false,
+      value: "not found yaml file",
+    };
+  }
+  const command: string = `kubectl apply -f ${applyPaths.join(
+    " -f "
+  )} --kubeconfig ${kubeConfig}`;
   return await DataCenter.execCommand(command);
 }
 
