@@ -254,7 +254,6 @@ export default class StartDevModeCommand implements ICommand {
             message: "dev start",
           });
           host.log("dev start ...", true);
-          const svc = await this.getSvcConfig(appName, node.name);
           let dirs: Array<string> | string = new Array<string>();
           let isOld = false;
           dirs = host.formalizePath(currentUri);
@@ -303,14 +302,16 @@ export default class StartDevModeCommand implements ICommand {
               message: "port forwarding",
             });
             host.log("port forward ...", true);
-            await nhctl.startPortForward(
-              host,
-              node.getKubeConfigPath(),
-              appName,
-              node.name,
-              "devPorts",
-              container.dev.portForward
-            );
+            await nhctl
+              .startPortForward(
+                host,
+                node.getKubeConfigPath(),
+                appName,
+                node.name,
+                "devPorts",
+                container.dev.portForward
+              )
+              .catch(() => {});
             host.log("port forward end", true);
             host.log("", true);
           }
