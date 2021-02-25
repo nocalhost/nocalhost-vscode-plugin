@@ -94,7 +94,7 @@ export class Deployment extends ControllerResourceNode {
       }
       const deploy = await kubectl.loadResource(
         this.getKubeConfigPath(),
-        this.type,
+        this.resourceType,
         this.name,
         "json"
       );

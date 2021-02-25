@@ -20,7 +20,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "^0.2.9"
+    "version": "^0.2.7"
   },
   "contributes": {
     "yamlValidation": [
@@ -123,6 +123,11 @@
           "group": "inline@0"
         },
         {
+          "command": "Nocalhost.upgradeApp",
+          "when": "viewItem =~ /^application-installed/i",
+          "group": "0"
+        },
+        {
           "command": "Nocalhost.cleanPvc",
           "when": "viewItem =~ /^(application-installed|workload-deployment)/i",
           "group": "navigation"
@@ -174,7 +179,7 @@
         },
         {
           "command": "Nocalhost.portForward",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod-Running)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running)/i",
           "group": "1"
         },
         {
@@ -260,6 +265,10 @@
         "command": "Nocalhost.installApp",
         "title": "Install App",
         "icon": "$(rocket)"
+      },
+      {
+        "command": "Nocalhost.upgradeApp",
+        "title": "Upgrade App"
       },
       {
         "command": "Nocalhost.uninstallApp",
