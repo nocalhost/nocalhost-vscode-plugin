@@ -113,9 +113,9 @@ export async function upgrade(
   }
   let upgradeCommand = nhctlCommand(
     kubeconfigPath,
-    `upgrade ${appName} -u ${gitUrl} ${resourcePath} ${
-      appConfig ? "--config " + appConfig : ""
-    }`
+    `upgrade ${appName} ${
+      gitUrl && gitUrl.trim() ? `-u ${gitUrl}` : ""
+    } ${resourcePath} ${appConfig ? "--config " + appConfig : ""}`
   );
 
   if (appType === "helmRepo") {
@@ -124,8 +124,9 @@ export async function upgrade(
       `upgrade ${appName} --helm-chart-name ${appName} --helm-repo-url ${gitUrl}`
     );
   } else if (["helmLocal", "rawManifestLocal"].includes(appType)) {
-    //
-    return;
+    upgradeCommand += ` --local-path=${local && local.localPath} --config ${
+      local && local.config
+    }`;
   }
 
   if (refOrVersion) {

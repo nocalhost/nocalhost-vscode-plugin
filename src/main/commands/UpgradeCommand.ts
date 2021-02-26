@@ -1,4 +1,7 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
+
 import ICommand from "./ICommand";
 import { UPGRADE_APP } from "./constants";
 import registerCommand from "./register";
@@ -27,59 +30,43 @@ export default class UpgradeCommand implements ICommand {
         }
       | undefined = undefined;
     if (["helmLocal", "rawManifestLocal"].includes(appNode.installType)) {
-      host.showInformationMessage("not support local application");
-      return;
-      // let confirm = await host.showInformationMessage(
-      //   appNode.installType === "rawManifestLocal"
-      //     ? "Please choose application manifest root directory"
-      //     : "Please choose unpacked application heml chart root directory",
-      //   { modal: true },
-      //   "confirm"
-      // );
-      // if (confirm !== "confirm") {
-      //   return;
-      // }
-      // let localPath = await host.showSelectFolderDialog(
-      //   "Please select your local application"
-      // );
-      // if (!localPath) {
-      //   return;
-      // }
-      // const configs = this.getAllConfig(
-      //   path.resolve(localPath[0].fsPath, ".nocalhost")
-      // );
-      // let configPath: string | undefined = "";
-      // if (configs.length > 1) {
-      //   // show select
-      //   configPath = await vscode.window.showQuickPick(configs);
-      // } else if (configs.length === 0) {
-      //   // select one
-      //   let confirm = await host.showInformationMessage(
-      //     "Please select your configuration file",
-      //     { modal: true },
-      //     "confirm"
-      //   );
-      //   if (confirm !== "confirm") {
-      //     return;
-      //   }
-      //   const configUri = await host.showSelectFileDialog(
-      //     "Please select your configuration file",
-      //     vscode.Uri.file(localPath[0].fsPath)
-      //   );
-      //   if (configUri) {
-      //     configPath = configUri[0].fsPath;
-      //   }
-      // } else {
-      //   configPath = configs[0];
-      // }
-      // if (!configPath) {
-      //   return;
-      // }
+      let confirm = await host.showInformationMessage(
+        appNode.installType === "rawManifestLocal"
+          ? "Please choose application manifest root directory"
+          : "Please choose unpacked application helm chart root directory",
+        { modal: true },
+        "confirm"
+      );
+      if (confirm !== "confirm") {
+        return;
+      }
+      let localPath = await host.showSelectFolderDialog(
+        "Please select your local application"
+      );
+      if (!localPath) {
+        return;
+      }
+      const configs = this.getAllConfig(
+        path.resolve(localPath[0].fsPath, ".nocalhost")
+      );
+      let configPath: string | undefined = "";
+      if (configs.length > 1) {
+        // show select
+        configPath = await vscode.window.showQuickPick(configs);
+      } else if (configs.length === 0) {
+        // select one
+        host.showErrorMessage("Not found config.yaml");
+      } else {
+        configPath = configs[0];
+      }
+      if (!configPath) {
+        return;
+      }
 
-      // local = {
-      //   localPath: localPath[0].fsPath,
-      //   config: configPath,
-      // };
+      local = {
+        localPath: localPath[0].fsPath,
+        config: configPath,
+      };
     } else {
       let repoMsg = "";
       let btMsg = "";
@@ -152,5 +139,26 @@ export default class UpgradeCommand implements ICommand {
           nodeStateId: appNode.getNodeStateId(),
         });
       });
+  }
+
+  private getAllConfig(localPath: string) {
+    const configs = new Array<string>();
+    const isExist = fs.existsSync(localPath);
+    if (!isExist) {
+      return configs;
+    }
+    const files = fs.readdirSync(localPath);
+    files.forEach((filePath) => {
+      const fullPath = path.resolve(localPath, filePath);
+      const stat = fs.statSync(fullPath);
+      if (stat.isFile()) {
+        const extname = path.extname(fullPath);
+        if ([".yaml", ".yml"].includes(extname)) {
+          configs.push(filePath);
+        }
+      }
+    });
+
+    return configs;
   }
 }

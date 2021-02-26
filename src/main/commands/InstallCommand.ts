@@ -38,7 +38,7 @@ export default class InstallCommand implements ICommand {
       let confirm = await host.showInformationMessage(
         appNode.installType === "rawManifestLocal"
           ? "Please choose application manifest root directory"
-          : "Please choose unpacked application heml chart root directory",
+          : "Please choose unpacked application helm chart root directory",
         { modal: true },
         "confirm"
       );
