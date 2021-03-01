@@ -202,6 +202,7 @@ export default class InstallCommand implements ICommand {
           nodeStateId: appNode.getNodeStateId(),
         });
       });
+    // await host.delay(1000);
     const nocalhostConfig = await appNode.getNocalhostConfig();
     if (nocalhostConfig && nocalhostConfig.services) {
       const services = nocalhostConfig.services;
@@ -228,18 +229,21 @@ export default class InstallCommand implements ICommand {
             ports = ports.concat(container.install.portForward);
           }
         }
-        await nhctl.startPortForward(
-          host,
-          appNode.getKubeConfigPath(),
-          appNode.name,
-          service.name,
-          "manual",
-          service.serviceType,
-          ports,
-          podName
-        );
+        if (ports.length > 0) {
+          await nhctl.startPortForward(
+            host,
+            appNode.getKubeConfigPath(),
+            appNode.name,
+            service.name,
+            "manual",
+            service.serviceType,
+            ports,
+            podName
+          );
+        }
       }
     }
+    await vscode.commands.executeCommand(REFRESH);
   }
 
   private async install(

@@ -116,6 +116,7 @@ export class AppNode extends NocalhostFolderNode {
 
   public async freshNocalhostConfig() {
     this.nocalhostConfig = await ConfigService.getAppConfig(this.name);
+    return this.nocalhostConfig;
   }
 
   // public async getDevelopingNodes(): Promise<Array<any>> {
