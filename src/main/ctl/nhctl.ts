@@ -329,8 +329,14 @@ export async function getAppInfo(appName: string) {
   return result.stdout;
 }
 
-export async function getServiceConfig(appName: string, workloadName: string) {
-  const describeCommand = `nhctl describe ${appName} -d ${workloadName}`;
+export async function getServiceConfig(
+  appName: string,
+  workloadName: string,
+  type?: string
+) {
+  const describeCommand = `nhctl describe ${appName} -d ${workloadName} ${
+    type ? `--type ${type}` : ""
+  }`;
   const result = await execAsyncWithReturn(describeCommand, []);
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {

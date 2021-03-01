@@ -20,7 +20,8 @@ export default class PortForwardListCommand implements ICommand {
 
     const svcProfile = await nhctl.getServiceConfig(
       node.getAppName(),
-      node.name
+      node.name,
+      node.resourceType
     );
 
     if (!svcProfile) {
