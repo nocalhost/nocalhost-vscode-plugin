@@ -134,7 +134,11 @@ export class Deployment extends ControllerResourceNode {
 
   public async refreshSvcProfile() {
     const appNode = this.getAppNode();
-    this.svcProfile = await nhctl.getServiceConfig(appNode.name, this.name);
+    this.svcProfile = await nhctl.getServiceConfig(
+      appNode.name,
+      this.name,
+      this.resourceType
+    );
   }
 
   public async checkConfig() {

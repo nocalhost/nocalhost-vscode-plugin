@@ -58,7 +58,11 @@ export class StatefulSet extends ControllerResourceNode {
 
   public async getPortForwardStatus() {
     const appNode = this.getAppNode();
-    const svcProfile = await nhctl.getServiceConfig(appNode.name, this.name);
+    const svcProfile = await nhctl.getServiceConfig(
+      appNode.name,
+      this.name,
+      this.resourceType
+    );
     if (svcProfile && svcProfile.devPortForwardList.length > 0) {
       return true;
     }
