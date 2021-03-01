@@ -184,7 +184,7 @@
         },
         {
           "command": "Nocalhost.portForwardList",
-          "when": "viewItem =~ /^workload-(deployment)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)/i",
           "group": "1"
         },
         {

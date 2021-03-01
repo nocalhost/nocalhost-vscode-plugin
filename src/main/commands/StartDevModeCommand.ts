@@ -309,6 +309,7 @@ export default class StartDevModeCommand implements ICommand {
                 appName,
                 node.name,
                 "devPorts",
+                node.resourceType,
                 container.dev.portForward
               )
               .catch(() => {});
