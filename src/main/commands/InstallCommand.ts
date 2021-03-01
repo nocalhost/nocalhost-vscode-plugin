@@ -12,7 +12,7 @@ import * as nhctl from "../ctl/nhctl";
 import * as kubectl from "../ctl/kubectl";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
-import { List, ResourceStatus } from "../nodes/types/resourceType";
+import { List, Resource, ResourceStatus } from "../nodes/types/resourceType";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
@@ -202,6 +202,44 @@ export default class InstallCommand implements ICommand {
           nodeStateId: appNode.getNodeStateId(),
         });
       });
+    const nocalhostConfig = await appNode.getNocalhostConfig();
+    if (nocalhostConfig && nocalhostConfig.services) {
+      const services = nocalhostConfig.services;
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
+        const containers = service.containers;
+        let ports: Array<string> = [];
+        const resArr = await kubectl.getControllerPod(
+          appNode.getKubeConfigPath(),
+          service.serviceType,
+          service.name
+        );
+        if (resArr && resArr.length <= 0) {
+          host.showErrorMessage("Not found pod");
+          return;
+        }
+        const podNameArr = (resArr as Array<Resource>).map((res) => {
+          return res.metadata.name;
+        });
+        const podName = podNameArr[0];
+        for (let j = 0; j < containers.length; j++) {
+          const container = containers[j];
+          if (container.install && container.install.portForward) {
+            ports = ports.concat(container.install.portForward);
+          }
+        }
+        await nhctl.startPortForward(
+          host,
+          appNode.getKubeConfigPath(),
+          appNode.name,
+          service.name,
+          "manual",
+          service.serviceType,
+          ports,
+          podName
+        );
+      }
+    }
   }
 
   private async install(

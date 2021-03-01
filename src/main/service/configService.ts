@@ -16,7 +16,18 @@ export interface NocalhostServiceConfig {
 }
 export interface ContainerConfig {
   name: string;
-  install: boolean;
+  install?: {
+    env?: Array<{
+      name: string;
+      value: string;
+    }>;
+    envFrom?: {
+      envFile?: Array<{
+        path: string;
+      }>;
+    };
+    portForward?: Array<string>;
+  };
   dev: {
     gitUrl: string;
     image: string;
