@@ -11,6 +11,7 @@ import { Resource } from "../nodes/types/resourceType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { Pod } from "../nodes/workloads/pod/Pod";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
+import { StatefulSet } from "../nodes/workloads/controllerResources/statefulSet/StatefulSet";
 
 export default class PortForwardCommand implements ICommand {
   command: string = PORT_FORWARD;
@@ -64,7 +65,7 @@ export default class PortForwardCommand implements ICommand {
     if (!portMap) {
       return;
     }
-    if (node instanceof Deployment) {
+    if (node instanceof Deployment || node instanceof StatefulSet) {
       // new Port Forward
       const ports = portMap.split(",").filter((str) => {
         let reg = /([0-9]+)?:[0-9]+/g;
@@ -83,6 +84,7 @@ export default class PortForwardCommand implements ICommand {
         node.getAppName(),
         node.name,
         "manual",
+        node.resourceType,
         ports,
         podName
       );

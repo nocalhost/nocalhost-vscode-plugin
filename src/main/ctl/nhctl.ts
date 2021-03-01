@@ -226,6 +226,7 @@ export async function startPortForward(
   appName: string,
   workloadName: string,
   way: "manual" | "devPorts",
+  resourceType?: string,
   ports?: Array<string>,
   pod?: string
 ) {
@@ -237,8 +238,8 @@ export async function startPortForward(
   const portForwardCommand = nhctlCommand(
     kubeconfigPath,
     `port-forward start ${appName} -d ${workloadName} ${portOptions} ${
-      pod ? `--pod ${pod}` : ""
-    } --way ${way}`
+      resourceType ? `--type ${resourceType}` : ""
+    } ${pod ? `--pod ${pod}` : ""} --way ${way}`
   );
 
   host.log(`[cmd] ${portForwardCommand}`, true);
@@ -256,10 +257,11 @@ export async function startPortForward(
 export async function endPortForward(
   appName: string,
   workloadName: string,
-  port: string
+  port: string,
+  resourceType: string
 ) {
   // nhctl port-forward end coding-agile -d nginx -p 5006:5005
-  const endPortForwardCommand = `nhctl port-forward end ${appName} -d ${workloadName} -p ${port}`;
+  const endPortForwardCommand = `nhctl port-forward end ${appName} -d ${workloadName} -p ${port} --type ${resourceType}`;
 
   host.log(`[cmd] ${endPortForwardCommand}`, true);
 
