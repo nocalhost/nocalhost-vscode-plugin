@@ -78,7 +78,12 @@ export default class PortForwardListCommand implements ICommand {
         return;
       }
     }
-    await nhctl.endPortForward(node.getAppName(), node.name, endPort);
+    await nhctl.endPortForward(
+      node.getAppName(),
+      node.name,
+      endPort,
+      node.resourceType
+    );
     await vscode.commands.executeCommand("Nocalhost.refresh", node);
     host.showInformationMessage(`Ended Port Forward ${endPort}`);
     host.getOutputChannel().show(true);

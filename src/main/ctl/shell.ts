@@ -20,11 +20,12 @@ export async function execAsyncWithReturn(
     const proc = spawn(command, args, { shell: true, env });
     let stdout = "";
     let stderr = "";
+    let err = `execute command fail: ${command}`;
     proc.on("close", (code) => {
       if (code === 0) {
         resolve({ stdout, stderr, code });
       } else {
-        reject(new Error(stderr));
+        reject(new Error(stderr || err));
       }
     });
 
