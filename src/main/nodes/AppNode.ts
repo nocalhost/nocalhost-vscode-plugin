@@ -16,9 +16,9 @@ import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
 import { ApplicationInfo } from "../api";
+import ConfigService, { NocalhostConfig } from "../service/configService";
 import host from "../host";
 import { SYNC_SERVICE } from "../commands/constants";
-import services, { ServiceResult } from "../common/DataCenter/services";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -36,6 +36,7 @@ export class AppNode extends NocalhostFolderNode {
   public parent: NocalhostRootNode;
   // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
+  private nocalhostConfig: NocalhostConfig | undefined;
   constructor(
     parent: NocalhostRootNode,
     installType: string,
@@ -104,6 +105,17 @@ export class AppNode extends NocalhostFolderNode {
     }
     this.nhctlAppInfo = info;
     return this.nhctlAppInfo;
+  }
+
+  public async getNocalhostConfig() {
+    if (this.nocalhostConfig) {
+      return this.nocalhostConfig;
+    }
+    return this.freshNocalhostConfig();
+  }
+
+  public async freshNocalhostConfig() {
+    this.nocalhostConfig = await ConfigService.getAppConfig(this.name);
   }
 
   // public async getDevelopingNodes(): Promise<Array<any>> {
