@@ -115,3 +115,30 @@ export async function getPodNames(
   });
   return podNameArr;
 }
+
+export async function getRunningPodNames(
+  name: string,
+  kind: string,
+  kubeConfigPath: string
+) {
+  let podNameArr: Array<string> = [];
+  let resArr = await getControllerPod(kubeConfigPath, kind, name);
+  if (resArr && resArr.length <= 0) {
+    return podNameArr;
+  }
+  // filter
+  resArr = (resArr as Array<Resource>).filter((res) => {
+    if (res.status) {
+      const status = res.status as ResourceStatus;
+      if (status.phase === "Running") {
+        return true;
+      }
+    }
+
+    return false;
+  });
+  podNameArr = (resArr as Array<Resource>).map((res) => {
+    return res.metadata.name;
+  });
+  return podNameArr;
+}
