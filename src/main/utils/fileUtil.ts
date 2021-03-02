@@ -7,7 +7,10 @@ import { ColorThemeKind } from "vscode";
 
 export async function readYaml(filePath: string) {
   const data = await readFile(filePath);
-  const yamlObj = yaml.parse(data);
+  let yamlObj = null;
+  try {
+    yamlObj = yaml.parse(data);
+  } catch (error) {}
   return yamlObj;
 }
 

@@ -7,12 +7,13 @@ import {
 } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
+import { readYaml } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
 import { NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 
-export function install(
+export async function install(
   host: Host,
   kubeconfigPath: string,
   appName: string,
@@ -47,11 +48,20 @@ export function install(
   );
 
   if (installType === "helmRepo") {
+    let chartName = "";
+    if (helmNHConfigPath) {
+      const obj = await readYaml(helmNHConfigPath);
+      if (obj && obj.name) {
+        chartName = obj.name;
+      }
+    }
     installCommand = nhctlCommand(
       kubeconfigPath,
-      `install ${appName} --helm-chart-name ${appName} -t ${installType} ${
-        values ? "-f " + values : ""
-      } ${valuesStr ? "--set " + valuesStr : ""} --helm-repo-url ${gitUrl} ${
+      `install ${appName} --helm-chart-name ${
+        chartName || appName
+      } -t ${installType} ${values ? "-f " + values : ""} ${
+        valuesStr ? "--set " + valuesStr : ""
+      } --helm-repo-url ${gitUrl} ${
         helmNHConfigPath ? "--outer-config " + helmNHConfigPath : ""
       }`
     );
