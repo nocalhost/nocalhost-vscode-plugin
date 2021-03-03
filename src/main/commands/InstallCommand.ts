@@ -210,18 +210,15 @@ export default class InstallCommand implements ICommand {
         const service = services[i];
         const containers = service.containers;
         let ports: Array<string> = [];
-        const resArr = await kubectl.getControllerPod(
-          appNode.getKubeConfigPath(),
+        const podNameArr = await kubectl.getPodNames(
+          service.name,
           service.serviceType,
-          service.name
+          appNode.getKubeConfigPath()
         );
-        if (resArr && resArr.length <= 0) {
+        if (podNameArr && podNameArr.length <= 0) {
           host.showErrorMessage("Not found pod");
           return;
         }
-        const podNameArr = (resArr as Array<Resource>).map((res) => {
-          return res.metadata.name;
-        });
         const podName = podNameArr[0];
         for (let j = 0; j < containers.length; j++) {
           const container = containers[j];
