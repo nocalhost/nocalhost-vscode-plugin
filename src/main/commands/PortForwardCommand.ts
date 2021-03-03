@@ -27,18 +27,12 @@ export default class PortForwardCommand implements ICommand {
     if (node instanceof ControllerResourceNode) {
       const kind = node.resourceType;
       const name = node.name;
-      const resArr = await kubectl.getControllerPod(
-        node.getKubeConfigPath(),
+
+      const podNameArr = await kubectl.getRunningPodNames(
+        name,
         kind,
-        name
+        node.getKubeConfigPath()
       );
-      if (resArr && resArr.length <= 0) {
-        host.showErrorMessage("Not found pod");
-        return;
-      }
-      const podNameArr = (resArr as Array<Resource>).map((res) => {
-        return res.metadata.name;
-      });
       podName = podNameArr[0];
       if (podNameArr.length > 1) {
         podName = await vscode.window.showQuickPick(podNameArr);
