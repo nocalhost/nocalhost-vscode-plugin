@@ -127,9 +127,9 @@ export default class InstallCommand implements ICommand {
       const res = await host.showInformationMessage(
         "Do you want to specify values?",
         { modal: true },
+        "Use Default values",
         "Specify One values.yaml",
-        "Specify values",
-        "Use Default values"
+        "Specify values"
       );
       if (!res) {
         return;
