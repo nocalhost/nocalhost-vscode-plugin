@@ -227,16 +227,18 @@ export default class InstallCommand implements ICommand {
           }
         }
         if (ports.length > 0) {
-          await nhctl.startPortForward(
-            host,
-            appNode.getKubeConfigPath(),
-            appNode.name,
-            service.name,
-            "manual",
-            service.serviceType,
-            ports,
-            podName
-          );
+          await nhctl
+            .startPortForward(
+              host,
+              appNode.getKubeConfigPath(),
+              appNode.name,
+              service.name,
+              "manual",
+              service.serviceType,
+              ports,
+              podName
+            )
+            .catch(() => {});
         }
       }
     }
