@@ -59,6 +59,16 @@ export default class StartDevModeCommand implements ICommand {
     if (!result) {
       return;
     }
+    if (result.containerName === "nocalhost-dev") {
+      let r = await host.showInformationMessage(
+        `This container is developing. If you continue to choose this container, some problems may occur. Are you sure to continue develop?`,
+        { modal: true },
+        "confirm"
+      );
+      if (r !== "confirm") {
+        return;
+      }
+    }
     const appName = node.getAppName();
     const destDir = await this.cloneOrGetFolderDir(
       appName,
