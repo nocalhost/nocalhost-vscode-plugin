@@ -35,7 +35,7 @@ export default class PortForwardListCommand implements ICommand {
     }
 
     const portList = svcProfile.devPortForwardList.map((item) => {
-      return `${item.localport}:${item.remoteport}`;
+      return `${item.localport}:${item.remoteport}(${item.status})`;
     });
 
     const endPort = await vscode.window.showQuickPick(portList);
@@ -79,10 +79,12 @@ export default class PortForwardListCommand implements ICommand {
         return;
       }
     }
+
+    const endPosition = endPort.indexOf("(");
     await nhctl.endPortForward(
       node.getAppName(),
       node.name,
-      endPort,
+      endPort.substring(0, endPosition),
       node.resourceType
     );
     await vscode.commands.executeCommand("Nocalhost.refresh", node);
