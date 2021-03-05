@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 import * as vscode from "vscode";
 import { getApplication } from "../api";
 import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR, USERINFO } from "../constants";
@@ -6,9 +7,9 @@ import { AppNode } from "./AppNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
-import * as fileUtil from "../utils/fileUtil";
 import host from "../host";
 import DataCenter from "../common/DataCenter";
+import logger from "../utils/logger";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<AppNode | NocalhostAccountNode> = [];
@@ -30,7 +31,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     DataCenter.getInstance().setApplications();
 
     const res = await getApplication();
-    let all: Array<Promise<any>> = [];
     NocalhostRootNode.childNodes = res.map((app) => {
       let context = app.context;
       let obj: {
@@ -59,13 +59,14 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         KUBE_CONFIG_DIR,
         `${app.id}_${app.devspaceId}_config`
       );
-      all.push(fileUtil.writeFile(filePath, app.kubeconfig));
+      logger.info(`appName: ${obj.name} kubeconfig: `, app.kubeconfig);
+      this.writeFile(filePath, app.kubeconfig);
 
       const nhConfigPath = path.resolve(
         HELM_NH_CONFIG_DIR,
         `${app.id}_${app.devspaceId}_config`
       );
-      fileUtil.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+      this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
       return new AppNode(
         this,
         obj.installType,
@@ -81,8 +82,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         app
       );
     });
-
-    await Promise.all(all);
 
     const userinfo = host.getGlobalState(USERINFO);
 
@@ -111,6 +110,18 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       type = originInstallType;
     }
     return type;
+  }
+
+  private writeFile(filePath: string, writeData: string) {
+    const isExist = fs.existsSync(filePath);
+    if (isExist) {
+      const data = fs.readFileSync(filePath).toString();
+      if (data === writeData) {
+        return;
+      }
+    }
+
+    fs.writeFileSync(filePath, writeData);
   }
 
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
