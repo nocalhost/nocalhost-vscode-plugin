@@ -248,6 +248,14 @@ export class Host implements vscode.Disposable {
     return process.platform === "win32";
   }
 
+  isLinux() {
+    return process.platform !== "win32" && process.platform !== "darwin";
+  }
+
+  isMac() {
+    return process.platform === "darwin";
+  }
+
   formalizePath(path: string) {
     if (this.isWindow()) {
       return `"${path}"`;
