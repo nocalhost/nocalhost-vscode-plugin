@@ -166,6 +166,9 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       canSelectMany: true,
       canSelectFolders: true,
       canSelectFiles: true,
+      filters: {
+        yaml: ["yaml", "yml"],
+      },
     });
     if (!uris) {
       return;
