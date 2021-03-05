@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import * as semver from "semver";
+import { spawn } from "child_process";
+
 import {
   execAsyncWithReturn,
   execChildProcessAsync,
@@ -12,6 +14,7 @@ import * as packageJson from "../../../package.json";
 import { NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
+import logger from "../utils/logger";
 
 export async function install(
   host: Host,
@@ -173,7 +176,7 @@ export async function uninstall(
     async (progress) => {
       const uninstallCommand = nhctlCommand(
         kubeconfigPath,
-        `uninstall ${appName} --force`
+        `uninstall ${appName}`
       );
       host.log(`[cmd] ${uninstallCommand}`, true);
       await execChildProcessAsync(
@@ -252,15 +255,86 @@ export async function startPortForward(
     } ${pod ? `--pod ${pod}` : ""} --way ${way}`
   );
 
-  host.log(`[cmd] ${portForwardCommand}`, true);
+  function isSudo(ports: string[] | undefined) {
+    let sudo = false;
+    if (!ports) {
+      return sudo;
+    }
+    ports.forEach((portStr) => {
+      const localPort = portStr.split(":")[0];
+      if (localPort && Number(localPort) < 1024) {
+        sudo = true;
+      }
+    });
+
+    return sudo;
+  }
+
+  const sudo = isSudo(ports);
+
+  function sudoPortforward(command: string) {
+    return new Promise((resolve, reject) => {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+      logger.info(`[cmd] ${command}`);
+      const proc = spawn(command, [], { shell: true, env });
+      let stdout = "";
+      let stderr = "";
+      let err = `execute command fail: ${command}`;
+      proc.on("close", (code) => {
+        if (code === 0) {
+          resolve({ stdout, stderr, code });
+        } else {
+          reject(new Error(stderr || err));
+        }
+      });
+
+      proc.stdout.on("data", function (data) {
+        stdout += data;
+        host.log("" + data);
+      });
+
+      let password = "";
+
+      proc.stderr.on("data", async function (data) {
+        stderr += data;
+        host.log("" + data);
+        const line = "" + data;
+        if (line.indexOf("Sorry, try again") >= 0) {
+          password =
+            (await host.showInputBox({
+              placeHolder: "please input your password",
+            })) || "";
+        }
+        if (line.indexOf("[sudo] password for") >= 0) {
+          password =
+            (await host.showInputBox({
+              placeHolder: "please input your password",
+            })) || "";
+          proc.stdin.write(`${password}\n`, (err) => {
+            console.log("write " + password);
+          });
+        }
+      });
+    });
+  }
+
+  host.log(
+    `[cmd] ${sudo ? `sudo -S ${portForwardCommand}` : portForwardCommand}`,
+    true
+  );
 
   await host.showProgressing(`Starting port-forward`, async (progress) => {
-    await execChildProcessAsync(
-      host,
-      portForwardCommand,
-      [],
-      `Port-forward (${appName}/${workloadName}) fail`
-    );
+    if (sudo) {
+      await sudoPortforward(`sudo -S ${portForwardCommand}`);
+    } else {
+      await execChildProcessAsync(
+        host,
+        portForwardCommand,
+        [],
+        `Port-forward (${appName}/${workloadName}) fail`
+      );
+    }
   });
 }
 

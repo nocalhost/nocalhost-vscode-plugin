@@ -16,6 +16,13 @@ import { List, Resource, ResourceStatus } from "../nodes/types/resourceType";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
+  productPagePort = "";
+  bookInfoUrls = [
+    "https://github.com/nocalhost/bookinfo.git",
+    "git@github.com:nocalhost/bookinfo.git",
+    "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
+    "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
+  ];
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
@@ -24,7 +31,7 @@ export default class InstallCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
-
+    let productPagePort = (this.productPagePort = "");
     let refOrVersion: string | undefined;
     let values: string | undefined;
     let valuesStr: string | undefined;
@@ -151,6 +158,10 @@ export default class InstallCommand implements ICommand {
         valuesStr = await host.showInputBox({
           placeHolder: "eg: key1=val1,key2=val2",
         });
+
+        if (!valuesStr) {
+          return;
+        }
       }
     }
     state.setAppState(appNode.name, "installing", true, {
@@ -167,82 +178,23 @@ export default class InstallCommand implements ICommand {
       node.collapsis();
     });
 
-    await this.install(
-      host,
-      appNode.getKubeConfigPath(),
-      appNode.name,
-      appNode.id,
-      appNode.appConfig,
-      appNode.helmNHConfig ? appNode.getHelmHNConfigPath() : "",
-      appNode.devSpaceId,
-      appNode.url,
-      appNode.installType,
-      appNode.resourceDir,
+    await this.startInstall(
+      appNode,
       values,
       valuesStr,
       refOrVersion,
       local
-    )
-      .then(() => {
-        const bookInfoUrls = [
-          "https://github.com/nocalhost/bookinfo.git",
-          "git@github.com:nocalhost/bookinfo.git",
-          "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
-          "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
-        ];
-        if (bookInfoUrls.includes(appNode.url) && appNode.name === "bookinfo") {
-          this.checkStatus(appNode);
-        }
-      })
-      .finally(() => {
-        appNode.expanded();
-        appNode.expandWorkloadNode();
-        state.deleteAppState(appNode.name, "installing", {
-          refresh: true,
-          nodeStateId: appNode.getNodeStateId(),
-        });
+    ).finally(() => {
+      state.deleteAppState(appNode.name, "installing", {
+        refresh: true,
+        nodeStateId: appNode.getNodeStateId(),
       });
-    // await host.delay(1000);
-    const nocalhostConfig = await appNode.getNocalhostConfig();
-    if (nocalhostConfig && nocalhostConfig.services) {
-      const services = nocalhostConfig.services;
-      for (let i = 0; i < services.length; i++) {
-        const service = services[i];
-        const containers = service.containers;
-        let ports: Array<string> = [];
-        const podNameArr = await kubectl.getPodNames(
-          service.name,
-          service.serviceType,
-          appNode.getKubeConfigPath()
-        );
-        if (podNameArr && podNameArr.length <= 0) {
-          host.showErrorMessage("Not found pod");
-          return;
-        }
-        const podName = podNameArr[0];
-        for (let j = 0; j < containers.length; j++) {
-          const container = containers[j];
-          if (container.install && container.install.portForward) {
-            ports = ports.concat(container.install.portForward);
-          }
-        }
-        if (ports.length > 0) {
-          await nhctl
-            .startPortForward(
-              host,
-              appNode.getKubeConfigPath(),
-              appNode.name,
-              service.name,
-              "manual",
-              service.serviceType,
-              ports,
-              podName
-            )
-            .catch(() => {});
-        }
-      }
-    }
+    });
+    productPagePort = this.productPagePort;
     await vscode.commands.executeCommand(REFRESH);
+    if (this.isBookInfo(appNode) && productPagePort) {
+      this.checkStatus(appNode, productPagePort);
+    }
   }
 
   private async install(
@@ -285,15 +237,111 @@ export default class InstallCommand implements ICommand {
     host.setGlobalState(appName, {});
   }
 
-  private async checkStatus(appNode: AppNode) {
+  private async checkStatus(appNode: AppNode, productPagePort: string) {
     const check = await this.checkBookInfoStatus(appNode).catch(() => {});
     if (check) {
-      this.portForwordService(appNode);
+      const res = await host.showInformationMessage(
+        `productpage url: http://127.0.0.1:${productPagePort}/productpage`,
+        { modal: true },
+        "go"
+      );
+      await vscode.commands.executeCommand(REFRESH);
+      if (res === "go") {
+        const uri = vscode.Uri.parse(
+          `http://127.0.0.1:${productPagePort}/productpage`
+        );
+        vscode.env.openExternal(uri);
+      }
       return;
     }
     setTimeout(() => {
-      this.checkStatus(appNode);
+      this.checkStatus(appNode, productPagePort);
     }, 2000);
+  }
+
+  private isBookInfo(appNode: AppNode) {
+    if (
+      this.bookInfoUrls.includes(appNode.url) &&
+      appNode.name === "bookinfo"
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private async startInstall(
+    appNode: AppNode,
+    values: string | undefined,
+    valuesStr: string | undefined,
+    refOrVersion: string | undefined,
+    local: any
+  ) {
+    await this.install(
+      host,
+      appNode.getKubeConfigPath(),
+      appNode.name,
+      appNode.id,
+      appNode.appConfig,
+      appNode.helmNHConfig ? appNode.getHelmHNConfigPath() : "",
+      appNode.devSpaceId,
+      appNode.url,
+      appNode.installType,
+      appNode.resourceDir,
+      values,
+      valuesStr,
+      refOrVersion,
+      local
+    );
+    appNode.expanded();
+    appNode.expandWorkloadNode();
+
+    // await host.delay(1000);
+    const nocalhostConfig = await appNode.getNocalhostConfig();
+    if (nocalhostConfig && nocalhostConfig.services) {
+      const services = nocalhostConfig.services;
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
+        const containers = service.containers;
+        let ports: Array<string> = [];
+        for (let j = 0; j < containers.length; j++) {
+          const container = containers[j];
+          if (container.install && container.install.portForward) {
+            ports = ports.concat(container.install.portForward);
+          }
+        }
+        if (ports.length <= 0) {
+          break;
+        }
+        const podNameArr =
+          (await kubectl
+            .getPodNames(
+              service.name,
+              service.serviceType,
+              appNode.getKubeConfigPath()
+            )
+            .catch(() => {})) || [];
+        if (podNameArr && podNameArr.length <= 0) {
+          return;
+        }
+        const podName = podNameArr[0];
+        await nhctl
+          .startPortForward(
+            host,
+            appNode.getKubeConfigPath(),
+            appNode.name,
+            service.name,
+            "manual",
+            service.serviceType,
+            ports,
+            podName
+          )
+          .catch(() => {});
+        if (service.name === "productpage") {
+          this.productPagePort = ports[0].split(":")[0];
+        }
+      }
+    }
   }
 
   private async checkBookInfoStatus(appNode: AppNode) {
@@ -326,33 +374,6 @@ export default class InstallCommand implements ICommand {
     });
 
     return check;
-  }
-
-  private async portForwordService(appNode: AppNode) {
-    const terminalCommands = [
-      "port-forward",
-      "services/productpage",
-      "39080:9080",
-    ];
-    terminalCommands.push("--kubeconfig", appNode.getKubeConfigPath());
-    const shellPath = "kubectl";
-    const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      terminalCommands,
-      process.platform === "win32" ? `${shellPath}.exe` : shellPath,
-      "kubectl"
-    );
-    host.pushBookInfoDispose(terminalDisposed);
-    terminalDisposed.show();
-    const res = await host.showInformationMessage(
-      `productpage url: http://127.0.0.1:39080/productpage`,
-      { modal: true },
-      "go"
-    );
-    await vscode.commands.executeCommand(REFRESH);
-    if (res === "go") {
-      const uri = vscode.Uri.parse("http://127.0.0.1:39080/productpage");
-      vscode.env.openExternal(uri);
-    }
   }
 
   private getAllConfig(localPath: string) {

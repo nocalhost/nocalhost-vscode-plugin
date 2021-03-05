@@ -8,6 +8,7 @@ import registerCommand from "./register";
 import state from "../state";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
+import * as kubectl from "../ctl/kubectl";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 
@@ -117,7 +118,10 @@ export default class UpgradeCommand implements ICommand {
       const node = item as AppNode;
       node.collapsis();
     });
-
+    // end port
+    await host.showProgressing(`Ending port-forward`, async (progress) => {
+      await this.endAllPortForward(appNode);
+    });
     await nhctl
       .upgrade(
         appNode.getKubeConfigPath(),
@@ -139,6 +143,7 @@ export default class UpgradeCommand implements ICommand {
           nodeStateId: appNode.getNodeStateId(),
         });
       });
+    await this.startPortForward(appNode);
   }
 
   private getAllConfig(localPath: string) {
@@ -160,5 +165,64 @@ export default class UpgradeCommand implements ICommand {
     });
 
     return configs;
+  }
+
+  private async endAllPortForward(appNode: AppNode) {
+    const appInfo = await appNode.getApplicationInfo();
+    const serivces = appInfo.svcProfile;
+    for (let i = 0; i < serivces.length; i++) {
+      const service = serivces[i];
+      const portForwardList = service.devPortForwardList || [];
+      for (let j = 0; j < portForwardList.length; j++) {
+        await nhctl.endPortForward(
+          appNode.name,
+          service.actualName,
+          `${portForwardList[i].localport}:${portForwardList[i].remoteport}`,
+          service.rawConfig.serviceType
+        );
+      }
+    }
+  }
+
+  private async startPortForward(appNode: AppNode) {
+    const nocalhostConfig = await appNode.getNocalhostConfig();
+    if (nocalhostConfig && nocalhostConfig.services) {
+      const services = nocalhostConfig.services;
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
+        const containers = service.containers;
+        let ports: Array<string> = [];
+        const podNameArr = await kubectl.getPodNames(
+          service.name,
+          service.serviceType,
+          appNode.getKubeConfigPath()
+        );
+        if (podNameArr && podNameArr.length <= 0) {
+          host.showErrorMessage("Not found pod");
+          return;
+        }
+        const podName = podNameArr[0];
+        for (let j = 0; j < containers.length; j++) {
+          const container = containers[j];
+          if (container.install && container.install.portForward) {
+            ports = ports.concat(container.install.portForward);
+          }
+        }
+        if (ports.length > 0) {
+          await nhctl
+            .startPortForward(
+              host,
+              appNode.getKubeConfigPath(),
+              appNode.name,
+              service.name,
+              "manual",
+              service.serviceType,
+              ports,
+              podName
+            )
+            .catch(() => {});
+        }
+      }
+    }
   }
 }
