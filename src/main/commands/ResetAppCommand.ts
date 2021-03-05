@@ -54,7 +54,7 @@ export default class ResetAppCommand implements ICommand {
   ) {
     host.log(`Uninstalling application: ${appName}`, true);
     host.showInformationMessage(`Uninstalling application: ${appName}`);
-    await nhctl.uninstall(host, kubeconfigPath, appName);
+    await nhctl.uninstall(host, kubeconfigPath, appName, true);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     host.removeGlobalState(appName);
     state.delete(appName);
