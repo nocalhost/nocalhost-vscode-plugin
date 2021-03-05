@@ -293,7 +293,8 @@ export default class StartDevModeCommand implements ICommand {
             host,
             node.getKubeConfigPath(),
             appName,
-            node.name
+            node.name,
+            containerName
           );
           host.log("sync file end", true);
           host.log("", true);
