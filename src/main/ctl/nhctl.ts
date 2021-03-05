@@ -361,9 +361,12 @@ export async function syncFile(
   host: Host,
   kubeconfigPath: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  container?: string
 ) {
-  let baseCommand = `sync ${appName} -d ${workloadName}`;
+  let baseCommand = `sync ${appName} -d ${workloadName} ${
+    container ? `--container ${container}` : ""
+  }`;
   const syncFileCommand = nhctlCommand(kubeconfigPath, baseCommand);
 
   host.log(`[cmd] ${syncFileCommand}`, true);
