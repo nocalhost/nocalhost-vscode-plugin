@@ -30,7 +30,11 @@ export default class CleanPvcCommand implements ICommand {
       return;
     }
 
-    const pvcs = await nhctl.listPVC(appName, workloadName);
+    const pvcs = await nhctl.listPVC(
+      node.getKubeConfigPath(),
+      appName,
+      workloadName
+    );
     const pvcMap = new Map<string, string>();
     const pvcNames = new Array<string>();
     pvcs.map((p) => {
@@ -50,7 +54,12 @@ export default class CleanPvcCommand implements ICommand {
     } else {
       pvcName = pvcMap.get(result);
     }
-    await nhctl.cleanPVC(appName, workloadName, pvcName);
+    await nhctl.cleanPVC(
+      node.getKubeConfigPath(),
+      appName,
+      workloadName,
+      pvcName
+    );
     host.showInformationMessage("cleared pvc");
   }
 }

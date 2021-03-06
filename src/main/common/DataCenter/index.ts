@@ -1,5 +1,5 @@
 import * as yaml from "yaml";
-import { getApplication } from "../../api";
+import { ApplicationInfo, getApplication } from "../../api";
 import {
   IApplication,
   IApplicationContext,
@@ -13,7 +13,8 @@ import {
 } from "./index.types";
 import * as shell from "../../ctl/shell";
 import services, { ServiceResult } from "./services";
-import { DATA_CENTER_INTERVAL_MS } from "../../constants";
+import { DATA_CENTER_INTERVAL_MS, KUBE_CONFIG_DIR } from "../../constants";
+import * as path from "path";
 
 interface IDataStore {
   applications: IApplication[];
@@ -67,9 +68,9 @@ export default class DataCenter {
   }
 
   public async setApplications(timeout?: number): Promise<void> {
-    const results: any[] = await getApplication();
+    const results: ApplicationInfo[] = await getApplication();
     const applications: Promise<IApplication>[] = results.map(
-      async (result: any) => {
+      async (result: ApplicationInfo) => {
         const contextObj: any = JSON.parse(result.context || "{}");
         const context: IApplicationContext = {
           source: contextObj.source || "",
@@ -81,22 +82,28 @@ export default class DataCenter {
           nocalhostConfig: contextObj["nocalhost_config"] || "",
         };
         // await this.fetchApplicationMeta(context.applicationName);
-        await this.fetchApplicationDescribe(context.applicationName);
-        await this.fetchApplicationConfig(context.applicationName);
+        await this.fetchApplicationDescribe(
+          this.getKubeConfigPath(result.id, result.devspaceId),
+          context.applicationName
+        );
+        await this.fetchApplicationConfig(
+          this.getKubeConfigPath(result.id, result.devspaceId),
+          context.applicationName
+        );
         return {
           id: result.id,
           context: context,
           status: result.status,
-          installStatus: result["install_status"],
+          installStatus: result.installStatus,
           kubeConfig: result.kubeconfig || "",
           cpu: result.cpu,
           memory: result.memory,
           namespace: result.namespace || "",
-          clusterId: result["cluster_id"],
-          devspaceId: result["devspace_id"],
-          spaceName: result["space_name"] || "",
-          storageClass: result["storage_class"] || "",
-          devStartAppendCommand: result["dev_start_append_command"] || "",
+          clusterId: result.clusterId,
+          devspaceId: result.devspaceId,
+          spaceName: result.spaceName || "",
+          storageClass: result.storageClass || "",
+          devStartAppendCommand: result.devStartAppendCommand || "",
         };
       }
     );
@@ -113,6 +120,15 @@ export default class DataCenter {
     //     this.setApplications(timeout);
     //   }, timeout);
     // }
+  }
+
+  public getKubeConfigPath(id: any, devSpaceId: any) {
+    const kubeconfigPath = path.resolve(
+      KUBE_CONFIG_DIR,
+      `${id}_${devSpaceId}_config`
+    );
+
+    return path.normalize(kubeconfigPath);
   }
 
   private async fetchApplicationMeta(applicationName: string): Promise<void> {
@@ -167,9 +183,11 @@ export default class DataCenter {
   }
 
   private async fetchApplicationDescribe(
+    kubeConfigPath: string,
     applicationName: string
   ): Promise<void> {
     const result: ServiceResult = await services.describeApplication(
+      kubeConfigPath,
       applicationName
     );
     const rawData: string = result.success ? result.value : "";
@@ -243,8 +261,12 @@ export default class DataCenter {
     this.dataStore.applicationDescribes.set(applicationName, describeInfo);
   }
 
-  private async fetchApplicationConfig(applicationName: string): Promise<void> {
+  private async fetchApplicationConfig(
+    kubeConfigPath: string,
+    applicationName: string
+  ): Promise<void> {
     const result: ServiceResult = await services.fetchApplicationConfig(
+      kubeConfigPath,
       applicationName
     );
     const rawData: string = result.success ? result.value : "";

@@ -29,6 +29,8 @@ export default class EndDevModeCommand implements ICommand {
     );
     await node.setStatus("");
     await node.setContainer("");
-    vscode.commands.executeCommand(SYNC_SERVICE, {});
+    vscode.commands.executeCommand(SYNC_SERVICE, {
+      kubeConfigPath: node.getKubeConfigPath(),
+    });
   }
 }

@@ -43,7 +43,10 @@ export async function execChildProcessAsync(
   host: Host,
   command: string,
   args: Array<any>,
-  errorTips?: string,
+  errorTips?: {
+    dialog?: string;
+    output?: string;
+  },
   notShow?: boolean
 ) {
   return new Promise((resolve, reject) => {
@@ -56,7 +59,12 @@ export async function execChildProcessAsync(
       if (code === 0) {
         resolve(null);
       } else {
-        reject(errorTips || `execute command fail: ${command}`);
+        if (errorTips && errorTips.output) {
+          host.log(errorTips.output, true);
+        }
+        reject(
+          (errorTips && errorTips.dialog) || `execute command fail: ${command}`
+        );
       }
     });
 

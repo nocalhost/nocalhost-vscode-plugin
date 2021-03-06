@@ -10,6 +10,7 @@ import host from "../host";
 export interface Sync {
   app: string;
   service: string;
+  kubeConfigPath: string;
 }
 
 export default class OverrideSyncCommand implements ICommand {
@@ -30,6 +31,10 @@ export default class OverrideSyncCommand implements ICommand {
     if (result !== "Confirm") {
       return;
     }
-    await nhctl.overrideSyncFolders(syncData.app, syncData.service);
+    await nhctl.overrideSyncFolders(
+      syncData.kubeConfigPath,
+      syncData.app,
+      syncData.service
+    );
   }
 }
