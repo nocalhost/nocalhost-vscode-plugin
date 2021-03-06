@@ -177,7 +177,7 @@ export default class UpgradeCommand implements ICommand {
         await nhctl.endPortForward(
           appNode.name,
           service.actualName,
-          `${portForwardList[i].localport}:${portForwardList[i].remoteport}`,
+          `${portForwardList[j].localport}:${portForwardList[j].remoteport}`,
           service.rawConfig.serviceType
         );
       }
