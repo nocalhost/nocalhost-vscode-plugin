@@ -13,6 +13,7 @@ import * as kubectl from "../ctl/kubectl";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 import { List, Resource, ResourceStatus } from "../nodes/types/resourceType";
+import logger from "../utils/logger";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
@@ -298,7 +299,11 @@ export default class InstallCommand implements ICommand {
 
     // await host.delay(1000);
     const nocalhostConfig = await appNode.getNocalhostConfig();
-    if (nocalhostConfig && nocalhostConfig.services) {
+    if (
+      nocalhostConfig &&
+      nocalhostConfig.services &&
+      nocalhostConfig.services.length > 0
+    ) {
       const services = nocalhostConfig.services;
       for (let i = 0; i < services.length; i++) {
         const service = services[i];
@@ -311,18 +316,19 @@ export default class InstallCommand implements ICommand {
           }
         }
         if (ports.length <= 0) {
-          break;
+          logger.info(`${service.name} port is null`);
+          continue;
         }
-        const podNameArr =
-          (await kubectl
-            .getPodNames(
-              service.name,
-              service.serviceType,
-              appNode.getKubeConfigPath()
-            )
-            .catch(() => {})) || [];
+        const podNameArr = await this.getPodNames(
+          service.name,
+          service.serviceType,
+          appNode.getKubeConfigPath(),
+          1000 * 60
+        );
+        logger.info(`podName: ${JSON.stringify(podNameArr, undefined, 2)}`);
         if (podNameArr && podNameArr.length <= 0) {
-          return;
+          logger.info("service : " + service.name + " not found pod");
+          continue;
         }
         const podName = podNameArr[0];
         await nhctl
@@ -341,7 +347,31 @@ export default class InstallCommand implements ICommand {
           this.productPagePort = ports[0].split(":")[0];
         }
       }
+    } else {
+      logger.info("appname: " + appNode.name + "not service config");
     }
+  }
+
+  public async getPodNames(
+    name: string,
+    type: string,
+    kubeConfigPath: string,
+    timeout: number = 1000 * 60
+  ) {
+    let startTime = new Date().getTime();
+    let podNameArr = new Array<string>();
+    while (
+      podNameArr &&
+      podNameArr.length <= 0 &&
+      new Date().getTime() - startTime < timeout
+    ) {
+      podNameArr =
+        (await kubectl
+          .getPodNames(name, type, kubeConfigPath)
+          .catch(() => {})) || [];
+    }
+
+    return podNameArr;
   }
 
   private async checkBookInfoStatus(appNode: AppNode) {
