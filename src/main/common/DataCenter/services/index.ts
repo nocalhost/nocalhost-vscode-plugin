@@ -11,13 +11,19 @@ async function fetchApplicationMeta(
   return await DataCenter.execCommand(command);
 }
 
-async function describeApplication(name: string): Promise<ServiceResult> {
-  const command: string = `nhctl describe ${name}`;
+async function describeApplication(
+  kubeConfigPath: string,
+  name: string
+): Promise<ServiceResult> {
+  const command: string = `nhctl describe ${name} --kubeconfig ${kubeConfigPath}`;
   return await DataCenter.execCommand(command);
 }
 
-async function fetchApplicationConfig(name: string): Promise<ServiceResult> {
-  const command: string = `nhctl config get ${name}`;
+async function fetchApplicationConfig(
+  kubeConfigPath: string,
+  name: string
+): Promise<ServiceResult> {
+  const command: string = `nhctl config get ${name} --kubeconfig ${kubeConfigPath}`;
   return await DataCenter.execCommand(command);
 }
 
@@ -53,31 +59,30 @@ async function fetchKubernetesResource(
 }
 
 async function applyKubernetesObject(
+  appName: string,
   filePath: string,
   kubeConfig: string,
   isDir = false
 ): Promise<ServiceResult> {
-  let applyPaths = [filePath];
-  if (isDir) {
-    applyPaths = [];
-    const files = fs.readdirSync(filePath);
-    for (const fileName of files) {
-      const fileFullPath = path.resolve(filePath, fileName);
-      const stat = fs.statSync(fileFullPath);
-      if (stat.isFile && path.extname(fileFullPath) === ".yaml") {
-        applyPaths.push(fileFullPath);
-      }
-    }
-  }
-  if (applyPaths.length < 1) {
-    return {
-      success: false,
-      value: "not found yaml file",
-    };
-  }
-  const command: string = `kubectl apply -f ${applyPaths.join(
-    " -f "
-  )} --kubeconfig ${kubeConfig}`;
+  // let applyPaths = [filePath];
+  // if (isDir) {
+  //   applyPaths = [];
+  //   const files = fs.readdirSync(filePath);
+  //   for (const fileName of files) {
+  //     const fileFullPath = path.resolve(filePath, fileName);
+  //     const stat = fs.statSync(fileFullPath);
+  //     if (stat.isFile && path.extname(fileFullPath) === ".yaml") {
+  //       applyPaths.push(fileFullPath);
+  //     }
+  //   }
+  // }
+  // if (applyPaths.length < 1) {
+  //   return {
+  //     success: false,
+  //     value: "not found yaml file",
+  //   };
+  // }
+  const command: string = `nhctl apply ${appName} ${filePath} --kubeconfig ${kubeConfig}`;
   return await DataCenter.execCommand(command);
 }
 

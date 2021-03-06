@@ -135,6 +135,7 @@ export class Deployment extends ControllerResourceNode {
   public async refreshSvcProfile() {
     const appNode = this.getAppNode();
     this.svcProfile = await nhctl.getServiceConfig(
+      appNode.getKubeConfigPath(),
       appNode.name,
       this.name,
       this.resourceType
@@ -145,6 +146,7 @@ export class Deployment extends ControllerResourceNode {
     const appNode = this.getAppNode();
     if (!this.firstRender) {
       this.nocalhostService = await ConfigService.getWorkloadConfig(
+        appNode.getKubeConfigPath(),
         appNode.name,
         this.name
       );

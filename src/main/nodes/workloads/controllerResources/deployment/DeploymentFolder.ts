@@ -32,7 +32,10 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     const list = JSON.parse(res as string) as List;
     const appNode = this.getAppNode();
     const appInfo = await appNode.getApplicationInfo();
-    const appConfig = await ConfigService.getAppConfig(appNode.name);
+    const appConfig = await ConfigService.getAppConfig(
+      appNode.getKubeConfigPath(),
+      appNode.name
+    );
     const result: Deployment[] = list.items.map((item) => {
       const status = item.status as ResourceStatus;
       const svcProfiles = appInfo.svcProfile || [];
