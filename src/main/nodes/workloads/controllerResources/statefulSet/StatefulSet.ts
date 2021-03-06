@@ -59,6 +59,7 @@ export class StatefulSet extends ControllerResourceNode {
   public async getPortForwardStatus() {
     const appNode = this.getAppNode();
     const svcProfile = await nhctl.getServiceConfig(
+      appNode.getKubeConfigPath(),
       appNode.name,
       this.name,
       this.resourceType

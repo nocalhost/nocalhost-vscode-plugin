@@ -92,6 +92,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
           name: `${nodeName}-${namespace}.yaml`,
         });
         const result: ServiceResult = await services.applyKubernetesObject(
+          appNode.name,
           path,
           kubeConfig
         );
@@ -147,6 +148,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       },
       async (progress) => {
         const result: ServiceResult = await services.applyKubernetesObject(
+          selected,
           path,
           kubeConfig
         );
@@ -186,6 +188,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
             const path: string = uri.fsPath || uri.path;
             const isDir: boolean = fs.lstatSync(path).isDirectory();
             return await services.applyKubernetesObject(
+              target.name,
               path,
               kubeConfig,
               isDir

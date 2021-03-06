@@ -35,8 +35,9 @@ export default class LoadResourceCommand implements ICommand {
       if (isDeveloping) {
         scheme = "Nocalhost";
       }
+      const kubeconifg = node.getKubeConfigPath();
       const uri: vscode.Uri = vscode.Uri.parse(
-        `${scheme}://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}`
+        `${scheme}://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}`
       );
       const doc: vscode.TextDocument = await vscode.workspace.openTextDocument(
         uri
@@ -55,7 +56,7 @@ export default class LoadResourceCommand implements ICommand {
       }
       const name: string = node.name;
       const uri: vscode.Uri = vscode.Uri.parse(
-        `nhtext://loadresource/${name}.yaml?type=nh&name=${name}`
+        `nhtext://loadresource/${name}.yaml?type=nh&name=${name}&kubeConfigPath=${node.getKubeConfigPath()}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: true });

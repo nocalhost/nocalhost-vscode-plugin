@@ -10,6 +10,7 @@ import host from "../host";
 export interface Sync {
   app: string;
   service: string;
+  kubeConfigPath: string;
 }
 
 interface SyncMsg {
@@ -37,7 +38,11 @@ export default class SyncServiceCommand implements ICommand {
     }
 
     this._id = setInterval(async () => {
-      const result = await nhctl.getSyncStatus(syncData.app, syncData.service);
+      const result = await nhctl.getSyncStatus(
+        syncData.kubeConfigPath,
+        syncData.app,
+        syncData.service
+      );
       if (!result) {
         // hide status bar
         if (this._id) {

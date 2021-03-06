@@ -54,6 +54,7 @@ export default class TextDocumentContentProvider
         }
         case "nh": {
           const result: ServiceResult = await services.describeApplication(
+            kubeConfig,
             name
           );
           if (!result.success) {

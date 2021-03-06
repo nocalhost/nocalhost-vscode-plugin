@@ -115,12 +115,14 @@ export default class StartDevModeCommand implements ICommand {
 
   private async cloneCode(
     host: Host,
+    kubeConfigPath: string,
     appName: string,
     workloadName: string,
     containerName: string
   ) {
     let destDir: string | undefined;
     let gitUrl: string | undefined = await this.getGitUrl(
+      kubeConfigPath,
       appName,
       workloadName,
       containerName
@@ -166,7 +168,13 @@ export default class StartDevModeCommand implements ICommand {
       return;
     }
     if (result === nls["bt.clone"]) {
-      destDir = await this.cloneCode(host, appName, node.name, containerName);
+      destDir = await this.cloneCode(
+        host,
+        node.getKubeConfigPath(),
+        appName,
+        node.name,
+        containerName
+      );
     } else if (result === nls["bt.open.dir"]) {
       const uris = await host.showOpenDialog({
         canSelectFiles: false,
@@ -299,6 +307,7 @@ export default class StartDevModeCommand implements ICommand {
           host.log("sync file end", true);
           host.log("", true);
           const container = await ConfigService.getContaienrConfig(
+            node.getKubeConfigPath(),
             appName,
             node.name,
             containerName
@@ -342,6 +351,7 @@ export default class StartDevModeCommand implements ICommand {
     vscode.commands.executeCommand(SYNC_SERVICE, {
       app: appName,
       service: node.name,
+      kubeConfigPath: node.getKubeConfigPath(),
     });
   }
 
@@ -379,8 +389,13 @@ export default class StartDevModeCommand implements ICommand {
     }
   }
 
-  private async getSvcConfig(appName: string, workloadName: string) {
+  private async getSvcConfig(
+    kubeConfigPath: string,
+    appName: string,
+    workloadName: string
+  ) {
     let workloadConfig = await ConfigService.getWorkloadConfig(
+      kubeConfigPath,
       appName,
       workloadName
     );
@@ -389,11 +404,13 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   private async getGitUrl(
+    kubeConfigPath: string,
     appName: string,
     workloadName: string,
     containerName: string
   ) {
     const config = await ConfigService.getContaienrConfig(
+      kubeConfigPath,
       appName,
       workloadName,
       containerName

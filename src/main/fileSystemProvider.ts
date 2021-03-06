@@ -118,9 +118,11 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const style = uri.path.substring(uri.path.length - 4);
         const paths = uri.path.substring(0, uri.path.length - 5).split("/");
         const type = paths[1];
+        const query = querystring.decode(uri.query);
+        const kubeConfigPath = query.kubeConfigPath as string;
         if (type === "loadResource") {
           const name = paths[2];
-          result = await nhctl.loadResource(host, name);
+          result = await nhctl.loadResource(host, kubeConfigPath, name);
         } else if (type === "config") {
           const configType = paths[2];
           if (configType === "app") {
@@ -131,16 +133,24 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             if (key && subKey) {
               if (key === "services" && subKey) {
                 let serviceInfo = await ConfigService.getWorkloadConfig(
+                  kubeConfigPath,
                   appName,
                   subKey
                 );
                 if (!serviceInfo) {
-                  result = await nhctl.getTemplateConfig(appName, subKey);
+                  result = await nhctl.getTemplateConfig(
+                    kubeConfigPath,
+                    appName,
+                    subKey
+                  );
                 } else {
                   result = this.stringify(serviceInfo, style) as string;
                 }
               } else {
-                const appInfo: any = await ConfigService.getAppConfig(appName);
+                const appInfo: any = await ConfigService.getAppConfig(
+                  kubeConfigPath,
+                  appName
+                );
                 if (appInfo[key] instanceof Array) {
                   result = "";
                   for (let i = 0; i < appInfo[key].length; i++) {
@@ -155,7 +165,10 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
                 }
               }
             } else if (key) {
-              const appInfo: any = await ConfigService.getAppConfig(appName);
+              const appInfo: any = await ConfigService.getAppConfig(
+                kubeConfigPath,
+                appName
+              );
               const obj: any = {};
               obj[key] = appInfo[key];
               result = this.stringify(obj, style) || "";
@@ -211,7 +224,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     }
     let destDir = "";
     let destData: string | Buffer = "";
-
+    const kubeConfigPath = query.kubeConfigPath as string;
     let command: string | undefined;
     let args;
     if (type === "config") {
@@ -223,13 +236,21 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
 
         // destDir = ConfigService.getAppConfigPath(appName);
         if (key === "services" && subKey) {
-          await ConfigService.writeConfig(appName, subKey, data);
+          await ConfigService.writeConfig(
+            kubeConfigPath,
+            appName,
+            subKey,
+            data
+          );
           command = "Nocalhost.refresh";
           commands.executeCommand(command, state.getNode(id));
           return;
         }
 
-        const appInfo: any = await ConfigService.getAppConfig(appName);
+        const appInfo: any = await ConfigService.getAppConfig(
+          kubeConfigPath,
+          appName
+        );
         let originData = "";
         if (key && subKey) {
           originData = this.getOriginData(subKey, data);

@@ -19,6 +19,7 @@ export default class PortForwardListCommand implements ICommand {
     }
 
     const svcProfile = await nhctl.getServiceConfig(
+      node.getKubeConfigPath(),
       node.getAppName(),
       node.name,
       node.resourceType
@@ -82,6 +83,7 @@ export default class PortForwardListCommand implements ICommand {
 
     const endPosition = endPort.indexOf("(");
     await nhctl.endPortForward(
+      node.getKubeConfigPath(),
       node.getAppName(),
       node.name,
       endPort.substring(0, endPosition),
