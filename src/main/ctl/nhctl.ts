@@ -229,6 +229,68 @@ export async function devStart(
   );
 }
 
+function isSudo(ports: string[] | undefined) {
+  let sudo = false;
+  if (!ports) {
+    return sudo;
+  }
+  ports.forEach((portStr) => {
+    const localPort = portStr.split(":")[0];
+    if (localPort && Number(localPort) < 1024 && host.isLinux()) {
+      sudo = true;
+    }
+  });
+
+  return sudo;
+}
+
+function sudoPortforward(command: string) {
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+    logger.info(`[cmd] ${command}`);
+    const proc = spawn(command, [], { shell: true, env });
+    let stdout = "";
+    let stderr = "";
+    let err = `execute command fail: ${command}`;
+    proc.on("close", (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr, code });
+      } else {
+        reject(new Error(stderr || err));
+      }
+    });
+
+    proc.stdout.on("data", function (data) {
+      stdout += data;
+      host.log("" + data);
+    });
+
+    let password = "";
+
+    proc.stderr.on("data", async function (data) {
+      stderr += data;
+      host.log("" + data);
+      const line = "" + data;
+      if (line.indexOf("Sorry, try again") >= 0) {
+        password =
+          (await host.showInputBox({
+            placeHolder: "please input your password",
+          })) || "";
+      }
+      if (line.indexOf("[sudo] password for") >= 0) {
+        password =
+          (await host.showInputBox({
+            placeHolder: "please input your password",
+          })) || "";
+        proc.stdin.write(`${password}\n`, (err) => {
+          console.log("write " + password);
+        });
+      }
+    });
+  });
+}
+
 export async function startPortForward(
   host: Host,
   kubeconfigPath: string,
@@ -251,69 +313,7 @@ export async function startPortForward(
     } ${pod ? `--pod ${pod}` : ""} --way ${way}`
   );
 
-  function isSudo(ports: string[] | undefined) {
-    let sudo = false;
-    if (!ports) {
-      return sudo;
-    }
-    ports.forEach((portStr) => {
-      const localPort = portStr.split(":")[0];
-      if (localPort && Number(localPort) < 1024 && host.isLinux()) {
-        sudo = true;
-      }
-    });
-
-    return sudo;
-  }
-
   const sudo = isSudo(ports);
-
-  function sudoPortforward(command: string) {
-    return new Promise((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      const env = Object.assign(process.env, { DISABLE_SPINNER: true });
-      logger.info(`[cmd] ${command}`);
-      const proc = spawn(command, [], { shell: true, env });
-      let stdout = "";
-      let stderr = "";
-      let err = `execute command fail: ${command}`;
-      proc.on("close", (code) => {
-        if (code === 0) {
-          resolve({ stdout, stderr, code });
-        } else {
-          reject(new Error(stderr || err));
-        }
-      });
-
-      proc.stdout.on("data", function (data) {
-        stdout += data;
-        host.log("" + data);
-      });
-
-      let password = "";
-
-      proc.stderr.on("data", async function (data) {
-        stderr += data;
-        host.log("" + data);
-        const line = "" + data;
-        if (line.indexOf("Sorry, try again") >= 0) {
-          password =
-            (await host.showInputBox({
-              placeHolder: "please input your password",
-            })) || "";
-        }
-        if (line.indexOf("[sudo] password for") >= 0) {
-          password =
-            (await host.showInputBox({
-              placeHolder: "please input your password",
-            })) || "";
-          proc.stdin.write(`${password}\n`, (err) => {
-            console.log("write " + password);
-          });
-        }
-      });
-    });
-  }
 
   host.log(
     `[cmd] ${sudo ? `sudo -S ${portForwardCommand}` : portForwardCommand}`,
@@ -344,11 +344,17 @@ export async function endPortForward(
     `port-forward end ${appName} -d ${workloadName} -p ${port} --type ${resourceType}`
   );
 
-  host.log(`[cmd] ${endPortForwardCommand}`, true);
+  const sudo = isSudo([port]);
 
-  await execChildProcessAsync(host, endPortForwardCommand, [], {
-    dialog: `End port-forward (${appName}/${workloadName}) fail`,
-  });
+  if (sudo) {
+    host.log(`[cmd] sudo -S ${endPortForwardCommand}`, true);
+    await sudoPortforward(`sudo -S ${endPortForwardCommand}`);
+  } else {
+    host.log(`[cmd] ${endPortForwardCommand}`, true);
+    await execChildProcessAsync(host, endPortForwardCommand, [], {
+      dialog: `End port-forward (${appName}/${workloadName}) fail`,
+    });
+  }
 }
 
 export async function syncFile(
