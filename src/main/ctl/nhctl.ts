@@ -258,7 +258,7 @@ export async function startPortForward(
     }
     ports.forEach((portStr) => {
       const localPort = portStr.split(":")[0];
-      if (localPort && Number(localPort) < 1024) {
+      if (localPort && Number(localPort) < 1024 && host.isLinux()) {
         sudo = true;
       }
     });
