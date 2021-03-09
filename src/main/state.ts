@@ -1,13 +1,54 @@
 import * as vscode from "vscode";
+import * as _ from "lodash";
+
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
+import host from "./host";
+import logger from "./utils/logger";
 
 class State {
   private login = false;
 
   private stateMap = new Map<string, any>();
   private nodeMap = new Map<string, BaseNocalhostNode>();
+  private dataMap = new Map<string, object>();
+  public k8sFolderMap = new Map<string, boolean>();
+
+  private renderMessage = new Map<string, number>();
 
   private running = false;
+
+  constructor() {
+    setInterval(() => {
+      this.consume();
+    }, 500);
+  }
+
+  private consume() {
+    this.renderMessage.forEach((item, key) => {
+      vscode.commands.executeCommand("Nocalhost.refresh", this.getNode(key));
+      this.renderMessage.delete(key);
+    });
+  }
+
+  public setData(id: string, data: object, isInit?: boolean) {
+    const currentData = this.dataMap.get(id);
+    const isSame = _.isEqual(currentData, data);
+    this.dataMap.set(id, data);
+    if (!isSame && !isInit) {
+      this.renderMessage.set(id, new Date().getTime());
+      logger.info("渲染节点：" + id);
+    } else {
+      logger.info("is first render or is same");
+    }
+  }
+
+  public getData(id: string) {
+    return this.dataMap.get(id);
+  }
+
+  public clearAllData() {
+    this.dataMap.clear();
+  }
 
   public getNode(id: string | undefined) {
     if (id) {

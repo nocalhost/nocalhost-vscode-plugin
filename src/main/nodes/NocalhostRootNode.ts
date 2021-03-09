@@ -1,15 +1,16 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { getApplication } from "../api";
+import { ApplicationInfo, getApplication } from "../api";
 import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR, USERINFO } from "../constants";
 import { AppNode } from "./AppNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import host from "../host";
-import DataCenter from "../common/DataCenter";
+// import DataCenter from "../common/DataCenter";
 import logger from "../utils/logger";
+import state from "../state";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<AppNode | NocalhostAccountNode> = [];
@@ -17,9 +18,20 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     return NocalhostRootNode.childNodes;
   }
 
+  public async updateData(isInit?: boolean): Promise<any> {
+    const res = await getApplication();
+    state.setData(this.getNodeStateId(), res, true);
+
+    state.setData(this.getNodeStateId(), res, isInit);
+
+    return res;
+  }
+
   public label: string = "Nocalhost";
   public type = ROOT;
-  constructor(public parent: BaseNocalhostNode | null) {}
+  constructor(public parent: BaseNocalhostNode | null) {
+    state.setNode(this.getNodeStateId(), this);
+  }
 
   getParent(element: BaseNocalhostNode): BaseNocalhostNode | null | undefined {
     return;
@@ -28,9 +40,12 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<Array<AppNode | NocalhostAccountNode>> {
-    DataCenter.getInstance().setApplications();
+    // DataCenter.getInstance().setApplications();
+    let res = state.getData(this.getNodeStateId()) as ApplicationInfo[];
 
-    const res = await getApplication();
+    if (!res) {
+      res = await this.updateData(true);
+    }
     NocalhostRootNode.childNodes = res.map((app) => {
       let context = app.context;
       let obj: {
