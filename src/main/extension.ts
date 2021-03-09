@@ -36,6 +36,8 @@ import TextDocumentContentProvider from "./textDocumentContentProvider";
 import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
+import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
+import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -52,6 +54,20 @@ export async function activate(context: vscode.ExtensionContext) {
   let nocalhostFileSystemProvider = new NocalhostFileSystemProvider();
   appTreeView = vscode.window.createTreeView("Nocalhost", {
     treeDataProvider: appTreeProvider,
+  });
+
+  appTreeView.onDidExpandElement((e) => {
+    const node = e.element;
+    if (node instanceof KubernetesResourceFolder) {
+      state.k8sFolderMap.set(node.getNodeStateId(), true);
+    }
+  });
+
+  appTreeView.onDidCollapseElement((e) => {
+    const node = e.element;
+    if (node instanceof KubernetesResourceFolder) {
+      state.k8sFolderMap.set(node.getNodeStateId(), false);
+    }
   });
 
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
@@ -94,6 +110,21 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   launchDevspace();
+
+  setInterval(async () => {
+    const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+    if (rootNode) {
+      await rootNode.updateData();
+    }
+    for (const [id, expanded] of state.k8sFolderMap) {
+      if (expanded) {
+        const node = state.getNode(id) as KubernetesResourceFolder;
+        if (node) {
+          await node.updateData();
+        }
+      }
+    }
+  }, 5 * 1000);
 }
 
 function launchDevspace() {
