@@ -110,21 +110,6 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   launchDevspace();
-
-  setInterval(async () => {
-    const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
-    if (rootNode) {
-      await rootNode.updateData();
-    }
-    for (const [id, expanded] of state.k8sFolderMap) {
-      if (expanded) {
-        const node = state.getNode(id) as KubernetesResourceFolder;
-        if (node) {
-          await node.updateData();
-        }
-      }
-    }
-  }, 5 * 1000);
 }
 
 function launchDevspace() {

@@ -3,6 +3,9 @@ import { Progress } from "vscode";
 import * as shell from "./ctl/shell";
 import { NOCALHOST_INSTALLATION_LINK } from "./constants";
 import { checkVersion } from "./ctl/nhctl";
+import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
+import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
+import state from "./state";
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -25,6 +28,37 @@ export class Host implements vscode.Disposable {
 
   public setContext(context: vscode.ExtensionContext) {
     this.context = context;
+  }
+
+  private autoRefreshTimeId: NodeJS.Timeout | null = null;
+
+  public stopAutoRefresh() {
+    if (this.autoRefreshTimeId) {
+      clearInterval(this.autoRefreshTimeId);
+      this.autoRefreshTimeId = null;
+    }
+  }
+
+  public startAutoRefresh() {
+    if (this.autoRefreshTimeId) {
+      clearInterval(this.autoRefreshTimeId);
+      this.autoRefreshTimeId = null;
+    }
+
+    this.autoRefreshTimeId = setInterval(async () => {
+      const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+      if (rootNode) {
+        await rootNode.updateData();
+      }
+      for (const [id, expanded] of state.k8sFolderMap) {
+        if (expanded) {
+          const node = state.getNode(id) as KubernetesResourceFolder;
+          if (node) {
+            await node.updateData();
+          }
+        }
+      }
+    }, 5 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {
