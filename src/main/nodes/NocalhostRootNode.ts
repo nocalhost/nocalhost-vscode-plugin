@@ -20,7 +20,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
   public async updateData(isInit?: boolean): Promise<any> {
     const res = await getApplication();
-    state.setData(this.getNodeStateId(), res, true);
 
     state.setData(this.getNodeStateId(), res, isInit);
 

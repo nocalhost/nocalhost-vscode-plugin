@@ -36,9 +36,7 @@ class State {
     this.dataMap.set(id, data);
     if (!isSame && !isInit) {
       this.renderMessage.set(id, new Date().getTime());
-      logger.info("渲染节点：" + id);
-    } else {
-      logger.info("is first render or is same");
+      logger.info("render node id: " + id);
     }
   }
 
@@ -72,6 +70,11 @@ class State {
     await vscode.commands.executeCommand("setContext", "login", state);
     await vscode.commands.executeCommand("Nocalhost.refresh");
     this.login = state;
+    if (this.login) {
+      host.startAutoRefresh();
+    } else {
+      host.stopAutoRefresh();
+    }
   }
 
   setRunning(running: boolean) {
