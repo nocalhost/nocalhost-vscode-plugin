@@ -36,9 +36,7 @@ class State {
     this.dataMap.set(id, data);
     if (!isSame && !isInit) {
       this.renderMessage.set(id, new Date().getTime());
-      logger.info("渲染节点：" + id);
-    } else {
-      logger.info("is first render or is same");
+      logger.info("render node id: " + id);
     }
   }
 
