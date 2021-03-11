@@ -72,6 +72,11 @@ class State {
     await vscode.commands.executeCommand("setContext", "login", state);
     await vscode.commands.executeCommand("Nocalhost.refresh");
     this.login = state;
+    if (this.login) {
+      host.startAutoRefresh();
+    } else {
+      host.stopAutoRefresh();
+    }
   }
 
   setRunning(running: boolean) {
