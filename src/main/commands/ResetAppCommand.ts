@@ -31,7 +31,7 @@ export default class ResetAppCommand implements ICommand {
     state.setAppState(appNode.name, "uninstalling", true);
     appNode.collapsis();
     vscode.commands.executeCommand("Nocalhost.refresh");
-    await this.uninstall(
+    await this.reset(
       host,
       appNode.getKubeConfigPath(),
       appNode.name,
@@ -45,20 +45,20 @@ export default class ResetAppCommand implements ICommand {
     });
   }
 
-  private async uninstall(
+  private async reset(
     host: Host,
     kubeconfigPath: string,
     appName: string,
     appId: number,
     devSpaceId: number
   ) {
-    host.log(`Uninstalling application: ${appName}`, true);
-    host.showInformationMessage(`Uninstalling application: ${appName}`);
-    await nhctl.uninstall(host, kubeconfigPath, appName, true);
+    host.log(`Reseting application: ${appName}`, true);
+    host.showInformationMessage(`Reseting application: ${appName}`);
+    await nhctl.resetApp(kubeconfigPath, appName);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     host.removeGlobalState(appName);
     state.delete(appName);
-    host.log(`Application ${appName} uninstalled`, true);
-    host.showInformationMessage(`Application ${appName} uninstalled`);
+    host.log(`Application ${appName} reset`, true);
+    host.showInformationMessage(`Application ${appName} reset`);
   }
 }
