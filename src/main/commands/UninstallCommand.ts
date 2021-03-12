@@ -31,7 +31,6 @@ export default class UninstallCommand implements ICommand {
     }
 
     state.setAppState(appNode.name, "uninstalling", true);
-    appNode.collapsis();
     vscode.commands.executeCommand("Nocalhost.refresh");
     host.disposeApp(appNode.name);
     await this.uninstall(
@@ -55,7 +54,7 @@ export default class UninstallCommand implements ICommand {
   ) {
     host.log(`Uninstalling application: ${appName}`, true);
     host.getOutputChannel().show(true);
-    await nhctl.uninstall(host, kubeconfigPath, appName);
+    await nhctl.uninstall(host, kubeconfigPath, appName, true);
     await updateAppInstallStatus(appId, devSpaceId, 0);
     host.removeGlobalState(appName);
     state.delete(appName);
