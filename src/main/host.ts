@@ -62,21 +62,22 @@ export class Host implements vscode.Disposable {
           const node = state.getNode(id) as KubernetesResourceFolder;
           if (node) {
             // filter parent is close
-            function isClose(parentNode: BaseNocalhostNode): boolean {
-              const child = parentNode.getParent();
-              if (!child) {
-                return false;
-              }
-              if (child instanceof NocalhostFolderNode && !child.isExpand) {
-                return true;
-              }
+            // function isClose(parentNode: BaseNocalhostNode): boolean {
+            //   const child = parentNode.getParent();
+            //   if (!child) {
+            //     return false;
+            //   }
+            //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
+            //     return true;
+            //   }
 
-              return isClose(child);
-            }
-            const close = isClose(node);
-            if (!close) {
-              await node.updateData();
-            }
+            //   return isClose(child);
+            // }
+            // const close = isClose(node);
+            await node.updateData().catch(() => {});
+            // if (!close) {
+            //   await node.updateData();
+            // }
           }
         }
       }

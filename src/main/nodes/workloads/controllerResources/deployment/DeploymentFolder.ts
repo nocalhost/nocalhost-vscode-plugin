@@ -25,7 +25,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     );
     const list = JSON.parse(res as string) as List;
     const appNode = this.getAppNode();
-    
+
     const appInfo = await appNode.freshApplicationInfo();
     const appConfig = await ConfigService.getAppConfig(
       appNode.getKubeConfigPath(),
