@@ -29,7 +29,6 @@ export default class ResetAppCommand implements ICommand {
     }
 
     state.setAppState(appNode.name, "uninstalling", true);
-    appNode.collapsis();
     vscode.commands.executeCommand("Nocalhost.refresh");
     await this.reset(
       host,

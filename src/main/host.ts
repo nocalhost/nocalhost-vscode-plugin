@@ -6,6 +6,8 @@ import { checkVersion } from "./ctl/nhctl";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
+import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
+import { BaseNocalhostNode } from "./nodes/types/nodeType";
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -59,7 +61,22 @@ export class Host implements vscode.Disposable {
         if (expanded) {
           const node = state.getNode(id) as KubernetesResourceFolder;
           if (node) {
-            await node.updateData();
+            // filter parent is close
+            function isClose(parentNode: BaseNocalhostNode): boolean {
+              const child = parentNode.getParent();
+              if (!child) {
+                return false;
+              }
+              if (child instanceof NocalhostFolderNode && !child.isExpand) {
+                return true;
+              }
+
+              return isClose(child);
+            }
+            const close = isClose(node);
+            if (!close) {
+              await node.updateData();
+            }
           }
         }
       }

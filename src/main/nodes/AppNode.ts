@@ -266,21 +266,6 @@ export class AppNode extends NocalhostFolderNode {
     });
   }
 
-  collapsis(): void {
-    state.set(this.getNodeStateId(), vscode.TreeItemCollapsibleState.Collapsed);
-  }
-
-  expanded(): void {
-    state.set(this.getNodeStateId(), vscode.TreeItemCollapsibleState.Expanded);
-  }
-
-  expandWorkloadNode(): void {
-    state.set(
-      `${this.getNodeStateId()}${ID_SPLIT}Workloads`,
-      vscode.TreeItemCollapsibleState.Expanded
-    );
-  }
-
   createChild(type: string) {
     let node: BaseNocalhostNode;
     switch (type) {

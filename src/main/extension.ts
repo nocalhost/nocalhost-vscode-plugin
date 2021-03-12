@@ -38,6 +38,7 @@ import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
+import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -61,12 +62,19 @@ export async function activate(context: vscode.ExtensionContext) {
     if (node instanceof KubernetesResourceFolder) {
       state.k8sFolderMap.set(node.getNodeStateId(), true);
     }
+
+    if (node instanceof NocalhostFolderNode) {
+      node.isExpand = true;
+    }
   });
 
   appTreeView.onDidCollapseElement((e) => {
     const node = e.element;
     if (node instanceof KubernetesResourceFolder) {
       state.k8sFolderMap.set(node.getNodeStateId(), false);
+    }
+    if (node instanceof NocalhostFolderNode) {
+      node.isExpand = false;
     }
   });
 

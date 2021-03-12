@@ -169,15 +169,6 @@ export default class InstallCommand implements ICommand {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
     });
-    // make siblings collapsis
-    const siblings: (
-      | AppNode
-      | NocalhostAccountNode
-    )[] = await appNode.siblings();
-    siblings.forEach((item) => {
-      const node = item as AppNode;
-      node.collapsis();
-    });
 
     await this.startInstall(
       appNode,
@@ -294,8 +285,6 @@ export default class InstallCommand implements ICommand {
       refOrVersion,
       local
     );
-    appNode.expanded();
-    appNode.expandWorkloadNode();
 
     // await host.delay(1000);
     const nocalhostConfig = await appNode.getNocalhostConfig();

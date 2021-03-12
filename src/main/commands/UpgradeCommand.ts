@@ -109,15 +109,7 @@ export default class UpgradeCommand implements ICommand {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
     });
-    // make siblings collapsis
-    const siblings: (
-      | AppNode
-      | NocalhostAccountNode
-    )[] = await appNode.siblings();
-    siblings.forEach((item) => {
-      const node = item as AppNode;
-      node.collapsis();
-    });
+
     // end port
     await host.showProgressing(`Ending port-forward`, async (progress) => {
       await this.endAllPortForward(appNode);
@@ -133,10 +125,6 @@ export default class UpgradeCommand implements ICommand {
         local,
         refOrVersion
       )
-      .then(() => {
-        appNode.expanded();
-        appNode.expandWorkloadNode();
-      })
       .finally(() => {
         state.deleteAppState(appNode.name, "upgrading", {
           refresh: true,
