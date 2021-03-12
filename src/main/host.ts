@@ -20,8 +20,13 @@ export class Host implements vscode.Disposable {
     100
   );
   private newTerminal!: vscode.Terminal | null;
-  private debugDisposes: Array<{ dispose: () => any }> = [];
 
+  private appDisposesMap = new Map<
+    string,
+    Map<string, Array<{ dispose: () => any }>>
+  >();
+
+  // TODO: DELETE
   private bookInfoDisposes: Array<{ dispose: () => any }> = [];
 
   private context: vscode.ExtensionContext | null = null;
@@ -109,16 +114,51 @@ export class Host implements vscode.Disposable {
     return this.context.workspaceState.update(key, null);
   }
 
-  public pushDebugDispose(item: { dispose: () => any }) {
-    this.debugDisposes.push(item);
+  public disposeApp(id: string) {
+    const workloadMap = this.appDisposesMap.get(id);
+    if (!workloadMap) {
+      return;
+    }
+
+    workloadMap.forEach((arr, key) => {
+      this.disposeWorkload(id, key);
+    });
+
+    workloadMap.clear();
+    this.appDisposesMap.delete(id);
   }
 
-  public disposeDebug() {
-    this.debugDisposes.map((item) => {
-      if (item) {
-        item.dispose();
-      }
+  public disposeWorkload(appId: string, id: string) {
+    const workloadMap = this.appDisposesMap.get(appId);
+    if (!workloadMap) {
+      return;
+    }
+    const arr = workloadMap.get(id);
+    if (!arr) {
+      return;
+    }
+
+    arr.forEach((obj) => {
+      obj.dispose();
     });
+
+    workloadMap.delete(id);
+  }
+
+  public pushDispose(appId: string, id: string, obj: { dispose: () => any }) {
+    let workloadMap = this.appDisposesMap.get(appId);
+    if (!workloadMap) {
+      workloadMap = new Map();
+      this.appDisposesMap.set(appId, workloadMap);
+    }
+
+    let arr = workloadMap.get(id);
+    if (!arr) {
+      arr = [];
+      workloadMap.set(id, arr);
+    }
+
+    arr.push(obj);
   }
 
   public pushBookInfoDispose(item: { dispose: () => any }) {
@@ -255,11 +295,15 @@ export class Host implements vscode.Disposable {
   dispose() {
     this.statusBar.dispose();
     this.outputChannel.dispose();
-    this.disposeDebug();
     this.disposeBookInfo();
     if (this.newTerminal) {
       this.newTerminal.dispose();
     }
+
+    this.appDisposesMap.forEach((m, key) => {
+      this.disposeApp(key);
+    });
+    this.appDisposesMap = new Map();
   }
 
   getCurrentRootPath() {

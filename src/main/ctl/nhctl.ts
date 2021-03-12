@@ -389,7 +389,6 @@ export async function endDevMode(
         `dev end ${appName} -d ${workLoadName} `
       );
       host.log(`[cmd] ${end}`, true);
-      host.disposeDebug();
       await execChildProcessAsync(host, end, [], {
         dialog: `End devMode (${appName}/${workLoadName}) fail`,
       });

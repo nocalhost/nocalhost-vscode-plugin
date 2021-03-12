@@ -21,6 +21,7 @@ export default class EndDevModeCommand implements ICommand {
     }
     const appNode = node.getAppNode();
     host.getOutputChannel().show(true);
+    host.disposeWorkload(appNode.name, node.name);
     await nhctl.endDevMode(
       host,
       node.getKubeConfigPath(),

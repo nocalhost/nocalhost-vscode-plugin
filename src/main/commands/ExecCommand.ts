@@ -32,16 +32,22 @@ export default class ExecCommand implements ICommand {
     if (!(node instanceof Pod)) {
       const status = await node.getStatus();
       if (status === DeploymentStatus.developing) {
-        await this.opendevSpaceExec(
+        const terminal = await this.opendevSpaceExec(
           node.getAppName(),
           node.name,
           "nocalhost-dev",
           node.getKubeConfigPath()
         );
+        host.pushDispose(node.getAppName(), node.name, terminal);
         return;
       }
     }
-    this.openExec(node, result.podName, result.containerName);
+    const terminal = await this.openExec(
+      node,
+      result.podName,
+      result.containerName
+    );
+    host.pushDispose(node.getAppName(), node.name, terminal);
   }
 
   private async getDefaultShell(
@@ -86,9 +92,11 @@ export default class ExecCommand implements ICommand {
       workloadName
     );
     terminalDisposed.show();
-    host.pushDebugDispose(terminalDisposed);
+
     host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
+
+    return terminalDisposed;
   }
 
   private async execCore(
@@ -114,7 +122,7 @@ export default class ExecCommand implements ICommand {
       podName
     );
     terminalDisposed.show();
-    host.pushDebugDispose(terminalDisposed);
+    return terminalDisposed;
   }
 
   /**
@@ -128,7 +136,7 @@ export default class ExecCommand implements ICommand {
     podName: string,
     container: string
   ) {
-    await this.execCore(node.getKubeConfigPath(), podName, container);
+    return await this.execCore(node.getKubeConfigPath(), podName, container);
   }
 
   async getPodAndContainer(node: ControllerNodeApi | Pod) {

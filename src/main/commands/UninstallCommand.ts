@@ -33,6 +33,7 @@ export default class UninstallCommand implements ICommand {
     state.setAppState(appNode.name, "uninstalling", true);
     appNode.collapsis();
     vscode.commands.executeCommand("Nocalhost.refresh");
+    host.disposeApp(appNode.name);
     await this.uninstall(
       host,
       appNode.getKubeConfigPath(),
