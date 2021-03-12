@@ -47,14 +47,53 @@ export default class PortForwardCommand implements ICommand {
       return;
     }
 
-    let placeHolder = "eg: 1234:1234";
-    if (node instanceof Deployment) {
+    const reg = /^([1-9][0-9]*)?:?([1-9][0-9]*)$/;
+    const reg2 = /^([1-9][0-9]*)?:([1-9][0-9]*)(,([1-9][0-9]*)?:([1-9][0-9]*))*$/;
+    let expReg = reg;
+    let placeHolder = "1234:1234";
+    if (node instanceof Deployment || node instanceof StatefulSet) {
       placeHolder = "single: 1234:1234  multiple: 1234:1234,2345:2345";
+      expReg = reg2;
     }
 
     let portMap: string | undefined = "";
+    function validate(value: string) {
+      const match = expReg.exec(value);
+      if (!match) {
+        return "please input correct string; example: " + placeHolder;
+      }
+      const errTip = "the number of port must be less than 65536";
+      function check(port: string | null) {
+        if (!port) {
+          return true;
+        }
+        if (port && Number(port) < 65536) {
+          return true;
+        }
+        return false;
+      }
+      const checkPort = new Array<string>();
+      if (node instanceof Deployment || node instanceof StatefulSet) {
+        checkPort.push(match[1], match[2], match[4], match[5]);
+      } else {
+        checkPort.push(match[1], match[2]);
+      }
+      const errors = checkPort.filter((value) => {
+        const result = check(value);
+        if (!result) {
+          return true;
+        }
+
+        return false;
+      });
+      if (errors.length > 0) {
+        return errTip;
+      }
+      return undefined;
+    }
     portMap = await vscode.window.showInputBox({
       placeHolder: placeHolder,
+      validateInput: validate,
     });
     if (!portMap) {
       return;
