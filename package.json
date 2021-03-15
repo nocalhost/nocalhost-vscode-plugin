@@ -26,7 +26,7 @@
     "yamlValidation": [
       {
         "fileMatch": ".nocalhost/*.yaml",
-        "url": "./schemas/nocalhost.config.json"
+        "url": "./schemas/nocalhost.configV2.json"
       }
     ],
     "viewsContainers": {
