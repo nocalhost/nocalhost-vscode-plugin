@@ -153,6 +153,11 @@
           "group": "inline@1"
         },
         {
+          "command": "Nocalhost.EditAppConfig",
+          "when": "viewItem =~ /^application-installed/i",
+          "group": "inline@0"
+        },
+        {
           "command": "Nocalhost.exec",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running)/i",
           "group": "1"
@@ -352,6 +357,14 @@
         "icon": {
           "dark": "images/dark/setting-warning.svg",
           "light": "images/light/setting-warning.svg"
+        }
+      },
+      {
+        "command": "Nocalhost.EditAppConfig",
+        "title": "%Config%",
+        "icon": {
+          "dark": "images/dark/setting-normal.svg",
+          "light": "images/light/setting-normal.svg"
         }
       },
       {

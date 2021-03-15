@@ -172,6 +172,13 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
               const obj: any = {};
               obj[key] = appInfo[key];
               result = this.stringify(obj, style) || "";
+            } else {
+              // edit app config
+              let appConfigInfo = await ConfigService.getAppAllConfig(
+                kubeConfigPath,
+                appName
+              );
+              result = this.stringify(appConfigInfo, style) as string;
             }
           }
         } else if (type === "helm-value" && paths[2] === "app") {
@@ -272,8 +279,11 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           }
         } else if (key) {
           appInfo[key] = originData;
+        } else {
+          await ConfigService.writeAppConfig(kubeConfigPath, appName, data);
+          return;
         }
-        destData = Buffer.from(this.stringify(appInfo, "yaml") || "", "utf-8");
+        destData = Buffer.from(this.stringify(appInfo, style) || "", "utf-8");
       }
     } else if (type === "helm-value" && paths[2] === "app") {
       // NocalhostRW://nh/helm-value/app/${appNode.name}.yaml

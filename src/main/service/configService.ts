@@ -65,6 +65,19 @@ export interface NocalhostConfig {
   onPostInstall?: Array<JobConfig>;
   onPreUninstall?: Array<JobConfig>;
   onPostUninstall?: Array<JobConfig>;
+  env?: Array<{
+    name: string;
+    value: string;
+  }>;
+  envFrom?: {
+    envFile?: Array<{
+      path: string;
+    }>;
+  };
+  helmValues?: Array<{
+    name: string;
+    value: string;
+  }>;
   services: Array<NocalhostServiceConfig>;
 }
 
@@ -129,5 +142,22 @@ export default class ConfigService {
     }
 
     return containerConfig;
+  }
+
+  static async getAppAllConfig(kubeConfigPath: string, appName: string) {
+    const configStr = await nhctl.getAppConfig(kubeConfigPath, appName);
+    const config = yaml.parse(configStr) as NocalhostConfig;
+
+    return config;
+  }
+
+  static async writeAppConfig(
+    kubeConfigPath: string,
+    appName: string,
+    config: NocalhostConfig
+  ) {
+    let objJsonStr = JSON.stringify(config);
+    let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
+    await nhctl.editAppConfig(kubeConfigPath, appName, objJsonB64);
   }
 }

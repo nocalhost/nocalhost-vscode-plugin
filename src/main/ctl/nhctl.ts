@@ -471,6 +471,28 @@ export async function editConfig(
   return result.stdout;
 }
 
+export async function getAppConfig(kubeConfigPath: string, appName: string) {
+  const configCommand = nhctlCommand(
+    kubeConfigPath,
+    `config get ${appName} --app-config`
+  );
+  const result = await execAsyncWithReturn(configCommand, []);
+  return result.stdout;
+}
+
+export async function editAppConfig(
+  kubeConfigPath: string,
+  appName: string,
+  contents: string
+) {
+  const configCommand = nhctlCommand(
+    kubeConfigPath,
+    `config edit ${appName} --app-config -c ${contents}`
+  );
+  const result = await execAsyncWithReturn(configCommand, []);
+  return result.stdout;
+}
+
 export async function resetApp(kubeConfigPath: string, appName: string) {
   await host.showProgressing(`Reset : ${appName}`, async (progress) => {
     const resetCommand = nhctlCommand(kubeConfigPath, `reset ${appName}`);
