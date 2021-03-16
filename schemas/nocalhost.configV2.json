@@ -357,9 +357,9 @@
                           }
                         },
                         "useDevContainer": {
-                          "type": "string",
+                          "type": "boolean",
                           "description": "Use .dev-container of VSCode to specify DevContainer Image (Not currently implemented)",
-                          "default": ""
+                          "default": false
                         },
                         "sync": {
                           "type": "object",
