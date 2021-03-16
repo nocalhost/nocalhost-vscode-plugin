@@ -39,6 +39,7 @@ import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
+import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -111,6 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
     state.setLogin(true);
   }
   host.getOutputChannel().show(true);
+  await registerYamlSchemaSupport();
   await vscode.commands.executeCommand(
     "setContext",
     "extensionActivated",
