@@ -177,6 +177,7 @@ export class Deployment extends ControllerResourceNode {
               },
             },
           },
+          minItems: 1,
         },
       },
     };
