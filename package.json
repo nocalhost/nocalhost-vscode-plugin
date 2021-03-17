@@ -214,7 +214,7 @@
         },
         {
           "command": "Nocalhost.viewKubeConfig",
-          "when": "viewItem =~ /^application/i",
+          "when": "viewItem =~ /^devspace/i",
           "group": "navigation"
         }
       ]
