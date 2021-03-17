@@ -29,6 +29,7 @@ import PortForwardListCommand from "./PortForwardListCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
 import EditAppConfigCommand from "./EditAppConfigCommand";
+import ShowApplicationsCommand from "./ShowApplicationsCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -68,4 +69,5 @@ export default function initCommands(
   new OverrideSyncCommand(context);
   new UpgradeCommand(context);
   new EditAppConfigCommand(context);
+  new ShowApplicationsCommand(context);
 }

@@ -19,6 +19,7 @@ import host from "../host";
 import logger from "../utils/logger";
 import state from "../state";
 import { DevSpaceNode } from "./DevSpaceNode";
+import * as nhctl from "../ctl/nhctl";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<BaseNocalhostNode> = [];
@@ -30,8 +31,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     const res = await getApplication();
     const devSpaces = await getDevSpace();
     const applications = await getV2Application();
-
-    const obj = { devSpaces, applications, old: res };
+    const installedApps = await nhctl.getInstalledApp();
+    const obj = { devSpaces, applications, old: res, installedApps };
 
     state.setData(this.getNodeStateId(), obj, isInit);
     return obj;
@@ -56,6 +57,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       devSpaces: DevspaceInfo[];
       applications: V2ApplicationInfo[];
       old: ApplicationInfo[];
+      installedApps: nhctl.AllInstallAppInfo;
     };
 
     if (!res) {
@@ -112,11 +114,21 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         app
       );
     });
-    const devs = res.devSpaces.map((d) => {
+    const devs: DevSpaceNode[] = [];
+
+    for (const d of res.devSpaces) {
       const filePath = path.resolve(KUBE_CONFIG_DIR, `${d.id}_config`);
       this.writeFile(filePath, d.kubeconfig);
-      return new DevSpaceNode(this, d.namespace, d, res.applications);
-    });
+      let installedApps = res.installedApps[d.namespace];
+      const node = new DevSpaceNode(
+        this,
+        d.namespace,
+        d,
+        res.applications,
+        installedApps
+      );
+      devs.push(node);
+    }
     NocalhostRootNode.childNodes = NocalhostRootNode.childNodes.concat(devs);
 
     const userinfo = host.getGlobalState(USERINFO);
