@@ -5,20 +5,12 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { CONFIG_MAP_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List } from "../../types/resourceType";
+import { List, Resource } from "../../types/resourceType";
 import { ConfigMap } from "./ConfigMap";
 
 export class ConfigMapFolder extends KubernetesResourceFolder {
-  public async updateData(isInit?: boolean): Promise<any> {
-    const res = await kubectl.getResourceList(
-      this.getKubeConfigPath(),
-      "ConfigMaps"
-    );
-    const list = JSON.parse(res as string) as List;
-    state.setData(this.getNodeStateId(), list, isInit);
+  public resourceType: string = "ConfigMaps";
 
-    return list;
-  }
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
@@ -33,11 +25,11 @@ export class ConfigMapFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as List;
+    let list = state.getData(this.getNodeStateId()) as Resource[];
     if (!list) {
       this.updateData(true);
     }
-    const result: ConfigMap[] = list.items.map(
+    const result: ConfigMap[] = list.map(
       (item) =>
         new ConfigMap(this, item.metadata.name, item.metadata.name, item)
     );

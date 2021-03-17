@@ -1,13 +1,16 @@
 import state from "../../state";
 import * as vscode from "vscode";
 
+import * as kubectl from "../../ctl/kubectl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
 import { AppNode } from "../AppNode";
 import { BaseNocalhostNode } from "../types/nodeType";
+import { List } from "../types/resourceType";
 
 export abstract class KubernetesResourceFolder extends NocalhostFolderNode {
   public abstract label: string;
   public abstract type: string;
+  public abstract resourceType: string;
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     const collapseState =
       state.get(this.getNodeStateId()) ||
@@ -40,5 +43,38 @@ export abstract class KubernetesResourceFolder extends NocalhostFolderNode {
     return appNode.getKubeConfigPath();
   }
 
-  public abstract updateData(isInit?: boolean): Promise<any>;
+  public async updateData(isInit?: boolean): Promise<any> {
+    const res = await kubectl.getResourceList(
+      this.getKubeConfigPath(),
+      this.resourceType
+    );
+    const list = JSON.parse(res as string) as List;
+
+    const appNode = this.getAppNode();
+
+    const resource = list.items.filter((r) => {
+      if (
+        r.metadata &&
+        r.metadata["annotations"] &&
+        r.metadata["annotations"]["meta.nocalhost.sh/release-name"] ===
+          appNode.name
+      ) {
+        return true;
+      }
+      if (
+        !(
+          r.metadata &&
+          r.metadata["annotations"] &&
+          r.metadata["annotations"]["meta.nocalhost.sh/release-name"]
+        ) &&
+        appNode.name === "other"
+      ) {
+        return true;
+      }
+    });
+
+    state.setData(this.getNodeStateId(), resource, isInit);
+
+    return resource;
+  }
 }

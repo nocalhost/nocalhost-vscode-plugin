@@ -15,10 +15,11 @@ import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
-import { ApplicationInfo } from "../api";
+import { ApplicationInfo, V2ApplicationInfo } from "../api";
 import ConfigService, { NocalhostConfig } from "../service/configService";
 import host from "../host";
 import { SYNC_SERVICE } from "../commands/constants";
+import { DevSpaceNode } from "./DevSpaceNode";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -32,13 +33,13 @@ export class AppNode extends NocalhostFolderNode {
   public helmNHConfig: string;
   public kubeConfig: string;
   public resourceDir: Array<string>;
-  public info: ApplicationInfo;
-  public parent: NocalhostRootNode;
+  public info: V2ApplicationInfo | ApplicationInfo;
+  public parent: BaseNocalhostNode;
   // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
   private nocalhostConfig: NocalhostConfig | undefined;
   constructor(
-    parent: NocalhostRootNode,
+    parent: BaseNocalhostNode,
     installType: string,
     resourceDir: Array<string>,
     label: string,
@@ -49,7 +50,7 @@ export class AppNode extends NocalhostFolderNode {
     status: number,
     installStatus: number,
     kubeConfig: string,
-    info: ApplicationInfo // api info
+    info: V2ApplicationInfo | ApplicationInfo // api info
   ) {
     super();
     this.installType = installType;
@@ -87,7 +88,8 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   get namespace() {
-    return this.info.namespace;
+    const devspace = this.parent as DevSpaceNode;
+    return devspace.info.namespace;
   }
 
   public async getApplicationInfo() {
@@ -165,9 +167,10 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   public getKubeConfigPath() {
+    const devspace = this.getParent() as DevSpaceNode;
     const kubeconfigPath = path.resolve(
       KUBE_CONFIG_DIR,
-      `${this.id}_${this.devSpaceId}_config`
+      `${devspace.info.id}_config`
     );
 
     return path.normalize(kubeconfigPath);
@@ -192,17 +195,20 @@ export class AppNode extends NocalhostFolderNode {
       info = await this.getApplicationInfo();
       state.setData(this.getNodeStateId(), info, true);
     }
-    this.installStatus = info.installed ? 1 : 0;
-    let collapseState: vscode.TreeItemCollapsibleState;
-    if (this.unInstalled()) {
-      collapseState = vscode.TreeItemCollapsibleState.None;
-    } else {
-      collapseState =
-        state.get(this.getNodeStateId()) ||
-        vscode.TreeItemCollapsibleState.Collapsed;
-    }
+    this.installStatus = 1;
+    // let collapseState: vscode.TreeItemCollapsibleState;
+    // if (this.unInstalled()) {
+    //   collapseState = vscode.TreeItemCollapsibleState.None;
+    // } else {
+    //   collapseState =
+    //     state.get(this.getNodeStateId()) ||
+    //     vscode.TreeItemCollapsibleState.Collapsed;
+    // }
     // await this.getDevelopingNodes();
-    let treeItem = new vscode.TreeItem(this.label, collapseState);
+    let treeItem = new vscode.TreeItem(
+      this.label,
+      vscode.TreeItemCollapsibleState.Collapsed
+    );
     this.updateIcon(treeItem);
     this.updateContext(treeItem);
     this.updateSyncStatus();
@@ -256,14 +262,16 @@ export class AppNode extends NocalhostFolderNode {
     return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.label}`;
   }
 
-  getParent(): NocalhostRootNode {
+  getParent(): BaseNocalhostNode {
     return this.parent;
   }
 
   async siblings(): Promise<(AppNode | NocalhostAccountNode)[]> {
-    return (await this.parent.getChildren()).filter((item) => {
-      return item instanceof AppNode && item.id !== this.id;
-    });
+    // return (await this.parent.getChildren()).filter((item) => {
+    //   return item instanceof AppNode && item.id !== this.id;
+    // });
+
+    return [];
   }
 
   createChild(type: string) {
