@@ -113,8 +113,8 @@
       ],
       "view/item/context": [
         {
-          "command": "Nocalhost.installApp",
-          "when": "viewItem =~ /^application-notInstalled/i",
+          "command": "Nocalhost.showApp",
+          "when": "viewItem =~ /^devspace/i",
           "group": "inline@0"
         },
         {
@@ -267,9 +267,13 @@
         "icon": "$(sign-out)"
       },
       {
-        "command": "Nocalhost.installApp",
+        "command": "Nocalhost.showApp",
         "title": "Install App",
         "icon": "$(rocket)"
+      },
+      {
+        "command": "Nocalhost.installApp",
+        "title": "Install App"
       },
       {
         "command": "Nocalhost.upgradeApp",

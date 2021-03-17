@@ -8,6 +8,8 @@ export const START_DEV_MODE = "Nocalhost.startDevMode";
 export const END_DEV_MODE = "Nocalhost.endDevMode";
 export const RESET = "Nocalhost.reset";
 
+export const SHOW_APP = "Nocalhost.showApp";
+
 export const SWITCH_END_POINT = "Nocalhost.switchEndPoint";
 export const OPEN_END_POINT = "Nocalhost.openEndPoint";
 
