@@ -16,6 +16,23 @@ import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 
+export async function getInstalledAppByNamespace(
+  namespace: string
+): Promise<{ name: string; type: string }[]> {
+  const command = "nhctl list --yaml";
+  const result = await execAsyncWithReturn(command, []);
+
+  let obj: {
+    [key: string]: any;
+  } = {};
+
+  if (result && result.stdout) {
+    obj = yaml.parse(result.stdout);
+  }
+
+  return obj[namespace] || [];
+}
+
 export async function install(
   host: Host,
   kubeconfigPath: string,

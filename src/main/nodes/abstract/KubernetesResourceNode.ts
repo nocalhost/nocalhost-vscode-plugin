@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import state from "../../state";
 import { AppNode } from "../AppNode";
+import { DevSpaceNode } from "../DevSpaceNode";
 import { ID_SPLIT } from "../nodeContants";
 
 import { BaseNocalhostNode } from "../types/nodeType";
@@ -66,11 +67,13 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
 
   public getStorageClass() {
     const appNode = this.getAppNode();
-    return appNode.info.storageClass;
+    const devspace = appNode.getParent() as DevSpaceNode;
+    return devspace.info.storageClass;
   }
 
   public getDevStartAppendCommand() {
     const appNode = this.getAppNode();
-    return appNode.info.devStartAppendCommand;
+    const devspace = appNode.getParent() as DevSpaceNode;
+    return devspace.info.devStartAppendCommand;
   }
 }
