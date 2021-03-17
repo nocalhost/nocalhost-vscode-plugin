@@ -119,7 +119,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     for (const d of res.devSpaces) {
       const filePath = path.resolve(KUBE_CONFIG_DIR, `${d.id}_config`);
       this.writeFile(filePath, d.kubeconfig);
-      let installedApps = res.installedApps[d.namespace];
+      let installedApps = res.installedApps[d.namespace] || [];
       const node = new DevSpaceNode(
         this,
         d.namespace,
