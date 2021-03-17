@@ -27,7 +27,7 @@ export class ConfigMapFolder extends KubernetesResourceFolder {
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
     let list = state.getData(this.getNodeStateId()) as Resource[];
     if (!list) {
-      this.updateData(true);
+      list = await this.updateData(true);
     }
     const result: ConfigMap[] = list.map(
       (item) =>
