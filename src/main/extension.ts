@@ -37,7 +37,6 @@ import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
-import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 // import DataCenter from "./common/DataCenter/index";

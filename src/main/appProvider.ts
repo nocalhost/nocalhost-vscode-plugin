@@ -40,7 +40,6 @@ export default class NocalhostAppProvider
   }
 
   refresh(node?: BaseNocalhostNode) {
-    console.log("> refresh...");
     this.onDidChangeTreeDataEventEmitter.fire(node);
   }
 }

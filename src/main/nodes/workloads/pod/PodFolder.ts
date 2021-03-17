@@ -6,17 +6,12 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { PODS_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List } from "../../types/resourceType";
+import { List, Resource } from "../../types/resourceType";
 import { Pod } from "./Pod";
 
 export class PodFolder extends KubernetesResourceFolder {
-  public async updateData(isInit?: boolean): Promise<any> {
-    const res = await kubectl.getResourceList(this.getKubeConfigPath(), "Pods");
-    const list = JSON.parse(res as string) as List;
-    state.setData(this.getNodeStateId(), list, isInit);
+  public resourceType: string = "Pods";
 
-    return list;
-  }
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
@@ -30,11 +25,11 @@ export class PodFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as List;
-    if (!list) {
-      list = await this.updateData(true);
+    let resources = state.getData(this.getNodeStateId()) as Resource[];
+    if (!resources) {
+      resources = await this.updateData(true);
     }
-    const result: Pod[] = list.items.map(
+    const result: Pod[] = resources.map(
       (item) => new Pod(this, item.metadata.name, item.metadata.name, item)
     );
 

@@ -5,20 +5,11 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { STORAGE_CLASS_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List } from "../../types/resourceType";
+import { List, Resource } from "../../types/resourceType";
 import { StorageClass } from "./storageClass";
 
 export class StorageClassFolder extends KubernetesResourceFolder {
-  public async updateData(isInit?: boolean): Promise<any> {
-    const res = await kubectl.getResourceList(
-      this.getKubeConfigPath(),
-      "StorageClass"
-    );
-    const list = JSON.parse(res as string) as List;
-
-    state.setData(this.getNodeStateId(), list, isInit);
-    return list;
-  }
+  public resourceType: string = "StorageClass";
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
@@ -33,11 +24,11 @@ export class StorageClassFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as List;
+    let list = state.getData(this.getNodeStateId()) as Resource[];
     if (!list) {
       list = await this.updateData(true);
     }
-    const result: StorageClass[] = list.items.map(
+    const result: StorageClass[] = list.map(
       (item) =>
         new StorageClass(this, item.metadata.name, item.metadata.name, item)
     );

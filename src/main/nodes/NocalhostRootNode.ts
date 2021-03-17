@@ -1,7 +1,14 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { ApplicationInfo, getApplication } from "../api";
+import {
+  ApplicationInfo,
+  DevspaceInfo,
+  getApplication,
+  getDevSpace,
+  getV2Application,
+  V2ApplicationInfo,
+} from "../api";
 import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR, USERINFO } from "../constants";
 import { AppNode } from "./AppNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
@@ -11,19 +18,23 @@ import host from "../host";
 // import DataCenter from "../common/DataCenter";
 import logger from "../utils/logger";
 import state from "../state";
+import { DevSpaceNode } from "./DevSpaceNode";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
-  private static childNodes: Array<AppNode | NocalhostAccountNode> = [];
-  public static getChildNodes(): Array<AppNode | NocalhostAccountNode> {
+  private static childNodes: Array<BaseNocalhostNode> = [];
+  public static getChildNodes(): Array<BaseNocalhostNode> {
     return NocalhostRootNode.childNodes;
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
     const res = await getApplication();
+    const devSpaces = await getDevSpace();
+    const applications = await getV2Application();
 
-    state.setData(this.getNodeStateId(), res, isInit);
+    const obj = { devSpaces, applications, old: res };
 
-    return res;
+    state.setData(this.getNodeStateId(), obj, isInit);
+    return obj;
   }
 
   public label: string = "Nocalhost";
@@ -38,14 +49,19 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
   async getChildren(
     parent?: BaseNocalhostNode
-  ): Promise<Array<AppNode | NocalhostAccountNode>> {
+  ): Promise<Array<BaseNocalhostNode>> {
+    NocalhostRootNode.childNodes = [];
     // DataCenter.getInstance().setApplications();
-    let res = state.getData(this.getNodeStateId()) as ApplicationInfo[];
+    let res = state.getData(this.getNodeStateId()) as {
+      devSpaces: DevspaceInfo[];
+      applications: V2ApplicationInfo[];
+      old: ApplicationInfo[];
+    };
 
     if (!res) {
       res = await this.updateData(true);
     }
-    NocalhostRootNode.childNodes = res.map((app) => {
+    const appNode = res.old.map((app) => {
       let context = app.context;
       let obj: {
         url?: string;
@@ -96,11 +112,17 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         app
       );
     });
+    const devs = res.devSpaces.map((d) => {
+      const filePath = path.resolve(KUBE_CONFIG_DIR, `${d.id}_config`);
+      this.writeFile(filePath, d.kubeconfig);
+      return new DevSpaceNode(this, d.namespace, d, res.applications);
+    });
+    NocalhostRootNode.childNodes = NocalhostRootNode.childNodes.concat(devs);
 
     const userinfo = host.getGlobalState(USERINFO);
 
     const hasAccountNode: boolean = NocalhostRootNode.childNodes.some(
-      (node: AppNode | NocalhostAccountNode) => {
+      (node) => {
         return node instanceof NocalhostAccountNode;
       }
     );
@@ -141,7 +163,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(
       this.label,
-      vscode.TreeItemCollapsibleState.Expanded
+      vscode.TreeItemCollapsibleState.Collapsed
     );
     return treeItem;
   }

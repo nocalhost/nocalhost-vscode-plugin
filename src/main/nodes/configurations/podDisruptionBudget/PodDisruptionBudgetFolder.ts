@@ -5,20 +5,11 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { POD_DISRUPTION_BUDGET } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List } from "../../types/resourceType";
+import { List, Resource } from "../../types/resourceType";
 import { PodDisruptionBudget } from "./PodDisruptionBudget";
 
 export class PodDisruptionBudgetFolder extends KubernetesResourceFolder {
-  public async updateData(isInit?: boolean): Promise<any> {
-    const res = await kubectl.getResourceList(
-      this.getKubeConfigPath(),
-      "PodDisruptionBudget"
-    );
-    const list = JSON.parse(res as string) as List;
-    state.setData(this.getNodeStateId(), list, isInit);
-
-    return list;
-  }
+  public resourceType: string = "PodDisruptionBudget";
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
@@ -33,11 +24,11 @@ export class PodDisruptionBudgetFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as List;
+    let list = state.getData(this.getNodeStateId()) as Resource[];
     if (!list) {
       list = await this.updateData(true);
     }
-    const result: PodDisruptionBudget[] = list.items.map(
+    const result: PodDisruptionBudget[] = list.map(
       (item) =>
         new PodDisruptionBudget(
           this,

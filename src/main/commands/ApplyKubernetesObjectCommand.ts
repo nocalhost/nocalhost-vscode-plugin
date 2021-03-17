@@ -112,9 +112,11 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       return;
     }
     const path: string = target.fsPath || target.path;
-    const applications: Array<
-      AppNode | NocalhostAccountNode
-    > = NocalhostRootNode.getChildNodes();
+    // const applications: Array<
+    //   AppNode | NocalhostAccountNode
+    // > = NocalhostRootNode.getChildNodes();
+    // TODO:
+    const applications: Array<AppNode | NocalhostAccountNode> = [];
     if (applications.length === 0) {
       vscode.window.showWarningMessage("No application found.");
       return;
