@@ -122,7 +122,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       let installedApps = res.installedApps[d.namespace] || [];
       const node = new DevSpaceNode(
         this,
-        d.namespace,
+        d.spaceName,
         d,
         res.applications,
         installedApps
