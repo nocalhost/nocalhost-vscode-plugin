@@ -210,7 +210,6 @@ export default class InstallCommand implements ICommand {
       valuesStr,
       refOrVersion
     );
-    await updateAppInstallStatus(appId, devSpaceId, 1);
     host.setGlobalState(appName, {});
   }
 

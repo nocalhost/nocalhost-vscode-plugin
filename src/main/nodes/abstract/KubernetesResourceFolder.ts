@@ -5,7 +5,8 @@ import * as kubectl from "../../ctl/kubectl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
 import { AppNode } from "../AppNode";
 import { BaseNocalhostNode } from "../types/nodeType";
-import { List } from "../types/resourceType";
+import { List, Resource } from "../types/resourceType";
+import { DevSpaceNode } from "../DevSpaceNode";
 
 export abstract class KubernetesResourceFolder extends NocalhostFolderNode {
   public abstract label: string;
@@ -52,29 +53,83 @@ export abstract class KubernetesResourceFolder extends NocalhostFolderNode {
 
     const appNode = this.getAppNode();
 
-    const resource = list.items.filter((r) => {
-      if (
-        r.metadata &&
-        r.metadata["annotations"] &&
-        r.metadata["annotations"]["meta.nocalhost.sh/release-name"] ===
-          appNode.name
-      ) {
-        return true;
-      }
-      if (
-        !(
-          r.metadata &&
-          r.metadata["annotations"] &&
-          r.metadata["annotations"]["meta.nocalhost.sh/release-name"]
-        ) &&
-        appNode.name === "other"
-      ) {
-        return true;
-      }
-    });
+    const resource = this.filterResource(list.items, appNode);
 
     state.setData(this.getNodeStateId(), resource, isInit);
 
     return resource;
+  }
+
+  private isOther(
+    r: Resource,
+    appName: string,
+    installedAppName: Array<string>
+  ) {
+    if (appName !== "other") {
+      return false;
+    }
+    if (
+      !(
+        r.metadata &&
+        r.metadata["annotations"] &&
+        (r.metadata["annotations"]["meta.helm.sh/release-name"] ||
+          r.metadata["annotations"]["dev.nocalhost/application-name"])
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      r.metadata &&
+      r.metadata["annotations"] &&
+      r.metadata["annotations"]["dev.nocalhost/application-name"] &&
+      !installedAppName.includes(
+        r.metadata["annotations"]["dev.nocalhost/application-name"]
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      r.metadata &&
+      r.metadata["annotations"] &&
+      r.metadata["annotations"]["meta.helm.sh/release-name"] &&
+      !installedAppName.includes(
+        r.metadata["annotations"]["meta.helm.sh/release-name"]
+      )
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  public filterResource(resources: Array<Resource>, appNode: AppNode) {
+    return resources.filter((r) => {
+      if (
+        r.metadata &&
+        r.metadata["annotations"] &&
+        r.metadata["annotations"]["dev.nocalhost/application-name"] ===
+          appNode.name
+      ) {
+        return true;
+      }
+
+      if (
+        r.metadata &&
+        r.metadata["annotations"] &&
+        r.metadata["annotations"]["meta.helm.sh/release-name"] === appNode.name
+      ) {
+        return true;
+      }
+      const devspace = appNode.getParent() as DevSpaceNode;
+      const installedAppNames = devspace.installedApps.map((item) => item.name);
+
+      if (this.isOther(r, appNode.name, installedAppNames)) {
+        return true;
+      }
+
+      return false;
+    });
   }
 }

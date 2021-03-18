@@ -31,26 +31,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
       appNode.getKubeConfigPath(),
       appNode.name
     );
-    const resource = list.items.filter((r) => {
-      if (
-        r.metadata &&
-        r.metadata["annotations"] &&
-        r.metadata["annotations"]["meta.nocalhost.sh/release-name"] ===
-          appNode.name
-      ) {
-        return true;
-      }
-      if (
-        !(
-          r.metadata &&
-          r.metadata["annotations"] &&
-          r.metadata["annotations"]["meta.nocalhost.sh/release-name"]
-        ) &&
-        appNode.name === "other"
-      ) {
-        return true;
-      }
-    });
+    const resource = this.filterResource(list.items, appNode);
     const obj = {
       resource: resource,
       appInfo,
