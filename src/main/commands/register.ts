@@ -23,6 +23,7 @@ export default function registerCommand(
         state.setRunning(true);
         Promise.resolve(callback(...args))
           .catch((err) => {
+            state.setRunning(false);
             const errMessage = err.message ? err.message : err;
             host.showErrorMessage(errMessage);
           })
