@@ -37,7 +37,7 @@ export default class TextDocumentContentProvider
       const type: string = queryObj.type as string;
       const kind: string = queryObj.kind as string;
       const name: string = queryObj.name as string;
-      const kubeConfig: string = queryObj.kubeConfig as string;
+      const kubeConfig: string = queryObj.kubeConfigPath as string;
       switch (type) {
         case "k8s": {
           const result: ServiceResult = await services.fetchKubernetesResource(
