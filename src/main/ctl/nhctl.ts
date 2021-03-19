@@ -535,7 +535,7 @@ export async function editAppConfig(
 
 export async function resetApp(kubeConfigPath: string, appName: string) {
   await host.showProgressing(`Reset : ${appName}`, async (progress) => {
-    const resetCommand = nhctlCommand(kubeConfigPath, `reset ${appName}`);
+    const resetCommand = nhctlCommand(kubeConfigPath, `reset`);
     host.log(`[cmd] ${resetCommand}`, true);
     await execChildProcessAsync(host, resetCommand, [], {
       dialog: `reset (${appName}) fail`,

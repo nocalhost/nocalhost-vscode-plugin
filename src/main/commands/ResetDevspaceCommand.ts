@@ -30,6 +30,7 @@ export default class ResetDevspaceCommand implements ICommand {
 
     state.setAppState(node.info.spaceName, "uninstalling", true);
     vscode.commands.executeCommand("Nocalhost.refresh");
+    host.disposeDevspace(node.info.spaceName);
     await this.reset(
       host,
       node.getKubeConfigPath(),
