@@ -21,7 +21,9 @@ export default class ExecCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
-    await this.exec(node);
+    await host.showProgressing("opening ...", async () => {
+      await this.exec(node);
+    });
   }
 
   async exec(node: ControllerNodeApi | Pod) {
@@ -57,13 +59,23 @@ export default class ExecCommand implements ICommand {
   ) {
     let defaultShell = "sh";
     for (let i = 0; i < ExecCommand.defaultShells.length; i++) {
-      const shellObj = await shell.execAsyncWithReturn(
-        `kubectl exec ${podName} -c ${constainerName} --kubeconfig ${kubeConfigPath} -- which ${ExecCommand.defaultShells[i]}`,
-        []
-      );
-      if (shellObj.code === 0 && shellObj.stdout) {
-        defaultShell = ExecCommand.defaultShells[i];
-        break;
+      let notExist = false;
+      const shellObj = await shell
+        .execAsyncWithReturn(
+          `kubectl exec ${podName} -c ${constainerName} --kubeconfig ${kubeConfigPath} -- which ${ExecCommand.defaultShells[i]}`,
+          []
+        )
+        .catch(() => {
+          notExist = true;
+        });
+      if (notExist) {
+        continue;
+      } else {
+        const result = shellObj as shell.ShellResult;
+        if (result.code === 0 && result.stdout) {
+          defaultShell = ExecCommand.defaultShells[i];
+          break;
+        }
       }
     }
 

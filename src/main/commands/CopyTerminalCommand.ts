@@ -21,7 +21,9 @@ export default class CopyTerminalCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
-    await this.exec(node);
+    await host.showProgressing("copying ...", async () => {
+      await this.exec(node);
+    });
   }
 
   async exec(node: ControllerNodeApi | Pod) {
@@ -36,7 +38,7 @@ export default class CopyTerminalCommand implements ICommand {
         return;
       }
     }
-    this.openExec(node);
+    await this.openExec(node);
   }
 
   private async getDefaultShell(
@@ -46,13 +48,23 @@ export default class CopyTerminalCommand implements ICommand {
   ) {
     let defaultShell = "sh";
     for (let i = 0; i < CopyTerminalCommand.defaultShells.length; i++) {
-      const shellObj = await shell.execAsyncWithReturn(
-        `kubectl exec ${podName} -c ${constainerName} --kubeconfig ${kubeConfigPath} -- which ${CopyTerminalCommand.defaultShells[i]}`,
-        []
-      );
-      if (shellObj.code === 0 && shellObj.stdout) {
-        defaultShell = CopyTerminalCommand.defaultShells[i];
-        break;
+      let notExist = false;
+      const shellObj = await shell
+        .execAsyncWithReturn(
+          `kubectl exec ${podName} -c ${constainerName} --kubeconfig ${kubeConfigPath} -- which ${CopyTerminalCommand.defaultShells[i]}`,
+          []
+        )
+        .catch(() => {
+          notExist = true;
+        });
+      if (notExist) {
+        continue;
+      } else {
+        const result = shellObj as shell.ShellResult;
+        if (result.code === 0 && result.stdout) {
+          defaultShell = CopyTerminalCommand.defaultShells[i];
+          break;
+        }
       }
     }
 
