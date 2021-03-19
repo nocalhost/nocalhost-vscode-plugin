@@ -211,14 +211,14 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
         if (successMessage.length > 0) {
           value +=
             applyResults.length > 1
-              ? `${successMessage.length} success: ${successMessage.join(",")}.`
-              : `${successMessage.join(",")}.`;
+              ? `${successMessage.length} success: ${successMessage.join(",")}`
+              : `${successMessage.join(",")}`;
         }
         if (failureMessage.length > 0) {
           value +=
             applyResults.length > 1
-              ? `${failureMessage.length} failure: ${failureMessage.join(",")}.`
-              : `${failureMessage.join(",")}.`;
+              ? `${failureMessage.length} failure: ${failureMessage.join(",")}`
+              : `${failureMessage.join(",")}`;
         }
         const success: boolean = failureMessage.length === 0;
         if (success) {
