@@ -7,6 +7,7 @@ import { REFRESH, RESET } from "./constants";
 import registerCommand from "./register";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
+import { DevSpaceNode } from "../nodes/DevSpaceNode";
 
 export default class ResetCommand implements ICommand {
   command: string = RESET;
@@ -20,7 +21,9 @@ export default class ResetCommand implements ICommand {
     }
     const appName = node.getAppName();
     await nhctl.resetService(node.getKubeConfigPath(), appName, node.name);
-    host.disposeWorkload(appName, node.name);
+    const appNode = node.getAppNode();
+    const devspace = appNode.getParent() as DevSpaceNode;
+    host.disposeWorkload(devspace.info.spaceName, appName, node.name);
     vscode.commands.executeCommand(REFRESH, node);
     host.showInformationMessage(`reset service ${node.name}`);
   }

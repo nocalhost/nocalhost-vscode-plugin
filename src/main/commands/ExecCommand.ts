@@ -40,7 +40,12 @@ export default class ExecCommand implements ICommand {
           "nocalhost-dev",
           node.getKubeConfigPath()
         );
-        host.pushDispose(node.getAppName(), node.name, terminal);
+        host.pushDispose(
+          node.getSpaceName(),
+          node.getAppName(),
+          node.name,
+          terminal
+        );
         return;
       }
     }
@@ -49,7 +54,12 @@ export default class ExecCommand implements ICommand {
       result.podName,
       result.containerName
     );
-    host.pushDispose(node.getAppName(), node.name, terminal);
+    host.pushDispose(
+      node.getSpaceName(),
+      node.getAppName(),
+      node.name,
+      terminal
+    );
   }
 
   private async getDefaultShell(

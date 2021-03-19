@@ -87,11 +87,15 @@ export class DevSpaceNode extends NocalhostFolderNode {
       obj.resourceDir = jsonObj["resource_dir"];
     }
 
+    const label =
+      (obj.name === "default.application" ? "default" : obj.name) ||
+      `app_${app.id}`;
+
     const appNode = new AppNode(
       this,
       obj.installType,
       obj.resourceDir,
-      obj.name || `app_${app.id}`,
+      label,
       obj.appConfig || "",
       obj.nocalhostConfig || "",
       app.id,

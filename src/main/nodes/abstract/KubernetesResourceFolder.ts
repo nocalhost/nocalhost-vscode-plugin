@@ -65,7 +65,7 @@ export abstract class KubernetesResourceFolder extends NocalhostFolderNode {
     appName: string,
     installedAppName: Array<string>
   ) {
-    if (appName !== "other") {
+    if (appName !== "default.application") {
       return false;
     }
     if (

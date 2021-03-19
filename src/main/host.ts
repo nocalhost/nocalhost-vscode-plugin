@@ -6,9 +6,6 @@ import { checkVersion } from "./ctl/nhctl";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
-import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
-import { BaseNocalhostNode } from "./nodes/types/nodeType";
-
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
@@ -23,9 +20,17 @@ export class Host implements vscode.Disposable {
   );
   private newTerminal!: vscode.Terminal | null;
 
-  private appDisposesMap = new Map<
+  private devspaceDisposesMap = new Map<
     string,
-    Map<string, Array<{ dispose: () => any }>>
+    Map<
+      string,
+      Map<
+        string,
+        {
+          dispose: () => any;
+        }[]
+      >
+    >
   >();
 
   // TODO: DELETE
@@ -132,22 +137,44 @@ export class Host implements vscode.Disposable {
     return this.context.workspaceState.update(key, null);
   }
 
-  public disposeApp(id: string) {
-    const workloadMap = this.appDisposesMap.get(id);
+  public disposeApp(devspaceName: string, id: string) {
+    const appMap = this.devspaceDisposesMap.get(devspaceName);
+    if (!appMap) {
+      return;
+    }
+    const workloadMap = appMap.get(id);
     if (!workloadMap) {
       return;
     }
 
     workloadMap.forEach((arr, key) => {
-      this.disposeWorkload(id, key);
+      this.disposeWorkload(devspaceName, id, key);
     });
 
     workloadMap.clear();
-    this.appDisposesMap.delete(id);
+    appMap.delete(id);
   }
 
-  public disposeWorkload(appId: string, id: string) {
-    const workloadMap = this.appDisposesMap.get(appId);
+  public disposeDevspace(devspaceName: string) {
+    const appMap = this.devspaceDisposesMap.get(devspaceName);
+    if (!appMap) {
+      return;
+    }
+
+    appMap.forEach((m, key) => {
+      this.disposeApp(devspaceName, key);
+    });
+
+    appMap.clear();
+    this.devspaceDisposesMap.delete(devspaceName);
+  }
+
+  public disposeWorkload(devspaceName: string, appId: string, id: string) {
+    const appMap = this.devspaceDisposesMap.get(devspaceName);
+    if (!appMap) {
+      return;
+    }
+    const workloadMap = appMap.get(appId);
     if (!workloadMap) {
       return;
     }
@@ -163,11 +190,21 @@ export class Host implements vscode.Disposable {
     workloadMap.delete(id);
   }
 
-  public pushDispose(appId: string, id: string, obj: { dispose: () => any }) {
-    let workloadMap = this.appDisposesMap.get(appId);
+  public pushDispose(
+    devspaceName: string,
+    appId: string,
+    id: string,
+    obj: { dispose: () => any }
+  ) {
+    let appMap = this.devspaceDisposesMap.get(devspaceName);
+    if (!appMap) {
+      appMap = new Map();
+      this.devspaceDisposesMap.set(devspaceName, appMap);
+    }
+    let workloadMap = appMap.get(appId);
     if (!workloadMap) {
       workloadMap = new Map();
-      this.appDisposesMap.set(appId, workloadMap);
+      appMap.set(appId, workloadMap);
     }
 
     let arr = workloadMap.get(id);
@@ -318,10 +355,10 @@ export class Host implements vscode.Disposable {
       this.newTerminal.dispose();
     }
 
-    this.appDisposesMap.forEach((m, key) => {
-      this.disposeApp(key);
+    this.devspaceDisposesMap.forEach((m, key) => {
+      this.disposeDevspace(key);
     });
-    this.appDisposesMap = new Map();
+    this.devspaceDisposesMap = new Map();
   }
 
   getCurrentRootPath() {

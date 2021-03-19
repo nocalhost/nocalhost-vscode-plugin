@@ -16,13 +16,14 @@ import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 
-interface InstalledAppInfo {
+export interface InstalledAppInfo {
   name: string;
   type: string;
 }
 
 export interface AllInstallAppInfo {
-  [key: string]: InstalledAppInfo[];
+  namespace: string;
+  application: Array<InstalledAppInfo>;
 }
 
 // export async function getInstalledAppByNamespace(
@@ -42,11 +43,11 @@ export interface AllInstallAppInfo {
 //   return obj[namespace] || [];
 // }
 
-export async function getInstalledApp(): Promise<AllInstallAppInfo> {
+export async function getInstalledApp(): Promise<AllInstallAppInfo[]> {
   const command = "nhctl list --yaml";
   const result = await execAsyncWithReturn(command, []);
 
-  let obj: AllInstallAppInfo = {};
+  let obj: AllInstallAppInfo[] = [];
 
   if (result && result.stdout) {
     obj = yaml.parse(result.stdout);

@@ -22,6 +22,7 @@ import {
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_CONTAINER,
+  TMP_DEVSPACE,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -127,7 +128,7 @@ function launchDevspace() {
   if (tmpWorkloadPath !== host.getCurrentRootPath()) {
     return;
   }
-  console.log("launch devspace");
+  const tmpDevspace = host.getGlobalState(TMP_DEVSPACE);
   const tmpApp = host.getGlobalState(TMP_APP);
   const tmpId = host.getGlobalState(TMP_ID);
   const tmpWorkload = host.getGlobalState(TMP_WORKLOAD);
@@ -140,6 +141,7 @@ function launchDevspace() {
   );
   const tmpContainer = host.getGlobalState(TMP_CONTAINER);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
+    host.removeGlobalState(TMP_DEVSPACE);
     host.removeGlobalState(TMP_APP);
     host.removeGlobalState(TMP_WORKLOAD);
     host.removeGlobalState(TMP_STATUS);
@@ -149,6 +151,7 @@ function launchDevspace() {
     host.removeGlobalState(TMP_DEVSTART_APPEND_COMMAND);
     host.removeGlobalState(TMP_ID);
     host.removeGlobalState(TMP_CONTAINER);
+    host.removeGlobalState(TMP_STORAGE_CLASS);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -187,6 +190,7 @@ function launchDevspace() {
       getAppName: () => tmpApp,
       getStorageClass: () => tmpStorageClass,
       getDevStartAppendCommand: () => tmpDevstartAppendCommand,
+      getSpaceName: () => tmpDevspace,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }

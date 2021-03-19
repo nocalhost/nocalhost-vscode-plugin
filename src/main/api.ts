@@ -161,7 +161,7 @@ export async function getV2Application() {
   }
 
   const contextObj = {
-    application_name: "DEFAULT RESOURCE",
+    application_name: "default.application",
     application_url: "",
     application_config_path: "",
     nocalhost_config: "",
@@ -192,7 +192,7 @@ export async function updateAppInstallStatus(
   );
 }
 
-export async function resetApp(devSpaceId: number) {
+export async function resetDevspace(devSpaceId: number) {
   return axios.post(`/v1/plugin/${devSpaceId}/recreate`);
 }
 

@@ -11,7 +11,7 @@ import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import PortForwardCommand from "./PortForwardCommand";
-import ResetAppCommand from "./ResetAppCommand";
+import ResetDevspaceCommand from "./ResetDevspaceCommand";
 import ResetCommand from "./ResetCommand";
 import SignInCommand from "./SignInCommand";
 import SignOutCommand from "./SignOutCommand";
@@ -58,7 +58,7 @@ export default function initCommands(
   new CopyTerminalCommand(context);
   new ResetCommand(context);
   new CleanPvcCommand(context);
-  new ResetAppCommand(context);
+  new ResetDevspaceCommand(context);
   new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
   new AssociateLocalDirectoryCommand(context);

@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.3.3",
+  "version": "0.3.5",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -119,17 +119,17 @@
         },
         {
           "command": "Nocalhost.uninstallApp",
-          "when": "viewItem =~ /^application-installed/i",
+          "when": "viewItem =~ /^application-nodefault-installed/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.upgradeApp",
-          "when": "viewItem =~ /^application-installed/i",
+          "when": "viewItem =~ /^application-nodefault-installed/i",
           "group": "0"
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^(application-installed|workload-deployment)/i",
+          "when": "viewItem =~ /^(application-(.*)-installed|workload-deployment)/i",
           "group": "navigation"
         },
         {
@@ -154,7 +154,7 @@
         },
         {
           "command": "Nocalhost.EditAppConfig",
-          "when": "viewItem =~ /^application-installed/i",
+          "when": "viewItem =~ /^application-nodefault-installed/i",
           "group": "inline@0"
         },
         {
@@ -173,8 +173,8 @@
           "group": "1"
         },
         {
-          "command": "Nocalhost.resetApp",
-          "when": "viewItem =~ /^application/i",
+          "command": "Nocalhost.resetDevspace",
+          "when": "viewItem =~ /^devspace/i",
           "group": "navigation"
         },
         {
@@ -205,11 +205,11 @@
         {
           "command": "Nocalhost.loadResource",
           "title": "%loadResource%",
-          "when": "viewItem =~ /^application-installed/i"
+          "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
           "command": "Nocalhost.applyKubernetesObject",
-          "when": "viewItem =~ /^application-installed/i",
+          "when": "viewItem =~ /^application-(.*)-installed/i",
           "group": "navigation"
         },
         {
@@ -315,7 +315,7 @@
         "title": "%Reset%"
       },
       {
-        "command": "Nocalhost.resetApp",
+        "command": "Nocalhost.resetDevspace",
         "title": "%Reset%"
       },
       {
@@ -329,7 +329,7 @@
       {
         "command": "Nocalhost.loadResource",
         "title": "%loadResource%",
-        "when": "viewItem =~ /^application-installed/i"
+        "when": "viewItem =~ /^application-nodefault-installed/i"
       },
       {
         "command": "Nocalhost.log",
