@@ -112,6 +112,15 @@ export interface V2ApplicationInfo {
   public: number;
 }
 
+export interface V2ApplicationInfo {
+  id: number;
+  context: string;
+  userId: number;
+  status: number;
+  editable: number;
+  public: number;
+}
+
 export async function getApplication() {
   const response = await axios.get("/v1/plugin/dev_space");
   const res = response.data as ResponseData;
