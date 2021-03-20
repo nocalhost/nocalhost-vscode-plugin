@@ -16,6 +16,46 @@ import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 
+export interface InstalledAppInfo {
+  name: string;
+  type: string;
+}
+
+export interface AllInstallAppInfo {
+  namespace: string;
+  application: Array<InstalledAppInfo>;
+}
+
+// export async function getInstalledAppByNamespace(
+//   namespace: string
+// ): Promise<{ name: string; type: string }[]> {
+//   const command = "nhctl list --yaml";
+//   const result = await execAsyncWithReturn(command, []);
+
+//   let obj: {
+//     [key: string]: any;
+//   } = {};
+
+//   if (result && result.stdout) {
+//     obj = yaml.parse(result.stdout);
+//   }
+
+//   return obj[namespace] || [];
+// }
+
+export async function getInstalledApp(): Promise<AllInstallAppInfo[]> {
+  const command = "nhctl list --yaml";
+  const result = await execAsyncWithReturn(command, []);
+
+  let obj: AllInstallAppInfo[] = [];
+
+  if (result && result.stdout) {
+    obj = yaml.parse(result.stdout);
+  }
+
+  return obj;
+}
+
 export async function install(
   host: Host,
   kubeconfigPath: string,
@@ -471,9 +511,31 @@ export async function editConfig(
   return result.stdout;
 }
 
+export async function getAppConfig(kubeConfigPath: string, appName: string) {
+  const configCommand = nhctlCommand(
+    kubeConfigPath,
+    `config get ${appName} --app-config`
+  );
+  const result = await execAsyncWithReturn(configCommand, []);
+  return result.stdout;
+}
+
+export async function editAppConfig(
+  kubeConfigPath: string,
+  appName: string,
+  contents: string
+) {
+  const configCommand = nhctlCommand(
+    kubeConfigPath,
+    `config edit ${appName} --app-config -c ${contents}`
+  );
+  const result = await execAsyncWithReturn(configCommand, []);
+  return result.stdout;
+}
+
 export async function resetApp(kubeConfigPath: string, appName: string) {
   await host.showProgressing(`Reset : ${appName}`, async (progress) => {
-    const resetCommand = nhctlCommand(kubeConfigPath, `reset ${appName}`);
+    const resetCommand = nhctlCommand(kubeConfigPath, `reset`);
     host.log(`[cmd] ${resetCommand}`, true);
     await execChildProcessAsync(host, resetCommand, [], {
       dialog: `reset (${appName}) fail`,
@@ -593,6 +655,23 @@ export async function overrideSyncFolders(
   );
   host.log(`[cmd] ${overrideSyncCommand}`);
   await execChildProcessAsync(host, overrideSyncCommand, []);
+}
+
+export async function reconnectSync(
+  kubeConfigPath: string,
+  appName: string,
+  workloadName: string
+) {
+  // nhctl sync coding-operation -d platform-login  --kubeconfig /Users/weiwang/.nh/plugin/kubeConfigs/12_354_config --resume
+  const reconnectSyncCommand = nhctlCommand(
+    kubeConfigPath,
+    `sync ${appName} -d ${workloadName} --resume`
+  );
+  host.log(`[cmd] ${reconnectSyncCommand}`);
+  await execChildProcessAsync(host, reconnectSyncCommand, [], {
+    output: "reconnected sync service",
+    dialog: "reconnected sync service",
+  });
 }
 
 export async function checkVersion() {

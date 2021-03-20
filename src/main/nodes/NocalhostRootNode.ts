@@ -1,7 +1,14 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { ApplicationInfo, getApplication } from "../api";
+import {
+  ApplicationInfo,
+  DevspaceInfo,
+  getApplication,
+  getDevSpace,
+  getV2Application,
+  V2ApplicationInfo,
+} from "../api";
 import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR, USERINFO } from "../constants";
 import { AppNode } from "./AppNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
@@ -11,19 +18,24 @@ import host from "../host";
 // import DataCenter from "../common/DataCenter";
 import logger from "../utils/logger";
 import state from "../state";
+import { DevSpaceNode } from "./DevSpaceNode";
+import * as nhctl from "../ctl/nhctl";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
-  private static childNodes: Array<AppNode | NocalhostAccountNode> = [];
-  public static getChildNodes(): Array<AppNode | NocalhostAccountNode> {
+  private static childNodes: Array<BaseNocalhostNode> = [];
+  public static getChildNodes(): Array<BaseNocalhostNode> {
     return NocalhostRootNode.childNodes;
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
-    const res = await getApplication();
+    // const res = await getApplication();
+    const devSpaces = await getDevSpace();
+    const applications = await getV2Application();
+    const installedApps = await nhctl.getInstalledApp();
+    const obj = { devSpaces, applications, old: [], installedApps };
 
-    state.setData(this.getNodeStateId(), res, isInit);
-
-    return res;
+    state.setData(this.getNodeStateId(), obj, isInit);
+    return obj;
   }
 
   public label: string = "Nocalhost";
@@ -38,14 +50,20 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
   async getChildren(
     parent?: BaseNocalhostNode
-  ): Promise<Array<AppNode | NocalhostAccountNode>> {
+  ): Promise<Array<BaseNocalhostNode>> {
+    NocalhostRootNode.childNodes = [];
     // DataCenter.getInstance().setApplications();
-    let res = state.getData(this.getNodeStateId()) as ApplicationInfo[];
+    let res = state.getData(this.getNodeStateId()) as {
+      devSpaces: DevspaceInfo[];
+      applications: V2ApplicationInfo[];
+      old: ApplicationInfo[];
+      installedApps: nhctl.AllInstallAppInfo[];
+    };
 
     if (!res) {
       res = await this.updateData(true);
     }
-    NocalhostRootNode.childNodes = res.map((app) => {
+    const appNode = res.old.map((app) => {
       let context = app.context;
       let obj: {
         url?: string;
@@ -69,12 +87,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         obj.installType = this.generateInstallType(source, originInstallType);
         obj.resourceDir = jsonObj["resource_dir"];
       }
-      const filePath = path.resolve(
-        KUBE_CONFIG_DIR,
-        `${app.id}_${app.devspaceId}_config`
-      );
-      logger.info(`appName: ${obj.name} kubeconfig: `, app.kubeconfig);
-      this.writeFile(filePath, app.kubeconfig);
 
       const nhConfigPath = path.resolve(
         HELM_NH_CONFIG_DIR,
@@ -96,11 +108,56 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         app
       );
     });
+    const devs: DevSpaceNode[] = [];
+
+    res.applications.forEach((app) => {
+      let context = app.context;
+      let obj: {
+        url?: string;
+        name?: string;
+        appConfig?: string;
+        nocalhostConfig?: string;
+        installType: string;
+        resourceDir: Array<string>;
+      } = {
+        installType: "rawManifest",
+        resourceDir: ["manifest/templates"],
+      };
+      if (context) {
+        let jsonObj = JSON.parse(context);
+        obj.url = jsonObj["application_url"];
+        obj.name = jsonObj["application_name"];
+        obj.appConfig = jsonObj["application_config_path"];
+        obj.nocalhostConfig = jsonObj["nocalhost_config"];
+        let originInstallType = jsonObj["install_type"];
+        let source = jsonObj["source"];
+        obj.installType = this.generateInstallType(source, originInstallType);
+        obj.resourceDir = jsonObj["resource_dir"];
+      }
+
+      const nhConfigPath = path.resolve(HELM_NH_CONFIG_DIR, `${app.id}_config`);
+      this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+    });
+
+    for (const d of res.devSpaces) {
+      const filePath = path.resolve(KUBE_CONFIG_DIR, `${d.id}_config`);
+      this.writeFile(filePath, d.kubeconfig);
+      let installedApps = this.getInstalledApp(res.installedApps, d.namespace);
+      const node = new DevSpaceNode(
+        this,
+        d.spaceName,
+        d,
+        res.applications,
+        installedApps
+      );
+      devs.push(node);
+    }
+    NocalhostRootNode.childNodes = NocalhostRootNode.childNodes.concat(devs);
 
     const userinfo = host.getGlobalState(USERINFO);
 
     const hasAccountNode: boolean = NocalhostRootNode.childNodes.some(
-      (node: AppNode | NocalhostAccountNode) => {
+      (node) => {
         return node instanceof NocalhostAccountNode;
       }
     );
@@ -111,6 +168,28 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       );
     }
     return NocalhostRootNode.childNodes;
+  }
+
+  private getInstalledApp(
+    allAppInfo: nhctl.AllInstallAppInfo[],
+    namespace: string
+  ) {
+    const infos = allAppInfo.filter((item) => item.namespace === namespace);
+    let result = new Array<nhctl.InstalledAppInfo>();
+    if (infos.length > 0) {
+      result = result.concat(infos[0].application);
+    }
+
+    result = result.filter((item) => {
+      return item.name !== "default.application";
+    });
+
+    result.push({
+      name: "default.application",
+      type: "rawManifest",
+    });
+
+    return result;
   }
 
   private generateInstallType(source: string, originInstallType: string) {
@@ -141,7 +220,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(
       this.label,
-      vscode.TreeItemCollapsibleState.Expanded
+      vscode.TreeItemCollapsibleState.Collapsed
     );
     return treeItem;
   }

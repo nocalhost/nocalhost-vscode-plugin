@@ -11,7 +11,7 @@ import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import PortForwardCommand from "./PortForwardCommand";
-import ResetAppCommand from "./ResetAppCommand";
+import ResetDevspaceCommand from "./ResetDevspaceCommand";
 import ResetCommand from "./ResetCommand";
 import SignInCommand from "./SignInCommand";
 import SignOutCommand from "./SignOutCommand";
@@ -28,6 +28,9 @@ import OverrideSyncCommand from "./OverrideSyncCommand";
 import PortForwardListCommand from "./PortForwardListCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
+import EditAppConfigCommand from "./EditAppConfigCommand";
+import ShowApplicationsCommand from "./ShowApplicationsCommand";
+import ReconnectSyncCommand from "./ReconnectSyncCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -56,7 +59,7 @@ export default function initCommands(
   new CopyTerminalCommand(context);
   new ResetCommand(context);
   new CleanPvcCommand(context);
-  new ResetAppCommand(context);
+  new ResetDevspaceCommand(context);
   new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
   new AssociateLocalDirectoryCommand(context);
@@ -66,4 +69,7 @@ export default function initCommands(
   new SyncServiceCommand(context);
   new OverrideSyncCommand(context);
   new UpgradeCommand(context);
+  new EditAppConfigCommand(context);
+  new ShowApplicationsCommand(context);
+  new ReconnectSyncCommand(context);
 }

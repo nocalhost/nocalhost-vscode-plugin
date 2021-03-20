@@ -19,6 +19,21 @@ interface ResponseData {
   data: any;
 }
 
+export interface DevspaceInfo {
+  id: number;
+  userId: number;
+  spaceName: string;
+  clusterId: number;
+  kubeconfig: string;
+  memory: number;
+  cpu: number;
+  spaceResourceLimit: string;
+  namespace: string;
+  status: number;
+  storageClass: string;
+  devStartAppendCommand: Array<string>;
+}
+
 axios.interceptors.request.use(function (config) {
   const jwt = host.getGlobalState(JWT) as string;
   config.baseURL = host.getGlobalState(BASE_URL) as string;
@@ -37,15 +52,14 @@ axios.interceptors.response.use(
       state.setLogin(false);
     }
     if (res.code !== 0) {
-      vscode.window.showErrorMessage(res.message || "");
-      return Promise.reject(res);
+      // vscode.window.showErrorMessage(res.message || "");
+      return Promise.reject();
     }
 
     return response;
   },
   function (error) {
-    vscode.window.showErrorMessage(error.message);
-    return Promise.reject(error);
+    return Promise.reject();
   }
 );
 
@@ -85,7 +99,25 @@ export interface ApplicationInfo {
   devspaceId: number;
   spaceName: string;
   storageClass: string;
-  devStartAppendCommand: string;
+  devStartAppendCommand: Array<string>;
+}
+
+export interface V2ApplicationInfo {
+  id: number;
+  context: string;
+  userId: number;
+  status: number;
+  editable: number;
+  public: number;
+}
+
+export interface V2ApplicationInfo {
+  id: number;
+  context: string;
+  userId: number;
+  status: number;
+  editable: number;
+  public: number;
 }
 
 export async function getApplication() {
@@ -114,6 +146,49 @@ export async function getApplication() {
   return result;
 }
 
+export async function getV2Application() {
+  const userinfo = host.getGlobalState(USERINFO);
+  const userId = userinfo.id;
+  if (!userId) {
+    return;
+  }
+  const response = await axios.get(`/v1/users/${userId}/applications`);
+  const res = response.data as ResponseData;
+  const applications = res.data || [];
+  const result = new Array<V2ApplicationInfo>();
+  for (let i = 0; i < applications.length; i++) {
+    const app: V2ApplicationInfo = {
+      id: applications[i].id,
+      userId: applications[i]["user_id"],
+      public: applications[i].public,
+      editable: applications[i].editable,
+      context: applications[i].context,
+      status: applications[i].status,
+    };
+    result.push(app);
+  }
+
+  const contextObj = {
+    application_name: "default.application",
+    application_url: "",
+    application_config_path: "",
+    nocalhost_config: "",
+    source: "",
+    resource_dir: "",
+    install_type: "",
+  };
+
+  result.push({
+    id: 0,
+    userId: userId,
+    public: 1,
+    editable: 1,
+    context: JSON.stringify(contextObj),
+    status: 1,
+  });
+  return result;
+}
+
 export async function updateAppInstallStatus(
   appId: number,
   devSpaceId: number,
@@ -125,6 +200,36 @@ export async function updateAppInstallStatus(
   );
 }
 
-export async function resetApp(devSpaceId: number) {
+export async function resetDevspace(devSpaceId: number) {
   return axios.post(`/v1/plugin/${devSpaceId}/recreate`);
+}
+
+export async function getDevSpace() {
+  const userinfo = host.getGlobalState(USERINFO);
+  const userId = userinfo.id;
+  if (!userId) {
+    return;
+  }
+  const response = await axios.get(`/v1/users/${userId}/dev_spaces`);
+  const res = response.data as ResponseData;
+  const applications = res.data || [];
+  const result = new Array<DevspaceInfo>();
+  for (let i = 0; i < applications.length; i++) {
+    const app: DevspaceInfo = {
+      id: applications[i].id,
+      userId: applications[i]["user_id"],
+      status: applications[i].status,
+      kubeconfig: applications[i].kubeconfig,
+      cpu: applications[i].cpu,
+      memory: applications[i].memory,
+      namespace: applications[i].namespace,
+      clusterId: applications[i]["cluster_id"],
+      spaceName: applications[i]["space_name"],
+      spaceResourceLimit: applications[i]["space_resource_limit"],
+      storageClass: applications[i]["storage_class"],
+      devStartAppendCommand: applications[i]["dev_start_append_command"],
+    };
+    result.push(app);
+  }
+  return result;
 }

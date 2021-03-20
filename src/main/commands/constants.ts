@@ -2,9 +2,13 @@ export const REFRESH = "Nocalhost.refresh";
 export const EDIT_SERVICE_CONFIG = "Nocalhost.editServiceConfig";
 export const WRITE_SERVICE_CONFIG = "Nocalhost.writeServiceConfig";
 
+export const EDIT_APP_CONFIG = "Nocalhost.EditAppConfig";
+
 export const START_DEV_MODE = "Nocalhost.startDevMode";
 export const END_DEV_MODE = "Nocalhost.endDevMode";
 export const RESET = "Nocalhost.reset";
+
+export const SHOW_APP = "Nocalhost.showApp";
 
 export const SWITCH_END_POINT = "Nocalhost.switchEndPoint";
 export const OPEN_END_POINT = "Nocalhost.openEndPoint";
@@ -14,7 +18,7 @@ export const SIGN_OUT = "Nocalhost.signout";
 
 export const INSTALL_APP = "Nocalhost.installApp";
 export const UNINSTALL_APP = "Nocalhost.uninstallApp";
-export const RESET_APP = "Nocalhost.resetApp";
+export const RESET_DEVSPACE = "Nocalhost.resetDevspace";
 export const UPGRADE_APP = "Nocalhost.upgradeApp";
 
 export const LOAD_RESOURCE = "Nocalhost.loadResource";
@@ -33,3 +37,4 @@ export const APPLY_KUBERNETES_OBJECT = "Nocalhost.applyKubernetesObject";
 export const DELETE_KUBERNETES_OBJECT = "Nocalhost.deleteKubernetesObject";
 export const SYNC_SERVICE = "Nocalhost.syncService";
 export const OVERRIDE_SYNC = "Nocalhost.overrideSync";
+export const RECONNECT_SYNC = "Nocalhost.reconnectSync";

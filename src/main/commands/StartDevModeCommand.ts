@@ -7,6 +7,7 @@ import registerCommand from "./register";
 import {
   TMP_APP,
   TMP_CONTAINER,
+  TMP_DEVSPACE,
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_KUBECONFIG_PATH,
@@ -38,6 +39,7 @@ export interface ControllerNodeApi {
   getAppName: () => string;
   getStorageClass: () => string | undefined;
   getDevStartAppendCommand: () => string | undefined;
+  getSpaceName: () => string;
 }
 
 export default class StartDevModeCommand implements ICommand {
@@ -371,6 +373,7 @@ export default class StartDevModeCommand implements ICommand {
   ) {
     const appNode = node.getAppNode();
     host.setGlobalState(TMP_ID, node.getNodeStateId());
+    host.setGlobalState(TMP_DEVSPACE, node.getSpaceName());
     host.setGlobalState(TMP_APP, appName);
     host.setGlobalState(TMP_WORKLOAD, node.name);
     host.setGlobalState(TMP_STATUS, `${node.getNodeStateId()}_status`);

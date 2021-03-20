@@ -1,0 +1,527 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Nocalhost config schema",
+  "type": "object",
+  "properties": {
+    "configProperties": {
+      "type": "object",
+      "description": "Specify config properties",
+      "properties": {
+        "version": {
+          "type": "string",
+          "default": "v2",
+          "description": "config file version",
+          "examples": ["v2"]
+        },
+        "envFile": {
+          "type": "string",
+          "default": null,
+          "description": "env file name, substitution variable for this file",
+          "examples": ["v2"]
+        }
+      },
+      "required": ["version"]
+    },
+    "application": {
+      "type": "object",
+      "default": null,
+      "description": "Application config",
+      "required": ["name", "manifestType", "resourcePath"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$",
+          "description": "Application name",
+          "examples": ["hello"]
+        },
+        "manifestType": {
+          "type": "string",
+          "enum": [
+            "helmGit",
+            "helmRepo",
+            "rawManifest",
+            "rawManifestLocal",
+            "helmLocal"
+          ],
+          "description": "Application k8s manifest type \n type: select，options：helmGit/helmRepo/rawManifest/rawManifestLocal/helmLocal",
+          "$comment": "Application k8s manifest type \n type: select，options：helmGit/helmRepo/rawManifest/rawManifestLocal/helmLocal",
+          "examples": ["rawManifest"]
+        },
+        "resourcePath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "helmGit: chart path: relative path of git repo root. \n helmRepo: no meaning \n rawManifest: manifest files path: multi relative paths of git repo root \n rawManifestLocal: manifest files path: multi relative paths of local application path \n helmLocal: chart path: relative path of local helm chart path"
+        },
+        "ignoredPath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["."],
+          "description": "helmGit: no meaning \n helmRepo: no meaning \n rawManifest: ignored manifest path: multi relative paths of git repo root \n rawManifestLocal: ignored manifest path: multi relative paths of local application path \n helmLocal: no meaning"
+        },
+        "helmValues": {
+          "type": "array",
+          "description": "Overwrite helm values.yaml",
+          "items": {
+            "type": "object",
+            "required": ["key", "value"],
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "key"
+              },
+              "value": {
+                "type": "string",
+                "description": "value"
+              }
+            }
+          },
+          "default": []
+        },
+        "env": {
+          "type": "array",
+          "description": "Inject environment variable for all workload when installed",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "envFrom": {
+          "type": "object",
+          "required": ["envFile"],
+          "properties": {
+            "envFile": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["path"],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "The env file path"
+                  }
+                }
+              }
+            }
+          },
+          "description": "Use envFile to inject environment variable for all workload when installed \n If specify env and envFrom at the same time, then use intersection of them, and use env key as primary"
+        },
+        "services": {
+          "type": "array",
+          "description": "The Applicaion's micro services",
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": ["name", "serviceType", "containers"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of service, the name of workload in cluster"
+              },
+              "serviceType": {
+                "type": "string",
+                "enum": [
+                  "deployment",
+                  "statefulset",
+                  "pod",
+                  "job",
+                  "cronjob",
+                  "daemonset"
+                ],
+                "description": "The Kubernetes Workloads type corresponding to the service"
+              },
+              "dependLabelSelector": {
+                "type": "object",
+                "properties": {
+                  "pods": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "examples": ["name=mariadb"]
+                    },
+                    "default": [],
+                    "description": "Dependent Pods label selector (The service will not start until the Pods selected by selector being ready.)"
+                  },
+                  "jobs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "examples": ["job-name=init-job"]
+                    },
+                    "default": [],
+                    "description": "Dependent Jobs label selector (The service will not start until the Jobs selected by selector completed.)"
+                  }
+                }
+              },
+              "containers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["dev"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "When the Pod has multiple containers, specify the container name",
+                      "default": ""
+                    },
+                    "install": {
+                      "type": "object",
+                      "description": "Specify installation parameters",
+                      "properties": {
+                        "env": {
+                          "type": "array",
+                          "description": "Inject environment variable for all workload when installed",
+                          "items": {
+                            "type": "object",
+                            "required": ["name", "value"],
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "envFrom": {
+                          "type": "object",
+                          "required": ["envFile"],
+                          "properties": {
+                            "envFile": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": ["path"],
+                                "properties": {
+                                  "path": {
+                                    "type": "string",
+                                    "description": "The env file path"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "description": "Use envFile to inject environment variable for all workload when installed \n If specify env and envFrom at the same time, then use intersection of them, and use env key as primary"
+                        },
+                        "portForward": {
+                          "type": "array",
+                          "description": "Ports to be forwarded to local when workload has been installed \n localPort:remotePort",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": [],
+                          "examples": ["3306:3306"]
+                        }
+                      }
+                    },
+                    "dev": {
+                      "type": "object",
+                      "required": ["gitUrl", "image"],
+                      "properties": {
+                        "gitUrl": {
+                          "type": "string",
+                          "description": "The git repository clone url of the service",
+                          "default": null
+                        },
+                        "image": {
+                          "type": "string",
+                          "description": "DevContainer Image of the micro service",
+                          "default": null
+                        },
+                        "shell": {
+                          "type": "string",
+                          "description": "The default shell of DevContainer (Not currently implemented)",
+                          "default": "/bin/sh"
+                        },
+                        "workDir": {
+                          "type": "string",
+                          "description": "The work directory of DevContainer",
+                          "default": "/home/nocalhost-dev"
+                        },
+                        "resources": {
+                          "type": "object",
+                          "description": "Specify reources requests and limits for DevContainer, same format to Kubernetes's resources (Not currently implemented)",
+                          "properties": {
+                            "limits": {
+                              "type": "object",
+                              "properties": {
+                                "cpu": {
+                                  "type": "string"
+                                },
+                                "memory": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "requests": {
+                              "type": "object",
+                              "properties": {
+                                "cpu": {
+                                  "type": "string"
+                                },
+                                "memory": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "default": {}
+                        },
+                        "persistentVolumeDirs": {
+                          "type": "array",
+                          "description": "Dirs to be persisted in DevContainer",
+                          "items": {
+                            "type": "object",
+                            "required": ["path"],
+                            "properties": {
+                              "path": {
+                                "type": "string",
+                                "default": null,
+                                "description": "Dir to be persisted in DevContainer"
+                              },
+                              "capacity": {
+                                "type": "string",
+                                "description": "Capability of the dir",
+                                "default": "10Gi",
+                                "examples": ["10Gi"]
+                              }
+                            }
+                          }
+                        },
+                        "command": {
+                          "type": "object",
+                          "properties": {
+                            "build": {
+                              "type": "array",
+                              "description": "Build command of the service",
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [""]
+                            },
+                            "run": {
+                              "type": "array",
+                              "description": "Run command of the service",
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [""]
+                            },
+                            "debug": {
+                              "type": "array",
+                              "description": "Debug command of the service",
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [""]
+                            },
+                            "hotReloadRun": {
+                              "type": "array",
+                              "description": "Hot-reload run command of the service",
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [""]
+                            },
+                            "hotReloadDebug": {
+                              "type": "array",
+                              "description": "Hot-reload debug command of the service",
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [""]
+                            }
+                          }
+                        },
+                        "debug": {
+                          "type": "object",
+                          "description": "Specify debug parameter",
+                          "properties": {
+                            "remoteDebugPort": {
+                              "type": "integer",
+                              "description": "Specify remote debug port",
+                              "default": null
+                            }
+                          }
+                        },
+                        "useDevContainer": {
+                          "type": "boolean",
+                          "description": "Use .dev-container of VSCode to specify DevContainer Image (Not currently implemented)",
+                          "default": false
+                        },
+                        "sync": {
+                          "type": "object",
+                          "description": "Specify file synchronization when enter dev mode",
+                          "default": {},
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": ["send", "sendreceive"],
+                              "description": "The synchronization file mode of the service (Not currently implemented) \n \"send\" specifies one-way synchronization to the container, \"sendreceive\" specifies two-way synchronization",
+                              "default": "send"
+                            },
+                            "filePattern": {
+                              "type": "array",
+                              "description": "List of files and directories to be synchronized to DevContainer",
+                              "default": ["."],
+                              "items": {
+                                "type": "string",
+                                "examples": ["./src"]
+                              }
+                            },
+                            "ignoreFilePattern": {
+                              "type": "array",
+                              "description": "List of ignored files and directories to be synchronized to DevContainer",
+                              "default": ["."],
+                              "items": {
+                                "type": "string",
+                                "examples": [".git"]
+                              }
+                            }
+                          }
+                        },
+                        "env": {
+                          "type": "array",
+                          "description": "Inject environment variable for all workload when installed",
+                          "items": {
+                            "type": "object",
+                            "required": ["name", "value"],
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "envFrom": {
+                          "type": "object",
+                          "required": ["envFile"],
+                          "properties": {
+                            "envFile": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": ["path"],
+                                "properties": {
+                                  "path": {
+                                    "type": "string",
+                                    "description": "The env file path"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "description": "Use envFile to inject environment variable for all workload when installed \n If specify env and envFrom at the same time, then use intersection of them, and use env key as primary"
+                        },
+                        "portForward": {
+                          "type": "array",
+                          "description": "Ports to be forwarded to local when enter devMode \n localPort:remotePort",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": [],
+                          "examples": ["3306:3306"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "onPreInstall": {
+          "type": "array",
+          "description": "The jobs to be executed before application's installation.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Job yaml file, the relative path of the repo root",
+                "default": "job-1.yaml"
+              },
+              "name": {
+                "type": "string",
+                "description": "Job name",
+                "default": "xxx-job"
+              },
+              "priority": {
+                "type": "integer",
+                "description": "Order of execution of job, the smallest be executed firstly.",
+                "default": 0
+              }
+            },
+            "required": ["path"]
+          }
+        },
+        "onPostInstall": {
+          "type": "array",
+          "description": "The jobs to be executed after application's installation. (Not currently implemented)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Job yaml file, the relative path of the repo root",
+                "default": "job-1.yaml"
+              },
+              "name": {
+                "type": "string",
+                "description": "Job name",
+                "default": "xxx-job"
+              },
+              "priority": {
+                "type": "integer",
+                "description": "Order of execution of job, the smallest be executed firstly.",
+                "default": -1
+              }
+            },
+            "required": ["path"]
+          }
+        },
+        "onPostUninstall": {
+          "type": "array",
+          "description": "The jobs to be executed after application's uninstallation. (Not currently implemented)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Job yaml file, the relative path of the repo root",
+                "default": "job-1.yaml"
+              },
+              "name": {
+                "type": "string",
+                "description": "Job name",
+                "default": "xxx-job"
+              },
+              "priority": {
+                "type": "integer",
+                "description": "Order of execution of job, the smallest be executed firstly.",
+                "default": -1
+              }
+            },
+            "required": ["path"]
+          }
+        }
+      }
+    }
+  },
+  "required": ["configProperties", "application"]
+}

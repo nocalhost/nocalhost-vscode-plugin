@@ -165,23 +165,8 @@ export default class InstallCommand implements ICommand {
         }
       }
     }
-    state.setAppState(appNode.name, "installing", true, {
-      refresh: true,
-      nodeStateId: appNode.getNodeStateId(),
-    });
 
-    await this.startInstall(
-      appNode,
-      values,
-      valuesStr,
-      refOrVersion,
-      local
-    ).finally(() => {
-      state.deleteAppState(appNode.name, "installing", {
-        refresh: true,
-        nodeStateId: appNode.getNodeStateId(),
-      });
-    });
+    await this.startInstall(appNode, values, valuesStr, refOrVersion, local);
     productPagePort = this.productPagePort;
     await vscode.commands.executeCommand(REFRESH);
     if (this.isBookInfo(appNode) && productPagePort) {
@@ -225,7 +210,6 @@ export default class InstallCommand implements ICommand {
       valuesStr,
       refOrVersion
     );
-    await updateAppInstallStatus(appId, devSpaceId, 1);
     host.setGlobalState(appName, {});
   }
 

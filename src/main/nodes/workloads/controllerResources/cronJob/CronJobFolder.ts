@@ -5,20 +5,11 @@ import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFo
 import { CronJob } from "./CronJob";
 import { CRON_JOBS_FOLDER } from "../../../nodeContants";
 import { BaseNocalhostNode } from "../../../types/nodeType";
-import { List } from "../../../types/resourceType";
+import { List, Resource } from "../../../types/resourceType";
 import state from "../../../../state";
 
 export class CronJobFolder extends KubernetesResourceFolder {
-  public async updateData(isInit?: boolean): Promise<any> {
-    const res = await kubectl.getResourceList(
-      this.getKubeConfigPath(),
-      "CronJobs"
-    );
-    const list = JSON.parse(res as string) as List;
-    state.setData(this.getNodeStateId(), list, isInit);
-
-    return list;
-  }
+  public resourceType: string = "CronJobs";
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
@@ -32,11 +23,11 @@ export class CronJobFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as List;
-    if (!list) {
-      list = await this.updateData(true);
+    let resources = state.getData(this.getNodeStateId()) as Resource[];
+    if (!resources) {
+      resources = await this.updateData(true);
     }
-    const result: CronJob[] = list.items.map(
+    const result: CronJob[] = resources.map(
       (item) => new CronJob(this, item.metadata.name, item.metadata.name, item)
     );
 

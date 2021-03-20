@@ -29,16 +29,30 @@ export default class CopyTerminalCommand implements ICommand {
   async exec(node: ControllerNodeApi | Pod) {
     if (!(node instanceof Pod)) {
       const status = await node.getStatus();
+      let container = "";
+      let pod = "";
       if (status === DeploymentStatus.developing) {
-        await this.opendevSpaceExec(
-          node.getAppName(),
-          node.name,
-          node.getKubeConfigPath()
-        );
-        return;
+        container = "nocalhost-dev";
+        pod = "";
+      } else {
+        const result = await this.getPodAndContainer(node);
+        if (!result || !result.containerName || !result.podName) {
+          return;
+        }
+        container = result.containerName;
+        pod = result.podName;
       }
+      await this.opendevSpaceExec(
+        node.getAppName(),
+        node.name,
+        pod,
+        container,
+        node.getKubeConfigPath()
+      );
+      return;
+    } else {
+      await this.openExec(node);
     }
-    await this.openExec(node);
   }
 
   private async getDefaultShell(
@@ -74,12 +88,19 @@ export default class CopyTerminalCommand implements ICommand {
   async opendevSpaceExec(
     appName: string,
     workloadName: string,
+    pod: string,
+    container: string,
     kubeConfigPath: string
   ) {
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
     terminalCommands.push("--kubeconfig", kubeConfigPath);
-    terminalCommands.push("-c", "nocalhost-dev");
+    if (pod) {
+      terminalCommands.push("--pod", pod);
+    }
+    if (container) {
+      terminalCommands.push("-c", container);
+    }
     const shellPath = "nhctl";
     host.copyTextToclipboard(`${shellPath} ${terminalCommands.join(" ")}`);
     host.showInformationMessage("Copyed Terminal");
@@ -143,5 +164,41 @@ export default class CopyTerminalCommand implements ICommand {
       return;
     }
     await this.execCore(kubeConfigPath, podName, containerName);
+  }
+
+  async getPodAndContainer(node: ControllerNodeApi | Pod) {
+    const kubeConfigPath = node.getKubeConfigPath();
+    let podName: string | undefined;
+    let status = "";
+    if (node instanceof Pod) {
+      podName = node.name;
+    } else {
+      const podNameArr = await kubectl.getPodNames(
+        node.name,
+        node.resourceType,
+        kubeConfigPath
+      );
+      podName = podNameArr[0];
+      status = await node.getStatus();
+      if (status !== DeploymentStatus.developing && podNameArr.length > 1) {
+        podName = await vscode.window.showQuickPick(podNameArr);
+      }
+    }
+    if (!podName) {
+      return;
+    }
+    const containerNameArr = await kubectl.getContainerNames(
+      podName,
+      kubeConfigPath
+    );
+    let containerName: string | undefined = containerNameArr[0];
+    if (status !== DeploymentStatus.developing && containerNameArr.length > 1) {
+      containerName = await vscode.window.showQuickPick(containerNameArr);
+    }
+    if (!containerName) {
+      return;
+    }
+
+    return { containerName, podName };
   }
 }

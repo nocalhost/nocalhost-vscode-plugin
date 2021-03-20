@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 
 import * as kubectl from "../../../../ctl/kubectl";
-import host from "../../../../host";
 import ConfigService, {
   NocalhostConfig,
   NocalhostServiceConfig,
@@ -14,16 +13,17 @@ import {
   BaseNocalhostNode,
   SvcProfile,
 } from "../../../types/nodeType";
-import { List, ResourceStatus } from "../../../types/resourceType";
+import { List, Resource, ResourceStatus } from "../../../types/resourceType";
 import { Deployment } from "./Deployment";
 
 export class DeploymentFolder extends KubernetesResourceFolder {
+  public resourceType = "Deployments";
   public async updateData(isInit?: boolean): Promise<any> {
     const res = await kubectl.getResourceList(
       this.getKubeConfigPath(),
-      "Deployments"
+      this.resourceType
     );
-    const list = JSON.parse(res as string) as List;
+    let list = JSON.parse(res as string) as List;
     const appNode = this.getAppNode();
 
     const appInfo = await appNode.freshApplicationInfo();
@@ -31,9 +31,9 @@ export class DeploymentFolder extends KubernetesResourceFolder {
       appNode.getKubeConfigPath(),
       appNode.name
     );
-
+    const resource = this.filterResource(list.items, appNode);
     const obj = {
-      list,
+      resource: resource,
       appInfo,
       appConfig,
     };
@@ -56,19 +56,19 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<Deployment[]>> {
     let obj = state.getData(this.getNodeStateId()) as {
-      list: List;
+      resource: Resource[];
       appInfo: AppInfo;
       appConfig: NocalhostConfig;
     };
     if (!obj) {
       obj = (await this.updateData(true)) as {
-        list: List;
+        resource: Resource[];
         appInfo: AppInfo;
         appConfig: NocalhostConfig;
       };
     }
-    const { list, appConfig, appInfo } = obj;
-    const result: Deployment[] = list.items.map((item) => {
+    const { resource, appConfig, appInfo } = obj;
+    const result: Deployment[] = resource.map((item) => {
       const status = item.status as ResourceStatus;
       const svcProfiles = appInfo.svcProfile || [];
       let svcProfile: SvcProfile | undefined | null;

@@ -10,6 +10,7 @@ import { KUBE_CONFIG_DIR } from "../constants";
 import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
+import { DevSpaceNode } from "../nodes/DevSpaceNode";
 
 export default class UninstallCommand implements ICommand {
   command: string = UNINSTALL_APP;
@@ -32,7 +33,8 @@ export default class UninstallCommand implements ICommand {
 
     state.setAppState(appNode.name, "uninstalling", true);
     vscode.commands.executeCommand("Nocalhost.refresh");
-    host.disposeApp(appNode.name);
+    const devspace = appNode.getParent() as DevSpaceNode;
+    host.disposeApp(devspace.info.spaceName, appNode.name);
     await this.uninstall(
       host,
       appNode.getKubeConfigPath(),
@@ -55,7 +57,6 @@ export default class UninstallCommand implements ICommand {
     host.log(`Uninstalling application: ${appName}`, true);
     host.getOutputChannel().show(true);
     await nhctl.uninstall(host, kubeconfigPath, appName, true);
-    await updateAppInstallStatus(appId, devSpaceId, 0);
     host.removeGlobalState(appName);
     state.delete(appName);
   }

@@ -22,6 +22,7 @@ import {
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_CONTAINER,
+  TMP_DEVSPACE,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -37,8 +38,8 @@ import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
-import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
+import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -111,6 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
     state.setLogin(true);
   }
   host.getOutputChannel().show(true);
+  await registerYamlSchemaSupport();
   await vscode.commands.executeCommand(
     "setContext",
     "extensionActivated",
@@ -126,7 +128,7 @@ function launchDevspace() {
   if (tmpWorkloadPath !== host.getCurrentRootPath()) {
     return;
   }
-  console.log("launch devspace");
+  const tmpDevspace = host.getGlobalState(TMP_DEVSPACE);
   const tmpApp = host.getGlobalState(TMP_APP);
   const tmpId = host.getGlobalState(TMP_ID);
   const tmpWorkload = host.getGlobalState(TMP_WORKLOAD);
@@ -139,6 +141,7 @@ function launchDevspace() {
   );
   const tmpContainer = host.getGlobalState(TMP_CONTAINER);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
+    host.removeGlobalState(TMP_DEVSPACE);
     host.removeGlobalState(TMP_APP);
     host.removeGlobalState(TMP_WORKLOAD);
     host.removeGlobalState(TMP_STATUS);
@@ -148,6 +151,7 @@ function launchDevspace() {
     host.removeGlobalState(TMP_DEVSTART_APPEND_COMMAND);
     host.removeGlobalState(TMP_ID);
     host.removeGlobalState(TMP_CONTAINER);
+    host.removeGlobalState(TMP_STORAGE_CLASS);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -186,6 +190,7 @@ function launchDevspace() {
       getAppName: () => tmpApp,
       getStorageClass: () => tmpStorageClass,
       getDevStartAppendCommand: () => tmpDevstartAppendCommand,
+      getSpaceName: () => tmpDevspace,
     };
     vscode.commands.executeCommand(START_DEV_MODE, node);
   }
@@ -234,10 +239,16 @@ async function init(context: vscode.ExtensionContext) {
 
 process.on("uncaughtException", (error) => {
   logger.error(`[uncatch exception] ${error.message}`);
+  if (error.message === "read ENOTCONN") {
+    return;
+  }
   vscode.window.showErrorMessage(error.message);
 });
 
 process.on("unhandledRejection", (error: any) => {
   logger.error(`[uncatch exception] ${(error && error.message) || error}`);
+  if (error && error.message === "read ENOTCONN") {
+    return;
+  }
   vscode.window.showErrorMessage((error && error.message) || error);
 });
