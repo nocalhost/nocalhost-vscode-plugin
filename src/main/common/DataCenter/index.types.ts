@@ -11,7 +11,7 @@ export interface IApplication {
   devspaceId: number;
   spaceName: string;
   storageClass: string;
-  devStartAppendCommand: string;
+  devStartAppendCommand: Array<string>;
 }
 
 export interface IApplicationContext {

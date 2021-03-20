@@ -103,7 +103,7 @@ export default class DataCenter {
           devspaceId: result.devspaceId,
           spaceName: result.spaceName || "",
           storageClass: result.storageClass || "",
-          devStartAppendCommand: result.devStartAppendCommand || "",
+          devStartAppendCommand: result.devStartAppendCommand || [],
         };
       }
     );

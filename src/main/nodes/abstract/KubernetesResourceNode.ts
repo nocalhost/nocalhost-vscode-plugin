@@ -80,6 +80,7 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
   public getDevStartAppendCommand() {
     const appNode = this.getAppNode();
     const devspace = appNode.getParent() as DevSpaceNode;
-    return devspace.info.devStartAppendCommand;
+    const appendCommands = devspace.info.devStartAppendCommand || [];
+    return appendCommands.join(" ");
   }
 }

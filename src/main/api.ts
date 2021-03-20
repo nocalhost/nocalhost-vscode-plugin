@@ -31,7 +31,7 @@ export interface DevspaceInfo {
   namespace: string;
   status: number;
   storageClass: string;
-  devStartAppendCommand: string;
+  devStartAppendCommand: Array<string>;
 }
 
 axios.interceptors.request.use(function (config) {
@@ -100,7 +100,7 @@ export interface ApplicationInfo {
   devspaceId: number;
   spaceName: string;
   storageClass: string;
-  devStartAppendCommand: string;
+  devStartAppendCommand: Array<string>;
 }
 
 export interface V2ApplicationInfo {
