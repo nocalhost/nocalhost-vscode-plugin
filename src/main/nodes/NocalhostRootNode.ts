@@ -87,12 +87,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         obj.installType = this.generateInstallType(source, originInstallType);
         obj.resourceDir = jsonObj["resource_dir"];
       }
-      const filePath = path.resolve(
-        KUBE_CONFIG_DIR,
-        `${app.id}_${app.devspaceId}_config`
-      );
-      logger.info(`appName: ${obj.name} kubeconfig: `, app.kubeconfig);
-      this.writeFile(filePath, app.kubeconfig);
 
       const nhConfigPath = path.resolve(
         HELM_NH_CONFIG_DIR,
@@ -115,6 +109,35 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       );
     });
     const devs: DevSpaceNode[] = [];
+
+    res.applications.forEach((app) => {
+      let context = app.context;
+      let obj: {
+        url?: string;
+        name?: string;
+        appConfig?: string;
+        nocalhostConfig?: string;
+        installType: string;
+        resourceDir: Array<string>;
+      } = {
+        installType: "rawManifest",
+        resourceDir: ["manifest/templates"],
+      };
+      if (context) {
+        let jsonObj = JSON.parse(context);
+        obj.url = jsonObj["application_url"];
+        obj.name = jsonObj["application_name"];
+        obj.appConfig = jsonObj["application_config_path"];
+        obj.nocalhostConfig = jsonObj["nocalhost_config"];
+        let originInstallType = jsonObj["install_type"];
+        let source = jsonObj["source"];
+        obj.installType = this.generateInstallType(source, originInstallType);
+        obj.resourceDir = jsonObj["resource_dir"];
+      }
+
+      const nhConfigPath = path.resolve(HELM_NH_CONFIG_DIR, `${app.id}_config`);
+      this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+    });
 
     for (const d of res.devSpaces) {
       const filePath = path.resolve(KUBE_CONFIG_DIR, `${d.id}_config`);
