@@ -670,7 +670,7 @@ export async function reconnectSync(
   host.log(`[cmd] ${reconnectSyncCommand}`);
   await execChildProcessAsync(host, reconnectSyncCommand, [], {
     output: "reconnected sync service",
-    dialog: "reconnected sync service"
+    dialog: "reconnected sync service",
   });
 }
 
