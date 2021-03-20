@@ -33,21 +33,26 @@ export default class ExecCommand implements ICommand {
     }
     if (!(node instanceof Pod)) {
       const status = await node.getStatus();
+      let container = result.containerName;
+      let pod = result.podName;
       if (status === DeploymentStatus.developing) {
-        const terminal = await this.opendevSpaceExec(
-          node.getAppName(),
-          node.name,
-          "nocalhost-dev",
-          node.getKubeConfigPath()
-        );
-        host.pushDispose(
-          node.getSpaceName(),
-          node.getAppName(),
-          node.name,
-          terminal
-        );
-        return;
+        container = "nocalhost-dev";
+        pod = "";
       }
+      const terminal = await this.opendevSpaceExec(
+        node.getAppName(),
+        node.name,
+        container,
+        node.getKubeConfigPath(),
+        pod
+      );
+      host.pushDispose(
+        node.getSpaceName(),
+        node.getAppName(),
+        node.name,
+        terminal
+      );
+      return;
     }
     const terminal = await this.openExec(
       node,
@@ -96,13 +101,17 @@ export default class ExecCommand implements ICommand {
     appName: string,
     workloadName: string,
     container: string | null,
-    kubeConfigPath: string
+    kubeConfigPath: string,
+    pod: string | null
   ) {
     host.log("Opening DevSpace terminal", true);
     host.showInformationMessage("Opening DevSpace terminal");
 
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
+    if (pod) {
+      terminalCommands.push("--pod", pod);
+    }
     if (container) {
       terminalCommands.push("--container", container);
     }
