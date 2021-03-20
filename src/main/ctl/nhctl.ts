@@ -668,7 +668,10 @@ export async function reconnectSync(
     `sync ${appName} -d ${workloadName} --resume`
   );
   host.log(`[cmd] ${reconnectSyncCommand}`);
-  await execChildProcessAsync(host, reconnectSyncCommand, []);
+  await execChildProcessAsync(host, reconnectSyncCommand, [], {
+    output: "reconnected sync service",
+    dialog: "reconnected sync service"
+  });
 }
 
 export async function checkVersion() {
