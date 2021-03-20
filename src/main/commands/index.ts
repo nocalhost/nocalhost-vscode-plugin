@@ -30,6 +30,7 @@ import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
 import EditAppConfigCommand from "./EditAppConfigCommand";
 import ShowApplicationsCommand from "./ShowApplicationsCommand";
+import ReconnectSyncCommand from "./ReconnectSyncCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -70,4 +71,5 @@ export default function initCommands(
   new UpgradeCommand(context);
   new EditAppConfigCommand(context);
   new ShowApplicationsCommand(context);
+  new ReconnectSyncCommand(context);
 }

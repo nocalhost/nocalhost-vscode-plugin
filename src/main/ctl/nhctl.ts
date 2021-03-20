@@ -657,6 +657,20 @@ export async function overrideSyncFolders(
   await execChildProcessAsync(host, overrideSyncCommand, []);
 }
 
+export async function reconnectSync(
+  kubeConfigPath: string,
+  appName: string,
+  workloadName: string
+) {
+  // nhctl sync coding-operation -d platform-login  --kubeconfig /Users/weiwang/.nh/plugin/kubeConfigs/12_354_config --resume
+  const reconnectSyncCommand = nhctlCommand(
+    kubeConfigPath,
+    `sync ${appName} -d ${workloadName} --resume`
+  );
+  host.log(`[cmd] ${reconnectSyncCommand}`);
+  await execChildProcessAsync(host, reconnectSyncCommand, []);
+}
+
 export async function checkVersion() {
   const requiredVersion: string = packageJson.nhctl?.version;
   const result: ServiceResult = await services.fetchNhctlVersion();
