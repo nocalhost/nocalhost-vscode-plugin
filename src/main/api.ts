@@ -52,15 +52,14 @@ axios.interceptors.response.use(
       state.setLogin(false);
     }
     if (res.code !== 0) {
-      vscode.window.showErrorMessage(res.message || "");
-      return Promise.reject(res);
+      // vscode.window.showErrorMessage(res.message || "");
+      return Promise.reject();
     }
 
     return response;
   },
   function (error) {
-    vscode.window.showErrorMessage(error.message);
-    return Promise.reject(error);
+    return Promise.reject();
   }
 );
 
