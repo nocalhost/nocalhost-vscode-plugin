@@ -11,6 +11,7 @@ import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import messageBus from "../utils/messageBus";
 
 export default class UninstallCommand implements ICommand {
   command: string = UNINSTALL_APP;
@@ -34,6 +35,10 @@ export default class UninstallCommand implements ICommand {
     state.setAppState(appNode.name, "uninstalling", true);
     vscode.commands.executeCommand("Nocalhost.refresh");
     const devspace = appNode.getParent() as DevSpaceNode;
+    messageBus.emit("uninstall", {
+      devspaceName: devspace.info.spaceName,
+      appName: appNode.name,
+    });
     host.disposeApp(devspace.info.spaceName, appNode.name);
     await this.uninstall(
       host,

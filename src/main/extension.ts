@@ -40,6 +40,7 @@ import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
+import messageBus from "./utils/messageBus";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -99,11 +100,6 @@ export async function activate(context: vscode.ExtensionContext) {
       "nhtext",
       textDocumentContentProvider
     ),
-    vscode.window.onDidChangeWindowState((e) => {
-      if (e.focused) {
-        launchDevspace();
-      }
-    }),
   ];
 
   context.subscriptions.push(...subs);
@@ -118,6 +114,36 @@ export async function activate(context: vscode.ExtensionContext) {
     "extensionActivated",
     true
   );
+
+  await messageBus.init();
+
+  messageBus.on("devstart", (value) => {
+    if (value.source !== (host.getCurrentRootPath() || "")) {
+      host.disposeBookInfo();
+      launchDevspace();
+    }
+  });
+
+  messageBus.on("endDevMode", (value) => {
+    if (value.source !== (host.getCurrentRootPath() || "")) {
+      const data = value.value as {
+        devspaceName: string;
+        appName: string;
+        workloadName: string;
+      };
+      host.disposeWorkload(data.devspaceName, data.appName, data.workloadName);
+    }
+  });
+
+  messageBus.on("uninstall", (value) => {
+    if (value.source !== (host.getCurrentRootPath() || "")) {
+      const data = value.value as {
+        devspaceName: string;
+        appName: string;
+      };
+      host.disposeApp(data.devspaceName, data.appName);
+    }
+  });
 
   launchDevspace();
 }

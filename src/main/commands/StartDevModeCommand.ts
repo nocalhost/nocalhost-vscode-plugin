@@ -27,6 +27,7 @@ import * as nls from "../../../package.nls.json";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { appTreeView } from "../extension";
+import messageBus from "../utils/messageBus";
 
 export interface ControllerNodeApi {
   name: string;
@@ -86,6 +87,11 @@ export default class StartDevModeCommand implements ICommand {
     } else if (destDir) {
       host.disposeBookInfo();
       this.saveAndOpenFolder(appName, node, destDir, result.containerName);
+      messageBus.emit("devstart", {
+        name: appName,
+        destDir,
+        container: result.containerName,
+      });
     }
   }
 
