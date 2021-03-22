@@ -689,12 +689,12 @@ export async function checkVersion() {
       return;
     }
     currentVersion = matched[1];
-    const pass: boolean = semver.satisfies(currentVersion, requiredVersion);
+    const pass: boolean = semver.gte(currentVersion, requiredVersion);
     if (!pass) {
       const result:
         | string
         | undefined = await vscode.window.showInformationMessage(
-        `Nocalhost required nhctl(${requiredVersion}), current version is v${currentVersion}, please upgrade your nhctl to the specify version.`,
+        `Nocalhost required nhctl(^${requiredVersion}), current version is ${currentVersion}, please upgrade your nhctl to the specify version.`,
         "Get nhctl"
       );
       if (result === "Get nhctl") {
