@@ -94,7 +94,11 @@ export async function install(
     let chartName = "";
     if (helmNHConfigPath) {
       const obj = await readYaml(helmNHConfigPath);
-      if (obj && obj.name) {
+      if (obj && obj.application && obj.application.name) {
+        chartName = obj.application.name;
+      }
+      // adapte old config
+      if (!chartName && obj && obj.name) {
         chartName = obj.name;
       }
     }
