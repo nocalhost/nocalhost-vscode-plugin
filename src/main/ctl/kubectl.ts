@@ -10,16 +10,14 @@ import host from "../host";
 import { DEFAULT_KUBE_CONFIG_FULLPATH } from "../constants";
 
 export async function exec(command: string, kubeconfigPath: string) {
-  const res = await execAsyncWithReturn(
-    `kubectl ${command} --kubeconfig ${kubeconfigPath}`,
-    []
-  );
+  const execCommand = `kubectl ${command} --kubeconfig ${kubeconfigPath}`;
+  const res = await execAsyncWithReturn(execCommand, []);
 
   if (res.code === 0) {
     return res.stdout;
   }
 
-  return Promise.reject(new Error(res.stderr));
+  return Promise.reject(new Error(`command: ${execCommand} \n ${res.stderr}`));
 }
 
 function getKubectlCommand(args: Array<string>) {

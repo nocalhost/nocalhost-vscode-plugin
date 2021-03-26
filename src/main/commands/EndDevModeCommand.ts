@@ -7,6 +7,7 @@ import host from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import messageBus from "../utils/messageBus";
 
 export default class EndDevModeCommand implements ICommand {
   command: string = END_DEV_MODE;
@@ -24,6 +25,11 @@ export default class EndDevModeCommand implements ICommand {
     host.getOutputChannel().show(true);
     const devspace = appNode.getParent() as DevSpaceNode;
     host.disposeWorkload(devspace.info.spaceName, appNode.name, node.name);
+    messageBus.emit("endDevMode", {
+      devspaceName: devspace.info.spaceName,
+      appName: appNode.name,
+      workloadName: node.name,
+    });
     await nhctl.endDevMode(
       host,
       node.getKubeConfigPath(),

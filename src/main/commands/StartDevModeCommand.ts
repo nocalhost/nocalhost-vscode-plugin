@@ -27,6 +27,7 @@ import * as nls from "../../../package.nls.json";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { appTreeView } from "../extension";
+import messageBus from "../utils/messageBus";
 
 export interface ControllerNodeApi {
   name: string;
@@ -86,6 +87,11 @@ export default class StartDevModeCommand implements ICommand {
     } else if (destDir) {
       host.disposeBookInfo();
       this.saveAndOpenFolder(appName, node, destDir, result.containerName);
+      messageBus.emit("devstart", {
+        name: appName,
+        destDir,
+        container: result.containerName,
+      });
     }
   }
 
@@ -308,40 +314,40 @@ export default class StartDevModeCommand implements ICommand {
           );
           host.log("sync file end", true);
           host.log("", true);
-          const container = await ConfigService.getContaienrConfig(
-            node.getKubeConfigPath(),
-            appName,
-            node.name,
-            containerName
-          );
-          if (
-            container &&
-            container.dev.portForward &&
-            container.dev.portForward.length &&
-            container.dev.portForward.length > 0
-          ) {
-            progress.report({
-              message: "port forwarding",
-            });
-            host.log("port forward ...", true);
-            await nhctl
-              .startPortForward(
-                host,
-                node.getKubeConfigPath(),
-                appName,
-                node.name,
-                "devPorts",
-                node.resourceType,
-                container.dev.portForward
-              )
-              .catch(() => {});
-            host.log("port forward end", true);
-            host.log("", true);
-          }
+          // const container = await ConfigService.getContaienrConfig(
+          //   node.getKubeConfigPath(),
+          //   appName,
+          //   node.name,
+          //   containerName
+          // );
+          // if (
+          //   container &&
+          //   container.dev.portForward &&
+          //   container.dev.portForward.length &&
+          //   container.dev.portForward.length > 0
+          // ) {
+          //   progress.report({
+          //     message: "port forwarding",
+          //   });
+          //   host.log("port forward ...", true);
+          //   await nhctl
+          //     .startPortForward(
+          //       host,
+          //       node.getKubeConfigPath(),
+          //       appName,
+          //       node.name,
+          //       "devPorts",
+          //       node.resourceType,
+          //       container.dev.portForward
+          //     )
+          //     .catch(() => {});
+          //   host.log("port forward end", true);
+          //   host.log("", true);
+          // }
 
-          progress.report({
-            message: "DevMode Started.",
-          });
+          // progress.report({
+          //   message: "DevMode Started.",
+          // });
           node.setStatus("");
           await vscode.commands.executeCommand(EXEC, node);
         } catch (error) {

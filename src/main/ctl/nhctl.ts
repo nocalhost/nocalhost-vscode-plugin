@@ -50,7 +50,12 @@ export async function getInstalledApp(): Promise<AllInstallAppInfo[]> {
   let obj: AllInstallAppInfo[] = [];
 
   if (result && result.stdout) {
-    obj = yaml.parse(result.stdout);
+    try {
+      obj = yaml.parse(result.stdout);
+    } catch (error) {
+      logger.info("command: " + command + "result: ", result.stdout);
+      throw error;
+    }
   }
 
   return obj;
@@ -94,7 +99,11 @@ export async function install(
     let chartName = "";
     if (helmNHConfigPath) {
       const obj = await readYaml(helmNHConfigPath);
-      if (obj && obj.name) {
+      if (obj && obj.application && obj.application.name) {
+        chartName = obj.application.name;
+      }
+      // adapte old config
+      if (!chartName && obj && obj.name) {
         chartName = obj.name;
       }
     }
@@ -466,7 +475,12 @@ export async function getServiceConfig(
   const result = await execAsyncWithReturn(describeCommand, []);
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {
-    svcProfile = yaml.parse(result.stdout) as SvcProfile;
+    try {
+      svcProfile = yaml.parse(result.stdout) as SvcProfile;
+    } catch (error) {
+      logger.info("command: " + describeCommand + "result: ", result.stdout);
+      throw error;
+    }
   }
 
   return svcProfile;
@@ -596,7 +610,13 @@ export async function listPVC(
     } --yaml`
   );
   const result = await execAsyncWithReturn(configCommand, []);
-  const pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+  let pvcs: PVCData[] = [];
+  try {
+    pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+  } catch (error) {
+    logger.info("command: " + configCommand + "result: ", result.stdout);
+    throw error;
+  }
   return pvcs;
 }
 
@@ -689,12 +709,12 @@ export async function checkVersion() {
       return;
     }
     currentVersion = matched[1];
-    const pass: boolean = semver.satisfies(currentVersion, requiredVersion);
+    const pass: boolean = semver.gte(currentVersion, requiredVersion);
     if (!pass) {
       const result:
         | string
         | undefined = await vscode.window.showInformationMessage(
-        `Nocalhost required nhctl(${requiredVersion}), current version is v${currentVersion}, please upgrade your nhctl to the specify version.`,
+        `Nocalhost required nhctl(^${requiredVersion}), current version is ${currentVersion}, please upgrade your nhctl to the specify version.`,
         "Get nhctl"
       );
       if (result === "Get nhctl") {
