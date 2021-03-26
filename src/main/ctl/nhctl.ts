@@ -50,7 +50,12 @@ export async function getInstalledApp(): Promise<AllInstallAppInfo[]> {
   let obj: AllInstallAppInfo[] = [];
 
   if (result && result.stdout) {
-    obj = yaml.parse(result.stdout);
+    try {
+      obj = yaml.parse(result.stdout);
+    } catch (error) {
+      logger.info("command: " + command + "result: ", result.stdout);
+      throw error;
+    }
   }
 
   return obj;
@@ -470,7 +475,12 @@ export async function getServiceConfig(
   const result = await execAsyncWithReturn(describeCommand, []);
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {
-    svcProfile = yaml.parse(result.stdout) as SvcProfile;
+    try {
+      svcProfile = yaml.parse(result.stdout) as SvcProfile;
+    } catch (error) {
+      logger.info("command: " + describeCommand + "result: ", result.stdout);
+      throw error;
+    }
   }
 
   return svcProfile;
@@ -600,7 +610,13 @@ export async function listPVC(
     } --yaml`
   );
   const result = await execAsyncWithReturn(configCommand, []);
-  const pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+  let pvcs: PVCData[] = [];
+  try {
+    pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+  } catch (error) {
+    logger.info("command: " + configCommand + "result: ", result.stdout);
+    throw error;
+  }
   return pvcs;
 }
 
