@@ -25,7 +25,7 @@ export default class RefreshCommand implements ICommand {
       state.clearAllData();
     }
     if (node instanceof NocalhostRootNode) {
-      this.provider.refresh();
+      this.provider.refresh(undefined);
     } else {
       this.provider.refresh(node);
     }
