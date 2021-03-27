@@ -7,6 +7,7 @@ import NocalhostAppProvider from "../appProvider";
 import registerCommand from "./register";
 import { BaseNocalhostNode } from "../nodes/types/nodeType";
 import state from "../state";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
 export default class RefreshCommand implements ICommand {
   command: string = REFRESH;
@@ -23,6 +24,10 @@ export default class RefreshCommand implements ICommand {
       // clear all data;
       state.clearAllData();
     }
-    this.provider.refresh(node);
+    if (node instanceof NocalhostRootNode) {
+      this.provider.refresh();
+    } else {
+      this.provider.refresh(node);
+    }
   }
 }
