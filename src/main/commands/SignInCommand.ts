@@ -39,7 +39,7 @@ export default class SignInCommand implements ICommand {
       await state.setLogin(true);
       vscode.window.showInformationMessage("login successful");
     } catch (e) {
-      vscode.window.showWarningMessage(e.message);
+      vscode.window.showWarningMessage(e && e.message);
     }
   }
 }
