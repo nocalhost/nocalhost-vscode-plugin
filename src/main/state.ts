@@ -25,8 +25,7 @@ class State {
 
   private consume() {
     this.renderMessage.forEach((item, key) => {
-      const node = key === "Nocalhost" ? null : this.getNode(key);
-      vscode.commands.executeCommand("Nocalhost.refresh", node);
+      vscode.commands.executeCommand("Nocalhost.refresh", this.getNode(key));
       this.renderMessage.delete(key);
     });
   }
