@@ -56,6 +56,8 @@ export class DevSpaceNode extends NocalhostFolderNode {
       type = "rawManifest";
     } else if (source === "git" && originInstallType === "helm_chart") {
       type = "helmGit";
+    } else if (source === "git" && originInstallType === "kustomize") {
+      type = "kustomizeGit";
     } else if (source === "local") {
       type = originInstallType;
     }
