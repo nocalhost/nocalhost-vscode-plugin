@@ -165,8 +165,37 @@ export default class InstallCommand implements ICommand {
         }
       }
     }
+    let resourceDir: Array<string> | undefined;
+    if (appNode.installType === "kustomizeGit") {
+      const res = await host.showInformationMessage(
+        "Do you want to specify a Kustomize path?",
+        { modal: true },
+        "Use Default path",
+        "Specify One"
+      );
+      if (!res) {
+        return;
+      }
+      if (res === "Specify One") {
+        const resPath = await host.showInputBox({
+          placeHolder: "please input your kustomize path",
+        });
+        if (!resPath) {
+          return;
+        }
 
-    await this.startInstall(appNode, values, valuesStr, refOrVersion, local);
+        resourceDir = [resPath];
+      }
+    }
+
+    await this.startInstall(
+      appNode,
+      values,
+      valuesStr,
+      refOrVersion,
+      local,
+      resourceDir
+    );
     productPagePort = this.productPagePort;
     await vscode.commands.executeCommand(REFRESH);
     if (this.isBookInfo(appNode) && productPagePort) {
@@ -251,7 +280,8 @@ export default class InstallCommand implements ICommand {
     values: string | undefined,
     valuesStr: string | undefined,
     refOrVersion: string | undefined,
-    local: any
+    local: any,
+    resourceDir?: Array<string>
   ) {
     await this.install(
       host,
@@ -263,7 +293,7 @@ export default class InstallCommand implements ICommand {
       appNode.devSpaceId,
       appNode.url,
       appNode.installType,
-      appNode.resourceDir,
+      resourceDir || appNode.resourceDir,
       values,
       valuesStr,
       refOrVersion,

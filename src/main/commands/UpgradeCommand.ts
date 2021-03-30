@@ -111,9 +111,9 @@ export default class UpgradeCommand implements ICommand {
     });
 
     // end port
-    await host.showProgressing(`Ending port-forward`, async (progress) => {
-      await this.endAllPortForward(appNode);
-    });
+    // await host.showProgressing(`Ending port-forward`, async (progress) => {
+    //   await this.endAllPortForward(appNode);
+    // });
     await nhctl
       .upgrade(
         appNode.getKubeConfigPath(),
@@ -131,7 +131,7 @@ export default class UpgradeCommand implements ICommand {
           nodeStateId: appNode.getNodeStateId(),
         });
       });
-    await this.startPortForward(appNode);
+    // await this.startPortForward(appNode);
   }
 
   private getAllConfig(localPath: string) {

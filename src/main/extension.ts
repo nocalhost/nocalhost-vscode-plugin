@@ -276,5 +276,10 @@ process.on("unhandledRejection", (error: any) => {
   if (error && error.message === "read ENOTCONN") {
     return;
   }
-  vscode.window.showErrorMessage((error && error.message) || error);
+
+  if (error.source === "api" && error.error && error.error.code) {
+    vscode.window.showErrorMessage(error.error.message);
+  } else {
+    vscode.window.showErrorMessage((error && error.message) || error);
+  }
 });

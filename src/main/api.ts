@@ -53,13 +53,13 @@ axios.interceptors.response.use(
     }
     if (res.code !== 0) {
       // vscode.window.showErrorMessage(res.message || "");
-      return Promise.reject();
+      return Promise.reject({ source: "api", error: res });
     }
 
     return response;
   },
   function (error) {
-    return Promise.reject();
+    return Promise.reject({ source: "api", error });
   }
 );
 

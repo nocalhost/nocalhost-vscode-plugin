@@ -62,7 +62,7 @@ export default class SyncServiceCommand implements ICommand {
               command: OVERRIDE_SYNC,
               arguments: [syncData],
             };
-            host.outSyncStatusBar.text = "$(warning)";
+            host.outSyncStatusBar.text = "$(bell-dot)";
             host.outSyncStatusBar.command = overrideSyncCommand;
             host.outSyncStatusBar.tooltip = r.outOfSync;
             host.outSyncStatusBar.show();
@@ -88,6 +88,9 @@ export default class SyncServiceCommand implements ICommand {
   getIcon(status: string) {
     let icon = "error";
     switch (status) {
+      case "outOfSync":
+        icon = "warning";
+        break;
       case "disconnected":
         icon = "debug-disconnect";
         break;
