@@ -30,12 +30,19 @@ export default class PortForwardListCommand implements ICommand {
       return;
     }
 
-    if (svcProfile.devPortForwardList.length < 1) {
+    const portForwardList = svcProfile.devPortForwardList.filter((item) => {
+      if (item.role === "SYNC") {
+        return false;
+      }
+      return true;
+    });
+
+    if (portForwardList.length < 1) {
       host.showInformationMessage("No Port Forward");
       return;
     }
 
-    const portList = svcProfile.devPortForwardList.map((item) => {
+    const portList = portForwardList.map((item) => {
       return `${item.localport}:${item.remoteport}(${item.status})`;
     });
 

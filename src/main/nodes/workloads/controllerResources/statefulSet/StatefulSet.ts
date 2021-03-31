@@ -65,7 +65,15 @@ export class StatefulSet extends ControllerResourceNode {
       this.resourceType
     );
     if (svcProfile && svcProfile.devPortForwardList.length > 0) {
-      return true;
+      const portForwardList = svcProfile.devPortForwardList.filter((item) => {
+        if (item.role === "SYNC") {
+          return false;
+        }
+        return true;
+      });
+      if (portForwardList.length > 0) {
+        return true;
+      }
     }
     return false;
   }

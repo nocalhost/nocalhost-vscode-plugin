@@ -38,6 +38,7 @@ export interface SvcProfile {
   localSyncthingGUIPort: number;
   localAbsoluteSyncDirFromDevStartPlugin: Array<string>;
   devPortForwardList: Array<{
+    role?: string;
     localport: number;
     remoteport: number;
     way: string;
