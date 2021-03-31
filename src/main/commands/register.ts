@@ -26,6 +26,9 @@ export default function registerCommand(
             state.setRunning(false);
             const errMessage = err.message ? err.message : err;
             host.showErrorMessage(errMessage);
+            logger.error(
+              `[vscode Command] exec command: ${command}. ${errMessage}`
+            );
           })
           .finally(() => {
             state.setRunning(false);
@@ -37,7 +40,16 @@ export default function registerCommand(
             host.showErrorMessage(errMessage);
           });
         } else {
-          callback(...args);
+          try {
+            callback(...args);
+          } catch (error) {
+            logger.error(
+              `[vscode Command] exec command: ${command}. ${
+                error && error.message
+              }: ${error && error.stack}`
+            );
+            throw error;
+          }
         }
       }
     }

@@ -25,7 +25,7 @@ export async function execAsyncWithReturn(
       if (code === 0) {
         resolve({ stdout, stderr, code });
       } else {
-        reject(new Error(stderr || err));
+        reject(new Error(`${err}. ${stderr}`));
       }
     });
 
@@ -55,6 +55,7 @@ export async function execChildProcessAsync(
     logger.info(`[cmd] ${command}`);
     const proc = spawn(command, args, { shell: true, env });
     let errorStr = "";
+    let err = `execute command fail: ${command}`;
     proc.on("close", (code) => {
       if (code === 0) {
         resolve(null);
@@ -62,9 +63,7 @@ export async function execChildProcessAsync(
         if (errorTips && errorTips.output) {
           host.log(errorTips.output, true);
         }
-        reject(
-          (errorTips && errorTips.dialog) || `execute command fail: ${command}`
-        );
+        reject((errorTips && errorTips.dialog) || `${err}. ${errorStr}`);
       }
     });
 
