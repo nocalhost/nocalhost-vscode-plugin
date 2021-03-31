@@ -63,12 +63,17 @@ export default class PortForwardListCommand implements ICommand {
     }
 
     const endPosition = endPort.indexOf("(");
-    await nhctl.endPortForward(
-      node.getKubeConfigPath(),
-      node.getAppName(),
-      node.name,
-      endPort.substring(0, endPosition),
-      node.resourceType
+    await host.showProgressing(
+      "Ending port-forward: " + endPort.substring(0, endPosition),
+      async () => {
+        await nhctl.endPortForward(
+          node.getKubeConfigPath(),
+          node.getAppName(),
+          node.name,
+          endPort.substring(0, endPosition),
+          node.resourceType
+        );
+      }
     );
     await vscode.commands.executeCommand("Nocalhost.refresh", node);
     host.showInformationMessage(`Ended Port Forward ${endPort}`);
