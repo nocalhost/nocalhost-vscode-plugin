@@ -127,7 +127,17 @@ export class Deployment extends ControllerResourceNode {
 
   public async getPortForwardStatus() {
     if (this.svcProfile && this.svcProfile.devPortForwardList.length > 0) {
-      return true;
+      const portForwardList = this.svcProfile.devPortForwardList.filter(
+        (item) => {
+          if (item.role === "SYNC") {
+            return false;
+          }
+          return true;
+        }
+      );
+      if (portForwardList.length > 0) {
+        return true;
+      }
     }
     return false;
   }
