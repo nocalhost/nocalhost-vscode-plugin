@@ -58,7 +58,15 @@ export async function getInstalledApp(): Promise<AllInstallAppInfo[]> {
     }
   }
 
-  return obj;
+  return obj.sort((a, b) => {
+    if (a.namespace < b.namespace) {
+      return -1;
+    }
+    if (a.namespace > b.namespace) {
+      return 1;
+    }
+    return 0;
+  });
 }
 
 export async function install(

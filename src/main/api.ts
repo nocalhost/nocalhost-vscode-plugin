@@ -186,7 +186,7 @@ export async function getV2Application() {
     context: JSON.stringify(contextObj),
     status: 1,
   });
-  return result;
+  return result.sort((a, b) => a.id - b.id);
 }
 
 export async function updateAppInstallStatus(
@@ -231,5 +231,13 @@ export async function getDevSpace() {
     };
     result.push(app);
   }
-  return result;
+  return result.sort((a, b) => {
+    if (a.spaceName < b.spaceName) {
+      return -1;
+    }
+    if (a.spaceName > b.spaceName) {
+      return 1;
+    }
+    return 0;
+  });
 }

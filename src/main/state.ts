@@ -35,6 +35,14 @@ class State {
     const isSame = _.isEqual(currentData, data);
     this.dataMap.set(id, data);
     if (!isSame && !isInit) {
+      if (id === "Nocalhost") {
+        logger.error(
+          "pre: ",
+          JSON.stringify(currentData, undefined, 2),
+          "after: ",
+          JSON.stringify(data, undefined, 2)
+        );
+      }
       this.renderMessage.set(id, new Date().getTime());
       logger.info("render node id: " + id);
     }
