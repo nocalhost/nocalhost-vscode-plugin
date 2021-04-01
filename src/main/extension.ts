@@ -264,7 +264,7 @@ async function init(context: vscode.ExtensionContext) {
 }
 
 process.on("uncaughtException", (error) => {
-  logger.error(`[uncatch exception] ${error.message}`);
+  logger.error(`[uncatch exception] ${error.message} ${error.stack}`);
   if (error.message === "read ENOTCONN") {
     return;
   }
@@ -272,7 +272,11 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (error: any) => {
-  logger.error(`[uncatch exception] ${(error && error.message) || error}`);
+  logger.error(
+    `[uncatch exception] ${(error && error.message) || error} ${
+      error && error.stack
+    }`
+  );
   if (error && error.message === "read ENOTCONN") {
     return;
   }
