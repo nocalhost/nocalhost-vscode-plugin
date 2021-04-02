@@ -105,6 +105,28 @@ export default class UpgradeCommand implements ICommand {
         }
       }
     }
+    let resourceDir: Array<string> | undefined;
+    if (appNode.installType === "kustomizeGit") {
+      const res = await host.showInformationMessage(
+        "Do you want to specify a Kustomize path?",
+        { modal: true },
+        "Use Default path",
+        "Specify One"
+      );
+      if (!res) {
+        return;
+      }
+      if (res === "Specify One") {
+        const resPath = await host.showInputBox({
+          placeHolder: "please input your kustomize path",
+        });
+        if (!resPath) {
+          return;
+        }
+
+        resourceDir = [resPath];
+      }
+    }
     state.setAppState(appNode.name, "upgrading", true, {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
@@ -120,7 +142,7 @@ export default class UpgradeCommand implements ICommand {
         appNode.name,
         appNode.url,
         appNode.installType,
-        appNode.resourceDir,
+        resourceDir || appNode.resourceDir,
         appNode.appConfig,
         local,
         refOrVersion
