@@ -19,7 +19,7 @@ export default class RefreshCommand implements ICommand {
     this.provider = provider;
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  async execCommand(node?: BaseNocalhostNode) {
+  execCommand(node?: BaseNocalhostNode) {
     if (!node) {
       // clear all data;
       state.clearAllData();

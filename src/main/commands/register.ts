@@ -21,9 +21,11 @@ export default function registerCommand(
           return;
         }
         state.setRunning(true);
-        Promise.resolve(callback(...args))
-          .catch((err) => {
-            state.setRunning(false);
+      }
+
+      if (callback.then) {
+        await callback(...args)
+          .catch((err: any) => {
             const errMessage = err.message ? err.message : err;
             host.showErrorMessage(errMessage);
             logger.error(
@@ -31,24 +33,23 @@ export default function registerCommand(
             );
           })
           .finally(() => {
-            state.setRunning(false);
+            if (isLock) {
+              state.setRunning(false);
+            }
           });
       } else {
-        if (callback.then) {
-          callback(...args).catch((err: any) => {
-            const errMessage = err.message ? err.message : err;
-            host.showErrorMessage(errMessage);
-          });
-        } else {
-          try {
-            callback(...args);
-          } catch (error) {
-            logger.error(
-              `[vscode Command] exec command: ${command}. ${
-                error && error.message
-              }: ${error && error.stack}`
-            );
-            throw error;
+        try {
+          callback(...args);
+        } catch (error) {
+          host.showErrorMessage(error.message);
+          logger.error(
+            `[vscode Command] exec command: ${command}. ${
+              error && error.message
+            }: ${error && error.stack}`
+          );
+        } finally {
+          if (isLock) {
+            state.setRunning(false);
           }
         }
       }
