@@ -100,6 +100,9 @@ export default class InstallCommand implements ICommand {
       if (appNode.installType === "helmRepo") {
         repoMsg = "Which version to install?";
         btMsg = "Default Version";
+      } else if (appNode.installType === "kustomizeGit") {
+        repoMsg = "Which branch to install(Kustomize in Git Repo)?";
+        btMsg = "Default Branch";
       } else {
         repoMsg = "Which branch to install(Manifests in Git Repo)?";
         btMsg = "Default Branch";
