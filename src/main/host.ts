@@ -20,6 +20,8 @@ export class Host implements vscode.Disposable {
   );
   private newTerminal!: vscode.Terminal | null;
 
+  public bookinfo_timeout_id: NodeJS.Timeout | null = null; // bookinfo
+
   private devspaceDisposesMap = new Map<
     string,
     Map<
