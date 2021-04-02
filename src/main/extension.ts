@@ -268,6 +268,11 @@ process.on("uncaughtException", (error) => {
   if (error.message === "read ENOTCONN") {
     return;
   }
+  if (
+    error.message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
+  ) {
+    return;
+  }
   vscode.window.showErrorMessage(error.message);
 });
 
