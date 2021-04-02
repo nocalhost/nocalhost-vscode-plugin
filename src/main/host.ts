@@ -60,7 +60,7 @@ export class Host implements vscode.Disposable {
     this.autoRefreshTimeId = setInterval(async () => {
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
-        await rootNode.updateData();
+        await rootNode.updateData().catch(() => {});
       }
       for (const [id, expanded] of state.k8sFolderMap) {
         if (expanded) {

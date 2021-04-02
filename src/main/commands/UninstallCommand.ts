@@ -33,7 +33,6 @@ export default class UninstallCommand implements ICommand {
     }
 
     state.setAppState(appNode.name, "uninstalling", true);
-    vscode.commands.executeCommand("Nocalhost.refresh");
     const devspace = appNode.getParent() as DevSpaceNode;
     messageBus.emit("uninstall", {
       devspaceName: devspace.info.spaceName,
@@ -48,7 +47,6 @@ export default class UninstallCommand implements ICommand {
       appNode.devSpaceId
     ).finally(() => {
       state.deleteAppState(appNode.name, "uninstalling");
-      vscode.commands.executeCommand("Nocalhost.refresh");
     });
   }
 
