@@ -18,6 +18,7 @@ import logger from "../utils/logger";
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
   productPagePort = "";
+  startTime = new Date().getTime();
   bookInfoUrls = [
     "https://github.com/nocalhost/bookinfo.git",
     "git@github.com:nocalhost/bookinfo.git",
@@ -202,6 +203,7 @@ export default class InstallCommand implements ICommand {
     productPagePort = this.productPagePort;
     await vscode.commands.executeCommand(REFRESH);
     if (this.isBookInfo(appNode) && productPagePort) {
+      this.startTime = new Date().getTime();
       this.checkStatus(appNode, productPagePort);
     }
   }
@@ -246,6 +248,13 @@ export default class InstallCommand implements ICommand {
   }
 
   private async checkStatus(appNode: AppNode, productPagePort: string) {
+    if (host.bookinfo_timeout_id) {
+      clearTimeout(host.bookinfo_timeout_id);
+    }
+    if (new Date().getTime() - this.startTime > 5 * 60 * 1000) {
+      logger.info("time out to open productpage");
+      return;
+    }
     const check = await this.checkBookInfoStatus(appNode).catch(() => {});
     if (check) {
       const res = await host.showInformationMessage(
@@ -253,7 +262,6 @@ export default class InstallCommand implements ICommand {
         { modal: true },
         "go"
       );
-      await vscode.commands.executeCommand(REFRESH);
       if (res === "go") {
         const uri = vscode.Uri.parse(
           `http://127.0.0.1:${productPagePort}/productpage`
@@ -262,7 +270,7 @@ export default class InstallCommand implements ICommand {
       }
       return;
     }
-    setTimeout(() => {
+    host.bookinfo_timeout_id = setTimeout(() => {
       this.checkStatus(appNode, productPagePort);
     }, 2000);
   }
