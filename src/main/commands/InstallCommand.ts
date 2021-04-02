@@ -300,59 +300,35 @@ export default class InstallCommand implements ICommand {
       local
     );
 
-    // await host.delay(1000);
-    // const nocalhostConfig = await appNode.getNocalhostConfig();
-    // if (
-    //   nocalhostConfig &&
-    //   nocalhostConfig.services &&
-    //   nocalhostConfig.services.length > 0
-    // ) {
-    //   const services = nocalhostConfig.services;
-    //   for (let i = 0; i < services.length; i++) {
-    //     const service = services[i];
-    //     const containers = service.containers;
-    //     let ports: Array<string> = [];
-    //     for (let j = 0; j < containers.length; j++) {
-    //       const container = containers[j];
-    //       if (container.install && container.install.portForward) {
-    //         ports = ports.concat(container.install.portForward);
-    //       }
-    //     }
-    //     if (ports.length <= 0) {
-    //       logger.info(`${service.name} port is null`);
-    //       continue;
-    //     }
-    //     const podNameArr = await this.getPodNames(
-    //       service.name,
-    //       service.serviceType,
-    //       appNode.getKubeConfigPath(),
-    //       1000 * 60
-    //     );
-    //     logger.info(`podName: ${JSON.stringify(podNameArr, undefined, 2)}`);
-    //     if (podNameArr && podNameArr.length <= 0) {
-    //       logger.info("service : " + service.name + " not found pod");
-    //       continue;
-    //     }
-    //     const podName = podNameArr[0];
-    //     await nhctl
-    //       .startPortForward(
-    //         host,
-    //         appNode.getKubeConfigPath(),
-    //         appNode.name,
-    //         service.name,
-    //         "manual",
-    //         service.serviceType,
-    //         ports,
-    //         podName
-    //       )
-    //       .catch(() => {});
-    //     if (service.name === "productpage") {
-    //       this.productPagePort = ports[0].split(":")[0];
-    //     }
-    //   }
-    // } else {
-    //   logger.info("appname: " + appNode.name + "not service config");
-    // }
+    await host.delay(1000);
+    const nocalhostConfig = await appNode.getNocalhostConfig();
+    if (
+      nocalhostConfig &&
+      nocalhostConfig.services &&
+      nocalhostConfig.services.length > 0
+    ) {
+      const services = nocalhostConfig.services;
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
+        const containers = service.containers;
+        let ports: Array<string> = [];
+        for (let j = 0; j < containers.length; j++) {
+          const container = containers[j];
+          if (container.install && container.install.portForward) {
+            ports = ports.concat(container.install.portForward);
+          }
+        }
+        if (ports.length <= 0) {
+          logger.info(`${service.name} port is null`);
+          continue;
+        }
+        if (service.name === "productpage") {
+          this.productPagePort = ports[0].split(":")[0];
+        }
+      }
+    } else {
+      logger.info("appname: " + appNode.name + "not service config");
+    }
   }
 
   public async getPodNames(
