@@ -98,6 +98,13 @@ export async function getContainerNames(
   return containerNameArr;
 }
 
+/**
+ * get all pod name, except terminating pod
+ * @param name resourceName
+ * @param kind resource kind
+ * @param kubeConfigPath kubeconfig path
+ * @returns pod name array
+ */
 export async function getPodNames(
   name: string,
   kind: string,
@@ -123,7 +130,13 @@ export async function getPodNames(
   });
   return podNameArr;
 }
-
+/**
+ * get all running pod name, except terminating pod
+ * @param name resourceName
+ * @param kind resource kind
+ * @param kubeConfigPath kubeconfig path
+ * @returns pod name array
+ */
 export async function getRunningPodNames(
   name: string,
   kind: string,

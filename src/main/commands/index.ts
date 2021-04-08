@@ -31,6 +31,7 @@ import UpgradeCommand from "./UpgradeCommand";
 import EditAppConfigCommand from "./EditAppConfigCommand";
 import ShowApplicationsCommand from "./ShowApplicationsCommand";
 import ReconnectSyncCommand from "./ReconnectSyncCommand";
+import DebugCommand from "./DebugCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -72,4 +73,7 @@ export default function initCommands(
   new EditAppConfigCommand(context);
   new ShowApplicationsCommand(context);
   new ReconnectSyncCommand(context);
+
+  // command
+  new DebugCommand(context);
 }

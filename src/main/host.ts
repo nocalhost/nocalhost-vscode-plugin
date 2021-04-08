@@ -22,6 +22,8 @@ export class Host implements vscode.Disposable {
 
   public bookinfo_timeout_id: NodeJS.Timeout | null = null; // bookinfo
 
+  // private debugDisposesMap = new Map<string, { dispose: () => any }>();
+
   private devspaceDisposesMap = new Map<
     string,
     Map<
@@ -389,6 +391,16 @@ export class Host implements vscode.Disposable {
 
   isMac() {
     return process.platform === "darwin";
+  }
+
+  async showWorkspaceFolderPick(): Promise<vscode.WorkspaceFolder | undefined> {
+    if (!vscode.workspace.workspaceFolders) {
+      vscode.window.showErrorMessage("This command requires an open folder.");
+      return undefined;
+    } else if (vscode.workspace.workspaceFolders.length === 1) {
+      return vscode.workspace.workspaceFolders[0];
+    }
+    return await vscode.window.showWorkspaceFolderPick();
   }
 
   formalizePath(path: string) {
