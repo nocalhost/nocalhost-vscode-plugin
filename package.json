@@ -113,6 +113,10 @@
       ],
       "view/item/context": [
         {
+          "command": "Nocalhost.debug",
+          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i"
+        },
+        {
           "command": "Nocalhost.showApp",
           "when": "viewItem =~ /^devspace/i",
           "group": "inline@0"
@@ -230,6 +234,10 @@
       }
     ],
     "commands": [
+      {
+        "command": "Nocalhost.debug",
+        "title": "Debug"
+      },
       {
         "command": "Nocalhost.loadWorkloads",
         "title": "Load Workloads"
@@ -460,6 +468,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "@types/json-schema": "^7.0.7",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
     "highlight.js": "^10.5.0",

@@ -38,3 +38,6 @@ export const DELETE_KUBERNETES_OBJECT = "Nocalhost.deleteKubernetesObject";
 export const SYNC_SERVICE = "Nocalhost.syncService";
 export const OVERRIDE_SYNC = "Nocalhost.overrideSync";
 export const RECONNECT_SYNC = "Nocalhost.reconnectSync";
+
+// debug
+export const DEBUG = "Nocalhost.debug";

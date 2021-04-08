@@ -74,6 +74,14 @@ export class Deployment extends ControllerResourceNode {
     return treeItem;
   }
 
+  public async isDeveloping() {
+    if (this.svcProfile && this.svcProfile.developing) {
+      return true;
+    }
+
+    return false;
+  }
+
   public async getStatus() {
     const appNode = this.getAppNode();
     let status = state.getAppState(
@@ -192,5 +200,9 @@ export class Deployment extends ControllerResourceNode {
       },
     };
     return validate(this.nocalhostService || {}, schema);
+  }
+
+  public getConfig() {
+    return this.nocalhostService;
   }
 }

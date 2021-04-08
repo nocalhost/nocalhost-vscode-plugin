@@ -50,7 +50,9 @@ export interface ContainerConfig {
       hotReloadRun?: Array<string>;
       hotReloadDebug?: Array<string>;
     };
-    debug: any;
+    debug?: {
+      remoteDebugPort: number;
+    };
     remoteDebugPort?: number;
     useDevContainer?: boolean;
   };
