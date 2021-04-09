@@ -41,3 +41,4 @@ export const RECONNECT_SYNC = "Nocalhost.reconnectSync";
 
 // debug
 export const DEBUG = "Nocalhost.debug";
+export const RUN = "Nocalhost.run";

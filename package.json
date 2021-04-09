@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -114,6 +114,10 @@
       "view/item/context": [
         {
           "command": "Nocalhost.debug",
+          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i"
+        },
+        {
+          "command": "Nocalhost.run",
           "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i"
         },
         {
@@ -237,6 +241,10 @@
       {
         "command": "Nocalhost.debug",
         "title": "Debug"
+      },
+      {
+        "command": "Nocalhost.run",
+        "title": "Run"
       },
       {
         "command": "Nocalhost.loadWorkloads",

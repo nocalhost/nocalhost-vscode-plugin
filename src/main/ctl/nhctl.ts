@@ -732,6 +732,6 @@ export async function checkVersion() {
   }
 }
 
-function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
+export function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
   return `nhctl ${baseCommand} --kubeconfig ${kubeconfigPath}`;
 }

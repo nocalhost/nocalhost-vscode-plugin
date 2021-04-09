@@ -6,7 +6,7 @@ import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import { ContainerConfig } from "../service/configService";
 import { IDebugProvider } from "./IDebugprovider";
-import validate from "../utils/validate";
+import { validate } from "json-schema";
 import logger from "../utils/logger";
 import * as kubectl from "../ctl/kubectl";
 
@@ -48,8 +48,12 @@ export class DebugSession {
       return;
     }
     const valid = this.validateDebugConfig(container);
-    if (!valid) {
-      host.showInformationMessage("please check debug config");
+    if (valid.errors.length > 0) {
+      let message = "please check config.\n";
+      valid.errors.forEach((e) => {
+        message += `${e.property}: ${e.message} \n`;
+      });
+      host.showErrorMessage(`${message}`);
       return;
     }
     const port =
@@ -119,6 +123,7 @@ export class DebugSession {
 
   public validateDebugConfig(config: ContainerConfig) {
     const schema: JsonSchema.JSONSchema6 = {
+      $schema: "http://json-schema.org/schema#",
       type: "object",
       required: ["dev"],
       properties: {
@@ -132,10 +137,10 @@ export class DebugSession {
               properties: {
                 debug: {
                   type: "array",
+                  minItems: 1,
                   items: {
                     type: "string",
                   },
-                  minLength: 1,
                 },
               },
             },

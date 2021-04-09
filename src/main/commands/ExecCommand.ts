@@ -104,9 +104,6 @@ export default class ExecCommand implements ICommand {
     kubeConfigPath: string,
     pod: string | null
   ) {
-    host.log("Opening DevSpace terminal", true);
-    host.showInformationMessage("Opening DevSpace terminal");
-
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
     if (pod) {
@@ -124,7 +121,6 @@ export default class ExecCommand implements ICommand {
     );
     terminalDisposed.show();
 
-    host.showInformationMessage("DevSpace terminal Opened");
     host.log("", true);
 
     return terminalDisposed;
