@@ -278,7 +278,7 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (error: any) => {
   logger.error(
-    `[uncatch exception] ${(error && error.message) || error} ${
+    `[unhandledRejection] ${(error && error.message) || error} ${
       error && error.stack
     }`
   );
@@ -289,6 +289,13 @@ process.on("unhandledRejection", (error: any) => {
   if (error.source === "api" && error.error && error.error.code) {
     vscode.window.showErrorMessage(error.error.message);
   } else {
-    vscode.window.showErrorMessage((error && error.message) || error);
+    const message: string = (error && error.message) || error;
+    if (
+      message &&
+      message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
+    ) {
+      return;
+    }
+    vscode.window.showErrorMessage(message);
   }
 });
