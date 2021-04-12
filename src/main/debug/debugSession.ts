@@ -25,6 +25,11 @@ export class DebugSession {
       host.showWarnMessage("Not in DevMode");
       return;
     }
+    const isInstalled = await debugProvider.isDebuggerInstalled();
+    if (!isInstalled) {
+      host.showInformationMessage("please install golang extension.");
+      return;
+    }
     // port-forward debug port
     const serviceConfig = node.getConfig();
     const containers = (serviceConfig && serviceConfig.containers) || [];
@@ -99,7 +104,7 @@ export class DebugSession {
       if (!proc.killed) {
         proc.kill();
       }
-      this.killContainerDebugProcess(
+      debugProvider.killContainerDebugProcess(
         podNames[0],
         node.getKubeConfigPath(),
         debugCommand
@@ -169,6 +174,8 @@ export class DebugSession {
     const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
     const args = command.split(" ");
     args.push("bash", "-c", `${execCommand.join(" ")}`);
+
+    host.log("debug: " + `${args.join(" ")}`);
     const proc = spawn(`kubectl`, args);
 
     proc.stdout.on("data", function (data) {
@@ -185,29 +192,13 @@ export class DebugSession {
     return proc;
   }
 
-  public killContainerDebugProcess(
-    podName: string,
-    kubeconfigPath: string,
-    execCommand: string[]
-  ) {
-    const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
-    const args = command.split(" ");
-    const sliceCommands = execCommand.join(" ").split("&&");
-
-    const killCommand = `kill -9 \`ps aux|grep -i '${sliceCommands[
-      sliceCommands.length - 1
-    ].trim()}'|grep -v grep|awk '{print $2}'\``;
-
-    args.push("bash", "-c", `${killCommand}`);
-    spawnSync(`kubectl`, args);
-  }
-
   public async portForward(
     port: string,
     podName: string,
     kubeconfigPath: string
   ) {
     const command = `port-forward ${podName} ${port} --kubeconfig ${kubeconfigPath}`;
+    host.log("port-forward: " + `kubectl ${command}`, true);
     const proc = spawn(`kubectl`, command.split(" "));
 
     return proc;

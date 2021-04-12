@@ -7,6 +7,7 @@ import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { NodeDebugProvider } from "../debug/nodeDebugProvider";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
+import { GoDebugProvider } from "../debug/goDebugProvider";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -27,7 +28,7 @@ export default class DebugCommand implements ICommand {
         return;
       }
       // TODO:
-      const supportType = ["node"];
+      const supportType = ["node", "go"];
       const type = await vscode.window.showQuickPick(supportType);
       if (!type) {
         return;
@@ -46,6 +47,9 @@ export default class DebugCommand implements ICommand {
     switch (type) {
       case "node":
         debugProvider = new NodeDebugProvider();
+        break;
+      case "go":
+        debugProvider = new GoDebugProvider();
         break;
       default:
     }
