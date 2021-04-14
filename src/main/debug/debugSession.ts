@@ -72,18 +72,8 @@ export class DebugSession {
       logger.info(`debug: not found pod`);
       return;
     }
-    const proc = await this.portForward(
-      `${port}:${port}`,
-      podNames[0],
-      node.getKubeConfigPath()
-    );
-    if (!proc) {
-      return;
-    }
-    await this.waitingPortForwardReady(proc);
     const devspaceName = node.getSpaceName();
     const appName = node.getAppName();
-    host.pushDispose(devspaceName, appName, node.name, { dispose: proc.kill });
 
     const debugCommand =
       (container.dev.command && container.dev.command.debug) || [];
@@ -96,7 +86,7 @@ export class DebugSession {
 
     const cwd = workspaceFolder.uri.fsPath;
     if (!containerProc) {
-      proc.kill();
+      // proc.kill();
       return;
     }
 
@@ -113,6 +103,26 @@ export class DebugSession {
         containerProc.kill();
       }
     };
+    // wait launch success
+    await this.waitLaunch(port, podNames[0], node.getKubeConfigPath()).catch(
+      (err) => {
+        terminatedCallback();
+        throw err;
+      }
+    );
+
+    const proc = await this.portForward(
+      `${port}:${port}`,
+      podNames[0],
+      node.getKubeConfigPath()
+    );
+    if (!proc) {
+      return;
+    }
+    await this.waitingPortForwardReady(proc).catch((err) => {
+      terminatedCallback();
+      throw err;
+    });
     const workDir = container.dev.workDir || "/home/nocalhost-dev";
     const success = await debugProvider.startDebug(
       cwd,
@@ -205,7 +215,11 @@ export class DebugSession {
   }
 
   public waitingPortForwardReady(proc: ChildProcess) {
+    const timeout = 10 * 1000;
     return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject("port-forward timeout");
+      }, timeout);
       proc.stdout?.on("data", function (data) {
         const forwardingRegExp = /Forwarding\s+from\s+127\.0\.0\.1:/;
         const message = `${data}`;
@@ -223,6 +237,43 @@ export class DebugSession {
         host.log("close debug port-forward", true);
         reject("Cannot setup port-forward.");
       });
+    });
+  }
+
+  public waitLaunch(port: number, podName: string, kubeconfigPath: string) {
+    function check() {
+      const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+      const args = command.split(" ");
+
+      args.push("bash", "-c", `netstat -tunlp | grep ${port}`);
+      const result = spawnSync(`kubectl`, args);
+      if (result) {
+        return true;
+      }
+      return false;
+    }
+    const timeout = 10 * 1000 * 60;
+    const startTime = Date.now();
+    return new Promise((resolve, reject) => {
+      let isLaunched = check();
+      let isRunning = false;
+      if (!isLaunched) {
+        while (Date.now() - startTime < timeout && !isLaunched) {
+          if (isRunning) {
+            return;
+          }
+          isRunning = true;
+          setTimeout(() => {
+            isLaunched = check();
+            isRunning = false;
+          }, 1000);
+        }
+      }
+      if (isLaunched) {
+        resolve(true);
+      } else {
+        reject(false);
+      }
     });
   }
 }
