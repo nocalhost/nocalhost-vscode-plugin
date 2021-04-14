@@ -14,6 +14,7 @@ import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 import { List, Resource, ResourceStatus } from "../nodes/types/resourceType";
 import logger from "../utils/logger";
+import { DevSpaceNode } from "../nodes/DevSpaceNode";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
@@ -201,7 +202,8 @@ export default class InstallCommand implements ICommand {
       resourceDir
     );
     productPagePort = this.productPagePort;
-    await vscode.commands.executeCommand(REFRESH);
+    const devspaceNode = appNode.getParent() as DevSpaceNode;
+    devspaceNode.updateData();
     if (this.isBookInfo(appNode) && productPagePort) {
       this.startTime = new Date().getTime();
       this.checkStatus(appNode, productPagePort);

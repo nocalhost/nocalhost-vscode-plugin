@@ -41,6 +41,7 @@ import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFol
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 import messageBus from "./utils/messageBus";
+import { DevSpaceNode } from "./nodes/DevSpaceNode";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -61,8 +62,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   appTreeView.onDidExpandElement((e) => {
     const node = e.element;
-    if (node instanceof KubernetesResourceFolder) {
-      state.k8sFolderMap.set(node.getNodeStateId(), true);
+    if (
+      node instanceof KubernetesResourceFolder ||
+      node instanceof DevSpaceNode
+    ) {
+      state.refreshFolderMap.set(node.getNodeStateId(), true);
     }
 
     if (node instanceof NocalhostFolderNode) {
@@ -72,8 +76,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   appTreeView.onDidCollapseElement((e) => {
     const node = e.element;
-    if (node instanceof KubernetesResourceFolder) {
-      state.k8sFolderMap.set(node.getNodeStateId(), false);
+    if (
+      node instanceof KubernetesResourceFolder ||
+      node instanceof DevSpaceNode
+    ) {
+      state.refreshFolderMap.set(node.getNodeStateId(), false);
     }
     if (node instanceof NocalhostFolderNode) {
       node.isExpand = false;
@@ -287,6 +294,14 @@ process.on("unhandledRejection", (error: any) => {
   }
 
   if (error.source === "api" && error.error && error.error.code) {
+    if (
+      error.error.message.includes(
+        "routines:OPENSSL_internal:WRONG_VERSION_NUMBER"
+      )
+    ) {
+      logger.info("api: occur" + error.error.message);
+      return;
+    }
     vscode.window.showErrorMessage(error.error.message);
   } else {
     const message: string = (error && error.message) || error;

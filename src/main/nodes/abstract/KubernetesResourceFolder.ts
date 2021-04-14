@@ -7,8 +7,11 @@ import { AppNode } from "../AppNode";
 import { BaseNocalhostNode } from "../types/nodeType";
 import { List, Resource } from "../types/resourceType";
 import { DevSpaceNode } from "../DevSpaceNode";
+import { RefreshData } from "../impl/updateData";
 
-export abstract class KubernetesResourceFolder extends NocalhostFolderNode {
+export abstract class KubernetesResourceFolder
+  extends NocalhostFolderNode
+  implements RefreshData {
   public abstract label: string;
   public abstract type: string;
   public abstract resourceType: string;

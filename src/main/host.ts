@@ -7,6 +7,9 @@ import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFol
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
 import * as path from "path";
+import { root } from "tempy";
+import { RefreshData } from "./nodes/impl/updateData";
+import { BaseNocalhostNode } from "./nodes/types/nodeType";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -69,9 +72,9 @@ export class Host implements vscode.Disposable {
       if (rootNode) {
         await rootNode.updateData().catch(() => {});
       }
-      for (const [id, expanded] of state.k8sFolderMap) {
+      for (const [id, expanded] of state.refreshFolderMap) {
         if (expanded) {
-          const node = state.getNode(id) as KubernetesResourceFolder;
+          const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
           if (node) {
             // filter parent is close
             // function isClose(parentNode: BaseNocalhostNode): boolean {
