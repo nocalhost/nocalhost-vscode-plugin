@@ -34,6 +34,7 @@ export default class ResetDevspaceCommand implements ICommand {
     await this.reset(
       host,
       node.getKubeConfigPath(),
+      node.info.namespace,
       node.info.spaceName
     ).finally(async () => {
       await resetDevspace(node.info.id);
@@ -45,11 +46,12 @@ export default class ResetDevspaceCommand implements ICommand {
   private async reset(
     host: Host,
     kubeconfigPath: string,
+    namespace: string,
     devspaceName: string
   ) {
     host.log(`Reseting devspace: ${devspaceName}`, true);
     host.showInformationMessage(`Reseting devspace: ${devspaceName}`);
-    await nhctl.resetApp(kubeconfigPath, devspaceName);
+    await nhctl.resetApp(kubeconfigPath, namespace, devspaceName);
     host.removeGlobalState(devspaceName);
     state.delete(devspaceName);
     host.log(`Devspace ${devspaceName} reset`, true);

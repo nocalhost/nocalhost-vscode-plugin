@@ -11,6 +11,7 @@ export interface Sync {
   app: string;
   service: string;
   kubeConfigPath: string;
+  namespace: string;
 }
 
 interface SyncMsg {
@@ -40,6 +41,7 @@ export default class SyncServiceCommand implements ICommand {
     this._id = setInterval(async () => {
       const result = await nhctl.getSyncStatus(
         syncData.kubeConfigPath,
+        syncData.namespace,
         syncData.app,
         syncData.service
       );

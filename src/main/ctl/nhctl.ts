@@ -26,23 +26,6 @@ export interface AllInstallAppInfo {
   application: Array<InstalledAppInfo>;
 }
 
-// export async function getInstalledAppByNamespace(
-//   namespace: string
-// ): Promise<{ name: string; type: string }[]> {
-//   const command = "nhctl list --yaml";
-//   const result = await execAsyncWithReturn(command, []);
-
-//   let obj: {
-//     [key: string]: any;
-//   } = {};
-
-//   if (result && result.stdout) {
-//     obj = yaml.parse(result.stdout);
-//   }
-
-//   return obj[namespace] || [];
-// }
-
 export async function getInstalledApp(
   ns: string,
   kubeconfig: string
@@ -75,6 +58,7 @@ export async function getInstalledApp(
 export async function install(
   host: Host,
   kubeconfigPath: string,
+  namespace: string,
   appName: string,
   appConfig: string,
   helmNHConfigPath: string,
@@ -99,6 +83,7 @@ export async function install(
   }
   let installCommand = nhctlCommand(
     kubeconfigPath,
+    namespace,
     `install ${appName} -u ${gitUrl} -t ${installType} ${
       values ? "-f " + values : ""
     } ${valuesStr ? "--set " + valuesStr : ""} ${resourcePath} ${
@@ -120,6 +105,7 @@ export async function install(
     }
     installCommand = nhctlCommand(
       kubeconfigPath,
+      namespace,
       `install ${appName} --helm-chart-name ${
         chartName || appName
       } -t ${installType} ${values ? "-f " + values : ""} ${
@@ -131,6 +117,7 @@ export async function install(
   } else if (["helmLocal", "rawManifestLocal"].includes(installType)) {
     installCommand = nhctlCommand(
       kubeconfigPath,
+      namespace,
       `install ${appName} -t ${installType} ${
         values ? "-f " + values : ""
       } --local-path=${local && local.localPath}  --outer-config=${
@@ -162,6 +149,7 @@ export async function install(
 
 export async function upgrade(
   kubeconfigPath: string,
+  namespace: string,
   appName: string,
   gitUrl: string,
   appType: string,
@@ -183,6 +171,7 @@ export async function upgrade(
   }
   let upgradeCommand = nhctlCommand(
     kubeconfigPath,
+    namespace,
     `upgrade ${appName} ${
       gitUrl && gitUrl.trim() ? `-u ${gitUrl}` : ""
     } ${resourcePath} ${appConfig ? "--config " + appConfig : ""}`
@@ -191,6 +180,7 @@ export async function upgrade(
   if (appType === "helmRepo") {
     upgradeCommand = nhctlCommand(
       kubeconfigPath,
+      namespace,
       `upgrade ${appName} --helm-chart-name ${appName} --helm-repo-url ${gitUrl}`
     );
   } else if (["helmLocal", "rawManifestLocal"].includes(appType)) {
@@ -223,6 +213,7 @@ export async function upgrade(
 export async function uninstall(
   host: Host,
   kubeconfigPath: string,
+  namespace: string,
   appName: string,
   force?: boolean
 ) {
@@ -231,6 +222,7 @@ export async function uninstall(
     async (progress) => {
       const uninstallCommand = nhctlCommand(
         kubeconfigPath,
+        namespace,
         `uninstall ${appName} ${force ? `--force` : ""}`
       );
       host.log(`[cmd] ${uninstallCommand}`, true);
@@ -246,6 +238,7 @@ export async function uninstall(
 export async function devStart(
   host: Host,
   kubeconfigPath: string,
+  namespace: string,
   appName: string,
   workLoadName: string,
   sync: {
@@ -273,6 +266,7 @@ export async function devStart(
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
+    namespace,
     `dev start ${appName} -d ${workLoadName} ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
     }`
@@ -354,6 +348,7 @@ function sudoPortforward(command: string) {
 export async function startPortForward(
   host: Host,
   kubeconfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string,
   way: "manual" | "devPorts",
@@ -368,6 +363,7 @@ export async function startPortForward(
   }
   const portForwardCommand = nhctlCommand(
     kubeconfigPath,
+    namespace,
     `port-forward start ${appName} -d ${workloadName} ${portOptions} ${
       resourceType ? `--type ${resourceType}` : ""
     } ${pod ? `--pod ${pod}` : ""} --way ${way}`
@@ -393,6 +389,7 @@ export async function startPortForward(
 
 export async function endPortForward(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string,
   port: string,
@@ -401,6 +398,7 @@ export async function endPortForward(
   // nhctl port-forward end coding-agile -d nginx -p 5006:5005
   const endPortForwardCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `port-forward end ${appName} -d ${workloadName} -p ${port} --type ${resourceType}`
   );
 
@@ -420,6 +418,7 @@ export async function endPortForward(
 export async function syncFile(
   host: Host,
   kubeconfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string,
   container?: string
@@ -427,7 +426,7 @@ export async function syncFile(
   let baseCommand = `sync ${appName} -d ${workloadName} ${
     container ? `--container ${container}` : ""
   }`;
-  const syncFileCommand = nhctlCommand(kubeconfigPath, baseCommand);
+  const syncFileCommand = nhctlCommand(kubeconfigPath, namespace, baseCommand);
 
   host.log(`[cmd] ${syncFileCommand}`, true);
   await execChildProcessAsync(host, syncFileCommand, [], {
@@ -438,6 +437,7 @@ export async function syncFile(
 export async function endDevMode(
   host: Host,
   kubeconfigPath: string,
+  namespace: string,
   appName: string,
   workLoadName: string
 ) {
@@ -446,6 +446,7 @@ export async function endDevMode(
     async (progress) => {
       const end = nhctlCommand(
         kubeconfigPath,
+        namespace,
         `dev end ${appName} -d ${workLoadName} `
       );
       host.log(`[cmd] ${end}`, true);
@@ -459,28 +460,43 @@ export async function endDevMode(
 export async function loadResource(
   host: Host,
   kubeConfigPath: string,
+  namespace: string,
   appName: string
 ) {
-  const describeCommand = nhctlCommand(kubeConfigPath, `describe ${appName}`);
+  const describeCommand = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `describe ${appName}`
+  );
   // host.log(`[cmd] ${describeCommand}`, true);
   const result = await execAsyncWithReturn(describeCommand, []);
   return result.stdout;
 }
 
-export async function getAppInfo(kubeConfigPath: string, appName: string) {
-  const describeCommand = nhctlCommand(kubeConfigPath, `describe ${appName}`);
+export async function getAppInfo(
+  kubeConfigPath: string,
+  namespace: string,
+  appName: string
+) {
+  const describeCommand = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `describe ${appName}`
+  );
   const result = await execAsyncWithReturn(describeCommand, []);
   return result.stdout;
 }
 
 export async function getServiceConfig(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string,
   type?: string
 ) {
   const describeCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `describe ${appName} -d ${workloadName} ${type ? `--type ${type}` : ""}`
   );
   const result = await execAsyncWithReturn(describeCommand, []);
@@ -500,20 +516,27 @@ export async function getServiceConfig(
 export async function printAppInfo(
   host: Host,
   kubeconfigPath: string,
+  namespace: string,
   appName: string
 ) {
-  const printAppCommand = nhctlCommand(kubeconfigPath, `list ${appName}`);
+  const printAppCommand = nhctlCommand(
+    kubeconfigPath,
+    namespace,
+    `list ${appName}`
+  );
   host.log(`[cmd] ${printAppCommand}`, true);
   await execChildProcessAsync(host, printAppCommand, []);
 }
 
 export async function getConfig(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName?: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `config get ${appName} ${workloadName ? `-d ${workloadName}` : ""}`
   );
   const result = await execAsyncWithReturn(configCommand, []);
@@ -522,12 +545,14 @@ export async function getConfig(
 
 export async function editConfig(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string | undefined | null,
   contents: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `config edit ${appName} ${
       workloadName ? `-d ${workloadName}` : ""
     } -c ${contents}`
@@ -536,9 +561,14 @@ export async function editConfig(
   return result.stdout;
 }
 
-export async function getAppConfig(kubeConfigPath: string, appName: string) {
+export async function getAppConfig(
+  kubeConfigPath: string,
+  namespace: string,
+  appName: string
+) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `config get ${appName} --app-config`
   );
   const result = await execAsyncWithReturn(configCommand, []);
@@ -547,20 +577,26 @@ export async function getAppConfig(kubeConfigPath: string, appName: string) {
 
 export async function editAppConfig(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   contents: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `config edit ${appName} --app-config -c ${contents}`
   );
   const result = await execAsyncWithReturn(configCommand, []);
   return result.stdout;
 }
 
-export async function resetApp(kubeConfigPath: string, appName: string) {
+export async function resetApp(
+  kubeConfigPath: string,
+  namespace: string,
+  appName: string
+) {
   await host.showProgressing(`Reset : ${appName}`, async (progress) => {
-    const resetCommand = nhctlCommand(kubeConfigPath, `reset`);
+    const resetCommand = nhctlCommand(kubeConfigPath, namespace, `reset`);
     host.log(`[cmd] ${resetCommand}`, true);
     await execChildProcessAsync(host, resetCommand, [], {
       dialog: `reset (${appName}) fail`,
@@ -570,6 +606,7 @@ export async function resetApp(kubeConfigPath: string, appName: string) {
 
 export async function resetService(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string
 ) {
@@ -578,6 +615,7 @@ export async function resetService(
     async (progress) => {
       const resetCommand = nhctlCommand(
         kubeConfigPath,
+        namespace,
         `dev reset ${appName} -d ${workloadName}`
       );
       host.log(`[cmd] ${resetCommand}`, true);
@@ -590,11 +628,13 @@ export async function resetService(
 
 export async function getTemplateConfig(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `config template ${appName} -d ${workloadName}`
   );
   const result = await execAsyncWithReturn(configCommand, []);
@@ -611,11 +651,13 @@ export interface PVCData {
 }
 export async function listPVC(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName?: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `pvc list --app ${appName} ${
       workloadName ? `--svc ${workloadName}` : ""
     } --yaml`
@@ -633,12 +675,14 @@ export async function listPVC(
 
 export async function cleanPVC(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName?: string,
   pvcName?: string
 ) {
   const cleanCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `pvc clean --app ${appName} ${
       workloadName ? `--svc ${workloadName}` : ""
     } ${pvcName ? `--name ${pvcName}` : ""}`
@@ -651,11 +695,13 @@ export async function cleanPVC(
 
 export async function getSyncStatus(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string
 ) {
   const syncCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `sync-status ${appName} -d ${workloadName}`
   );
   let result: ShellResult = {
@@ -677,11 +723,13 @@ export async function getSyncStatus(
 
 export async function overrideSyncFolders(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string
 ) {
   const overrideSyncCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `sync-status ${appName} -d ${workloadName} --override`
   );
   host.log(`[cmd] ${overrideSyncCommand}`);
@@ -690,12 +738,14 @@ export async function overrideSyncFolders(
 
 export async function reconnectSync(
   kubeConfigPath: string,
+  namespace: string,
   appName: string,
   workloadName: string
 ) {
   // nhctl sync coding-operation -d platform-login  --kubeconfig /Users/weiwang/.nh/plugin/kubeConfigs/12_354_config --resume
   const reconnectSyncCommand = nhctlCommand(
     kubeConfigPath,
+    namespace,
     `sync ${appName} -d ${workloadName} --resume`
   );
   host.log(`[cmd] ${reconnectSyncCommand}`);
@@ -735,6 +785,10 @@ export async function checkVersion() {
   }
 }
 
-export function nhctlCommand(kubeconfigPath: string, baseCommand: string) {
-  return `nhctl ${baseCommand} --kubeconfig ${kubeconfigPath}`;
+export function nhctlCommand(
+  kubeconfigPath: string,
+  namespace: string,
+  baseCommand: string
+) {
+  return `nhctl ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
 }

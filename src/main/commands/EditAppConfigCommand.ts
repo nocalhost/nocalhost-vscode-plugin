@@ -20,7 +20,9 @@ export default class EditAppConfigCommand implements ICommand {
     const uri = vscode.Uri.parse(
       `NocalhostRW://nh/config/app/${
         node.name
-      }.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}`
+      }.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${
+        node.namespace
+      }`
     );
     let doc = await vscode.workspace.openTextDocument(uri);
     vscode.window.showTextDocument(doc, { preview: true });

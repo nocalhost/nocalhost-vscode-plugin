@@ -11,6 +11,7 @@ import {
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_KUBECONFIG_PATH,
+  TMP_NAMESPACE,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
   TMP_STORAGE_CLASS,
@@ -41,6 +42,7 @@ export interface ControllerNodeApi {
   getStorageClass: () => string | undefined;
   getDevStartAppendCommand: () => string | undefined;
   getSpaceName: () => string;
+  getNameSpace: () => string;
 }
 
 export default class StartDevModeCommand implements ICommand {
@@ -124,6 +126,7 @@ export default class StartDevModeCommand implements ICommand {
   private async cloneCode(
     host: Host,
     kubeConfigPath: string,
+    namespace: string,
     appName: string,
     workloadName: string,
     containerName: string
@@ -131,6 +134,7 @@ export default class StartDevModeCommand implements ICommand {
     let destDir: string | undefined;
     let gitUrl: string | undefined = await this.getGitUrl(
       kubeConfigPath,
+      namespace,
       appName,
       workloadName,
       containerName
@@ -179,6 +183,7 @@ export default class StartDevModeCommand implements ICommand {
       destDir = await this.cloneCode(
         host,
         node.getKubeConfigPath(),
+        node.getNameSpace(),
         appName,
         node.name,
         containerName
@@ -285,9 +290,10 @@ export default class StartDevModeCommand implements ICommand {
           dirs = host.formalizePath(currentUri);
           // update deployment label
           node.setContainer(containerName);
-          await nhctl.devStart(
+          const namespace = await nhctl.devStart(
             host,
             node.getKubeConfigPath(),
+            node.getNameSpace(),
             appName,
             node.name,
             {
@@ -308,6 +314,7 @@ export default class StartDevModeCommand implements ICommand {
           await nhctl.syncFile(
             host,
             node.getKubeConfigPath(),
+            node.getNameSpace(),
             appName,
             node.name,
             containerName
@@ -360,6 +367,7 @@ export default class StartDevModeCommand implements ICommand {
       app: appName,
       service: node.name,
       kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
     });
   }
 
@@ -380,6 +388,7 @@ export default class StartDevModeCommand implements ICommand {
     const appNode = node.getAppNode();
     host.setGlobalState(TMP_ID, node.getNodeStateId());
     host.setGlobalState(TMP_DEVSPACE, node.getSpaceName());
+    host.setGlobalState(TMP_NAMESPACE, node.getNameSpace());
     host.setGlobalState(TMP_APP, appName);
     host.setGlobalState(TMP_WORKLOAD, node.name);
     host.setGlobalState(TMP_STATUS, `${node.getNodeStateId()}_status`);
@@ -400,11 +409,13 @@ export default class StartDevModeCommand implements ICommand {
 
   private async getSvcConfig(
     kubeConfigPath: string,
+    namespace: string,
     appName: string,
     workloadName: string
   ) {
     let workloadConfig = await ConfigService.getWorkloadConfig(
       kubeConfigPath,
+      namespace,
       appName,
       workloadName
     );
@@ -414,12 +425,14 @@ export default class StartDevModeCommand implements ICommand {
 
   private async getGitUrl(
     kubeConfigPath: string,
+    namespace: string,
     appName: string,
     workloadName: string,
     containerName: string
   ) {
     const config = await ConfigService.getContaienrConfig(
       kubeConfigPath,
+      namespace,
       appName,
       workloadName,
       containerName

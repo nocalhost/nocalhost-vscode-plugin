@@ -20,7 +20,12 @@ export default class ResetCommand implements ICommand {
       return;
     }
     const appName = node.getAppName();
-    await nhctl.resetService(node.getKubeConfigPath(), appName, node.name);
+    await nhctl.resetService(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      appName,
+      node.name
+    );
     const appNode = node.getAppNode();
     const devspace = appNode.getParent() as DevSpaceNode;
     host.disposeWorkload(devspace.info.spaceName, appName, node.name);

@@ -44,6 +44,7 @@ export default class ExecCommand implements ICommand {
         node.name,
         container,
         node.getKubeConfigPath(),
+        node.getNameSpace(),
         pod
       );
       host.pushDispose(
@@ -102,6 +103,7 @@ export default class ExecCommand implements ICommand {
     workloadName: string,
     container: string | null,
     kubeConfigPath: string,
+    namespace: string,
     pod: string | null
   ) {
     const terminalCommands = ["dev", "terminal", appName];
@@ -113,6 +115,7 @@ export default class ExecCommand implements ICommand {
       terminalCommands.push("--container", container);
     }
     terminalCommands.push("--kubeconfig", kubeConfigPath);
+    terminalCommands.push("-n", namespace);
     const shellPath = "nhctl";
     const terminalDisposed = host.invokeInNewTerminalSpecialShell(
       terminalCommands,
