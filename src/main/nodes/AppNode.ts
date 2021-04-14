@@ -102,7 +102,7 @@ export class AppNode extends NocalhostFolderNode {
   public async freshApplicationInfo() {
     let info = {} as AppInfo;
     const infoStr = await nhctl
-      .getAppInfo(this.getKubeConfigPath(), this.name)
+      .getAppInfo(this.getKubeConfigPath(), this.namespace, this.name)
       .catch((err) => {});
     if (infoStr) {
       info = yaml.parse(infoStr as string);
@@ -121,6 +121,7 @@ export class AppNode extends NocalhostFolderNode {
   public async freshNocalhostConfig() {
     this.nocalhostConfig = await ConfigService.getAppConfig(
       this.getKubeConfigPath(),
+      this.namespace,
       this.name
     );
     return this.nocalhostConfig;
@@ -238,6 +239,7 @@ export class AppNode extends NocalhostFolderNode {
           app: this.name,
           service: service.actualName,
           kubeConfigPath: this.getKubeConfigPath(),
+          namespace: this.namespace,
         });
         break;
       }

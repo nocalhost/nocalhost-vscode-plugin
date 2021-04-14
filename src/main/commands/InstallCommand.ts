@@ -213,6 +213,7 @@ export default class InstallCommand implements ICommand {
   private async install(
     host: Host,
     kubeconfigPath: string,
+    namespace: string,
     appName: string,
     appId: number,
     appConfig: string,
@@ -235,6 +236,7 @@ export default class InstallCommand implements ICommand {
     await nhctl.install(
       host,
       kubeconfigPath,
+      namespace,
       appName,
       appConfig,
       helmNHConfigPath,
@@ -299,6 +301,7 @@ export default class InstallCommand implements ICommand {
     await this.install(
       host,
       appNode.getKubeConfigPath(),
+      appNode.namespace,
       appNode.name,
       appNode.id,
       appNode.appConfig,

@@ -47,7 +47,8 @@ export default class CopyTerminalCommand implements ICommand {
         node.name,
         pod,
         container,
-        node.getKubeConfigPath()
+        node.getKubeConfigPath(),
+        node.getNameSpace()
       );
       return;
     } else {
@@ -90,11 +91,13 @@ export default class CopyTerminalCommand implements ICommand {
     workloadName: string,
     pod: string,
     container: string,
-    kubeConfigPath: string
+    kubeConfigPath: string,
+    namespace: string
   ) {
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
     terminalCommands.push("--kubeconfig", kubeConfigPath);
+    terminalCommands.push("-n", namespace);
     if (pod) {
       terminalCommands.push("--pod", pod);
     }

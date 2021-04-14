@@ -154,6 +154,7 @@ export class Deployment extends ControllerResourceNode {
     const appNode = this.getAppNode();
     this.svcProfile = await nhctl.getServiceConfig(
       appNode.getKubeConfigPath(),
+      appNode.namespace,
       appNode.name,
       this.name,
       this.resourceType
@@ -165,6 +166,7 @@ export class Deployment extends ControllerResourceNode {
     if (!this.firstRender) {
       this.nocalhostService = await ConfigService.getWorkloadConfig(
         appNode.getKubeConfigPath(),
+        appNode.namespace,
         appNode.name,
         this.name
       );

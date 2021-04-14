@@ -20,11 +20,14 @@ export default class CleanPvcCommand implements ICommand {
       return;
     }
     let appName: string, workloadName: string | undefined;
+    let namespace: string = "";
     if (node instanceof Deployment) {
       appName = node.getAppName();
+      namespace = node.getNameSpace();
       workloadName = node.name;
     } else if (node instanceof AppNode) {
       appName = node.name;
+      namespace = node.namespace;
     } else {
       host.showInformationMessage("Not support the type");
       return;
@@ -32,6 +35,7 @@ export default class CleanPvcCommand implements ICommand {
 
     const pvcs = await nhctl.listPVC(
       node.getKubeConfigPath(),
+      namespace,
       appName,
       workloadName
     );
@@ -56,6 +60,7 @@ export default class CleanPvcCommand implements ICommand {
     }
     await nhctl.cleanPVC(
       node.getKubeConfigPath(),
+      namespace,
       appName,
       workloadName,
       pvcName

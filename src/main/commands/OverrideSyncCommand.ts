@@ -11,6 +11,7 @@ export interface Sync {
   app: string;
   service: string;
   kubeConfigPath: string;
+  namespace: string;
 }
 
 export default class OverrideSyncCommand implements ICommand {
@@ -33,6 +34,7 @@ export default class OverrideSyncCommand implements ICommand {
     }
     await nhctl.overrideSyncFolders(
       syncData.kubeConfigPath,
+      syncData.namespace,
       syncData.app,
       syncData.service
     );

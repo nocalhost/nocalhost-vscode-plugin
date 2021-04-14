@@ -114,6 +114,7 @@ export default class PortForwardCommand implements ICommand {
       await nhctl.startPortForward(
         host,
         node.getKubeConfigPath(),
+        node.getNameSpace(),
         node.getAppName(),
         node.name,
         "manual",

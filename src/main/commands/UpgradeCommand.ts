@@ -139,6 +139,7 @@ export default class UpgradeCommand implements ICommand {
     await nhctl
       .upgrade(
         appNode.getKubeConfigPath(),
+        appNode.namespace,
         appNode.name,
         appNode.url,
         appNode.installType,
@@ -186,6 +187,7 @@ export default class UpgradeCommand implements ICommand {
       for (let j = 0; j < portForwardList.length; j++) {
         await nhctl.endPortForward(
           appNode.getKubeConfigPath(),
+          appNode.namespace,
           appNode.name,
           service.actualName,
           `${portForwardList[j].localport}:${portForwardList[j].remoteport}`,
@@ -224,6 +226,7 @@ export default class UpgradeCommand implements ICommand {
             .startPortForward(
               host,
               appNode.getKubeConfigPath(),
+              appNode.namespace,
               appNode.name,
               service.name,
               "manual",

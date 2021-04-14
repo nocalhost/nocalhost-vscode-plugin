@@ -60,6 +60,7 @@ export class StatefulSet extends ControllerResourceNode {
     const appNode = this.getAppNode();
     const svcProfile = await nhctl.getServiceConfig(
       appNode.getKubeConfigPath(),
+      appNode.namespace,
       appNode.name,
       this.name,
       this.resourceType

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import ICommand from "./ICommand";
-import { END_DEV_MODE, SYNC_SERVICE } from "./constants";
+import { END_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
@@ -33,6 +33,7 @@ export default class EndDevModeCommand implements ICommand {
     await nhctl.endDevMode(
       host,
       node.getKubeConfigPath(),
+      node.getNameSpace(),
       appNode.name,
       node.name
     );

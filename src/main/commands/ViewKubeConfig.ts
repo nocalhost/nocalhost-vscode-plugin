@@ -20,7 +20,7 @@ export default class ViewKubeConfigCommand implements ICommand {
 
     const fsPath = node.getKubeConfigPath();
     const uri = vscode.Uri.parse(
-      `Nocalhost://nh/kubeConfig/${node.label}.yaml?fsPath=${fsPath}&kubeConfigPath=${fsPath}`
+      `Nocalhost://nh/kubeConfig/${node.label}.yaml?fsPath=${fsPath}&kubeConfigPath=${fsPath}&namespace=${node.info.namespace}`
     );
     let doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, { preview: false });

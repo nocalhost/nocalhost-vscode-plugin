@@ -42,9 +42,8 @@ export default class UninstallCommand implements ICommand {
     await this.uninstall(
       host,
       appNode.getKubeConfigPath(),
-      appNode.name,
-      appNode.id,
-      appNode.devSpaceId
+      appNode.namespace,
+      appNode.name
     ).finally(() => {
       state.deleteAppState(appNode.name, "uninstalling");
       devspace.updateData();
@@ -54,13 +53,12 @@ export default class UninstallCommand implements ICommand {
   private async uninstall(
     host: Host,
     kubeconfigPath: string,
-    appName: string,
-    appId: number,
-    devSpaceId: number
+    namespace: string,
+    appName: string
   ) {
     host.log(`Uninstalling application: ${appName}`, true);
     host.getOutputChannel().show(true);
-    await nhctl.uninstall(host, kubeconfigPath, appName, true);
+    await nhctl.uninstall(host, kubeconfigPath, namespace, appName, true);
     host.removeGlobalState(appName);
     state.delete(appName);
   }
