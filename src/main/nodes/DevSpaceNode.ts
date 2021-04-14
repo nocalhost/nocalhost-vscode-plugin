@@ -18,8 +18,9 @@ import { StorageFolder } from "./storage/StorageFolder";
 import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
 import { AppNode } from "./AppNode";
 import * as _ from "lodash";
+import { RefreshData } from "./impl/updateData";
 
-export class DevSpaceNode extends NocalhostFolderNode {
+export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
   public type = "DEVSPACE";
   public info: DevspaceInfo;
@@ -34,18 +35,14 @@ export class DevSpaceNode extends NocalhostFolderNode {
     parent: NocalhostRootNode,
     label: string,
     info: DevspaceInfo,
-    applications: Array<V2ApplicationInfo>,
-    installedApps: {
-      name: string;
-      type: string;
-    }[]
+    applications: Array<V2ApplicationInfo>
   ) {
     super();
     this.parent = parent;
     this.label = label || info.namespace;
     this.info = info;
     this.applications = applications;
-    this.installedApps = installedApps;
+    this.installedApps = [];
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -150,9 +147,42 @@ export class DevSpaceNode extends NocalhostFolderNode {
     return path.normalize(kubeconfigPath);
   }
 
-  async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
-    let data = this.installedApps;
+  public async updateData(isInit?: boolean): Promise<any> {
+    this.installedApps = await this.getInstalledApp(
+      this.info.namespace,
+      this.getKubeConfigPath()
+    );
+    state.setData(this.getNodeStateId(), this.installedApps, isInit);
+    return this.installedApps;
+  }
 
+  private async getInstalledApp(namespace: string, kubeconfigPath: string) {
+    const infos = await nhctl.getInstalledApp(namespace, kubeconfigPath);
+    let result = new Array<nhctl.InstalledAppInfo>();
+    if (infos.length > 0) {
+      result = result.concat(infos[0].application);
+    }
+
+    result = result.filter((item) => {
+      return item.name !== "default.application";
+    });
+
+    result.push({
+      name: "default.application",
+      type: "rawManifest",
+    });
+
+    return result;
+  }
+
+  async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
+    let data = state.getData(this.getNodeStateId()) as nhctl.InstalledAppInfo[];
+
+    if (!data) {
+      data = await this.updateData(true);
+    }
+
+    // updateData
     const nodes = data.map((item) => {
       const app = this.getApplication(item.name);
       if (!app) {

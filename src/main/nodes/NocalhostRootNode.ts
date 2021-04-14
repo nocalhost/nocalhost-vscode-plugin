@@ -31,8 +31,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     // const res = await getApplication();
     const devSpaces = await getDevSpace();
     const applications = await getV2Application();
-    const installedApps = await nhctl.getInstalledApp();
-    const obj = { devSpaces, applications, old: [], installedApps };
+    const obj = { devSpaces, applications, old: [] };
 
     state.setData(this.getNodeStateId(), obj, isInit);
     return obj;
@@ -57,7 +56,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       devSpaces: DevspaceInfo[];
       applications: V2ApplicationInfo[];
       old: ApplicationInfo[];
-      installedApps: nhctl.AllInstallAppInfo[];
     };
 
     if (!res) {
@@ -142,14 +140,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     for (const d of res.devSpaces) {
       const filePath = path.resolve(KUBE_CONFIG_DIR, `${d.id}_config`);
       this.writeFile(filePath, d.kubeconfig);
-      let installedApps = this.getInstalledApp(res.installedApps, d.namespace);
-      const node = new DevSpaceNode(
-        this,
-        d.spaceName,
-        d,
-        res.applications,
-        installedApps
-      );
+      const node = new DevSpaceNode(this, d.spaceName, d, res.applications);
       devs.push(node);
     }
     NocalhostRootNode.childNodes = NocalhostRootNode.childNodes.concat(devs);
@@ -168,28 +159,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       );
     }
     return NocalhostRootNode.childNodes;
-  }
-
-  private getInstalledApp(
-    allAppInfo: nhctl.AllInstallAppInfo[],
-    namespace: string
-  ) {
-    const infos = allAppInfo.filter((item) => item.namespace === namespace);
-    let result = new Array<nhctl.InstalledAppInfo>();
-    if (infos.length > 0) {
-      result = result.concat(infos[0].application);
-    }
-
-    result = result.filter((item) => {
-      return item.name !== "default.application";
-    });
-
-    result.push({
-      name: "default.application",
-      type: "rawManifest",
-    });
-
-    return result;
   }
 
   private generateInstallType(source: string, originInstallType: string) {

@@ -43,8 +43,11 @@ export interface AllInstallAppInfo {
 //   return obj[namespace] || [];
 // }
 
-export async function getInstalledApp(): Promise<AllInstallAppInfo[]> {
-  const command = "nhctl list --yaml";
+export async function getInstalledApp(
+  ns: string,
+  kubeconfig: string
+): Promise<AllInstallAppInfo[]> {
+  const command = `nhctl list --yaml -n ${ns} --kubeconfig ${kubeconfig}`;
   const result = await execAsyncWithReturn(command, []);
 
   let obj: AllInstallAppInfo[] = [];

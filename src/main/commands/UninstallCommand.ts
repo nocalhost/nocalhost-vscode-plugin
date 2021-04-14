@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 
 import ICommand from "./ICommand";
-import { UNINSTALL_APP } from "./constants";
+import { REFRESH, UNINSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
@@ -47,6 +47,7 @@ export default class UninstallCommand implements ICommand {
       appNode.devSpaceId
     ).finally(() => {
       state.deleteAppState(appNode.name, "uninstalling");
+      devspace.updateData();
     });
   }
 

@@ -11,7 +11,7 @@ class State {
   private stateMap = new Map<string, any>();
   private nodeMap = new Map<string, BaseNocalhostNode>();
   private dataMap = new Map<string, object>();
-  public k8sFolderMap = new Map<string, boolean>();
+  public refreshFolderMap = new Map<string, boolean>();
 
   private renderMessage = new Map<string, number>();
 
