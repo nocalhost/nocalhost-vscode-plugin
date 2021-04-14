@@ -50,7 +50,6 @@ export default class ResetDevspaceCommand implements ICommand {
     host.log(`Reseting devspace: ${devspaceName}`, true);
     host.showInformationMessage(`Reseting devspace: ${devspaceName}`);
     await nhctl.resetApp(kubeconfigPath, devspaceName);
-    // await updateAppInstallStatus(appId, devSpaceId, 0);
     host.removeGlobalState(devspaceName);
     state.delete(devspaceName);
     host.log(`Devspace ${devspaceName} reset`, true);
