@@ -104,7 +104,7 @@ export class DebugSession {
       podNames[0],
       node.getKubeConfigPath(),
       debugCommand,
-      () => {}
+      terminatedCallback
     );
 
     const cwd = workspaceFolder.uri.fsPath;
