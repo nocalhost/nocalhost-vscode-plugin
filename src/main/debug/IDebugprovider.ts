@@ -1,7 +1,7 @@
 import { spawnSync } from "child_process";
 
 export abstract class IDebugProvider {
-  static requiredCommand = ["ps", "awk", "netstat", "kill"];
+  static requiredCommand = ["ps", "awk", "netstat"];
   abstract startDebug(
     workspaceFolder: string,
     sessionName: string,
@@ -38,7 +38,7 @@ export abstract class IDebugProvider {
 
       args.push("bash", "-c", `which ${requiredCommand}`);
       const result = spawnSync(`kubectl`, args);
-      if (result) {
+      if (`${result.stdout}`) {
         return true;
       }
       return false;

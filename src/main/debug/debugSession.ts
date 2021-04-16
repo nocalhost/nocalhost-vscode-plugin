@@ -72,7 +72,7 @@ export class DebugSession {
       logger.info(`debug: not found pod`);
       return;
     }
-
+    host.log("[debug] check required command", true);
     const notFoundCommands = debugProvider.checkRequiredCommand(
       podNames[0],
       node.getKubeConfigPath()
@@ -86,19 +86,6 @@ export class DebugSession {
 
     const debugCommand =
       (container.dev.command && container.dev.command.debug) || [];
-
-    const containerProc = this.enterContainer(
-      podNames[0],
-      node.getKubeConfigPath(),
-      debugCommand
-    );
-
-    const cwd = workspaceFolder.uri.fsPath;
-    if (!containerProc) {
-      // proc.kill();
-      return;
-    }
-
     const terminatedCallback = async () => {
       if (!proc.killed) {
         proc.kill();
@@ -112,7 +99,22 @@ export class DebugSession {
         containerProc.kill();
       }
     };
+    host.log("[debug] launch debug", true);
+    const containerProc = this.enterContainer(
+      podNames[0],
+      node.getKubeConfigPath(),
+      debugCommand,
+      () => {}
+    );
+
+    const cwd = workspaceFolder.uri.fsPath;
+    if (!containerProc) {
+      // proc.kill();
+      return;
+    }
+
     // wait launch success
+    host.log("[debug] wait launch", true);
     await this.waitLaunch(port, podNames[0], node.getKubeConfigPath()).catch(
       (err) => {
         terminatedCallback();
@@ -120,6 +122,7 @@ export class DebugSession {
       }
     );
 
+    host.log("[debug] port forward", true);
     const proc = await this.portForward(
       `${port}:${port}`,
       podNames[0],
@@ -128,11 +131,15 @@ export class DebugSession {
     if (!proc) {
       return;
     }
+
+    host.log("[debug] wait port forward", true);
     await this.waitingPortForwardReady(proc).catch((err) => {
       terminatedCallback();
       throw err;
     });
     const workDir = container.dev.workDir || "/home/nocalhost-dev";
+
+    host.log("[debug] start debug", true);
     const success = await debugProvider.startDebug(
       cwd,
       `${Date.now()}`,
@@ -188,13 +195,14 @@ export class DebugSession {
   public enterContainer(
     podName: string,
     kubeconfigPath: string,
-    execCommand: string[]
+    execCommand: string[],
+    terminatedCallback: Function
   ) {
     const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
     const args = command.split(" ");
     args.push("bash", "-c", `${execCommand.join(" ")}`);
 
-    host.log("debug: " + `${args.join(" ")}`);
+    host.log("debug: " + `${args.join(" ")}`, true);
     const proc = spawn(`kubectl`, args);
 
     proc.stdout.on("data", function (data) {
@@ -205,6 +213,7 @@ export class DebugSession {
     });
 
     proc.on("close", async (code) => {
+      terminatedCallback();
       host.log("close debug container", true);
     });
 
@@ -249,40 +258,43 @@ export class DebugSession {
     });
   }
 
-  public waitLaunch(port: number, podName: string, kubeconfigPath: string) {
+  public async waitLaunch(
+    port: number,
+    podName: string,
+    kubeconfigPath: string
+  ) {
     function check() {
       const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
       const args = command.split(" ");
 
       args.push("bash", "-c", `netstat -tunlp | grep ${port}`);
       const result = spawnSync(`kubectl`, args);
-      if (result) {
+      if (`${result.stdout}`) {
         return true;
       }
       return false;
     }
     const timeout = 10 * 1000 * 60;
     const startTime = Date.now();
-    return new Promise((resolve, reject) => {
-      let isLaunched = check();
-      let isRunning = false;
-      if (!isLaunched) {
-        while (Date.now() - startTime < timeout && !isLaunched) {
-          if (isRunning) {
-            return;
-          }
-          isRunning = true;
-          setTimeout(() => {
-            isLaunched = check();
-            isRunning = false;
-          }, 1000);
+    let isLaunched = check();
+    let isRunning = false;
+    if (!isLaunched) {
+      while (Date.now() - startTime < timeout && !isLaunched) {
+        if (isRunning) {
+          return;
         }
+        isRunning = true;
+        await host.delay(1000);
+        isLaunched = check();
+        isRunning = false;
       }
-      if (isLaunched) {
-        resolve(true);
-      } else {
-        reject(false);
-      }
-    });
+    }
+    if (isLaunched) {
+      host.log(`[debug] launch success`, true);
+      return true;
+    } else {
+      host.log(`[debug] launch error`, true);
+      throw new Error("timeout");
+    }
   }
 }

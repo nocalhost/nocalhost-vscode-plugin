@@ -53,7 +53,6 @@ export class GoDebugProvider extends IDebugProvider {
         }
       })
     );
-    await host.delay(4000);
     return await vscode.debug.startDebugging(currentFolder, debugConfiguration);
   }
 

@@ -47,7 +47,6 @@ export class JavaDebugProvider extends IDebugProvider {
         }
       })
     );
-    await host.delay(10 * 1000);
     return await vscode.debug.startDebugging(currentFolder, debugConfiguration);
   }
 
