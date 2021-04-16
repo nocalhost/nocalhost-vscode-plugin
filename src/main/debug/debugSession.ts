@@ -72,8 +72,17 @@ export class DebugSession {
       logger.info(`debug: not found pod`);
       return;
     }
-    const devspaceName = node.getSpaceName();
-    const appName = node.getAppName();
+
+    const notFoundCommands = debugProvider.checkRequiredCommand(
+      podNames[0],
+      node.getKubeConfigPath()
+    );
+    if (notFoundCommands.length > 0) {
+      host.showErrorMessage(
+        "Not found command in container: " + notFoundCommands.join(" ")
+      );
+      return;
+    }
 
     const debugCommand =
       (container.dev.command && container.dev.command.debug) || [];
