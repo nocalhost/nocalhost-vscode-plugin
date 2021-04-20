@@ -183,7 +183,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       }
     }
 
-    fs.writeFileSync(filePath, writeData);
+    fs.writeFileSync(filePath, writeData, { mode: 0o600 });
   }
 
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
