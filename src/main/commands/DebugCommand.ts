@@ -20,7 +20,7 @@ export default class DebugCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
-    await host.showProgressing("debuging ...", async () => {
+    await host.showProgressing("Debugging ...", async () => {
       const debugSession = new DebugSession();
       // get current workspaceFolder
       const workspaceFolder = await host.showWorkspaceFolderPick();
