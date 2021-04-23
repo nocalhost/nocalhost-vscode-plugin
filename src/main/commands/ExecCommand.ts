@@ -179,6 +179,7 @@ export default class ExecCommand implements ICommand {
       const podNameArr = await kubectl.getPodNames(
         node.name,
         node.resourceType,
+        node.getNameSpace(),
         kubeConfigPath
       );
       podName = podNameArr[0];
@@ -192,7 +193,8 @@ export default class ExecCommand implements ICommand {
     }
     const containerNameArr = await kubectl.getContainerNames(
       podName,
-      kubeConfigPath
+      kubeConfigPath,
+      node.getNameSpace()
     );
     let containerName: string | undefined = containerNameArr[0];
     if (status !== DeploymentStatus.developing && containerNameArr.length > 1) {

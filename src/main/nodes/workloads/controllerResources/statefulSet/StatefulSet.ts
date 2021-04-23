@@ -41,6 +41,7 @@ export class StatefulSet extends ControllerResourceNode {
     const deploy = await kubectl.loadResource(
       this.getKubeConfigPath(),
       this.resourceType,
+      this.getNameSpace(),
       this.name,
       "json"
     );

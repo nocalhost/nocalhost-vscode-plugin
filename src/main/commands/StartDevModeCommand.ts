@@ -451,6 +451,7 @@ export default class StartDevModeCommand implements ICommand {
     const podNameArr = await kubectl.getPodNames(
       node.name,
       node.resourceType,
+      node.getNameSpace(),
       kubeConfigPath
     );
     podName = podNameArr[0];
@@ -462,7 +463,8 @@ export default class StartDevModeCommand implements ICommand {
     if (!containerName) {
       const containerNameArr = await kubectl.getContainerNames(
         podName,
-        kubeConfigPath
+        kubeConfigPath,
+        node.getNameSpace()
       );
 
       if (containerNameArr.length > 1) {

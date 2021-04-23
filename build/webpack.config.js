@@ -59,10 +59,12 @@ const extensionConfig = {
 const rendererConfig = {
   target: "node",
   mode: "production",
-  entry: "./src/renderer/index.tsx",
+  entry: {
+    renderer: "./src/renderer/index.tsx",
+    home: "./src/renderer/HomeIndex.tsx",
+  },
   output: {
     path: path.resolve(__dirname, "..", "dist"),
-    filename: "renderer.js",
   },
   devtool: "source-map",
   resolve: {

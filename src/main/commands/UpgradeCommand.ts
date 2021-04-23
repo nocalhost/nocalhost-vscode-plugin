@@ -208,6 +208,7 @@ export default class UpgradeCommand implements ICommand {
         const podNameArr = await kubectl.getPodNames(
           service.name,
           service.serviceType,
+          appNode.namespace,
           appNode.getKubeConfigPath()
         );
         if (podNameArr && podNameArr.length <= 0) {

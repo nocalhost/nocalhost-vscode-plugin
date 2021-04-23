@@ -72,8 +72,10 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const paths = uri.path.split("/");
         const query = querystring.decode(uri.query);
         let id = "";
+        let namespace = "";
         if (query) {
           id = query.id as string;
+          namespace = query.namespace as string;
         }
         const type = paths[1];
         if (type === "loadResource") {
@@ -86,6 +88,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             (await kubectl.loadResource(
               node.getKubeConfigPath(),
               kind,
+              namespace,
               name,
               output
             )) || "";
