@@ -42,7 +42,15 @@
       "NocalhostView": [
         {
           "id": "Nocalhost",
-          "name": "Nocalhost"
+          "name": "Nocalhost",
+          "type": "tree",
+          "when": "login || local"
+        },
+        {
+          "id": "Nocalhost.Home",
+          "name": "Nocalhost",
+          "type": "webview",
+          "when": "!login && !local"
         }
       ]
     },
@@ -51,16 +59,6 @@
         "view": "Nocalhost",
         "contents": "%noReady.description%",
         "when": "!extensionActivated"
-      },
-      {
-        "view": "Nocalhost",
-        "contents": "%noServer.description%",
-        "when": "extensionActivated && !serverConfig && !login"
-      },
-      {
-        "view": "Nocalhost",
-        "contents": "%noLogin.description%",
-        "when": "extensionActivated && serverConfig && !login"
       },
       {
         "view": "Nocalhost",
@@ -106,9 +104,9 @@
           "group": "overflow"
         },
         {
-          "command": "Nocalhost.switchEndPoint",
-          "when": "extensionActivated && view == Nocalhost && !login",
-          "group": "navigation"
+          "command": "Nocalhost.signout",
+          "when": "extensionActivated && view == Nocalhost && local",
+          "group": "overflow"
         }
       ],
       "view/item/context": [
@@ -222,7 +220,7 @@
         },
         {
           "command": "Nocalhost.viewKubeConfig",
-          "when": "viewItem =~ /^devspace/i",
+          "when": "viewItem =~ /^kubeconfig/i",
           "group": "navigation"
         }
       ]
@@ -257,11 +255,6 @@
       {
         "command": "Nocalhost.deleteKubernetesObject",
         "title": "Delete"
-      },
-      {
-        "command": "Nocalhost.switchEndPoint",
-        "title": "Switch Endpoint",
-        "icon": "$(globe)"
       },
       {
         "command": "Nocalhost.openEndPoint",

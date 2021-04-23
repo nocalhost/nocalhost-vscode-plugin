@@ -1,0 +1,31 @@
+body {
+	background-color: transparent;
+}
+
+.base-url {
+	display: flex;
+	margin: 10px 0 0 0 auto;
+}
+
+.sign-in {
+	display: block;
+	border: none;
+	margin: 5px auto;
+}
+
+.type {
+	margin: 10px auto;
+}
+
+.flex {
+	display: flex;
+	align-items: center;
+}
+
+.browser {
+	margin-left: 5px;
+}
+
+.browser:hover {
+	cursor: pointer;
+}

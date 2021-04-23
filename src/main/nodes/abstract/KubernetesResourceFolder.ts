@@ -48,13 +48,13 @@ export abstract class KubernetesResourceFolder
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
+    const appNode = this.getAppNode();
     const res = await kubectl.getResourceList(
       this.getKubeConfigPath(),
-      this.resourceType
+      this.resourceType,
+      appNode.namespace
     );
     const list = JSON.parse(res as string) as List;
-
-    const appNode = this.getAppNode();
 
     const resource = this.filterResource(list.items, appNode);
 

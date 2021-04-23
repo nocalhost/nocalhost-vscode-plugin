@@ -1,3 +1,5 @@
+import * as fs from "fs";
+
 import { execAsyncWithReturn } from "./shell";
 import {
   ControllerResource,
@@ -8,6 +10,7 @@ import {
 } from "../nodes/types/resourceType";
 import host from "../host";
 import { DEFAULT_KUBE_CONFIG_FULLPATH } from "../constants";
+import { DevspaceInfo } from "../api";
 
 export async function exec(command: string, kubeconfigPath: string) {
   const execCommand = `kubectl ${command} --kubeconfig ${kubeconfigPath}`;
@@ -27,12 +30,16 @@ function getKubectlCommand(args: Array<string>) {
 export async function getResourceList(
   kubeconfigPath: string,
   kind: string,
+  namespace?: string,
   label?: string
 ) {
   let args: Array<string>;
   args = ["get", kind];
   if (label) {
     args.push("-l", label);
+  }
+  if (namespace) {
+    args.push("-n", namespace);
   }
   args.push("-o", "json");
 
@@ -41,14 +48,65 @@ export async function getResourceList(
   return result;
 }
 
+export async function getAllNamespace(
+  kubeconfigPath: string,
+  defaultNamespace: string
+) {
+  const devspaces = new Array<DevspaceInfo>();
+  const kubeConfig = fs.readFileSync(kubeconfigPath);
+  let str = await getResourceList(kubeconfigPath, "ns").catch(() => {});
+  if (!str) {
+    const devspace: DevspaceInfo = {
+      id: 0,
+      userId: 0,
+      spaceName: defaultNamespace,
+      clusterId: 0,
+      kubeconfig: `${kubeConfig}`,
+      memory: 0,
+      cpu: 0,
+      spaceResourceLimit: "",
+      namespace: defaultNamespace,
+      status: 0,
+      storageClass: "",
+      devStartAppendCommand: [],
+    };
+
+    devspaces.push(devspace);
+
+    return devspaces;
+  }
+  const obj = JSON.parse(str) as Resource;
+  obj.items.forEach((ns) => {
+    const devspace: DevspaceInfo = {
+      id: 0,
+      userId: 0,
+      spaceName: ns["metadata"]["name"],
+      clusterId: 0,
+      kubeconfig: `${kubeConfig}`,
+      memory: 0,
+      cpu: 0,
+      spaceResourceLimit: "",
+      namespace: ns["metadata"]["name"],
+      status: 0,
+      storageClass: "",
+      devStartAppendCommand: [],
+    };
+
+    devspaces.push(devspace);
+  });
+
+  return devspaces;
+}
+
 export async function loadResource(
   kubeconfigPath: string,
   kind: string,
+  namespace: string,
   name: string,
   outputType = "yaml"
 ) {
   const result = await exec(
-    `get ${kind} ${name} -o ${outputType}`,
+    `get ${kind} ${name} -n ${namespace} -o ${outputType}`,
     kubeconfigPath || host.getGlobalState(DEFAULT_KUBE_CONFIG_FULLPATH)
   );
   return result;
@@ -57,18 +115,23 @@ export async function loadResource(
 export async function getResourceObj(
   kubeconfigPath: string,
   kind: string,
+  namespace: string,
   name: string
 ) {
-  const result = await exec(`get ${kind} ${name} -o json`, kubeconfigPath);
+  const result = await exec(
+    `get ${kind} ${name} -n ${namespace} -o json`,
+    kubeconfigPath
+  );
   return result;
 }
 
 export async function getControllerPod(
   kubeconfigPath: string,
   kind: string,
+  namespace: string,
   name: string
 ) {
-  const res = await getResourceObj(kubeconfigPath, kind, name);
+  const res = await getResourceObj(kubeconfigPath, kind, namespace, name);
   if (res) {
     const result = JSON.parse(res) as ControllerResource;
     const labels = result.spec.selector.matchLabels;
@@ -77,7 +140,12 @@ export async function getControllerPod(
       labelStrArr.push(`${key}=${labels[key]}`);
     }
     const labelStr = labelStrArr.join(",");
-    const listStr = await getResourceList(kubeconfigPath, "pods", labelStr);
+    const listStr = await getResourceList(
+      kubeconfigPath,
+      "pods",
+      namespace,
+      labelStr
+    );
 
     const resourceList = JSON.parse(listStr as string) as List;
 
@@ -87,9 +155,16 @@ export async function getControllerPod(
 
 export async function getContainerNames(
   podName: string,
-  kubeConfigPath: string
+  kubeConfigPath: string,
+  namespace: string
 ) {
-  const podStr = await loadResource(kubeConfigPath, "pod", podName, "json");
+  const podStr = await loadResource(
+    kubeConfigPath,
+    "pod",
+    namespace,
+    podName,
+    "json"
+  );
   const pod = JSON.parse(podStr as string) as PodResource;
   const containerNameArr = pod.spec.containers.map((c) => {
     return c.name;
@@ -108,10 +183,11 @@ export async function getContainerNames(
 export async function getPodNames(
   name: string,
   kind: string,
+  namespace: string,
   kubeConfigPath: string
 ) {
   let podNameArr: Array<string> = [];
-  let resArr = await getControllerPod(kubeConfigPath, kind, name);
+  let resArr = await getControllerPod(kubeConfigPath, kind, namespace, name);
   if (resArr && resArr.length <= 0) {
     return podNameArr;
   }
@@ -140,10 +216,11 @@ export async function getPodNames(
 export async function getRunningPodNames(
   name: string,
   kind: string,
+  namespace: string,
   kubeConfigPath: string
 ) {
   let podNameArr: Array<string> = [];
-  let resArr = await getControllerPod(kubeConfigPath, kind, name);
+  let resArr = await getControllerPod(kubeConfigPath, kind, namespace, name);
   if (resArr && resArr.length <= 0) {
     return podNameArr;
   }

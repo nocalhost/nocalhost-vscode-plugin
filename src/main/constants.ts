@@ -20,6 +20,10 @@ export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   ".kube/config"
 );
 
+// LOCAL
+export const IS_LOCAL = "isLocal";
+export const LOCAL_PATH = "localPath";
+
 // USER INFO
 export const USERNAME = "username";
 export const EMAIL = "email";
