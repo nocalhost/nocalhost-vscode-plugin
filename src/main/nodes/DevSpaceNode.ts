@@ -177,9 +177,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     // updateData
     // TODO: DISPLAY LOCAL APP NOT FILTER
     const nodes = data.map((item) => {
-      const app = this.getApplication(item.name);
+      let app = this.getApplication(item.name);
       if (!app) {
-        return null;
+        app = this.buildApplicationInfo(item.name);
       }
       return this.buildAppNode(app);
     });
@@ -190,6 +190,29 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       }
     });
     return result as AppNode[];
+  }
+
+  buildApplicationInfo(appName: string) {
+    const contextObj = {
+      application_name: appName,
+      application_url: "",
+      application_config_path: "",
+      nocalhost_config: "",
+      source: "",
+      resource_dir: "",
+      install_type: "",
+    };
+
+    const app = {
+      id: 0,
+      userId: 0,
+      public: 1,
+      editable: 1,
+      context: JSON.stringify(contextObj),
+      status: 1,
+    };
+
+    return app;
   }
 
   async getTreeItem() {
