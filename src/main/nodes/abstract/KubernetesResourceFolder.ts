@@ -8,6 +8,8 @@ import { BaseNocalhostNode } from "../types/nodeType";
 import { List, Resource } from "../types/resourceType";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { RefreshData } from "../impl/updateData";
+import host from "../../host";
+import { IS_LOCAL } from "../../constants";
 
 export abstract class KubernetesResourceFolder
   extends NocalhostFolderNode
@@ -108,6 +110,10 @@ export abstract class KubernetesResourceFolder
   }
 
   public filterResource(resources: Array<Resource>, appNode: AppNode) {
+    const isLocal = host.getGlobalState(IS_LOCAL);
+    if (isLocal) {
+      return resources;
+    }
     return resources.filter((r) => {
       if (
         r.metadata &&
