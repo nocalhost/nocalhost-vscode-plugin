@@ -110,10 +110,10 @@ export abstract class KubernetesResourceFolder
   }
 
   public filterResource(resources: Array<Resource>, appNode: AppNode) {
-    const isLocal = host.getGlobalState(IS_LOCAL);
-    if (isLocal) {
-      return resources;
-    }
+    // const isLocal = host.getGlobalState(IS_LOCAL);
+    // if (isLocal) {
+    //   return resources;
+    // }
     return resources.filter((r) => {
       if (
         r.metadata &&
