@@ -418,7 +418,7 @@ export class Host implements vscode.Disposable {
   }
 
   async check() {
-    const tools = ["kubectl", "nhctl"];
+    const tools = ["kubectl"];
     for (let i = 0; i < tools.length; i++) {
       const exist = shell.which(tools[i]);
       if (!exist) {
@@ -429,24 +429,10 @@ export class Host implements vscode.Disposable {
             );
             break;
           }
-          case "nhctl": {
-            const result:
-              | string
-              | undefined = await vscode.window.showErrorMessage(
-              "nhctl not found, please install nhctl first.",
-              "Get nhctl"
-            );
-            if (result === "Get nhctl") {
-              vscode.env.openExternal(
-                vscode.Uri.parse(NOCALHOST_INSTALLATION_LINK)
-              );
-            }
-            break;
-          }
         }
       }
     }
-    checkVersion();
+    await checkVersion();
   }
 
   async installVscodeExtension(extensionId: string): Promise<boolean> {

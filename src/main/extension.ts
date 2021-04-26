@@ -25,6 +25,7 @@ import {
   TMP_DEVSPACE,
   TMP_NAMESPACE,
   IS_LOCAL,
+  NH_BIN,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -275,10 +276,11 @@ async function init(context: vscode.ExtensionContext) {
   fileUtil.mkdir(KUBE_CONFIG_DIR);
   fileUtil.mkdir(HELM_VALUES_DIR);
   fileUtil.mkdir(HELM_NH_CONFIG_DIR);
+  fileUtil.mkdir(NH_BIN);
   // fileStore.initConfig();
   host.setGlobalState("extensionPath", context.extensionPath);
   updateServerConfigStatus();
-  checkVersion();
+  await checkVersion();
 
   const welcomeDidShow: boolean | undefined = host.getGlobalState(
     WELCOME_DID_SHOW
