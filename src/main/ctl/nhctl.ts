@@ -772,10 +772,10 @@ function getNhctlPath(version: string) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-linux-amd64?version=v${version}`;
     destinationPath = path.resolve(NH_BIN, "nhctl");
   } else if (isMac) {
-    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-darwin-amd64?version=${version}`;
+    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-darwin-amd64?version=v${version}`;
     destinationPath = path.resolve(NH_BIN, "nhctl");
   } else if (isWindows) {
-    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-windows-amd64.exe?version=${version}`;
+    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-windows-amd64.exe?version=v${version}`;
     destinationPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
