@@ -55,6 +55,7 @@ export interface ContainerConfig {
     };
     remoteDebugPort?: number;
     useDevContainer?: boolean;
+    [key: string]: any;
   };
 }
 

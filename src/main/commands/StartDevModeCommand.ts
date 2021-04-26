@@ -21,7 +21,10 @@ import {
 import host, { Host } from "../host";
 import * as path from "path";
 import git from "../ctl/git";
-import ConfigService from "../service/configService";
+import ConfigService, {
+  ContainerConfig,
+  NocalhostServiceConfig,
+} from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as kubectl from "../ctl/kubectl";
 import * as nls from "../../../package.nls.json";
@@ -75,6 +78,54 @@ export default class StartDevModeCommand implements ICommand {
       }
     }
     const appName = node.getAppName();
+    // check image
+    let image: string | undefined = await this.getImage(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      appName,
+      node.name,
+      result.containerName
+    );
+    if (!image) {
+      const result = await host.showInformationMessage(
+        "Please specify the mirror address",
+        { modal: true },
+        "Select",
+        "Custom"
+      );
+      if (!result) {
+        return;
+      }
+      if (result === "Select") {
+        const images = [
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/java:11",
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/ruby:3.0",
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/node:14",
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/python:3.9",
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/golang:1.16",
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/perl:latest",
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/rust:latest",
+          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/php:latest",
+        ];
+        image = await vscode.window.showQuickPick(images);
+      } else if (result === "Custom") {
+        image = await host.showInputBox({
+          placeHolder: "Please input your image address",
+        });
+        if (!image) {
+          return;
+        }
+      }
+    }
+    await this.saveConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      appName,
+      node.name,
+      result.containerName,
+      "image",
+      image as string
+    );
     const destDir = await this.cloneOrGetFolderDir(
       appName,
       node,
@@ -153,6 +204,15 @@ export default class StartDevModeCommand implements ICommand {
       });
       if (saveUris && saveUris.length > 0) {
         destDir = path.resolve(saveUris[0].fsPath, workloadName);
+        await this.saveConfig(
+          kubeConfigPath,
+          namespace,
+          appName,
+          workloadName,
+          containerName,
+          "gitUrl",
+          gitUrl
+        );
         await host.showProgressing("Starting DevMode", async (progress) => {
           progress.report({
             message: "cloning code",
@@ -162,6 +222,72 @@ export default class StartDevModeCommand implements ICommand {
       }
     }
     return destDir;
+  }
+
+  private async saveConfig(
+    kubeConfigPath: string,
+    namespace: string,
+    appName: string,
+    workloadName: string,
+    containerName: string,
+    key: string,
+    value: string
+  ) {
+    const serviceData = (await ConfigService.getWorkloadConfig(
+      kubeConfigPath,
+      namespace,
+      appName,
+      workloadName
+    )) as NocalhostServiceConfig;
+    const containers = serviceData.containers || [];
+    if (containers.length === 1) {
+      serviceData.containers[0].dev[key] = value;
+    } else if (containers.length < 1) {
+      const container: ContainerConfig = {
+        name: containerName,
+        dev: {
+          gitUrl: "",
+          image: "",
+          shell: "",
+          workDir: "/home/nocalhost-dev",
+          command: {},
+          sync: {},
+          portForward: [],
+          env: [],
+        },
+      };
+      container.dev[key] = value;
+      containers.push(container);
+    } else {
+      const temContainers = containers.filter((c) => c.name === containerName);
+      let c: ContainerConfig = {
+        name: containerName,
+        dev: {
+          gitUrl: "",
+          image: "",
+          shell: "",
+          workDir: "/home/nocalhost-dev",
+          command: {},
+          sync: {},
+          portForward: [],
+          env: [],
+        },
+      };
+      if (temContainers.length > 0) {
+        c = temContainers[0];
+        c.dev[key] = value;
+      } else {
+        c = containers[0];
+        c.dev[key] = value;
+      }
+    }
+    await ConfigService.writeConfig(
+      kubeConfigPath,
+      namespace,
+      appName,
+      workloadName,
+      serviceData
+    );
   }
 
   private async firstOpen(
@@ -443,6 +569,28 @@ export default class StartDevModeCommand implements ICommand {
     }
 
     return gitUrl;
+  }
+
+  private async getImage(
+    kubeConfigPath: string,
+    namespace: string,
+    appName: string,
+    workloadName: string,
+    containerName: string
+  ) {
+    const config = await ConfigService.getContaienrConfig(
+      kubeConfigPath,
+      namespace,
+      appName,
+      workloadName,
+      containerName
+    );
+    let image = "";
+    if (config) {
+      image = config.dev.image;
+    }
+
+    return image;
   }
 
   async getPodAndContainer(node: ControllerNodeApi) {
