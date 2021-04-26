@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
 import * as fs from "fs";
-import * as download from "download";
 import { spawn } from "child_process";
+import * as request from "request";
 
 import {
   execAsyncWithReturn,
@@ -379,7 +379,7 @@ export async function startPortForward(
     true
   );
 
-  await host.showProgressing(`Starting port-forward`, async (progress) => {
+  await host.showProgressing(`Starting port-forward`, async () => {
     if (sudo) {
       await sudoPortforward(`sudo -S ${portForwardCommand}`);
     } else {
@@ -806,14 +806,13 @@ export async function checkVersion() {
     if (isDownloadNhctl) {
       await host.showProgressing("Downloading nhctl", () => {
         return new Promise((res, rej) => {
-          download(sourcePath)
+          request(sourcePath)
             .pipe(
               fs.createWriteStream(destinationPath as fs.PathLike, {
                 mode: 0o755,
               })
             )
-            .on("close", (code: number) => {
-              host.log("download end", true);
+            .on("close", () => {
               res(true);
             })
             .on("error", (error: Error) => {
@@ -834,7 +833,7 @@ export async function checkVersion() {
   } else {
     await host.showProgressing("Downloading nhctl", () => {
       return new Promise((res, rej) => {
-        download(sourcePath)
+        request(sourcePath)
           .pipe(
             fs.createWriteStream(destinationPath as fs.PathLike, {
               mode: 0o755,
