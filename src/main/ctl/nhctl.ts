@@ -33,7 +33,11 @@ export async function getInstalledApp(
   ns: string,
   kubeconfig: string
 ): Promise<AllInstallAppInfo[]> {
-  const command = `nhctl list --yaml -n ${ns} --kubeconfig ${kubeconfig}`;
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  const command = `${nhctlPath} list --yaml -n ${ns} --kubeconfig ${kubeconfig}`;
   const result = await execAsyncWithReturn(command, []);
 
   let obj: AllInstallAppInfo[] = [];
