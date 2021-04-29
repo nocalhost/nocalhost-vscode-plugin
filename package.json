@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -20,7 +20,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.3.8"
+    "version": "0.3.9"
   },
   "contributes": {
     "yamlValidation": [
@@ -42,7 +42,15 @@
       "NocalhostView": [
         {
           "id": "Nocalhost",
-          "name": "Nocalhost"
+          "name": "Nocalhost",
+          "type": "tree",
+          "when": "login || local"
+        },
+        {
+          "id": "Nocalhost.Home",
+          "name": "Nocalhost",
+          "type": "webview",
+          "when": "!login && !local"
         }
       ]
     },
@@ -51,16 +59,6 @@
         "view": "Nocalhost",
         "contents": "%noReady.description%",
         "when": "!extensionActivated"
-      },
-      {
-        "view": "Nocalhost",
-        "contents": "%noServer.description%",
-        "when": "extensionActivated && !serverConfig && !login"
-      },
-      {
-        "view": "Nocalhost",
-        "contents": "%noLogin.description%",
-        "when": "extensionActivated && serverConfig && !login"
       },
       {
         "view": "Nocalhost",
@@ -106,9 +104,9 @@
           "group": "overflow"
         },
         {
-          "command": "Nocalhost.switchEndPoint",
-          "when": "extensionActivated && view == Nocalhost && !login",
-          "group": "navigation"
+          "command": "Nocalhost.signout",
+          "when": "extensionActivated && view == Nocalhost && local",
+          "group": "overflow"
         }
       ],
       "view/item/context": [
@@ -142,7 +140,7 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment)-info-(?!developing)/i",
+          "when": "viewItem =~ /^workload-(deployment)-(info|info-local|warn-local)-(?!developing)/i",
           "group": "inline@0"
         },
         {
@@ -222,7 +220,7 @@
         },
         {
           "command": "Nocalhost.viewKubeConfig",
-          "when": "viewItem =~ /^devspace/i",
+          "when": "viewItem =~ /^kubeconfig/i",
           "group": "navigation"
         }
       ]
@@ -257,11 +255,6 @@
       {
         "command": "Nocalhost.deleteKubernetesObject",
         "title": "Delete"
-      },
-      {
-        "command": "Nocalhost.switchEndPoint",
-        "title": "Switch Endpoint",
-        "icon": "$(globe)"
       },
       {
         "command": "Nocalhost.openEndPoint",
@@ -437,6 +430,7 @@
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
     "@types/react-router-dom": "^5.1.6",
+    "@types/request": "^2.48.5",
     "@types/semver": "^7.3.4",
     "@types/shelljs": "^0.8.8",
     "@types/sinon": "^9.0.10",
@@ -476,6 +470,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "@dineug/vscode-google-analytics": "^0.1.2",
     "@types/json-schema": "^7.0.7",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
@@ -487,7 +482,7 @@
     "semver": "^7.3.4",
     "shelljs": "^0.8.4",
     "tempy": "^1.0.0",
-    "uuid": "^8.3.1",
+    "uuid": "^8.3.2",
     "vscode-nls": "^5.0.0",
     "yaml": "^1.10.0"
   },

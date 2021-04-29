@@ -24,6 +24,8 @@ import {
   TMP_CONTAINER,
   TMP_DEVSPACE,
   TMP_NAMESPACE,
+  IS_LOCAL,
+  NH_BIN,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -43,6 +45,7 @@ import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 import messageBus from "./utils/messageBus";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
+import { HomeWebViewProvider } from "./webview/HomePage";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -55,6 +58,15 @@ export async function activate(context: vscode.ExtensionContext) {
   // TODO: DO NOT DELETE, FOR: [webview integration]
   // const dataCenter: DataCenter = DataCenter.getInstance();
   // dataCenter.addListener(() => appTreeProvider.refresh());
+
+  let homeWebViewProvider = new HomeWebViewProvider(context.extensionUri);
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      HomeWebViewProvider.viewType,
+      homeWebViewProvider
+    )
+  );
 
   let nocalhostFileSystemProvider = new NocalhostFileSystemProvider();
   appTreeView = vscode.window.createTreeView("Nocalhost", {
@@ -114,6 +126,10 @@ export async function activate(context: vscode.ExtensionContext) {
   const jwt = host.getGlobalState(JWT);
   if (jwt) {
     state.setLogin(true);
+  }
+  const isLocal = host.getGlobalState(IS_LOCAL);
+  if (isLocal) {
+    await vscode.commands.executeCommand("setContext", "local", true);
   }
   host.getOutputChannel().show(true);
   await registerYamlSchemaSupport();
@@ -260,10 +276,11 @@ async function init(context: vscode.ExtensionContext) {
   fileUtil.mkdir(KUBE_CONFIG_DIR);
   fileUtil.mkdir(HELM_VALUES_DIR);
   fileUtil.mkdir(HELM_NH_CONFIG_DIR);
+  fileUtil.mkdir(NH_BIN);
   // fileStore.initConfig();
   host.setGlobalState("extensionPath", context.extensionPath);
   updateServerConfigStatus();
-  checkVersion();
+  await checkVersion();
 
   const welcomeDidShow: boolean | undefined = host.getGlobalState(
     WELCOME_DID_SHOW

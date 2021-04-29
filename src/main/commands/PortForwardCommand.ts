@@ -31,6 +31,7 @@ export default class PortForwardCommand implements ICommand {
       const podNameArr = await kubectl.getRunningPodNames(
         name,
         kind,
+        node.getNameSpace(),
         node.getKubeConfigPath()
       );
       podName = podNameArr[0];

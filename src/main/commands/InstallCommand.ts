@@ -350,6 +350,7 @@ export default class InstallCommand implements ICommand {
   public async getPodNames(
     name: string,
     type: string,
+    namespace: string,
     kubeConfigPath: string,
     timeout: number = 1000 * 60
   ) {
@@ -362,7 +363,7 @@ export default class InstallCommand implements ICommand {
     ) {
       podNameArr =
         (await kubectl
-          .getPodNames(name, type, kubeConfigPath)
+          .getPodNames(name, type, namespace, kubeConfigPath)
           .catch(() => {})) || [];
     }
 
@@ -372,7 +373,8 @@ export default class InstallCommand implements ICommand {
   private async checkBookInfoStatus(appNode: AppNode) {
     const res = await kubectl.getResourceList(
       appNode.getKubeConfigPath(),
-      "Deployments"
+      "Deployments",
+      appNode.namespace
     );
     const list = JSON.parse(res as string) as List;
     let check = true;

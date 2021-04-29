@@ -19,12 +19,13 @@ import { Deployment } from "./Deployment";
 export class DeploymentFolder extends KubernetesResourceFolder {
   public resourceType = "Deployments";
   public async updateData(isInit?: boolean): Promise<any> {
+    const appNode = this.getAppNode();
     const res = await kubectl.getResourceList(
       this.getKubeConfigPath(),
-      this.resourceType
+      this.resourceType,
+      appNode.namespace
     );
     let list = JSON.parse(res as string) as List;
-    const appNode = this.getAppNode();
 
     const appInfo = await appNode.freshApplicationInfo();
     const appConfig = await ConfigService.getAppConfig(

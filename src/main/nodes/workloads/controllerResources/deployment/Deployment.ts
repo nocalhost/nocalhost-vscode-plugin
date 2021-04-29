@@ -16,6 +16,8 @@ import {
 import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
+import host from "../../../../host";
+import { IS_LOCAL } from "../../../../constants";
 
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
@@ -65,9 +67,10 @@ export class Deployment extends ControllerResourceNode {
         break;
     }
     const check = await this.checkConfig();
+    const isLocal = host.getGlobalState(IS_LOCAL);
     treeItem.contextValue = `${treeItem.contextValue}-${
       check ? "info" : "warn"
-    }-${status}`;
+    }-${isLocal ? "local-" : ""}${status}`;
     if (this.firstRender) {
       this.firstRender = false;
     }
@@ -103,6 +106,7 @@ export class Deployment extends ControllerResourceNode {
       const deploy = await kubectl.loadResource(
         this.getKubeConfigPath(),
         this.resourceType,
+        appNode.namespace,
         this.name,
         "json"
       );

@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
-import nocalhostState from "./state";
 
 export default class NocalhostAppProvider
   implements vscode.TreeDataProvider<BaseNocalhostNode> {
@@ -19,11 +18,7 @@ export default class NocalhostAppProvider
   }
 
   async getChildren(element?: BaseNocalhostNode) {
-    const isLogin = nocalhostState.isLogin();
     let result: vscode.ProviderResult<BaseNocalhostNode[]> = [];
-    if (!isLogin) {
-      return Promise.resolve([]);
-    }
 
     if (element) {
       result = await element.getChildren();

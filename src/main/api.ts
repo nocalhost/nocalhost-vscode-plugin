@@ -21,17 +21,13 @@ interface ResponseData {
 
 export interface DevspaceInfo {
   id: number;
-  userId: number;
   spaceName: string;
   clusterId: number;
   kubeconfig: string;
-  memory: number;
-  cpu: number;
-  spaceResourceLimit: string;
   namespace: string;
-  status: number;
   storageClass: string;
   devStartAppendCommand: Array<string>;
+  [key: string]: any;
 }
 
 axios.interceptors.request.use(function (config) {
@@ -240,4 +236,23 @@ export async function getDevSpace() {
     }
     return 0;
   });
+}
+
+export interface ServiceAccountInfo {
+  cluster_id: number;
+  kubeconfig: string;
+  storage_class: string;
+  privilege: boolean;
+  namespace_packs: Array<{
+    space_id: number;
+    namespace: string;
+    spacename: string;
+  }>;
+}
+
+export async function getServiceAccount() {
+  const response = await axios.get(`/v1/plugin/service_accounts`);
+  const res = response.data as ResponseData;
+  const serviceAccount: ServiceAccountInfo[] = res.data || [];
+  return serviceAccount;
 }

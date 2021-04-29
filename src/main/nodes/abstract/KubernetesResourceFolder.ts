@@ -8,6 +8,8 @@ import { BaseNocalhostNode } from "../types/nodeType";
 import { List, Resource } from "../types/resourceType";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { RefreshData } from "../impl/updateData";
+import host from "../../host";
+import { IS_LOCAL } from "../../constants";
 
 export abstract class KubernetesResourceFolder
   extends NocalhostFolderNode
@@ -48,13 +50,13 @@ export abstract class KubernetesResourceFolder
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
+    const appNode = this.getAppNode();
     const res = await kubectl.getResourceList(
       this.getKubeConfigPath(),
-      this.resourceType
+      this.resourceType,
+      appNode.namespace
     );
     const list = JSON.parse(res as string) as List;
-
-    const appNode = this.getAppNode();
 
     const resource = this.filterResource(list.items, appNode);
 
@@ -108,6 +110,10 @@ export abstract class KubernetesResourceFolder
   }
 
   public filterResource(resources: Array<Resource>, appNode: AppNode) {
+    // const isLocal = host.getGlobalState(IS_LOCAL);
+    // if (isLocal) {
+    //   return resources;
+    // }
     return resources.filter((r) => {
       if (
         r.metadata &&

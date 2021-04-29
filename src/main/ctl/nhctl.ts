@@ -1,6 +1,11 @@
 import * as vscode from "vscode";
 import * as semver from "semver";
+import * as path from "path";
+import * as fs from "fs";
 import { spawn } from "child_process";
+import * as request from "request";
+
+import ga, { getUUID } from "../utils/ga";
 
 import {
   execAsyncWithReturn,
@@ -11,7 +16,7 @@ import host, { Host } from "../host";
 import * as yaml from "yaml";
 import { readYaml } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
-import { NOCALHOST_INSTALLATION_LINK } from "../constants";
+import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
@@ -30,7 +35,11 @@ export async function getInstalledApp(
   ns: string,
   kubeconfig: string
 ): Promise<AllInstallAppInfo[]> {
-  const command = `nhctl list --yaml -n ${ns} --kubeconfig ${kubeconfig}`;
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  const command = `${nhctlPath} list --yaml -n ${ns} --kubeconfig ${kubeconfig}`;
   const result = await execAsyncWithReturn(command, []);
 
   let obj: AllInstallAppInfo[] = [];
@@ -272,6 +281,17 @@ export async function devStart(
     }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
+  const isLocal = host.getGlobalState(IS_LOCAL);
+  if (isLocal) {
+    const res = await ga.send({
+      category: "command",
+      action: "startDevMode",
+      label: devStartCommand,
+      value: 1,
+      clientID: getUUID(),
+    });
+    console.log("ga: ", res);
+  }
   await execChildProcessAsync(
     host,
     devStartCommand,
@@ -376,7 +396,19 @@ export async function startPortForward(
     true
   );
 
-  await host.showProgressing(`Starting port-forward`, async (progress) => {
+  const isLocal = host.getGlobalState(IS_LOCAL);
+  if (isLocal) {
+    const res = await ga.send({
+      category: "command",
+      action: "startPortForward",
+      label: portForwardCommand,
+      value: 1,
+      clientID: getUUID(),
+    });
+    console.log("ga: ", res);
+  }
+
+  await host.showProgressing(`Starting port-forward`, async () => {
     if (sudo) {
       await sudoPortforward(`sudo -S ${portForwardCommand}`);
     } else {
@@ -403,6 +435,16 @@ export async function endPortForward(
   );
 
   const sudo = isSudo([port]);
+  const isLocal = host.getGlobalState(IS_LOCAL);
+  if (isLocal) {
+    await ga.send({
+      category: "command",
+      action: "endPortForward",
+      label: endPortForwardCommand,
+      value: 1,
+      clientID: getUUID(),
+    });
+  }
 
   if (sudo) {
     host.log(`[cmd] sudo -S ${endPortForwardCommand}`, true);
@@ -450,6 +492,17 @@ export async function endDevMode(
         `dev end ${appName} -d ${workLoadName} `
       );
       host.log(`[cmd] ${end}`, true);
+
+      const isLocal = host.getGlobalState(IS_LOCAL);
+      if (isLocal) {
+        await ga.send({
+          category: "command",
+          action: "endDevMode",
+          label: end,
+          value: 1,
+          clientID: getUUID(),
+        });
+      }
       await execChildProcessAsync(host, end, [], {
         dialog: `End devMode (${appName}/${workLoadName}) fail`,
       });
@@ -755,8 +808,32 @@ export async function reconnectSync(
   });
 }
 
+function getNhctlPath(version: string) {
+  const isLinux = host.isLinux();
+  const isMac = host.isMac();
+  const isWindows = host.isWindow();
+  let sourcePath = "";
+  let destinationPath = "";
+  if (isLinux) {
+    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-linux-amd64?version=v${version}`;
+    destinationPath = path.resolve(NH_BIN, "nhctl");
+  } else if (isMac) {
+    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-darwin-amd64?version=v${version}`;
+    destinationPath = path.resolve(NH_BIN, "nhctl");
+  } else if (isWindows) {
+    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-windows-amd64.exe?version=v${version}`;
+    destinationPath = path.resolve(NH_BIN, "nhctl.exe");
+  }
+
+  return {
+    sourcePath,
+    destinationPath,
+  };
+}
+
 export async function checkVersion() {
   const requiredVersion: string = packageJson.nhctl?.version;
+  const { sourcePath, destinationPath } = getNhctlPath(requiredVersion);
   const result: ServiceResult = await services.fetchNhctlVersion();
   if (!requiredVersion) {
     return;
@@ -770,18 +847,58 @@ export async function checkVersion() {
       return;
     }
     currentVersion = matched[1];
-    const pass: boolean = semver.gte(currentVersion, requiredVersion);
-    if (!pass) {
+    const isDownloadNhctl: boolean = semver.lt(currentVersion, requiredVersion);
+    const isUpgradeExtension: boolean = semver.gt(
+      currentVersion,
+      requiredVersion
+    );
+
+    if (isDownloadNhctl) {
+      await host.showProgressing("Downloading nhctl", () => {
+        return new Promise((res, rej) => {
+          request(sourcePath)
+            .pipe(
+              fs.createWriteStream(destinationPath as fs.PathLike, {
+                mode: 0o755,
+              })
+            )
+            .on("close", () => {
+              res(true);
+            })
+            .on("error", (error: Error) => {
+              host.log(error.message + "\n" + error.stack, true);
+              rej(error);
+            });
+        });
+      });
+    }
+
+    if (isUpgradeExtension) {
       const result:
         | string
         | undefined = await vscode.window.showInformationMessage(
-        `Nocalhost required nhctl(^${requiredVersion}), current version is ${currentVersion}, please upgrade your nhctl to the specify version.`,
-        "Get nhctl"
+        `Please upgrade extension`
       );
-      if (result === "Get nhctl") {
-        vscode.env.openExternal(vscode.Uri.parse(NOCALHOST_INSTALLATION_LINK));
-      }
     }
+  } else {
+    await host.showProgressing("Downloading nhctl", () => {
+      return new Promise((res, rej) => {
+        request(sourcePath)
+          .pipe(
+            fs.createWriteStream(destinationPath as fs.PathLike, {
+              mode: 0o755,
+            })
+          )
+          .on("close", (code: number) => {
+            host.log("download end", true);
+            res(true);
+          })
+          .on("error", (error: Error) => {
+            host.log(error.message + "\n" + error.stack, true);
+            rej(error);
+          });
+      });
+    });
   }
 }
 
@@ -790,5 +907,9 @@ export function nhctlCommand(
   namespace: string,
   baseCommand: string
 ) {
-  return `nhctl ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  return `${nhctlPath} ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
 }

@@ -9,6 +9,7 @@ export const USER_CONFIG_FULLPATH = path.resolve(
   "config.json"
 );
 export const NHCTL_DIR = path.resolve(NH_CONFIG_DIR, "nhctl");
+export const NH_BIN = path.resolve(NH_CONFIG_DIR, "bin");
 export const KUBE_CONFIG_DIR = path.resolve(PLUGIN_CONFIG_DIR, "kubeConfigs");
 export const HELM_NH_CONFIG_DIR = path.resolve(
   PLUGIN_CONFIG_DIR,
@@ -19,6 +20,10 @@ export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   HOME_DIR,
   ".kube/config"
 );
+
+// LOCAL
+export const IS_LOCAL = "isLocal";
+export const LOCAL_PATH = "localPath";
 
 // USER INFO
 export const USERNAME = "username";

@@ -1,38 +1,33 @@
 import * as vscode from "vscode";
-import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR } from "../constants";
 import * as nhctl from "../ctl/nhctl";
-import * as yaml from "yaml";
 import state from "../state";
 
-import { APP_FOLDER, ID_SPLIT } from "./nodeContants";
-import { resolveVSCodeUri } from "../utils/fileUtil";
-import * as path from "path";
-import { BaseNocalhostNode, AppInfo } from "./types/nodeType";
+import { ID_SPLIT } from "./nodeContants";
+import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NetworkFolderNode } from "./networks/NetworkFolderNode";
-import { NocalhostRootNode } from "./NocalhostRootNode";
-import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
-import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
+import { DevspaceInfo, V2ApplicationInfo } from "../api";
 import { AppNode } from "./AppNode";
 import * as _ from "lodash";
 import { RefreshData } from "./impl/updateData";
+import { KubeConfigNode } from "./KubeConfigNode";
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
   public type = "DEVSPACE";
   public info: DevspaceInfo;
   public applications: Array<V2ApplicationInfo>;
-  public parent: NocalhostRootNode;
+  public parent: BaseNocalhostNode;
   public installedApps: {
     name: string;
     type: string;
   }[] = [];
 
   constructor(
-    parent: NocalhostRootNode,
+    parent: BaseNocalhostNode,
     label: string,
     info: DevspaceInfo,
     applications: Array<V2ApplicationInfo>
@@ -139,12 +134,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   }
 
   public getKubeConfigPath() {
-    const kubeconfigPath = path.resolve(
-      KUBE_CONFIG_DIR,
-      `${this.info.id}_config`
-    );
+    const node = this.getParent() as KubeConfigNode;
 
-    return path.normalize(kubeconfigPath);
+    return node.getKubeConfigPath();
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
@@ -183,10 +175,11 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     }
 
     // updateData
+    // TODO: DISPLAY LOCAL APP NOT FILTER
     const nodes = data.map((item) => {
-      const app = this.getApplication(item.name);
+      let app = this.getApplication(item.name);
       if (!app) {
-        return null;
+        app = this.buildApplicationInfo(item.name);
       }
       return this.buildAppNode(app);
     });
@@ -197,6 +190,29 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       }
     });
     return result as AppNode[];
+  }
+
+  buildApplicationInfo(appName: string) {
+    const contextObj = {
+      application_name: appName,
+      application_url: "",
+      application_config_path: "",
+      nocalhost_config: "",
+      source: "",
+      resource_dir: "",
+      install_type: "",
+    };
+
+    const app = {
+      id: 0,
+      userId: 0,
+      public: 1,
+      editable: 1,
+      context: JSON.stringify(contextObj),
+      status: 1,
+    };
+
+    return app;
   }
 
   async getTreeItem() {
@@ -214,7 +230,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.label}`;
   }
 
-  getParent(): NocalhostRootNode {
+  getParent(): BaseNocalhostNode {
     return this.parent;
   }
 

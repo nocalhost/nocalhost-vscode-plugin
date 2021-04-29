@@ -61,9 +61,11 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
   async getPodAndContainer(node: Deployment) {
     const kubeConfigPath = node.getKubeConfigPath();
     let podName: string | undefined;
+    const appNode = node.getAppNode();
     const podNameArr = await kubectl.getPodNames(
       node.name,
       node.resourceType,
+      appNode.namespace,
       kubeConfigPath
     );
     podName = podNameArr[0];
@@ -72,7 +74,8 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     }
     const containerNameArr = await kubectl.getContainerNames(
       podName,
-      kubeConfigPath
+      kubeConfigPath,
+      appNode.namespace
     );
     let containerName: string | undefined = "";
     if (containerNameArr.length > 1) {

@@ -1,0 +1,36 @@
+body {
+	background-color: transparent;
+}
+
+.base-url {
+	display: flex;
+	margin: 10px 0 0 0 auto;
+}
+
+.sign-in {
+	display: block;
+	border: none;
+	margin: 5px auto;
+}
+
+.type {
+	margin: 10px auto;
+}
+
+.normal {
+	display: block;
+	width: 100%;
+}
+
+.flex {
+	display: flex;
+	align-items: center;
+}
+
+.icon {
+	margin-left: 5px;
+}
+
+.icon:hover {
+	cursor: pointer;
+}
