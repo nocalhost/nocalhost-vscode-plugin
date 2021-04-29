@@ -75,10 +75,11 @@ export default function Home() {
   });
   const kubeConfigItems = kubeConfigs.map((p) => {
     const kubeObj = yaml.parse(p);
-    const currentContext = kubeObj["current-context"];
+    const clusters = kubeObj["clusters"];
+    const clusterName = clusters[0]["name"];
     return (
       <div className="flex">
-        <span className="normal">{currentContext}</span>
+        <span className="normal">{clusterName}</span>
         <span
           className="icon"
           onClick={() => {

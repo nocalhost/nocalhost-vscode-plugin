@@ -7,6 +7,7 @@ import {
   ApplicationInfo,
   DevspaceInfo,
   getDevSpace,
+  getServiceAccount,
   getV2Application,
   V2ApplicationInfo,
 } from "../api";
@@ -15,6 +16,7 @@ import {
   USERINFO,
   IS_LOCAL,
   LOCAL_PATH,
+  KUBE_CONFIG_DIR,
 } from "../constants";
 import { AppNode } from "./AppNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
@@ -26,6 +28,7 @@ import host from "../host";
 import state from "../state";
 import { KubeConfigNode } from "./KubeConfigNode";
 import * as kubectl from "../ctl/kubectl";
+import { sample } from "lodash";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<BaseNocalhostNode> = [];
@@ -37,6 +40,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     // const res = await getApplication();
     const isLocal = host.getGlobalState(IS_LOCAL);
     const localPaths = host.getGlobalState(LOCAL_PATH) as string[];
+    let kubeConfig = "";
     let devSpaces: Array<DevspaceInfo> | undefined = new Array();
     let applications: Array<V2ApplicationInfo> | undefined = new Array();
     const objArr = new Array();
@@ -44,6 +48,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       for (const localPath of localPaths) {
         const kubeStr = fs.readFileSync(localPath);
         const kubeConfigObj = yaml.parse(`${kubeStr}`);
+        kubeConfig = `${kubeStr}`;
         const contexts = kubeConfigObj["contexts"];
         const defaultNamespace = contexts[0]["context"]["namespace"] || "";
         devSpaces = await kubectl.getAllNamespace(
@@ -69,15 +74,57 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           status: 1,
         });
 
-        const obj = { devSpaces, applications, old: [], localPath };
+        const obj = { devSpaces, applications, old: [], localPath, kubeConfig };
 
         objArr.push(obj);
       }
     } else {
-      devSpaces = await getDevSpace();
+      const serviceAccounts = await getServiceAccount();
       applications = await getV2Application();
-      const obj = { devSpaces, applications, old: [], localPath: "" };
-      objArr.push(obj);
+      for (const sa of serviceAccounts) {
+        let devSpaces: Array<DevspaceInfo> | undefined = new Array();
+        const kubeconfigPath = path.resolve(
+          KUBE_CONFIG_DIR,
+          `${sa.cluster_id}_config`
+        );
+        this.writeFile(kubeconfigPath, sa.kubeconfig);
+        if (sa.privilege) {
+          const devs = await kubectl.getAllNamespace(kubeconfigPath, "default");
+          for (const dev of devs) {
+            dev.storageClass = sa.storage_class;
+            dev.devStartAppendCommand = [
+              "--priority-class",
+              "nocalhost-container-criticals",
+            ];
+            dev.kubeconfig = sa.kubeconfig;
+          }
+          devSpaces.push(...devs);
+        } else {
+          for (const ns of sa.namespace_packs) {
+            const devInfo: DevspaceInfo = {
+              id: ns.space_id,
+              spaceName: ns.spacename,
+              namespace: ns.namespace,
+              kubeconfig: sa.kubeconfig,
+              clusterId: sa.cluster_id,
+              storageClass: sa.storage_class,
+              devStartAppendCommand: [
+                "--priority-class",
+                "nocalhost-container-criticals",
+              ],
+            };
+            devSpaces.push(devInfo);
+          }
+        }
+        const obj = {
+          devSpaces,
+          applications,
+          old: [],
+          localPath: kubeconfigPath,
+          kubeConfig: sa.kubeconfig,
+        };
+        objArr.push(obj);
+      }
     }
 
     state.setData(this.getNodeStateId(), objArr, isInit);
@@ -104,6 +151,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       applications: V2ApplicationInfo[];
       old: ApplicationInfo[];
       localPath: string;
+      kubeConfig: string;
     }[];
 
     if (!resources) {
@@ -160,28 +208,36 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       });
 
       if (!isLocal) {
-        for (const d of res.devSpaces) {
-          const kubeConfigObj = yaml.parse(d.kubeconfig);
-          const node = new KubeConfigNode(
-            this,
-            kubeConfigObj["current-context"] || d.spaceName,
-            [d],
-            res.applications,
-            d.kubeconfig,
-            false,
-            ""
-          );
-          devs.push(node);
-        }
+        // for (const d of res.devSpaces) {
+        //   if (!d.kubeconfig) {
+        //     continue;
+        //   }
+
+        // }
+        const kubeConfigObj = yaml.parse(res.kubeConfig);
+        const clusters = kubeConfigObj["clusters"];
+        const clusterName = clusters[0]["name"];
+        const node = new KubeConfigNode(
+          this,
+          clusterName,
+          res.devSpaces,
+          res.applications,
+          res.kubeConfig,
+          false,
+          res.localPath
+        );
+        devs.push(node);
       } else {
         const kubeStr = fs.readFileSync(res.localPath);
         const kubeConfigObj = yaml.parse(`${kubeStr}`);
-        const contexts = kubeConfigObj["contexts"];
-        const defaultNamespace = contexts[0]["context"]["namespace"] || "";
-        text = kubeConfigObj["current-context"];
+        // const contexts = kubeConfigObj["contexts"];
+        const clusters = kubeConfigObj["clusters"];
+        // const defaultNamespace = contexts[0]["context"]["namespace"] || "";
+        const clusterName = clusters[0]["name"];
+        text = clusterName;
         const node = new KubeConfigNode(
           this,
-          kubeConfigObj["current-context"] || defaultNamespace,
+          clusterName,
           res.devSpaces,
           res.applications,
           `${kubeStr}`,
