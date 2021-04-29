@@ -28,12 +28,23 @@ export default function Home() {
     oldState.kubeConfigs || []
   );
 
+  if (!currentLocalPath) {
+    postMessage({
+      type: "getHomeDir",
+      data: null,
+    });
+  }
+
   const handleMessage = (event: MessageEvent) => {
     const data = event.data;
     const { type, payload } = data;
     switch (type) {
       case "kubeConfig": {
         console.log("payload: ", payload);
+        setCurrentLocalPath(payload || "");
+        return "";
+      }
+      case "homeDir": {
         setCurrentLocalPath(payload || "");
         return "";
       }

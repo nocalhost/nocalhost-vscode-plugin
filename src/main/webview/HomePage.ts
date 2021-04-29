@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import * as tempy from "tempy";
+import * as os from "os";
+import * as path from "path";
 
 import { SIGN_IN } from "../commands/constants";
 import { IS_LOCAL, LOCAL_PATH } from "../constants";
@@ -46,6 +48,14 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
           webviewView.webview.postMessage({
             type: "kubeConfig",
             payload: kubeConfigUri[0].fsPath || "",
+          });
+          break;
+        }
+        case "getHomeDir": {
+          const homeDir = os.homedir();
+          webviewView.webview.postMessage({
+            type: "homeDir",
+            payload: path.resolve(homeDir, ".kube", "config"),
           });
           break;
         }
