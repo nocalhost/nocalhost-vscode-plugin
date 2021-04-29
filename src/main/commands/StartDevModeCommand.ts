@@ -88,7 +88,7 @@ export default class StartDevModeCommand implements ICommand {
     );
     if (!image) {
       const result = await host.showInformationMessage(
-        "Please specify the mirror address",
+        "Please specify develop image",
         { modal: true },
         "Select",
         "Custom"

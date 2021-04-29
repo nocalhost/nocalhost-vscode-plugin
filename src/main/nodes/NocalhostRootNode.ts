@@ -36,45 +36,52 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public async updateData(isInit?: boolean): Promise<any> {
     // const res = await getApplication();
     const isLocal = host.getGlobalState(IS_LOCAL);
-    const localPath = host.getGlobalState(LOCAL_PATH);
+    const localPaths = host.getGlobalState(LOCAL_PATH) as string[];
     let devSpaces: Array<DevspaceInfo> | undefined = new Array();
     let applications: Array<V2ApplicationInfo> | undefined = new Array();
+    const objArr = new Array();
     if (isLocal && !state.isLogin()) {
-      const kubeStr = fs.readFileSync(localPath);
-      const kubeConfigObj = yaml.parse(`${kubeStr}`);
-      const contexts = kubeConfigObj["contexts"];
-      const defaultNamespace = contexts[0]["context"]["namespace"] || "";
-      devSpaces = await kubectl.getAllNamespace(
-        localPath,
-        defaultNamespace as string
-      );
-      const contextObj = {
-        application_name: "default.application",
-        application_url: "",
-        application_config_path: "",
-        nocalhost_config: "",
-        source: "",
-        resource_dir: "",
-        install_type: "",
-      };
+      for (const localPath of localPaths) {
+        const kubeStr = fs.readFileSync(localPath);
+        const kubeConfigObj = yaml.parse(`${kubeStr}`);
+        const contexts = kubeConfigObj["contexts"];
+        const defaultNamespace = contexts[0]["context"]["namespace"] || "";
+        devSpaces = await kubectl.getAllNamespace(
+          localPath,
+          defaultNamespace as string
+        );
+        const contextObj = {
+          application_name: "default.application",
+          application_url: "",
+          application_config_path: "",
+          nocalhost_config: "",
+          source: "",
+          resource_dir: "",
+          install_type: "",
+        };
 
-      applications.push({
-        id: 0,
-        userId: 0,
-        public: 1,
-        editable: 1,
-        context: JSON.stringify(contextObj),
-        status: 1,
-      });
+        applications.push({
+          id: 0,
+          userId: 0,
+          public: 1,
+          editable: 1,
+          context: JSON.stringify(contextObj),
+          status: 1,
+        });
+
+        const obj = { devSpaces, applications, old: [], localPath };
+
+        objArr.push(obj);
+      }
     } else {
       devSpaces = await getDevSpace();
       applications = await getV2Application();
+      const obj = { devSpaces, applications, old: [], localPath: "" };
+      objArr.push(obj);
     }
 
-    const obj = { devSpaces, applications, old: [] };
-
-    state.setData(this.getNodeStateId(), obj, isInit);
-    return obj;
+    state.setData(this.getNodeStateId(), objArr, isInit);
+    return objArr;
   }
 
   public label: string = "Nocalhost";
@@ -92,95 +99,99 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   ): Promise<Array<BaseNocalhostNode>> {
     NocalhostRootNode.childNodes = [];
     // DataCenter.getInstance().setApplications();
-    let res = state.getData(this.getNodeStateId()) as {
+    let resources = state.getData(this.getNodeStateId()) as {
       devSpaces: DevspaceInfo[];
       applications: V2ApplicationInfo[];
       old: ApplicationInfo[];
-    };
+      localPath: string;
+    }[];
 
-    if (!res) {
-      res = await this.updateData(true);
+    if (!resources) {
+      resources = await this.updateData(true);
     }
-    const appNode = res.old.map((app) => {
-      let context = app.context;
-      let obj: {
-        url?: string;
-        name?: string;
-        appConfig?: string;
-        nocalhostConfig?: string;
-        installType: string;
-        resourceDir: Array<string>;
-      } = {
-        installType: "rawManifest",
-        resourceDir: ["manifest/templates"],
-      };
-      if (context) {
-        let jsonObj = JSON.parse(context);
-        obj.url = jsonObj["application_url"];
-        obj.name = jsonObj["application_name"];
-        obj.appConfig = jsonObj["application_config_path"];
-        obj.nocalhostConfig = jsonObj["nocalhost_config"];
-        let originInstallType = jsonObj["install_type"];
-        let source = jsonObj["source"];
-        obj.installType = this.generateInstallType(source, originInstallType);
-        obj.resourceDir = jsonObj["resource_dir"];
-      }
-
-      const nhConfigPath = path.resolve(
-        HELM_NH_CONFIG_DIR,
-        `${app.id}_${app.devspaceId}_config`
-      );
-      this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
-      return new AppNode(
-        this,
-        obj.installType,
-        obj.resourceDir,
-        app.spaceName || obj.name || `app_${app.id}`,
-        obj.appConfig || "",
-        obj.nocalhostConfig || "",
-        app.id,
-        app.devspaceId,
-        app.status,
-        app.installStatus,
-        app.kubeconfig,
-        app
-      );
-    });
     const devs: KubeConfigNode[] = [];
     const isLocal = host.getGlobalState(IS_LOCAL) || false;
-    const localPath = host.getGlobalState(LOCAL_PATH) || "";
     let text = "";
-    if (!isLocal) {
-      for (const d of res.devSpaces) {
-        const kubeConfigObj = yaml.parse(d.kubeconfig);
+    for (const res of resources) {
+      const appNode = res.old.map((app) => {
+        let context = app.context;
+        let obj: {
+          url?: string;
+          name?: string;
+          appConfig?: string;
+          nocalhostConfig?: string;
+          installType: string;
+          resourceDir: Array<string>;
+        } = {
+          installType: "rawManifest",
+          resourceDir: ["manifest/templates"],
+        };
+        if (context) {
+          let jsonObj = JSON.parse(context);
+          obj.url = jsonObj["application_url"];
+          obj.name = jsonObj["application_name"];
+          obj.appConfig = jsonObj["application_config_path"];
+          obj.nocalhostConfig = jsonObj["nocalhost_config"];
+          let originInstallType = jsonObj["install_type"];
+          let source = jsonObj["source"];
+          obj.installType = this.generateInstallType(source, originInstallType);
+          obj.resourceDir = jsonObj["resource_dir"];
+        }
+
+        const nhConfigPath = path.resolve(
+          HELM_NH_CONFIG_DIR,
+          `${app.id}_${app.devspaceId}_config`
+        );
+        this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+        return new AppNode(
+          this,
+          obj.installType,
+          obj.resourceDir,
+          app.spaceName || obj.name || `app_${app.id}`,
+          obj.appConfig || "",
+          obj.nocalhostConfig || "",
+          app.id,
+          app.devspaceId,
+          app.status,
+          app.installStatus,
+          app.kubeconfig,
+          app
+        );
+      });
+
+      if (!isLocal) {
+        for (const d of res.devSpaces) {
+          const kubeConfigObj = yaml.parse(d.kubeconfig);
+          const node = new KubeConfigNode(
+            this,
+            kubeConfigObj["current-context"] || d.spaceName,
+            [d],
+            res.applications,
+            d.kubeconfig,
+            false,
+            ""
+          );
+          devs.push(node);
+        }
+      } else {
+        const kubeStr = fs.readFileSync(res.localPath);
+        const kubeConfigObj = yaml.parse(`${kubeStr}`);
+        const contexts = kubeConfigObj["contexts"];
+        const defaultNamespace = contexts[0]["context"]["namespace"] || "";
+        text = kubeConfigObj["current-context"];
         const node = new KubeConfigNode(
           this,
-          kubeConfigObj["current-context"] || d.spaceName,
-          [d],
+          kubeConfigObj["current-context"] || defaultNamespace,
+          res.devSpaces,
           res.applications,
-          d.kubeconfig,
-          false,
-          ""
+          `${kubeStr}`,
+          true,
+          res.localPath
         );
         devs.push(node);
       }
-    } else {
-      const kubeStr = fs.readFileSync(localPath);
-      const kubeConfigObj = yaml.parse(`${kubeStr}`);
-      const contexts = kubeConfigObj["contexts"];
-      const defaultNamespace = contexts[0]["context"]["namespace"] || "";
-      text = kubeConfigObj["current-context"];
-      const node = new KubeConfigNode(
-        this,
-        kubeConfigObj["current-context"] || defaultNamespace,
-        res.devSpaces,
-        res.applications,
-        `${kubeStr}`,
-        true,
-        localPath
-      );
-      devs.push(node);
     }
+
     NocalhostRootNode.childNodes = NocalhostRootNode.childNodes.concat(devs);
     if (!isLocal) {
       const userinfo = host.getGlobalState(USERINFO);
