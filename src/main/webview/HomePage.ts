@@ -51,20 +51,20 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
         }
         case "local": {
           const localData = data.data;
-          const { isLocalPath, localPath, kubeConfig } = localData;
+          const { localPaths, kubeConfigs } = localData;
           // set localPath
-          // TODO: validate kubeconfig
-          let tempLocalPath = "";
+          let tempLocalPaths = new Array<string>();
           host.setGlobalState(IS_LOCAL, true);
-          if (isLocalPath === "1") {
-            tempLocalPath = localPath;
-          }
-          if (isLocalPath === "0") {
-            tempLocalPath = tempy.writeSync(kubeConfig, {
+          const kubePaths = (kubeConfigs as string[]).map((k) => {
+            const tempLocalPath = tempy.writeSync(k, {
               name: `temp-kubeConfig`,
             });
-          }
-          host.setGlobalState(LOCAL_PATH, tempLocalPath);
+
+            return tempLocalPath;
+          });
+
+          tempLocalPaths = tempLocalPaths.concat(localPaths, kubePaths);
+          host.setGlobalState(LOCAL_PATH, tempLocalPaths);
           await vscode.commands.executeCommand("setContext", "local", true);
           break;
         }

@@ -17,15 +17,20 @@ body {
 	margin: 10px auto;
 }
 
+.normal {
+	display: block;
+	width: 100%;
+}
+
 .flex {
 	display: flex;
 	align-items: center;
 }
 
-.browser {
+.icon {
 	margin-left: 5px;
 }
 
-.browser:hover {
+.icon:hover {
 	cursor: pointer;
 }

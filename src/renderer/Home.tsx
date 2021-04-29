@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import FolderOpenIcon from "@material-ui/icons/FolderOpen";
+import RemoveCircleIcon from "@material-ui/icons/RemoveCircle";
 import { postMessage, vscode } from "./utils/index";
+import * as yaml from "yaml";
 
 export default function Home() {
   const oldState = vscode.getState() || {
@@ -8,18 +10,23 @@ export default function Home() {
     password: "",
     baseUrl: "",
     isLocal: "0",
-    isLocalPath: "1",
-    localPath: "",
-    kubeConfig: "",
+    localPaths: [],
+    kubeConfigs: [],
   };
   const [username, setUsername] = useState(oldState.username);
   const [password, setPassword] = useState(oldState.password);
   const [baseUrl, setBaseUrl] = useState(oldState.baseUrl);
   const [isLocal, setIsLocal] = useState(oldState.isLocal);
 
-  const [isLocalPath, setIsLocalPath] = useState(oldState.isLocalPath || "1");
-  const [localPath, setLocalPath] = useState(oldState.localPath || "");
-  const [kubeConfig, setKubeConfig] = useState(oldState.kubeConfig || "");
+  const [isLocalPath, setIsLocalPath] = useState<string>("1");
+  const [localPaths, setLocalPaths] = useState<Array<string>>(
+    oldState.localPaths || []
+  );
+  const [currentLocalPath, setCurrentLocalPath] = useState<string>("");
+  const [currentKubeConfig, setCurrentKubeConfig] = useState<string>("");
+  const [kubeConfigs, setKubeConfigs] = useState<Array<string>>(
+    oldState.kubeConfigs || []
+  );
 
   const handleMessage = (event: MessageEvent) => {
     const data = event.data;
@@ -27,7 +34,7 @@ export default function Home() {
     switch (type) {
       case "kubeConfig": {
         console.log("payload: ", payload);
-        setLocalPath(payload || "");
+        setCurrentLocalPath(payload || "");
         return "";
       }
       default:
@@ -43,6 +50,54 @@ export default function Home() {
   }, []);
 
   console.log("oldState: ", oldState);
+  const localItems = localPaths.map((p) => {
+    return (
+      <div className="flex">
+        <span className="normal">{p}</span>
+        <span
+          className="icon"
+          onClick={() => {
+            let tmpPaths = [...localPaths];
+            const index = tmpPaths.indexOf(p);
+            if (tmpPaths.length > 1) {
+              tmpPaths = tmpPaths.splice(index - 1, 1);
+            } else {
+              tmpPaths = [];
+            }
+            console.log("index, ", index, "\n", tmpPaths);
+            setLocalPaths(tmpPaths);
+          }}
+        >
+          <RemoveCircleIcon />
+        </span>
+      </div>
+    );
+  });
+  const kubeConfigItems = kubeConfigs.map((p) => {
+    const kubeObj = yaml.parse(p);
+    const currentContext = kubeObj["current-context"];
+    return (
+      <div className="flex">
+        <span className="normal">{currentContext}</span>
+        <span
+          className="icon"
+          onClick={() => {
+            let tmpKubeConfigs = [...kubeConfigs];
+            const index = tmpKubeConfigs.indexOf(p);
+            if (tmpKubeConfigs.length > 1) {
+              tmpKubeConfigs = tmpKubeConfigs.splice(index - 1, 1);
+            } else {
+              tmpKubeConfigs = [];
+            }
+            console.log("index, ", index, "\n", tmpKubeConfigs);
+            setKubeConfigs(tmpKubeConfigs);
+          }}
+        >
+          <RemoveCircleIcon />
+        </span>
+      </div>
+    );
+  });
   return (
     <div>
       <div className="type">
@@ -141,10 +196,10 @@ export default function Home() {
 
           {isLocalPath === "0" && (
             <textarea
-              value={kubeConfig}
+              value={currentKubeConfig}
               className="type"
               onChange={(e) => {
-                setKubeConfig(e.target.value);
+                setCurrentKubeConfig(e.target.value);
               }}
               rows={30}
               placeholder="KubeConfig"
@@ -156,9 +211,9 @@ export default function Home() {
                 type="text"
                 placeholder="kubeConfigPath"
                 name="k"
-                value={localPath}
+                value={currentLocalPath}
                 onChange={(e) => {
-                  setLocalPath(e.target.value);
+                  setCurrentLocalPath(e.target.value);
                 }}
               ></input>
               <span
@@ -169,25 +224,61 @@ export default function Home() {
                   });
                 }}
               >
-                <FolderOpenIcon className="browser"></FolderOpenIcon>
+                <FolderOpenIcon className="icon"></FolderOpenIcon>
               </span>
             </div>
           )}
           <button
+            className="type"
+            onClick={() => {
+              // add kubeconfig
+              console.log("add kubeconfig");
+              if (isLocalPath === "1" && currentLocalPath) {
+                if (localPaths.includes(currentLocalPath)) {
+                  return;
+                }
+                const tmpPaths = [...localPaths];
+                tmpPaths.push(currentLocalPath);
+                setLocalPaths(tmpPaths);
+              } else if (isLocalPath === "0" && currentKubeConfig) {
+                if (kubeConfigs.includes(currentKubeConfig)) {
+                  return;
+                }
+                // check kubeconfig
+                const kubeObj = yaml.parse(currentKubeConfig);
+                const currentContext = kubeObj["current-context"];
+                if (!currentContext) {
+                  return;
+                }
+                const tmpKubeconfigs = [...kubeConfigs];
+                tmpKubeconfigs.push(currentKubeConfig);
+                setKubeConfigs(tmpKubeconfigs);
+              }
+            }}
+          >
+            Add
+          </button>
+          {localItems}
+          {kubeConfigItems}
+          <button
             onClick={() => {
               vscode.setState({
                 ...oldState,
-                isLocalPath,
-                localPath,
-                kubeConfig,
+                localPaths,
+                kubeConfigs,
+                isLocal,
+              });
+              console.log("state: ", {
+                ...oldState,
+                localPaths,
+                kubeConfigs,
                 isLocal,
               });
               postMessage({
                 type: "local",
                 data: {
-                  isLocalPath,
-                  localPath,
-                  kubeConfig,
+                  localPaths,
+                  kubeConfigs,
                   isLocal,
                 },
               });
