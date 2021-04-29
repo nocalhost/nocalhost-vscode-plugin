@@ -175,12 +175,7 @@ export class AppNode extends NocalhostFolderNode {
 
   public getKubeConfigPath() {
     const devspace = this.getParent() as DevSpaceNode;
-    const kubeconfigPath = path.resolve(
-      KUBE_CONFIG_DIR,
-      `${devspace.info.id}_config`
-    );
-
-    return path.normalize(kubeconfigPath);
+    return devspace.getKubeConfigPath();
   }
 
   public getHelmHNConfigPath() {

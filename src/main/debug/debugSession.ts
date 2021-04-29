@@ -66,6 +66,7 @@ export class DebugSession {
     const podNames = await kubectl.getRunningPodNames(
       node.name,
       node.resourceType,
+      node.getNameSpace(),
       node.getKubeConfigPath()
     );
     if (podNames.length < 1) {

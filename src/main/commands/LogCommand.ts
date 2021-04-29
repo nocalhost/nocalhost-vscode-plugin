@@ -60,6 +60,7 @@ export default class LogCommand implements ICommand {
       const podNameArr = await kubectl.getPodNames(
         node.name,
         node.resourceType,
+        node.getNameSpace(),
         node.getKubeConfigPath()
       );
       result.podName = podNameArr[0];
@@ -76,7 +77,8 @@ export default class LogCommand implements ICommand {
     }
     const containerNameArr = await kubectl.getContainerNames(
       result.podName,
-      node.getKubeConfigPath()
+      node.getKubeConfigPath(),
+      node.getNameSpace()
     );
     result.containerName = containerNameArr[0];
     if (containerNameArr.length > 1) {

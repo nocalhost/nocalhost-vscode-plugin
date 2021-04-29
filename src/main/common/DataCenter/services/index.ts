@@ -1,5 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
+import { NH_BIN } from "../../../constants";
+import host from "../../../host";
 import DataCenter, { IExecCommandResult } from "../index";
 
 export type ServiceResult = IExecCommandResult;
@@ -7,7 +9,11 @@ export type ServiceResult = IExecCommandResult;
 async function fetchApplicationMeta(
   applicationName: string
 ): Promise<ServiceResult> {
-  const command: string = `nhctl plugin get ${applicationName}`;
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  const command: string = `${nhctlPath} plugin get ${applicationName}`;
   return await DataCenter.execCommand(command);
 }
 
@@ -15,7 +21,11 @@ async function describeApplication(
   kubeConfigPath: string,
   name: string
 ): Promise<ServiceResult> {
-  const command: string = `nhctl describe ${name} --kubeconfig ${kubeConfigPath}`;
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  const command: string = `${nhctlPath} describe ${name} --kubeconfig ${kubeConfigPath}`;
   return await DataCenter.execCommand(command);
 }
 
@@ -23,12 +33,20 @@ async function fetchApplicationConfig(
   kubeConfigPath: string,
   name: string
 ): Promise<ServiceResult> {
-  const command: string = `nhctl config get ${name} --kubeconfig ${kubeConfigPath}`;
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  const command: string = `${nhctlPath} config get ${name} --kubeconfig ${kubeConfigPath}`;
   return await DataCenter.execCommand(command);
 }
 
 async function fetchNhctlVersion(): Promise<ServiceResult> {
-  const command: string = `nhctl version`;
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  const command: string = `${nhctlPath} version`;
   return await DataCenter.execCommand(command);
 }
 

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 
 import ICommand from "./ICommand";
 import { COPY_TERMINAL } from "./constants";
@@ -9,6 +10,7 @@ import * as kubectl from "../ctl/kubectl";
 import * as shell from "../ctl/shell";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
+import { NH_BIN } from "../constants";
 
 export default class CopyTerminalCommand implements ICommand {
   command: string = COPY_TERMINAL;
@@ -104,7 +106,10 @@ export default class CopyTerminalCommand implements ICommand {
     if (container) {
       terminalCommands.push("-c", container);
     }
-    const shellPath = "nhctl";
+    const shellPath = path.resolve(
+      NH_BIN,
+      host.isWindow() ? "nhctl.exe" : "nhctl"
+    );
     host.copyTextToclipboard(`${shellPath} ${terminalCommands.join(" ")}`);
     host.showInformationMessage("Copyed Terminal");
   }
@@ -145,6 +150,7 @@ export default class CopyTerminalCommand implements ICommand {
       const podNameArr = await kubectl.getPodNames(
         node.name,
         node.resourceType,
+        node.getNameSpace(),
         kubeConfigPath
       );
       podName = podNameArr[0];
@@ -157,7 +163,8 @@ export default class CopyTerminalCommand implements ICommand {
     }
     const containerNameArr = await kubectl.getContainerNames(
       podName,
-      kubeConfigPath
+      kubeConfigPath,
+      node.getNameSpace()
     );
     let containerName: string | undefined = containerNameArr[0];
     if (containerNameArr.length > 1) {
@@ -179,6 +186,7 @@ export default class CopyTerminalCommand implements ICommand {
       const podNameArr = await kubectl.getPodNames(
         node.name,
         node.resourceType,
+        node.getNameSpace(),
         kubeConfigPath
       );
       podName = podNameArr[0];
@@ -192,7 +200,8 @@ export default class CopyTerminalCommand implements ICommand {
     }
     const containerNameArr = await kubectl.getContainerNames(
       podName,
-      kubeConfigPath
+      kubeConfigPath,
+      node.getNameSpace()
     );
     let containerName: string | undefined = containerNameArr[0];
     if (status !== DeploymentStatus.developing && containerNameArr.length > 1) {

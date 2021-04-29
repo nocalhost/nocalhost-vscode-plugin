@@ -21,10 +21,12 @@ import state from "./state";
 import ConfigService from "./service/configService";
 import { HELM_VALUES_DIR } from "./constants";
 import { KubernetesResourceNode } from "./nodes/abstract/KubernetesResourceNode";
+import { map } from "lodash";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
   static supportScheme = ["Nocalhost", "NocalhostRW"];
   static supportAuthority = ["k8s", "nh"];
+  public dataMap: Map<Uri, Uint8Array> = new Map();
   private readonly onDidChangeFileEmitter: EventEmitter<
     FileChangeEvent[]
   > = new EventEmitter<FileChangeEvent[]>();
@@ -35,13 +37,27 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
   ): Disposable {
     return new Disposable(() => {});
   }
-  stat(uri: Uri): FileStat | Thenable<FileStat> {
-    return {
+  async stat(uri: Uri): Promise<FileStat> {
+    const stat = {
       type: FileType.File,
       ctime: 0,
       mtime: 0,
       size: 65536,
     };
+    const has = this.dataMap.has(uri);
+    if (!has) {
+      const bufferData = await this.readFile(uri);
+      this.dataMap.set(uri, bufferData);
+      stat.mtime = Date.now();
+    } else {
+      const bufferData = await this.readFile(uri);
+      const buffer = this.dataMap.get(uri);
+      if (buffer && buffer.toString() !== bufferData.toString()) {
+        stat.mtime = Date.now();
+      }
+    }
+
+    return stat;
   }
   readDirectory(
     uri: Uri
@@ -72,8 +88,10 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const paths = uri.path.split("/");
         const query = querystring.decode(uri.query);
         let id = "";
+        let namespace = "";
         if (query) {
           id = query.id as string;
+          namespace = query.namespace as string;
         }
         const type = paths[1];
         if (type === "loadResource") {
@@ -86,6 +104,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             (await kubectl.loadResource(
               node.getKubeConfigPath(),
               kind,
+              namespace,
               name,
               output
             )) || "";

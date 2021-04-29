@@ -37,7 +37,7 @@ export default class LoadResourceCommand implements ICommand {
       }
       const kubeconfig = node.getKubeConfigPath();
       const uri: vscode.Uri = vscode.Uri.parse(
-        `${scheme}://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}`
+        `${scheme}://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${node.getNameSpace()}`
       );
       const doc: vscode.TextDocument = await vscode.workspace.openTextDocument(
         uri
