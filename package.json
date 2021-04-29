@@ -470,6 +470,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "@dineug/vscode-google-analytics": "^0.1.2",
     "@types/json-schema": "^7.0.7",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
@@ -481,7 +482,7 @@
     "semver": "^7.3.4",
     "shelljs": "^0.8.4",
     "tempy": "^1.0.0",
-    "uuid": "^8.3.1",
+    "uuid": "^8.3.2",
     "vscode-nls": "^5.0.0",
     "yaml": "^1.10.0"
   },

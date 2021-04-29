@@ -5,6 +5,8 @@ import * as fs from "fs";
 import { spawn } from "child_process";
 import * as request from "request";
 
+import ga, { getUUID } from "../utils/ga";
+
 import {
   execAsyncWithReturn,
   execChildProcessAsync,
@@ -14,7 +16,7 @@ import host, { Host } from "../host";
 import * as yaml from "yaml";
 import { readYaml } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
-import { NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
+import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
@@ -279,6 +281,17 @@ export async function devStart(
     }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
+  const isLocal = host.getGlobalState(IS_LOCAL);
+  if (isLocal) {
+    const res = await ga.send({
+      category: "command",
+      action: "startDevMode",
+      label: devStartCommand,
+      value: 1,
+      clientID: getUUID(),
+    });
+    console.log("ga: ", res);
+  }
   await execChildProcessAsync(
     host,
     devStartCommand,
@@ -383,6 +396,18 @@ export async function startPortForward(
     true
   );
 
+  const isLocal = host.getGlobalState(IS_LOCAL);
+  if (isLocal) {
+    const res = await ga.send({
+      category: "command",
+      action: "startPortForward",
+      label: portForwardCommand,
+      value: 1,
+      clientID: getUUID(),
+    });
+    console.log("ga: ", res);
+  }
+
   await host.showProgressing(`Starting port-forward`, async () => {
     if (sudo) {
       await sudoPortforward(`sudo -S ${portForwardCommand}`);
@@ -410,6 +435,16 @@ export async function endPortForward(
   );
 
   const sudo = isSudo([port]);
+  const isLocal = host.getGlobalState(IS_LOCAL);
+  if (isLocal) {
+    await ga.send({
+      category: "command",
+      action: "endPortForward",
+      label: endPortForwardCommand,
+      value: 1,
+      clientID: getUUID(),
+    });
+  }
 
   if (sudo) {
     host.log(`[cmd] sudo -S ${endPortForwardCommand}`, true);
@@ -457,6 +492,17 @@ export async function endDevMode(
         `dev end ${appName} -d ${workLoadName} `
       );
       host.log(`[cmd] ${end}`, true);
+
+      const isLocal = host.getGlobalState(IS_LOCAL);
+      if (isLocal) {
+        await ga.send({
+          category: "command",
+          action: "endDevMode",
+          label: end,
+          value: 1,
+          clientID: getUUID(),
+        });
+      }
       await execChildProcessAsync(host, end, [], {
         dialog: `End devMode (${appName}/${workLoadName}) fail`,
       });

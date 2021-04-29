@@ -52,15 +52,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   public getKubeConfigPath() {
-    if (this.isLocal) {
-      return this.localPath;
-    }
-    const kubeconfigPath = path.resolve(
-      KUBE_CONFIG_DIR,
-      `${this.devspaceInfos[0].id}_config`
-    );
-
-    return path.normalize(kubeconfigPath);
+    return this.localPath;
   }
 
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
@@ -97,11 +89,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
       this.label,
       vscode.TreeItemCollapsibleState.Collapsed
     );
-
-    for (const d of this.devspaceInfos) {
-      const filePath = path.resolve(KUBE_CONFIG_DIR, `${d.id}_config`);
-      this.writeFile(filePath, d.kubeconfig);
-    }
 
     treeItem.contextValue = "kubeconfig";
 
