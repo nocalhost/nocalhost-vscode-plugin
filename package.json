@@ -222,6 +222,11 @@
           "command": "Nocalhost.viewKubeConfig",
           "when": "viewItem =~ /^kubeconfig/i",
           "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.deleteKubeConfig",
+          "when": "viewItem =~ /^kubeconfig-local/i",
+          "group": "navigation"
         }
       ]
     },
@@ -272,7 +277,7 @@
       },
       {
         "command": "Nocalhost.signout",
-        "title": "Sign out",
+        "title": "Quit",
         "icon": "$(sign-out)"
       },
       {
@@ -296,6 +301,10 @@
       {
         "command": "Nocalhost.viewKubeConfig",
         "title": "%ViewKubeConfig%"
+      },
+      {
+        "command": "Nocalhost.deleteKubeConfig",
+        "title": "Delete"
       },
       {
         "command": "getWordloadList",

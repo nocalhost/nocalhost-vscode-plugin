@@ -90,7 +90,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       vscode.TreeItemCollapsibleState.Collapsed
     );
 
-    treeItem.contextValue = "kubeconfig";
+    treeItem.contextValue = `kubeconfig${this.isLocal ? "-local" : ""}`;
 
     return Promise.resolve(treeItem);
   }

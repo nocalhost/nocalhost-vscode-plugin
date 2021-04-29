@@ -33,6 +33,7 @@ import ShowApplicationsCommand from "./ShowApplicationsCommand";
 import ReconnectSyncCommand from "./ReconnectSyncCommand";
 import DebugCommand from "./DebugCommand";
 import RunCommand from "./RunCommand";
+import DeleteKubeConfigCommand from "./DeleteKubeConfigCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -78,4 +79,6 @@ export default function initCommands(
   // command
   new DebugCommand(context);
   new RunCommand(context);
+
+  new DeleteKubeConfigCommand(context);
 }
