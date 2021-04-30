@@ -841,7 +841,7 @@ export async function checkVersion() {
   if (result.success) {
     let currentVersion: string = "";
     const matched: string[] | null = result.value.match(
-      /Version: \s*v(\d+\.\d+\.\d+)/
+      /Version: \s*v{0,1}\d+(\.\d+){2}$/
     );
     if (!matched) {
       return;
