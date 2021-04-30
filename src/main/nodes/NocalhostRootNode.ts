@@ -28,7 +28,6 @@ import host from "../host";
 import state from "../state";
 import { KubeConfigNode } from "./KubeConfigNode";
 import * as kubectl from "../ctl/kubectl";
-import { sample } from "lodash";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<BaseNocalhostNode> = [];
@@ -253,17 +252,18 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       const userinfo = host.getGlobalState(USERINFO);
       text = userinfo.name;
     }
-
-    const hasAccountNode: boolean = NocalhostRootNode.childNodes.some(
-      (node) => {
-        return node instanceof NocalhostAccountNode;
-      }
-    );
-
-    if (NocalhostRootNode.childNodes.length > 0 && !hasAccountNode) {
-      NocalhostRootNode.childNodes.unshift(
-        new NocalhostAccountNode(this, `Hi, ${text}`)
+    if (!isLocal) {
+      const hasAccountNode: boolean = NocalhostRootNode.childNodes.some(
+        (node) => {
+          return node instanceof NocalhostAccountNode;
+        }
       );
+
+      if (NocalhostRootNode.childNodes.length > 0 && !hasAccountNode) {
+        NocalhostRootNode.childNodes.unshift(
+          new NocalhostAccountNode(this, `Hi, ${text}`)
+        );
+      }
     }
     return NocalhostRootNode.childNodes;
   }
