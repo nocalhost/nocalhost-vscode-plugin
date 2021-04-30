@@ -282,16 +282,16 @@ export async function devStart(
   );
   host.log(`[cmd] ${devStartCommand}`, true);
   const isLocal = host.getGlobalState(IS_LOCAL);
-  if (isLocal) {
-    const res = await ga.send({
-      category: "command",
-      action: "startDevMode",
-      label: devStartCommand,
-      value: 1,
-      clientID: getUUID(),
-    });
-    console.log("ga: ", res);
-  }
+  // if (isLocal) {
+  //   const res = await ga.send({
+  //     category: "command",
+  //     action: "startDevMode",
+  //     label: devStartCommand,
+  //     value: 1,
+  //     clientID: getUUID(),
+  //   });
+  //   console.log("ga: ", res);
+  // }
   await execChildProcessAsync(
     host,
     devStartCommand,
@@ -397,16 +397,16 @@ export async function startPortForward(
   );
 
   const isLocal = host.getGlobalState(IS_LOCAL);
-  if (isLocal) {
-    const res = await ga.send({
-      category: "command",
-      action: "startPortForward",
-      label: portForwardCommand,
-      value: 1,
-      clientID: getUUID(),
-    });
-    console.log("ga: ", res);
-  }
+  // if (isLocal) {
+  //   const res = await ga.send({
+  //     category: "command",
+  //     action: "startPortForward",
+  //     label: portForwardCommand,
+  //     value: 1,
+  //     clientID: getUUID(),
+  //   });
+  //   console.log("ga: ", res);
+  // }
 
   await host.showProgressing(`Starting port-forward`, async () => {
     if (sudo) {
@@ -436,15 +436,15 @@ export async function endPortForward(
 
   const sudo = isSudo([port]);
   const isLocal = host.getGlobalState(IS_LOCAL);
-  if (isLocal) {
-    await ga.send({
-      category: "command",
-      action: "endPortForward",
-      label: endPortForwardCommand,
-      value: 1,
-      clientID: getUUID(),
-    });
-  }
+  // if (isLocal) {
+  //   await ga.send({
+  //     category: "command",
+  //     action: "endPortForward",
+  //     label: endPortForwardCommand,
+  //     value: 1,
+  //     clientID: getUUID(),
+  //   });
+  // }
 
   if (sudo) {
     host.log(`[cmd] sudo -S ${endPortForwardCommand}`, true);
@@ -494,15 +494,15 @@ export async function endDevMode(
       host.log(`[cmd] ${end}`, true);
 
       const isLocal = host.getGlobalState(IS_LOCAL);
-      if (isLocal) {
-        await ga.send({
-          category: "command",
-          action: "endDevMode",
-          label: end,
-          value: 1,
-          clientID: getUUID(),
-        });
-      }
+      // if (isLocal) {
+      //   await ga.send({
+      //     category: "command",
+      //     action: "endDevMode",
+      //     label: end,
+      //     value: 1,
+      //     clientID: getUUID(),
+      //   });
+      // }
       await execChildProcessAsync(host, end, [], {
         dialog: `End devMode (${appName}/${workLoadName}) fail`,
       });
