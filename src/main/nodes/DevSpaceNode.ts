@@ -71,14 +71,14 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     };
     if (context) {
       let jsonObj = JSON.parse(context);
-      obj.url = jsonObj["application_url"];
-      obj.name = jsonObj["application_name"];
-      obj.appConfig = jsonObj["application_config_path"];
-      obj.nocalhostConfig = jsonObj["nocalhost_config"];
-      let originInstallType = jsonObj["install_type"];
+      obj.url = jsonObj["applicationUrl"];
+      obj.name = jsonObj["applicationName"];
+      obj.appConfig = jsonObj["applicationConfigPath"];
+      obj.nocalhostConfig = jsonObj["nocalhostConfig"];
+      let originInstallType = jsonObj["installType"];
       let source = jsonObj["source"];
       obj.installType = this.generateInstallType(source, originInstallType);
-      obj.resourceDir = jsonObj["resource_dir"];
+      obj.resourceDir = jsonObj["resourceDir"];
     }
 
     const label =
@@ -109,7 +109,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     const arr = this.applications.filter((a) => {
       const context = a.context;
       let jsonObj = JSON.parse(context);
-      const appName = jsonObj["application_name"];
+      const appName = jsonObj["applicationName"];
       if (installedAppNames.includes(appName)) {
         return false;
       } else {
@@ -124,7 +124,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     const apps = this.applications.filter((item) => {
       const context = item.context;
       let jsonObj = JSON.parse(context);
-      const appName = jsonObj["application_name"];
+      const appName = jsonObj["applicationName"];
       if (appName === name) {
         return true;
       }
@@ -194,13 +194,13 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
   buildApplicationInfo(appName: string) {
     const contextObj = {
-      application_name: appName,
-      application_url: "",
-      application_config_path: "",
-      nocalhost_config: "",
+      applicationName: appName,
+      applicationUrl: "",
+      applicationConfigPath: "",
+      nocalhostConfig: "",
       source: "",
-      resource_dir: "",
-      install_type: "",
+      resourceDir: "",
+      installType: "",
     };
 
     const app = {

@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import state from "./state";
 import host from "./host";
 import { BASE_URL, JWT, USERINFO } from "./constants";
+import { keysToCamel } from "./utils";
 
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
@@ -165,13 +166,13 @@ export async function getV2Application() {
   }
 
   const contextObj = {
-    application_name: "default.application",
-    application_url: "",
-    application_config_path: "",
-    nocalhost_config: "",
+    applicationName: "default.application",
+    applicationUrl: "",
+    applicationConfigPath: "",
+    nocalhostConfig: "",
     source: "",
-    resource_dir: "",
-    install_type: "",
+    resourceDir: "",
+    installType: "",
   };
 
   result.push({
@@ -239,12 +240,12 @@ export async function getDevSpace() {
 }
 
 export interface ServiceAccountInfo {
-  cluster_id: number;
+  clusterId: number;
   kubeconfig: string;
-  storage_class: string;
+  storageClass: string;
   privilege: boolean;
-  namespace_packs: Array<{
-    space_id: number;
+  namespacePacks: Array<{
+    spaceId: number;
     namespace: string;
     spacename: string;
   }>;
@@ -253,6 +254,6 @@ export interface ServiceAccountInfo {
 export async function getServiceAccount() {
   const response = await axios.get(`/v1/plugin/service_accounts`);
   const res = response.data as ResponseData;
-  const serviceAccount: ServiceAccountInfo[] = res.data || [];
+  const serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
   return serviceAccount;
 }

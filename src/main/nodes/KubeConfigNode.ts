@@ -69,7 +69,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       };
       if (context) {
         let jsonObj = JSON.parse(context);
-        obj.nocalhostConfig = jsonObj["nocalhost_config"];
+        obj.nocalhostConfig = jsonObj["nocalhostConfig"];
       }
 
       const nhConfigPath = path.resolve(HELM_NH_CONFIG_DIR, `${app.id}_config`);

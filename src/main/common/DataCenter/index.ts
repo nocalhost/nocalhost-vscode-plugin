@@ -74,12 +74,12 @@ export default class DataCenter {
         const contextObj: any = JSON.parse(result.context || "{}");
         const context: IApplicationContext = {
           source: contextObj.source || "",
-          installType: contextObj["install_type"] || "rawManifest",
-          applicationName: contextObj["application_name"] || "",
-          applicationURL: contextObj["application_url"] || "",
-          resourceDir: contextObj["resource_dir"] || ["manifest/templates"],
-          applicationConfigPath: contextObj["application_config_path"] || "",
-          nocalhostConfig: contextObj["nocalhost_config"] || "",
+          installType: contextObj["installType"] || "rawManifest",
+          applicationName: contextObj["applicationName"] || "",
+          applicationURL: contextObj["applicationUrl"] || "",
+          resourceDir: contextObj["resourceDir"] || ["manifest/templates"],
+          applicationConfigPath: contextObj["applicationConfigPath"] || "",
+          nocalhostConfig: contextObj["nocalhostConfig"] || "",
         };
         // await this.fetchApplicationMeta(context.applicationName);
         await this.fetchApplicationDescribe(

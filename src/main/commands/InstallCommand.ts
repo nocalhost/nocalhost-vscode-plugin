@@ -252,8 +252,8 @@ export default class InstallCommand implements ICommand {
   }
 
   private async checkStatus(appNode: AppNode, productPagePort: string) {
-    if (host.bookinfo_timeout_id) {
-      clearTimeout(host.bookinfo_timeout_id);
+    if (host.bookinfoTimeoutId) {
+      clearTimeout(host.bookinfoTimeoutId);
     }
     if (new Date().getTime() - this.startTime > 5 * 60 * 1000) {
       logger.info("time out to open productpage");
@@ -274,7 +274,7 @@ export default class InstallCommand implements ICommand {
       }
       return;
     }
-    host.bookinfo_timeout_id = setTimeout(() => {
+    host.bookinfoTimeoutId = setTimeout(() => {
       this.checkStatus(appNode, productPagePort);
     }, 2000);
   }

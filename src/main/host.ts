@@ -26,7 +26,7 @@ export class Host implements vscode.Disposable {
   );
   private newTerminal!: vscode.Terminal | null;
 
-  public bookinfo_timeout_id: NodeJS.Timeout | null = null; // bookinfo
+  public bookinfoTimeoutId: NodeJS.Timeout | null = null; // bookinfo
 
   // private debugDisposesMap = new Map<string, { dispose: () => any }>();
 

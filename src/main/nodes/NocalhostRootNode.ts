@@ -55,13 +55,13 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           defaultNamespace as string
         );
         const contextObj = {
-          application_name: "default.application",
-          application_url: "",
-          application_config_path: "",
-          nocalhost_config: "",
+          applicationName: "default.application",
+          applicationUrl: "",
+          applicationConfigPath: "",
+          nocalhostConfig: "",
           source: "",
-          resource_dir: "",
-          install_type: "",
+          resourceDir: "",
+          installType: "",
         };
 
         applications.push({
@@ -84,13 +84,13 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         let devSpaces: Array<DevspaceInfo> | undefined = new Array();
         const kubeconfigPath = path.resolve(
           KUBE_CONFIG_DIR,
-          `${sa.cluster_id}_config`
+          `${sa.clusterId}_config`
         );
         this.writeFile(kubeconfigPath, sa.kubeconfig);
         if (sa.privilege) {
           const devs = await kubectl.getAllNamespace(kubeconfigPath, "default");
           for (const dev of devs) {
-            dev.storageClass = sa.storage_class;
+            dev.storageClass = sa.storageClass;
             dev.devStartAppendCommand = [
               "--priority-class",
               "nocalhost-container-criticals",
@@ -99,14 +99,14 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           }
           devSpaces.push(...devs);
         } else {
-          for (const ns of sa.namespace_packs) {
+          for (const ns of sa.namespacePacks) {
             const devInfo: DevspaceInfo = {
-              id: ns.space_id,
+              id: ns.spaceId,
               spaceName: ns.spacename,
               namespace: ns.namespace,
               kubeconfig: sa.kubeconfig,
-              clusterId: sa.cluster_id,
-              storageClass: sa.storage_class,
+              clusterId: sa.clusterId,
+              storageClass: sa.storageClass,
               devStartAppendCommand: [
                 "--priority-class",
                 "nocalhost-container-criticals",
@@ -175,14 +175,14 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         };
         if (context) {
           let jsonObj = JSON.parse(context);
-          obj.url = jsonObj["application_url"];
-          obj.name = jsonObj["application_name"];
-          obj.appConfig = jsonObj["application_config_path"];
-          obj.nocalhostConfig = jsonObj["nocalhost_config"];
-          let originInstallType = jsonObj["install_type"];
+          obj.url = jsonObj["applicationUrl"];
+          obj.name = jsonObj["applicationName"];
+          obj.appConfig = jsonObj["applicationConfigPath"];
+          obj.nocalhostConfig = jsonObj["nocalhostConfig"];
+          let originInstallType = jsonObj["installType"];
           let source = jsonObj["source"];
           obj.installType = this.generateInstallType(source, originInstallType);
-          obj.resourceDir = jsonObj["resource_dir"];
+          obj.resourceDir = jsonObj["resourceDir"];
         }
 
         const nhConfigPath = path.resolve(

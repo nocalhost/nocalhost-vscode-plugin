@@ -80,11 +80,11 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   get name() {
-    return this.context["application_name"];
+    return this.context["applicationName"];
   }
 
   get url() {
-    return this.context["application_url"];
+    return this.context["applicationUrl"];
   }
 
   get namespace() {

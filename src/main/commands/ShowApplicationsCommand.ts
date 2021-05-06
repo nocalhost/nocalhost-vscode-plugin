@@ -23,7 +23,7 @@ export default class ShowApplicationsCommand implements ICommand {
     const appNames = apps.map((app) => {
       const context = app.context;
       let jsonObj = JSON.parse(context);
-      const appName = jsonObj["application_name"] as string;
+      const appName = jsonObj["applicationName"] as string;
       return appName;
     });
 
