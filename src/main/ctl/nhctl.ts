@@ -250,6 +250,7 @@ export async function devStart(
   namespace: string,
   appName: string,
   workLoadName: string,
+  workloadType: string,
   sync: {
     isOld: boolean;
     dirs: string | Array<string>;
@@ -276,7 +277,7 @@ export async function devStart(
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev start ${appName} -d ${workLoadName} ${options} ${
+    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
     }`
   );
@@ -463,9 +464,10 @@ export async function syncFile(
   namespace: string,
   appName: string,
   workloadName: string,
+  workloadType: string,
   container?: string
 ) {
-  let baseCommand = `sync ${appName} -d ${workloadName} ${
+  let baseCommand = `sync ${appName} -d ${workloadName} -t ${workloadType.toLowerCase()} ${
     container ? `--container ${container}` : ""
   }`;
   const syncFileCommand = nhctlCommand(kubeconfigPath, namespace, baseCommand);
@@ -481,7 +483,8 @@ export async function endDevMode(
   kubeconfigPath: string,
   namespace: string,
   appName: string,
-  workLoadName: string
+  workLoadName: string,
+  workloadType: string
 ) {
   await host.showProgressing(
     `Ending DevMode: ${appName}/${workLoadName}`,
@@ -489,7 +492,9 @@ export async function endDevMode(
       const end = nhctlCommand(
         kubeconfigPath,
         namespace,
-        `dev end ${appName} -d ${workLoadName} `
+        `dev end ${appName} -d ${workLoadName} ${
+          workloadType ? `-t ${workloadType.toLowerCase()}` : ""
+        }`
       );
       host.log(`[cmd] ${end}`, true);
 
@@ -585,12 +590,15 @@ export async function getConfig(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName?: string
+  workloadName?: string,
+  workloadType?: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `config get ${appName} ${workloadName ? `-d ${workloadName}` : ""}`
+    `config get ${appName} ${workloadName ? `-d ${workloadName}` : ""} ${
+      workloadType ? `-t ${workloadType.toLowerCase()}` : ""
+    }`
   );
   const result = await execAsyncWithReturn(configCommand, []);
   return result.stdout;
@@ -601,13 +609,14 @@ export async function editConfig(
   namespace: string,
   appName: string,
   workloadName: string | undefined | null,
+  workloadType: string | undefined | null,
   contents: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `config edit ${appName} ${
-      workloadName ? `-d ${workloadName}` : ""
+    `config edit ${appName} ${workloadName ? `-d ${workloadName}` : ""} ${
+      workloadType ? `-t ${workloadType.toLowerCase()}` : ""
     } -c ${contents}`
   );
   const result = await execAsyncWithReturn(configCommand, []);
@@ -661,7 +670,8 @@ export async function resetService(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  workloadType: string
 ) {
   await host.showProgressing(
     `Reset : ${appName}/${workloadName}`,
@@ -669,7 +679,7 @@ export async function resetService(
       const resetCommand = nhctlCommand(
         kubeConfigPath,
         namespace,
-        `dev reset ${appName} -d ${workloadName}`
+        `dev reset ${appName} -d ${workloadName} -t ${workloadType.toLowerCase()}`
       );
       host.log(`[cmd] ${resetCommand}`, true);
       await execChildProcessAsync(host, resetCommand, [], {

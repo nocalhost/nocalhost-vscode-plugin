@@ -159,7 +159,7 @@ export async function getV2Application() {
       userId: applications[i]["user_id"],
       public: applications[i].public,
       editable: applications[i].editable,
-      context: applications[i].context,
+      context: JSON.stringify(keysToCamel(JSON.parse(applications[i].context))),
       status: applications[i].status,
     };
     result.push(app);

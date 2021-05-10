@@ -172,7 +172,8 @@ export class Deployment extends ControllerResourceNode {
         appNode.getKubeConfigPath(),
         appNode.namespace,
         appNode.name,
-        this.name
+        this.name,
+        DEPLOYMENT
       );
     }
     const schema = {

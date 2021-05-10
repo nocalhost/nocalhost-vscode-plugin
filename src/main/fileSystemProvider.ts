@@ -140,6 +140,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const query = querystring.decode(uri.query);
         const kubeConfigPath = query.kubeConfigPath as string;
         const namespace = query.namespace as string;
+        const workloadType = query.workloadType as string;
         if (type === "loadResource") {
           const name = paths[2];
           result = await nhctl.loadResource(
@@ -161,7 +162,8 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
                   kubeConfigPath,
                   namespace,
                   appName,
-                  subKey
+                  subKey,
+                  workloadType
                 );
                 if (!serviceInfo) {
                   result = await nhctl.getTemplateConfig(
@@ -263,6 +265,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     let destData: string | Buffer = "";
     const kubeConfigPath = query.kubeConfigPath as string;
     const namespace = query.namespace as string;
+    const workloadType = query.workloadType as string;
     let command: string | undefined;
     let args;
     if (type === "config") {
@@ -279,6 +282,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             namespace,
             appName,
             subKey,
+            workloadType,
             data
           );
           command = "Nocalhost.refresh";

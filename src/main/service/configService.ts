@@ -101,6 +101,7 @@ export default class ConfigService {
     namespace: string,
     appName: string,
     workloadName: string | undefined | null,
+    workloadType: string | undefined | null,
     config: NocalhostConfig | NocalhostServiceConfig
   ) {
     let objJsonStr = JSON.stringify(config);
@@ -110,6 +111,7 @@ export default class ConfigService {
       namespace,
       appName,
       workloadName,
+      workloadType,
       objJsonB64
     );
   }
@@ -118,13 +120,15 @@ export default class ConfigService {
     kubeConfigPath: string,
     namespace: string,
     appName: string,
-    workloadName: string
+    workloadName: string,
+    workloadType?: string
   ): Promise<NocalhostServiceConfig | undefined> {
     const configStr = await nhctl.getConfig(
       kubeConfigPath,
       namespace,
       appName,
-      workloadName
+      workloadName,
+      workloadType
     );
     const config = yaml.parse(configStr) as NocalhostServiceConfig;
 
@@ -136,13 +140,15 @@ export default class ConfigService {
     namespace: string,
     appName: string,
     workloadName: string,
+    workloadType: string,
     containerName: string
   ) {
     const configStr = await nhctl.getConfig(
       kubeConfigPath,
       namespace,
       appName,
-      workloadName
+      workloadName,
+      workloadType
     );
     const config = yaml.parse(configStr) as NocalhostServiceConfig;
     let containerConfig: ContainerConfig | null = null;

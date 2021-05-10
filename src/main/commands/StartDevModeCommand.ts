@@ -84,6 +84,7 @@ export default class StartDevModeCommand implements ICommand {
       node.getNameSpace(),
       appName,
       node.name,
+      node.resourceType,
       result.containerName
     );
     if (!image) {
@@ -122,6 +123,7 @@ export default class StartDevModeCommand implements ICommand {
       node.getNameSpace(),
       appName,
       node.name,
+      node.resourceType,
       result.containerName,
       "image",
       image as string
@@ -180,6 +182,7 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    wrokloadType: string,
     containerName: string
   ) {
     let destDir: string | undefined;
@@ -188,6 +191,7 @@ export default class StartDevModeCommand implements ICommand {
       namespace,
       appName,
       workloadName,
+      wrokloadType,
       containerName
     );
     if (!gitUrl) {
@@ -209,6 +213,7 @@ export default class StartDevModeCommand implements ICommand {
           namespace,
           appName,
           workloadName,
+          wrokloadType,
           containerName,
           "gitUrl",
           gitUrl
@@ -229,6 +234,7 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    workloadType: string,
     containerName: string,
     key: string,
     value: string
@@ -237,7 +243,8 @@ export default class StartDevModeCommand implements ICommand {
       kubeConfigPath,
       namespace,
       appName,
-      workloadName
+      workloadName,
+      workloadType
     )) as NocalhostServiceConfig;
     const containers = serviceData.containers || [];
     if (containers.length === 1) {
@@ -286,6 +293,7 @@ export default class StartDevModeCommand implements ICommand {
       namespace,
       appName,
       workloadName,
+      workloadType,
       serviceData
     );
   }
@@ -312,6 +320,7 @@ export default class StartDevModeCommand implements ICommand {
         node.getNameSpace(),
         appName,
         node.name,
+        node.resourceType,
         containerName
       );
     } else if (result === nls["bt.open.dir"]) {
@@ -422,6 +431,7 @@ export default class StartDevModeCommand implements ICommand {
             node.getNameSpace(),
             appName,
             node.name,
+            node.resourceType,
             {
               isOld: isOld,
               dirs: dirs,
@@ -443,6 +453,7 @@ export default class StartDevModeCommand implements ICommand {
             node.getNameSpace(),
             appName,
             node.name,
+            node.resourceType,
             containerName
           );
           host.log("sync file end", true);
@@ -554,6 +565,7 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    workloadType: string,
     containerName: string
   ) {
     const config = await ConfigService.getContaienrConfig(
@@ -561,6 +573,7 @@ export default class StartDevModeCommand implements ICommand {
       namespace,
       appName,
       workloadName,
+      workloadType,
       containerName
     );
     let gitUrl = "";
@@ -576,6 +589,7 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    workloadType: string,
     containerName: string
   ) {
     const config = await ConfigService.getContaienrConfig(
@@ -583,6 +597,7 @@ export default class StartDevModeCommand implements ICommand {
       namespace,
       appName,
       workloadName,
+      workloadType,
       containerName
     );
     let image = "";
