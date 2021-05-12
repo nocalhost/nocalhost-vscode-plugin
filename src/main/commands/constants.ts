@@ -45,3 +45,4 @@ export const RUN = "Nocalhost.run";
 
 // local
 export const DELETE_KUBECONFIG = "Nocalhost.deleteKubeConfig";
+export const ADD_KUBECONFIG = "Nocalhost.addKubeconfig";

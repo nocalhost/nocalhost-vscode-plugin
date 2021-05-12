@@ -104,6 +104,11 @@
           "group": "overflow"
         },
         {
+          "command": "Nocalhost.addKubeconfig",
+          "when": "extensionActivated && view == Nocalhost && local",
+          "group": "overflow"
+        },
+        {
           "command": "Nocalhost.signout",
           "when": "extensionActivated && view == Nocalhost && local",
           "group": "overflow"
@@ -274,6 +279,10 @@
         "command": "Nocalhost.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "Nocalhost.addKubeconfig",
+        "title": "Add Kubeconfig"
       },
       {
         "command": "Nocalhost.signout",

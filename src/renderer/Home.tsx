@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from "react";
 import FolderOpenIcon from "@material-ui/icons/FolderOpen";
 import RemoveCircleIcon from "@material-ui/icons/RemoveCircle";
+import Tabs from "@material-ui/core/Tabs";
+import Tab from "@material-ui/core/Tab";
+import BottomNavigation from "@material-ui/core/BottomNavigation";
+import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
 import { postMessage, vscode } from "./utils/index";
 import * as yaml from "yaml";
+import { makeStyles } from "@material-ui/core";
+
+const useStyles = makeStyles({
+  localToggle: {
+    height: 35,
+  },
+  kubeconfigToggle: {
+    fontSize: 10,
+  },
+});
 
 export default function Home() {
+  const classes = useStyles();
   const oldState = vscode.getState() || {
     username: "",
     password: "",
@@ -113,18 +128,23 @@ export default function Home() {
   return (
     <div>
       <div className="type">
-        <select
+        <BottomNavigation
           value={isLocal}
-          name="type"
-          id="type"
-          onChange={(event) => {
-            console.log("type: ", event.target.value);
-            setIsLocal(event.target.value);
+          onChange={(event: React.ChangeEvent<{}>, newValue: string) =>
+            setIsLocal(newValue)
+          }
+          showLabels
+          classes={{
+            root: classes.localToggle,
           }}
+          // className={classes.root}
         >
-          <option value="0">Server</option>
-          <option value="1">Local</option>
-        </select>
+          <BottomNavigationAction label="Add Kubeconfig" value={"1"} />
+          <BottomNavigationAction
+            label="Connect to Nocalhost Server"
+            value={"0"}
+          />
+        </BottomNavigation>
       </div>
       {isLocal === "0" && (
         <div className="server">
@@ -132,7 +152,7 @@ export default function Home() {
             <input
               className="sign-in"
               type="text"
-              placeholder="Server Url"
+              placeholder="Nocalhost API Server"
               name="u"
               value={baseUrl}
               onChange={(e) => {
@@ -188,23 +208,29 @@ export default function Home() {
       )}
       {isLocal === "1" && (
         <div className="type">
-          <select
+          <Tabs
             value={isLocalPath}
-            name="localpath"
-            id="localpath"
-            onChange={(event) => {
+            onChange={(event: React.ChangeEvent<{}>, newValue: string) => {
               vscode.setState({
                 ...oldState,
-                isLocalPath: event.target.value,
+                isLocalPath: newValue,
               });
-              setIsLocalPath(event.target.value);
+              setIsLocalPath(newValue);
             }}
+            variant="fullWidth"
+            aria-label="full width tabs"
           >
-            <option value="0">KubeConfig Text</option>
-            <option defaultChecked value="1">
-              Local Path
-            </option>
-          </select>
+            <Tab
+              label="Select Kubeconfig file"
+              value="1"
+              classes={{ root: classes.kubeconfigToggle }}
+            />
+            <Tab
+              label="Paste as text"
+              value="0"
+              classes={{ root: classes.kubeconfigToggle }}
+            />
+          </Tabs>
 
           {isLocalPath === "0" && (
             <textarea
