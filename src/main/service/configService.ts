@@ -135,6 +135,8 @@ export default class ConfigService {
     return config;
   }
 
+  static async profileSetConfig() {}
+
   static async getContaienrConfig(
     kubeConfigPath: string,
     namespace: string,

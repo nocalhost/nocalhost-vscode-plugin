@@ -16,6 +16,7 @@ export async function exec(command: string, kubeconfigPath: string) {
   const execCommand = `kubectl ${command} --kubeconfig ${kubeconfigPath}`;
   const res = await execAsyncWithReturn(execCommand, []);
 
+  console.log("execCommand", execCommand);
   if (res.code === 0) {
     return res.stdout;
   }
@@ -105,8 +106,10 @@ export async function loadResource(
   name: string,
   outputType = "yaml"
 ) {
+  const command = `get ${kind} ${name} -n ${namespace} -o ${outputType}`;
+
   const result = await exec(
-    `get ${kind} ${name} -n ${namespace} -o ${outputType}`,
+    command,
     kubeconfigPath || host.getGlobalState(DEFAULT_KUBE_CONFIG_FULLPATH)
   );
   return result;

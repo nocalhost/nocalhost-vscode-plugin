@@ -5,6 +5,7 @@ import state from "./state";
 import host from "./host";
 import { BASE_URL, JWT, USERINFO } from "./constants";
 import { keysToCamel } from "./utils";
+import { IUserInfo } from "./domain";
 
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
@@ -14,7 +15,7 @@ interface LoginInfo {
   from?: "plugin";
 }
 
-interface ResponseData {
+export interface ResponseData {
   code: number;
   message?: string;
   data: any;
@@ -31,23 +32,23 @@ export interface DevspaceInfo {
   [key: string]: any;
 }
 
-axios.interceptors.request.use(function (config) {
-  const jwt = host.getGlobalState(JWT) as string;
-  config.baseURL = host.getGlobalState(BASE_URL) as string;
-  if (!config.baseURL) {
-    throw new Error("please config your api server");
-  }
-  config.headers["Authorization"] = `Bearer ${jwt}`;
+// axios.interceptors.request.use(function (config) {
+//   // const jwt = host.getGlobalState(JWT) as string;
+//   config.baseURL = host.getGlobalState(BASE_URL) as string;
+//   if (!config.baseURL) {
+//     throw new Error("please config your api server");
+//   }
+//   // config.headers["Authorization"] = `Bearer ${jwt}`;
 
-  return config;
-});
+//   return config;
+// });
 
 axios.interceptors.response.use(
   async function (response: AxiosResponse<ResponseData>) {
     const res = response.data;
-    if ([20103, 20111].includes(res.code)) {
-      state.setLogin(false);
-    }
+    // if ([20103, 20111].includes(res.code)) {
+    //   state.setLogin(false);
+    // }
     if (res.code !== 0) {
       // vscode.window.showErrorMessage(res.message || "");
       return Promise.reject({ source: "api", error: res });
@@ -66,18 +67,21 @@ export async function login(loginInfo: LoginInfo) {
     .data as ResponseData;
   if (response.data && response.data.token) {
     const jwt = response.data.token;
-    host.setGlobalState(JWT, jwt);
     return jwt;
   }
 
   throw new Error("login fail");
 }
 
-export async function getUserinfo() {
-  const response = await axios.get("/v1/me");
+export async function getUserInfo(jwt: string) {
+  const response = await axios.get("/v1/me", {
+    headers: {
+      // eslint-disable-next-line
+      Authorization: `Bearer ${jwt}`,
+    },
+  });
   if (response.status === 200 && response.data) {
     const { data } = response.data;
-    host.setGlobalState(USERINFO, data);
     return data;
   }
   throw new Error("Fail to fetch user infomation.");
@@ -117,8 +121,13 @@ export interface V2ApplicationInfo {
   public: number;
 }
 
-export async function getApplication() {
-  const response = await axios.get("/v1/plugin/dev_space");
+export async function getApplication(jwt: string) {
+  const response = await axios.get("/v1/plugin/dev_space", {
+    headers: {
+      // eslint-disable-next-line
+      Authorization: `Bearer ${jwt}`,
+    },
+  });
   const res = response.data as ResponseData;
   const applications = res.data || [];
   const result = new Array<ApplicationInfo>();
@@ -143,15 +152,33 @@ export async function getApplication() {
   return result;
 }
 
-export async function getV2Application() {
-  const userinfo = host.getGlobalState(USERINFO);
-  const userId = userinfo.id;
-  if (!userId) {
-    return;
+async function fetchApplication(userId: number, jwt: string) {
+  try {
+    const response = await axios.get(`/v1/users/${userId}/applications`, {
+      headers: {
+        // eslint-disable-next-line
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+    const res = response.data as ResponseData;
+    const applications = res.data || [];
+    return applications;
+  } catch (e) {
+    return [];
   }
-  const response = await axios.get(`/v1/users/${userId}/applications`);
-  const res = response.data as ResponseData;
-  const applications = res.data || [];
+}
+export async function getV2Application(
+  userInfo: IUserInfo,
+  jwt: string
+): Promise<V2ApplicationInfo[]> {
+  const userId = userInfo.id;
+  if (!userId) {
+    return [];
+  }
+  const applications = await fetchApplication(userId, jwt);
+  if (!applications || applications.length === 0) {
+    return [];
+  }
   const result = new Array<V2ApplicationInfo>();
   for (let i = 0; i < applications.length; i++) {
     const app: V2ApplicationInfo = {
@@ -251,9 +278,20 @@ export interface ServiceAccountInfo {
   }>;
 }
 
-export async function getServiceAccount() {
-  const response = await axios.get(`/v1/plugin/service_accounts`);
-  const res = response.data as ResponseData;
-  const serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
-  return serviceAccount;
+export async function getServiceAccount(jwt: string) {
+  try {
+    const response = await axios.get(`/v1/plugin/service_accounts`, {
+      headers: {
+        // eslint-disable-next-line
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+
+    const res = response.data as ResponseData;
+    const serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
+    return serviceAccount;
+  } catch (e) {
+    console.log(e);
+    return [];
+  }
 }

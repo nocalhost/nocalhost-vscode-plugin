@@ -1,4 +1,8 @@
 export const REFRESH = "Nocalhost.refresh";
+
+export const CLEAR_LOCAL_CLUSTER = "Nocalhost.clearLocalCluster";
+export const SHOW_CONTEXT_GLOBAL = "Nocalhost.showContextGlobal";
+
 export const EDIT_SERVICE_CONFIG = "Nocalhost.editServiceConfig";
 export const WRITE_SERVICE_CONFIG = "Nocalhost.writeServiceConfig";
 
@@ -46,3 +50,4 @@ export const RUN = "Nocalhost.run";
 // local
 export const DELETE_KUBECONFIG = "Nocalhost.deleteKubeConfig";
 export const ADD_KUBECONFIG = "Nocalhost.addKubeconfig";
+export const CLUSTERS_VIEW = "Nocalhost.ClustersView";

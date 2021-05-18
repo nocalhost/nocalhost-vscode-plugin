@@ -1,13 +1,10 @@
 import * as vscode from "vscode";
 import { Progress } from "vscode";
 import * as shell from "./ctl/shell";
-import { NOCALHOST_INSTALLATION_LINK } from "./constants";
 import { checkVersion } from "./ctl/nhctl";
-import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
 import * as path from "path";
-import { root } from "tempy";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 
@@ -52,22 +49,26 @@ export class Host implements vscode.Disposable {
     this.context = context;
   }
 
+  public getContext() {
+    return this.context;
+  }
+
   private autoRefreshTimeId: NodeJS.Timeout | null = null;
 
   public stopAutoRefresh() {
     if (this.autoRefreshTimeId) {
-      clearInterval(this.autoRefreshTimeId);
+      clearTimeout(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
   }
 
   public startAutoRefresh() {
     if (this.autoRefreshTimeId) {
-      clearInterval(this.autoRefreshTimeId);
+      clearTimeout(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
 
-    this.autoRefreshTimeId = setInterval(async () => {
+    this.autoRefreshTimeId = setTimeout(async () => {
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
         await rootNode.updateData().catch(() => {});
@@ -96,7 +97,8 @@ export class Host implements vscode.Disposable {
           }
         }
       }
-    }, 5 * 1000);
+      this.startAutoRefresh();
+    }, 4 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {

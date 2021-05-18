@@ -7,6 +7,8 @@ import { ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
 import registerCommand from "./register";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
+import { associate } from "../ctl/nhctl";
+
 import * as kubectl from "../ctl/kubectl";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
@@ -22,6 +24,9 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     let appName: string, workloadName: string | undefined;
     appName = node.getAppName();
     workloadName = node.name;
+    const namespace = node.getNameSpace();
+    const kubeConfigPath = node.getKubeConfigPath();
+
     const status = await node.getStatus();
     if (status === "developing") {
       host.showWarnMessage("after exiting develop mode, please try again!");
@@ -45,6 +50,16 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     );
     if (selectUri && selectUri.length > 0) {
       containerConfig.directory = selectUri[0].fsPath;
+      workloadConfig[containerName] = containerConfig;
+      appConfig[node.name] = workloadConfig;
+      await associate(
+        kubeConfigPath,
+        namespace,
+        appName,
+        containerConfig.directory,
+        node.resourceType,
+        workloadName
+      );
       host.setGlobalState(appName, appConfig);
       host.showInformationMessage("Directory successfully linked");
     }
@@ -78,6 +93,9 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       appNode.namespace
     );
     let containerName: string | undefined = "";
+    if (containerNameArr.length === 1) {
+      containerName = containerNameArr[0];
+    }
     if (containerNameArr.length > 1) {
       containerName = await vscode.window.showQuickPick(containerNameArr);
       if (!containerName) {

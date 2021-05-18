@@ -14,6 +14,7 @@ export default class NocalhostAppProvider
   async getTreeItem(element: BaseNocalhostNode): Promise<vscode.TreeItem> {
     let item: vscode.TreeItem | Thenable<vscode.TreeItem>;
     item = await element.getTreeItem();
+
     return item;
   }
 

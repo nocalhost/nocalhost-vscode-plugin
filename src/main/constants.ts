@@ -1,9 +1,9 @@
 import { homedir } from "os";
 import * as path from "path";
-
+export const ROOT_NODE_KEY = "Nocalhost";
 export const HOME_DIR = homedir();
 export const NH_CONFIG_DIR = path.resolve(HOME_DIR, ".nh");
-export const PLUGIN_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "plugin");
+export const PLUGIN_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "vscode-plugin");
 export const USER_CONFIG_FULLPATH = path.resolve(
   PLUGIN_CONFIG_DIR,
   "config.json"
@@ -23,7 +23,7 @@ export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
 
 // LOCAL
 export const IS_LOCAL = "isLocal";
-export const LOCAL_PATH = "localPath";
+export const LOCAL_PATH = "localPaths_v2";
 
 // USER INFO
 export const USERNAME = "username";
@@ -32,6 +32,8 @@ export const PASSWORD = "password";
 export const JWT = "jwt";
 export const BASE_URL = "baseUrl";
 export const USERINFO = "userinfo";
+export const SERVER_CLUSTER_LIST = "userinfoList_v2";
+
 export const WELCOME_DID_SHOW = "welcomeDidShow";
 
 // tmp start record

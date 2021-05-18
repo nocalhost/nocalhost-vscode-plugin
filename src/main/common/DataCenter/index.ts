@@ -68,7 +68,7 @@ export default class DataCenter {
   }
 
   public async setApplications(timeout?: number): Promise<void> {
-    const results: ApplicationInfo[] = await getApplication();
+    const results: ApplicationInfo[] = await getApplication("");
     const applications: Promise<IApplication>[] = results.map(
       async (result: ApplicationInfo) => {
         const contextObj: any = JSON.parse(result.context || "{}");

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import NocalhostAppProvider from "../appProvider";
-import AssociateLocalDirectoryCommand from "./AssociateDirectoryCommand";
+import AssociateLocalDirxectoryCommand from "./AssociateDirectoryCommand";
 import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
@@ -35,11 +35,15 @@ import DebugCommand from "./DebugCommand";
 import RunCommand from "./RunCommand";
 import DeleteKubeConfigCommand from "./DeleteKubeConfigCommand";
 import AddKubeconfig from "./AddKubeconfigCommand";
+import ClustersViewCommand from "./ClustersViewCommand";
+import ClearLocalCluster from "./ClearLocalCluster";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
 ) {
+  new ClearLocalCluster(context);
+  new ClustersViewCommand(context);
   new EditServiceConfigCommand(context);
   new WriteServiceConfigCommand(context);
 
@@ -49,7 +53,7 @@ export default function initCommands(
   new SwitchEndPointCommand(context);
   new OpenEndPointCommand(context);
 
-  new SignInCommand(context);
+  new SignInCommand(context, appTreeProvider);
   new SignOutCommand(context);
 
   new RefreshCommand(context, appTreeProvider);
@@ -66,7 +70,7 @@ export default function initCommands(
   new ResetDevspaceCommand(context);
   new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
-  new AssociateLocalDirectoryCommand(context);
+  new AssociateLocalDirxectoryCommand(context);
 
   new ApplyKubernetesObjectCommand(context);
   new DeleteKubernetesObjectCommand(context);
