@@ -47,6 +47,7 @@ export default class CopyTerminalCommand implements ICommand {
       await this.opendevSpaceExec(
         node.getAppName(),
         node.name,
+        node.resourceType,
         pod,
         container,
         node.getKubeConfigPath(),
@@ -91,6 +92,7 @@ export default class CopyTerminalCommand implements ICommand {
   async opendevSpaceExec(
     appName: string,
     workloadName: string,
+    workloadType: string,
     pod: string,
     container: string,
     kubeConfigPath: string,
@@ -98,6 +100,7 @@ export default class CopyTerminalCommand implements ICommand {
   ) {
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
+    terminalCommands.push("-t", workloadType);
     terminalCommands.push("--kubeconfig", kubeConfigPath);
     terminalCommands.push("-n", namespace);
     if (pod) {

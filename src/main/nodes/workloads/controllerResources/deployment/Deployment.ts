@@ -17,7 +17,6 @@ import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
 import host from "../../../../host";
-import { IS_LOCAL } from "../../../../constants";
 
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
@@ -40,40 +39,45 @@ export class Deployment extends ControllerResourceNode {
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
     let status = "";
-    status = await this.getStatus();
-    const portForwardStatus = await this.getPortForwardStatus();
-    switch (status) {
-      case "running":
-        treeItem.iconPath = resolveVSCodeUri("status-running.svg");
-        if (portForwardStatus) {
-          treeItem.iconPath = resolveVSCodeUri("Normal_Port_Forwarding.svg");
-        }
-        break;
-      case "developing":
-        treeItem.iconPath = resolveVSCodeUri("dev-start.svg");
-        const container = await this.getContainer();
-        if (container) {
-          treeItem.label = `${this.label}(${container})`;
-        }
-        if (portForwardStatus) {
-          treeItem.iconPath = resolveVSCodeUri("Dev_Port_Forwarding.svg");
-        }
-        break;
-      case "starting":
-        treeItem.iconPath = resolveVSCodeUri("loading.svg");
-        break;
-      case "unknown":
-        treeItem.iconPath = resolveVSCodeUri("status-unknown.svg");
-        break;
-    }
-    const check = await this.checkConfig();
-    const isLocal = host.getGlobalState(IS_LOCAL);
-    treeItem.contextValue = `${treeItem.contextValue}-${
-      check ? "info" : "warn"
-    }-${isLocal ? "local-" : ""}${status}`;
-    if (this.firstRender) {
+    try {
+      status = await this.getStatus();
+      const portForwardStatus = await this.getPortForwardStatus();
+      switch (status) {
+        case "running":
+          treeItem.iconPath = resolveVSCodeUri("status-running.svg");
+          if (portForwardStatus) {
+            treeItem.iconPath = resolveVSCodeUri("Normal_Port_Forwarding.svg");
+          }
+          break;
+        case "developing":
+          treeItem.iconPath = resolveVSCodeUri("dev-start.svg");
+          const container = await this.getContainer();
+          if (container) {
+            treeItem.label = `${this.label}(${container})`;
+          }
+          if (portForwardStatus) {
+            treeItem.iconPath = resolveVSCodeUri("Dev_Port_Forwarding.svg");
+          }
+          break;
+        case "starting":
+          treeItem.iconPath = resolveVSCodeUri("loading.svg");
+          break;
+        case "unknown":
+          treeItem.iconPath = resolveVSCodeUri("status-unknown.svg");
+          break;
+      }
+      const check = await this.checkConfig();
+      treeItem.contextValue = `${treeItem.contextValue}-${
+        check ? "info" : "warn"
+      }-${status}`;
+      if (this.firstRender) {
+        this.firstRender = false;
+      }
+    } catch (e) {
       this.firstRender = false;
+      host.log(e, true);
     }
+
     return treeItem;
   }
 
@@ -94,6 +98,7 @@ export class Deployment extends ControllerResourceNode {
     if (status) {
       return Promise.resolve(status);
     }
+
     if (this.firstRender) {
       if (this.svcProfile && this.svcProfile.developing) {
         return DeploymentStatus.developing;
@@ -172,7 +177,8 @@ export class Deployment extends ControllerResourceNode {
         appNode.getKubeConfigPath(),
         appNode.namespace,
         appNode.name,
-        this.name
+        this.name,
+        DEPLOYMENT
       );
     }
     const schema = {

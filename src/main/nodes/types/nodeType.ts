@@ -52,7 +52,9 @@ export interface SvcProfile {
 export interface BaseNocalhostNode {
   label: string;
   type: string;
+  hasInit?: boolean;
   parent: BaseNocalhostNode | undefined | null;
+  updateData?: (init: boolean) => Promise<any>;
   getNodeStateId(): string;
   getChildren(
     parent?: BaseNocalhostNode

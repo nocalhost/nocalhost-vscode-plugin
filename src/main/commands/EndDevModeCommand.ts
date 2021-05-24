@@ -35,7 +35,8 @@ export default class EndDevModeCommand implements ICommand {
       node.getKubeConfigPath(),
       node.getNameSpace(),
       appNode.name,
-      node.name
+      node.name,
+      node.resourceType
     );
     await node.setStatus("");
     await node.setContainer("");

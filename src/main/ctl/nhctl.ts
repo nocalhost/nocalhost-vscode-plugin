@@ -219,6 +219,24 @@ export async function upgrade(
   );
 }
 
+export async function associate(
+  kubeconfigPath: string,
+  namespace: string,
+  appName: string,
+  dir: string,
+  type: string,
+  workLoadName: string
+) {
+  const command = nhctlCommand(
+    kubeconfigPath,
+    namespace,
+    `dev associate ${appName} -s ${dir} -t ${type} -d ${workLoadName}`
+  );
+
+  const result = await execAsyncWithReturn(command, []);
+  return result.stdout;
+}
+
 export async function uninstall(
   host: Host,
   kubeconfigPath: string,
@@ -250,6 +268,7 @@ export async function devStart(
   namespace: string,
   appName: string,
   workLoadName: string,
+  workloadType: string,
   sync: {
     isOld: boolean;
     dirs: string | Array<string>;
@@ -269,29 +288,28 @@ export async function devStart(
   if (storageClass) {
     options += ` --storage-class ${storageClass}`;
   }
-
   if (container) {
     options += ` --container ${container}`;
   }
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev start ${appName} -d ${workLoadName} ${options} ${
+    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
     }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
-  const isLocal = host.getGlobalState(IS_LOCAL);
-  if (isLocal) {
-    const res = await ga.send({
-      category: "command",
-      action: "startDevMode",
-      label: devStartCommand,
-      value: 1,
-      clientID: getUUID(),
-    });
-    console.log("ga: ", res);
-  }
+  // const isLocal = host.getGlobalState(IS_LOCAL);
+  // if (isLocal) {
+  //   const res = await ga.send({
+  //     category: "command",
+  //     action: "startDevMode",
+  //     label: devStartCommand,
+  //     value: 1,
+  //     clientID: getUUID(),
+  //   });
+  //   console.log("ga: ", res);
+  // }
   await execChildProcessAsync(
     host,
     devStartCommand,
@@ -397,16 +415,16 @@ export async function startPortForward(
   );
 
   const isLocal = host.getGlobalState(IS_LOCAL);
-  if (isLocal) {
-    const res = await ga.send({
-      category: "command",
-      action: "startPortForward",
-      label: portForwardCommand,
-      value: 1,
-      clientID: getUUID(),
-    });
-    console.log("ga: ", res);
-  }
+  // if (isLocal) {
+  //   const res = await ga.send({
+  //     category: "command",
+  //     action: "startPortForward",
+  //     label: portForwardCommand,
+  //     value: 1,
+  //     clientID: getUUID(),
+  //   });
+  //   console.log("ga: ", res);
+  // }
 
   await host.showProgressing(`Starting port-forward`, async () => {
     if (sudo) {
@@ -436,15 +454,15 @@ export async function endPortForward(
 
   const sudo = isSudo([port]);
   const isLocal = host.getGlobalState(IS_LOCAL);
-  if (isLocal) {
-    await ga.send({
-      category: "command",
-      action: "endPortForward",
-      label: endPortForwardCommand,
-      value: 1,
-      clientID: getUUID(),
-    });
-  }
+  // if (isLocal) {
+  //   await ga.send({
+  //     category: "command",
+  //     action: "endPortForward",
+  //     label: endPortForwardCommand,
+  //     value: 1,
+  //     clientID: getUUID(),
+  //   });
+  // }
 
   if (sudo) {
     host.log(`[cmd] sudo -S ${endPortForwardCommand}`, true);
@@ -463,9 +481,10 @@ export async function syncFile(
   namespace: string,
   appName: string,
   workloadName: string,
+  workloadType: string,
   container?: string
 ) {
-  let baseCommand = `sync ${appName} -d ${workloadName} ${
+  let baseCommand = `sync ${appName} -d ${workloadName} -t ${workloadType.toLowerCase()} ${
     container ? `--container ${container}` : ""
   }`;
   const syncFileCommand = nhctlCommand(kubeconfigPath, namespace, baseCommand);
@@ -481,7 +500,8 @@ export async function endDevMode(
   kubeconfigPath: string,
   namespace: string,
   appName: string,
-  workLoadName: string
+  workLoadName: string,
+  workloadType: string
 ) {
   await host.showProgressing(
     `Ending DevMode: ${appName}/${workLoadName}`,
@@ -489,20 +509,21 @@ export async function endDevMode(
       const end = nhctlCommand(
         kubeconfigPath,
         namespace,
-        `dev end ${appName} -d ${workLoadName} `
+        `dev end ${appName} -d ${workLoadName} ${
+          workloadType ? `-t ${workloadType.toLowerCase()}` : ""
+        }`
       );
       host.log(`[cmd] ${end}`, true);
 
-      const isLocal = host.getGlobalState(IS_LOCAL);
-      if (isLocal) {
-        await ga.send({
-          category: "command",
-          action: "endDevMode",
-          label: end,
-          value: 1,
-          clientID: getUUID(),
-        });
-      }
+      // if (isLocal) {
+      //   await ga.send({
+      //     category: "command",
+      //     action: "endDevMode",
+      //     label: end,
+      //     value: 1,
+      //     clientID: getUUID(),
+      //   });
+      // }
       await execChildProcessAsync(host, end, [], {
         dialog: `End devMode (${appName}/${workLoadName}) fail`,
       });
@@ -581,16 +602,87 @@ export async function printAppInfo(
   await execChildProcessAsync(host, printAppCommand, []);
 }
 
+// ~/.nh/bin/nhctl profile get bookinfo-coding -d centos-01 --container xxx  --key image -t xxx  -n xxx --kubeconfig xxx
+export async function getImageByContainer(props: {
+  kubeConfigPath: string;
+  namespace: string;
+  appName: string;
+  workloadName: string;
+  containerName: string;
+  workloadType: string;
+}): Promise<{
+  image: string;
+} | null> {
+  const {
+    appName,
+    workloadName,
+    kubeConfigPath,
+    containerName,
+    workloadType,
+    namespace,
+  } = props;
+  const configCommand = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `profile get ${appName} -d ${workloadName || ""} --container ${
+      containerName || ""
+    } --key image -t ${workloadType.toLowerCase()}`
+  );
+  const result = await execAsyncWithReturn(configCommand, []);
+  try {
+    return JSON.parse(result.stdout);
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function profileConfig(props: {
+  kubeConfigPath: string;
+  namespace: string;
+  appName: string;
+  containerName: string;
+  workloadType: string;
+  workloadName: string;
+  key: string;
+  value: string;
+}) {
+  const {
+    value,
+    workloadType,
+    containerName,
+    key,
+    workloadName,
+    kubeConfigPath,
+    namespace,
+    appName,
+  } = props;
+  const command = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `profile set ${appName} -d ${
+      workloadName || ""
+    } -t ${workloadType.toLowerCase()} --container ${
+      containerName || ""
+    } --key ${key} --value ${value}`
+  );
+  const result = await execAsyncWithReturn(command, []);
+  return result;
+}
+
 export async function getConfig(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName?: string
+  workloadName?: string,
+  workloadType?: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `config get ${appName} ${workloadName ? `-d ${workloadName}` : ""}`
+    `config get ${appName} ${workloadName ? `-d ${workloadName}` : ""} ${
+      workloadType ? `-t ${workloadType.toLowerCase()}` : ""
+    }`
   );
   const result = await execAsyncWithReturn(configCommand, []);
   return result.stdout;
@@ -601,13 +693,14 @@ export async function editConfig(
   namespace: string,
   appName: string,
   workloadName: string | undefined | null,
+  workloadType: string | undefined | null,
   contents: string
 ) {
   const configCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `config edit ${appName} ${
-      workloadName ? `-d ${workloadName}` : ""
+    `config edit ${appName} ${workloadName ? `-d ${workloadName}` : ""} ${
+      workloadType ? `-t ${workloadType.toLowerCase()}` : ""
     } -c ${contents}`
   );
   const result = await execAsyncWithReturn(configCommand, []);
@@ -661,7 +754,8 @@ export async function resetService(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  workloadType: string
 ) {
   await host.showProgressing(
     `Reset : ${appName}/${workloadName}`,
@@ -669,7 +763,7 @@ export async function resetService(
       const resetCommand = nhctlCommand(
         kubeConfigPath,
         namespace,
-        `dev reset ${appName} -d ${workloadName}`
+        `dev reset ${appName} -d ${workloadName} -t ${workloadType.toLowerCase()}`
       );
       host.log(`[cmd] ${resetCommand}`, true);
       await execChildProcessAsync(host, resetCommand, [], {
@@ -841,7 +935,7 @@ export async function checkVersion() {
   if (result.success) {
     let currentVersion: string = "";
     const matched: string[] | null = result.value.match(
-      /Version: \s*v(\d+\.\d+\.\d+)/
+      /Version: \s*v{0,1}\d+(\.\d+){2}$/
     );
     if (!matched) {
       return;
@@ -881,6 +975,10 @@ export async function checkVersion() {
       );
     }
   } else {
+    if (host.getGlobalState("Downloading")) {
+      return;
+    }
+    host.setGlobalState("Downloading", true);
     await host.showProgressing("Downloading nhctl", () => {
       return new Promise((res, rej) => {
         request(sourcePath)
@@ -890,10 +988,18 @@ export async function checkVersion() {
             })
           )
           .on("close", (code: number) => {
+            host.removeGlobalState("Downloading");
             host.log("download end", true);
             res(true);
           })
+          .on("complete", () => {
+            console.log("aaaa");
+          })
+          .on("success", () => {
+            console.log("aaaa");
+          })
           .on("error", (error: Error) => {
+            host.removeGlobalState("Downloading");
             host.log(error.message + "\n" + error.stack, true);
             rej(error);
           });
@@ -911,5 +1017,7 @@ export function nhctlCommand(
     NH_BIN,
     host.isWindow() ? "nhctl.exe" : "nhctl"
   );
-  return `${nhctlPath} ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
+  const command = `${nhctlPath} ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
+  console.log(command);
+  return command;
 }

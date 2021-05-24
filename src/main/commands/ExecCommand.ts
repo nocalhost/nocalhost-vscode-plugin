@@ -44,6 +44,7 @@ export default class ExecCommand implements ICommand {
       const terminal = await this.opendevSpaceExec(
         node.getAppName(),
         node.name,
+        node.resourceType,
         container,
         node.getKubeConfigPath(),
         node.getNameSpace(),
@@ -103,6 +104,7 @@ export default class ExecCommand implements ICommand {
   async opendevSpaceExec(
     appName: string,
     workloadName: string,
+    workloadType: string,
     container: string | null,
     kubeConfigPath: string,
     namespace: string,
@@ -110,6 +112,7 @@ export default class ExecCommand implements ICommand {
   ) {
     const terminalCommands = ["dev", "terminal", appName];
     terminalCommands.push("-d", workloadName);
+    terminalCommands.push("-t", workloadType);
     if (pod) {
       terminalCommands.push("--pod", pod);
     }

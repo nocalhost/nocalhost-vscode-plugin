@@ -12,11 +12,13 @@ import { NocalhostRootNode } from "./NocalhostRootNode";
 import { DevspaceInfo, V2ApplicationInfo } from "../api";
 import * as _ from "lodash";
 import { DevSpaceNode } from "./DevSpaceNode";
+import { IUserInfo } from "../domain";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
   public type = "KUBECONFIG";
   public devspaceInfos: DevspaceInfo[];
+  public userInfo: IUserInfo;
   public kubeConfig: string;
   public applications: Array<V2ApplicationInfo>;
   public parent: NocalhostRootNode;
@@ -24,30 +26,36 @@ export class KubeConfigNode extends NocalhostFolderNode {
     name: string;
     type: string;
   }[] = [];
+  public id: string;
   public isLocal: boolean;
   public localPath: string;
 
   constructor(
+    id: string,
     parent: NocalhostRootNode,
     label: string,
     devspaceInfos: DevspaceInfo[],
     applications: Array<V2ApplicationInfo>,
     kubeConfig: string,
     isLocal = false,
-    localPath: string
+    localPath: string,
+    userInfo: IUserInfo
   ) {
     super();
+    this.id = id;
     this.parent = parent;
-    this.label = label || devspaceInfos[0].namespace;
+    this.label =
+      label || (devspaceInfos.length > 0 ? devspaceInfos[0].namespace : "");
     this.devspaceInfos = devspaceInfos;
     this.applications = applications;
     this.installedApps = [];
     this.kubeConfig = kubeConfig;
     this.isLocal = isLocal;
     this.localPath = localPath;
+    this.userInfo = userInfo;
     state.setNode(this.getNodeStateId(), this);
   }
-  updateData() {
+  updateData(): any {
     return [];
   }
 
@@ -69,15 +77,20 @@ export class KubeConfigNode extends NocalhostFolderNode {
       };
       if (context) {
         let jsonObj = JSON.parse(context);
-        obj.nocalhostConfig = jsonObj["nocalhost_config"];
+        obj.nocalhostConfig = jsonObj["nocalhostConfig"];
       }
 
       const nhConfigPath = path.resolve(HELM_NH_CONFIG_DIR, `${app.id}_config`);
       this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
     });
-
     for (const d of res.devSpaces) {
-      const node = new DevSpaceNode(this, d.spaceName, d, res.applications);
+      const node = new DevSpaceNode(
+        this,
+        d.spaceName,
+        d,
+        res.applications,
+        this.isLocal
+      );
       devs.push(node);
     }
 
@@ -90,7 +103,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       vscode.TreeItemCollapsibleState.Collapsed
     );
 
-    treeItem.contextValue = "kubeconfig";
+    treeItem.contextValue = `kubeconfig${this.isLocal ? "-local" : ""}`;
 
     return Promise.resolve(treeItem);
   }

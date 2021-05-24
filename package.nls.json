@@ -2,7 +2,7 @@
   "noReady.description": "Welcome to nocalhost, please wait...",
   "noServer.description": "Please config your server URL.\n[Config Server URL](command:Nocalhost.switchEndPoint)\n[Click here](https://nocalhost.dev/) for more details.",
   "noLogin.description": "Click sign in button to list DevSpaces.\n[Sign In](command:Nocalhost.signin)\n[Click here](https://nocalhost.dev/) for more details.",
-  "noApps.description": "You have no DevSpace currently. You can:\n- Add one on [Nocalhost web](command:Nocalhost.openEndPoint).\n- Ask the administrator of nocalhost-web for help\n\n[Click here](https://nocalhost.dev/Concepts/devspace/) for more details.",
+  "noApps.description": "You have no cluster currently, You can click \"+\" icon for :\n- Add kubeconfig to develop existing workloads.\n- Connect to Nocalhost Server\n\nor view [Quick Start](https://nocalhost.dev/getting-started/) if you use for Nocalhost first time.",
   "tips.open": "Current directory is not the directory of devSpace. To open source directory",
   "tips.clone": "To start develop, you must specify source code directory.",
   "bt.clone": "Clone from Git Repo",

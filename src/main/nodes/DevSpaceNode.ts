@@ -14,11 +14,14 @@ import { AppNode } from "./AppNode";
 import * as _ from "lodash";
 import { RefreshData } from "./impl/updateData";
 import { KubeConfigNode } from "./KubeConfigNode";
+import host from "../host";
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
   public type = "DEVSPACE";
   public info: DevspaceInfo;
+  public hasInit: boolean;
+  public isLocal: boolean;
   public applications: Array<V2ApplicationInfo>;
   public parent: BaseNocalhostNode;
   public installedApps: {
@@ -30,14 +33,17 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     parent: BaseNocalhostNode,
     label: string,
     info: DevspaceInfo,
-    applications: Array<V2ApplicationInfo>
+    applications: Array<V2ApplicationInfo>,
+    isLocal: boolean
   ) {
     super();
+    this.hasInit = false;
     this.parent = parent;
     this.label = label || info.namespace;
     this.info = info;
     this.applications = applications;
     this.installedApps = [];
+    this.isLocal = isLocal;
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -71,14 +77,14 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     };
     if (context) {
       let jsonObj = JSON.parse(context);
-      obj.url = jsonObj["application_url"];
-      obj.name = jsonObj["application_name"];
-      obj.appConfig = jsonObj["application_config_path"];
-      obj.nocalhostConfig = jsonObj["nocalhost_config"];
-      let originInstallType = jsonObj["install_type"];
+      obj.url = jsonObj["applicationUrl"];
+      obj.name = jsonObj["applicationName"];
+      obj.appConfig = jsonObj["applicationConfigPath"];
+      obj.nocalhostConfig = jsonObj["nocalhostConfig"];
+      let originInstallType = jsonObj["installType"];
       let source = jsonObj["source"];
       obj.installType = this.generateInstallType(source, originInstallType);
-      obj.resourceDir = jsonObj["resource_dir"];
+      obj.resourceDir = jsonObj["resourceDir"];
     }
 
     const label =
@@ -109,7 +115,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     const arr = this.applications.filter((a) => {
       const context = a.context;
       let jsonObj = JSON.parse(context);
-      const appName = jsonObj["application_name"];
+      const appName = jsonObj["applicationName"];
       if (installedAppNames.includes(appName)) {
         return false;
       } else {
@@ -124,7 +130,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     const apps = this.applications.filter((item) => {
       const context = item.context;
       let jsonObj = JSON.parse(context);
-      const appName = jsonObj["application_name"];
+      const appName = jsonObj["applicationName"];
       if (appName === name) {
         return true;
       }
@@ -144,6 +150,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       this.info.namespace,
       this.getKubeConfigPath()
     );
+    this.hasInit = true;
     state.setData(this.getNodeStateId(), this.installedApps, isInit);
     return this.installedApps;
   }
@@ -154,7 +161,6 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     if (infos.length > 0) {
       result = result.concat(infos[0].application);
     }
-
     result = result.filter((item) => {
       return item.name !== "default.application";
     });
@@ -194,13 +200,13 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
   buildApplicationInfo(appName: string) {
     const contextObj = {
-      application_name: appName,
-      application_url: "",
-      application_config_path: "",
-      nocalhost_config: "",
+      applicationName: appName,
+      applicationUrl: "",
+      applicationConfigPath: "",
+      nocalhostConfig: "",
       source: "",
-      resource_dir: "",
-      install_type: "",
+      resourceDir: "",
+      installType: "",
     };
 
     const app = {
@@ -221,7 +227,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       vscode.TreeItemCollapsibleState.Collapsed
     );
 
-    treeItem.contextValue = "devspace";
+    treeItem.contextValue = `devspace-${this.isLocal ? "local" : "server"}`;
 
     return Promise.resolve(treeItem);
   }

@@ -1,17 +1,26 @@
 import * as vscode from "vscode";
-import * as tempy from "tempy";
-
+import * as yamlUtils from "yaml";
+import * as os from "os";
+import * as path from "path";
+import NocalhostAppProvider from "../appProvider";
 import { SIGN_IN } from "../commands/constants";
-import { IS_LOCAL, LOCAL_PATH } from "../constants";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
+import { LocalCluster, updateStateRootNodes } from "../clusters";
 import host from "../host";
+import { readYaml, readFile, getYamlDefaultContext } from "../utils/fileUtil";
 
 export class HomeWebViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "Nocalhost.Home";
 
   private _view?: vscode.WebviewView;
-
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  private appTreeProvider: NocalhostAppProvider;
+  constructor(
+    private readonly _extensionUri: vscode.Uri,
+    appTreeProvider: NocalhostAppProvider
+  ) {
+    this.appTreeProvider = appTreeProvider;
+  }
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -24,15 +33,13 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
       // Allow scripts in the webview
       enableScripts: true,
       enableCommandUris: true,
-
       localResourceRoots: [this._extensionUri],
     };
-
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
-        case "login": {
+        case "connectServer": {
           vscode.commands.executeCommand(SIGN_IN, data.data);
           break;
         }
@@ -43,29 +50,69 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
           if (!kubeConfigUri || kubeConfigUri.length < 1) {
             return;
           }
+          const filePath = kubeConfigUri[0].fsPath;
+          const yaml = await readYaml(filePath);
+          const contexts = yaml.contexts || [];
           webviewView.webview.postMessage({
             type: "kubeConfig",
-            payload: kubeConfigUri[0].fsPath || "",
+            payload: {
+              path: filePath,
+              currentContext: getYamlDefaultContext(yaml),
+              contexts,
+            },
+          });
+          break;
+        }
+        case "initKubePath": {
+          const homeDir = os.homedir();
+          const defaultKubePath = path.resolve(homeDir, ".kube", "config");
+          const yaml = await readYaml(defaultKubePath);
+          const contexts = yaml.contexts || [];
+          webviewView.webview.postMessage({
+            type: "initKubePath-response",
+            payload: {
+              defaultKubePath,
+              contexts,
+              currentContext: getYamlDefaultContext(yaml),
+            },
           });
           break;
         }
         case "local": {
-          const localData = data.data;
-          const { localPaths, kubeConfigs } = localData;
-          // set localPath
-          let tempLocalPaths = new Array<string>();
-          host.setGlobalState(IS_LOCAL, true);
-          const kubePaths = (kubeConfigs as string[]).map((k) => {
-            const tempLocalPath = tempy.writeSync(k, {
-              name: `temp-kubeConfig`,
-            });
+          host.showProgressing("Adding ...", async () => {
+            const localData = data.data;
 
-            return tempLocalPath;
+            const { localPath, kubeConfig, contextName } = localData;
+            let newLocalCluster = null;
+            if (localPath) {
+              const str = await readFile(localPath);
+              newLocalCluster = await LocalCluster.appendLocalClusterByKubeConfig(
+                str,
+                contextName
+              );
+            }
+            if (kubeConfig) {
+              newLocalCluster = await LocalCluster.appendLocalClusterByKubeConfig(
+                kubeConfig
+              );
+            }
+            if (newLocalCluster) {
+              const newLocalNode = await LocalCluster.getLocalClusterRootNode(
+                newLocalCluster
+              );
+              updateStateRootNodes(newLocalNode);
+            }
+
+            await vscode.commands.executeCommand(
+              "setContext",
+              "Nocalhost.visibleTree",
+              true
+            );
+            // await vscode.commands.executeCommand("Nocalhost.refresh");
+            // host.startAutoRefresh()
+            this.appTreeProvider.refresh();
+            vscode.window.showInformationMessage("Success");
           });
-
-          tempLocalPaths = tempLocalPaths.concat(localPaths, kubePaths);
-          host.setGlobalState(LOCAL_PATH, tempLocalPaths);
-          await vscode.commands.executeCommand("setContext", "local", true);
           break;
         }
       }
@@ -93,7 +140,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
 		<head>
 			<meta charset="UTF-8">
 
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0, min-width=480">
 
 			<link href="${styleResetUri}" rel="stylesheet">
 			<link href="${styleVSCodeUri}" rel="stylesheet">

@@ -21,10 +21,7 @@ import {
 import host, { Host } from "../host";
 import * as path from "path";
 import git from "../ctl/git";
-import ConfigService, {
-  ContainerConfig,
-  NocalhostServiceConfig,
-} from "../service/configService";
+import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as kubectl from "../ctl/kubectl";
 import * as nls from "../../../package.nls.json";
@@ -78,12 +75,18 @@ export default class StartDevModeCommand implements ICommand {
       }
     }
     const appName = node.getAppName();
+    const destDir = await this.cloneOrGetFolderDir(
+      appName,
+      node,
+      result.containerName
+    );
     // check image
     let image: string | undefined = await this.getImage(
       node.getKubeConfigPath(),
       node.getNameSpace(),
       appName,
       node.name,
+      node.resourceType,
       result.containerName
     );
     if (!image) {
@@ -117,20 +120,21 @@ export default class StartDevModeCommand implements ICommand {
         }
       }
     }
+    if (!image) {
+      await host.showWarnMessage("Please choose image");
+      return;
+    }
     await this.saveConfig(
       node.getKubeConfigPath(),
       node.getNameSpace(),
       appName,
       node.name,
+      node.resourceType,
       result.containerName,
       "image",
       image as string
     );
-    const destDir = await this.cloneOrGetFolderDir(
-      appName,
-      node,
-      result.containerName
-    );
+
     if (
       destDir === true ||
       (destDir && destDir === this.getCurrentRootPath())
@@ -180,6 +184,7 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    wrokloadType: string,
     containerName: string
   ) {
     let destDir: string | undefined;
@@ -188,6 +193,7 @@ export default class StartDevModeCommand implements ICommand {
       namespace,
       appName,
       workloadName,
+      wrokloadType,
       containerName
     );
     if (!gitUrl) {
@@ -209,6 +215,7 @@ export default class StartDevModeCommand implements ICommand {
           namespace,
           appName,
           workloadName,
+          wrokloadType,
           containerName,
           "gitUrl",
           gitUrl
@@ -229,65 +236,21 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    workloadType: string,
     containerName: string,
     key: string,
     value: string
   ) {
-    const serviceData = (await ConfigService.getWorkloadConfig(
+    await nhctl.profileConfig({
       kubeConfigPath,
       namespace,
-      appName,
-      workloadName
-    )) as NocalhostServiceConfig;
-    const containers = serviceData.containers || [];
-    if (containers.length === 1) {
-      serviceData.containers[0].dev[key] = value;
-    } else if (containers.length < 1) {
-      const container: ContainerConfig = {
-        name: containerName,
-        dev: {
-          gitUrl: "",
-          image: "",
-          shell: "",
-          workDir: "/home/nocalhost-dev",
-          command: {},
-          sync: {},
-          portForward: [],
-          env: [],
-        },
-      };
-      container.dev[key] = value;
-      containers.push(container);
-    } else {
-      const temContainers = containers.filter((c) => c.name === containerName);
-      let c: ContainerConfig = {
-        name: containerName,
-        dev: {
-          gitUrl: "",
-          image: "",
-          shell: "",
-          workDir: "/home/nocalhost-dev",
-          command: {},
-          sync: {},
-          portForward: [],
-          env: [],
-        },
-      };
-      if (temContainers.length > 0) {
-        c = temContainers[0];
-        c.dev[key] = value;
-      } else {
-        c = containers[0];
-        c.dev[key] = value;
-      }
-    }
-    await ConfigService.writeConfig(
-      kubeConfigPath,
-      namespace,
-      appName,
+      workloadType,
       workloadName,
-      serviceData
-    );
+      appName,
+      containerName,
+      key,
+      value,
+    });
   }
 
   private async firstOpen(
@@ -312,6 +275,7 @@ export default class StartDevModeCommand implements ICommand {
         node.getNameSpace(),
         appName,
         node.name,
+        node.resourceType,
         containerName
       );
     } else if (result === nls["bt.open.dir"]) {
@@ -422,6 +386,7 @@ export default class StartDevModeCommand implements ICommand {
             node.getNameSpace(),
             appName,
             node.name,
+            node.resourceType,
             {
               isOld: isOld,
               dirs: dirs,
@@ -443,6 +408,7 @@ export default class StartDevModeCommand implements ICommand {
             node.getNameSpace(),
             appName,
             node.name,
+            node.resourceType,
             containerName
           );
           host.log("sync file end", true);
@@ -554,6 +520,7 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    workloadType: string,
     containerName: string
   ) {
     const config = await ConfigService.getContaienrConfig(
@@ -561,6 +528,7 @@ export default class StartDevModeCommand implements ICommand {
       namespace,
       appName,
       workloadName,
+      workloadType,
       containerName
     );
     let gitUrl = "";
@@ -576,21 +544,21 @@ export default class StartDevModeCommand implements ICommand {
     namespace: string,
     appName: string,
     workloadName: string,
+    workloadType: string,
     containerName: string
   ) {
-    const config = await ConfigService.getContaienrConfig(
+    const result = await nhctl.getImageByContainer({
       kubeConfigPath,
       namespace,
+      workloadType,
       appName,
       workloadName,
-      containerName
-    );
-    let image = "";
-    if (config) {
-      image = config.dev.image;
+      containerName,
+    });
+    if (!result) {
+      return undefined;
     }
-
-    return image;
+    return result.image;
   }
 
   async getPodAndContainer(node: ControllerNodeApi) {
@@ -614,11 +582,14 @@ export default class StartDevModeCommand implements ICommand {
         kubeConfigPath,
         node.getNameSpace()
       );
-
-      if (containerNameArr.length > 1) {
-        containerName = await vscode.window.showQuickPick(containerNameArr);
-        if (!containerName) {
-          return;
+      if (containerNameArr.length === 1) {
+        containerName = containerNameArr[0];
+      } else {
+        if (containerNameArr.length > 1) {
+          containerName = await vscode.window.showQuickPick(containerNameArr);
+          if (!containerName) {
+            return;
+          }
         }
       }
     }

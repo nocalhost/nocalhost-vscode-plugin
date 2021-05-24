@@ -6,6 +6,7 @@
     "outDir": "../out",
     "rootDir": "../",
     "noImplicitAny": true,
+    "strictNullChecks": false,
     "jsx": "react",
     "lib": ["dom", "esnext"],
     "esModuleInterop": true,

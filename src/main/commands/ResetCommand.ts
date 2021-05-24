@@ -24,7 +24,8 @@ export default class ResetCommand implements ICommand {
       node.getKubeConfigPath(),
       node.getNameSpace(),
       appName,
-      node.name
+      node.name,
+      node.resourceType
     );
     const appNode = node.getAppNode();
     const devspace = appNode.getParent() as DevSpaceNode;

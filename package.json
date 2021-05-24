@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.3.13",
+  "version": "0.4.21",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -20,7 +20,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "v0.4.1-rc"
+    "version": "0.4.1-rc"
   },
   "contributes": {
     "yamlValidation": [
@@ -44,13 +44,13 @@
           "id": "Nocalhost",
           "name": "Nocalhost",
           "type": "tree",
-          "when": "login || local"
+          "when": "extensionActivated && Nocalhost.visibleTree"
         },
         {
           "id": "Nocalhost.Home",
           "name": "Nocalhost",
           "type": "webview",
-          "when": "!login && !local"
+          "when": "extensionActivated && !Nocalhost.visibleTree"
         }
       ]
     },
@@ -63,7 +63,7 @@
       {
         "view": "Nocalhost",
         "contents": "%noApps.description%",
-        "when": "extensionActivated && login"
+        "when": "extensionActivated && emptyCluster"
       }
     ],
     "menus": {
@@ -99,14 +99,14 @@
           "group": "navigation"
         },
         {
-          "command": "Nocalhost.signout",
-          "when": "extensionActivated && view == Nocalhost && login",
-          "group": "overflow"
+          "command": "Nocalhost.ClustersView",
+          "when": "extensionActivated && !Nocalhost.visibleTree",
+          "group": "navigation"
         },
         {
-          "command": "Nocalhost.signout",
-          "when": "extensionActivated && view == Nocalhost && local",
-          "group": "overflow"
+          "command": "Nocalhost.addKubeconfig",
+          "when": "extensionActivated && view == Nocalhost",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -120,7 +120,7 @@
         },
         {
           "command": "Nocalhost.showApp",
-          "when": "viewItem =~ /^devspace/i",
+          "when": "viewItem =~ /^devspace-server/i",
           "group": "inline@0"
         },
         {
@@ -140,22 +140,22 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment)-(info|info-local|warn-local)-(?!developing)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)-(info|warn)-(?!developing)/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)-(.+?)-developing/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.editServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment)-info/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)-info/i",
           "group": "inline@1"
         },
         {
           "command": "Nocalhost.writeServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment)-warn/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)-warn/i",
           "group": "inline@1"
         },
         {
@@ -175,7 +175,7 @@
         },
         {
           "command": "Nocalhost.reset",
-          "when": "viewItem =~ /^workload-deployment/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)/i",
           "group": "1"
         },
         {
@@ -200,7 +200,7 @@
         },
         {
           "command": "Nocalhost.associateLocalDirectory",
-          "when": "viewItem =~ /^workload-deployment/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)/i",
           "group": "1"
         },
         {
@@ -222,6 +222,16 @@
           "command": "Nocalhost.viewKubeConfig",
           "when": "viewItem =~ /^kubeconfig/i",
           "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.signout",
+          "when": "viewItem =~ /^kubeconfig$/i",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.deleteKubeConfig",
+          "when": "viewItem =~ /^kubeconfig-local/i",
+          "group": "navigation"
         }
       ]
     },
@@ -241,8 +251,16 @@
         "title": "Debug"
       },
       {
+        "command": "Nocalhost.clearLocalCluster",
+        "title": "Clear local cluster"
+      },
+      {
         "command": "Nocalhost.run",
         "title": "Run"
+      },
+      {
+        "command": "Nocalhost.ClustersView",
+        "title": "Clusters"
       },
       {
         "command": "Nocalhost.loadWorkloads",
@@ -268,12 +286,14 @@
       {
         "command": "Nocalhost.refresh",
         "title": "Refresh",
+        "alt": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "Nocalhost.signout",
-        "title": "Sign out",
-        "icon": "$(sign-out)"
+        "command": "Nocalhost.addKubeconfig",
+        "title": "Add Cluster",
+        "alt": "Add Cluster",
+        "icon": "$(add)"
       },
       {
         "command": "Nocalhost.showApp",
@@ -296,6 +316,14 @@
       {
         "command": "Nocalhost.viewKubeConfig",
         "title": "%ViewKubeConfig%"
+      },
+      {
+        "command": "Nocalhost.deleteKubeConfig",
+        "title": "Delete"
+      },
+      {
+        "command": "Nocalhost.signout",
+        "title": "Logout"
       },
       {
         "command": "getWordloadList",
@@ -466,7 +494,7 @@
     "typescript": "4.0.2",
     "vsce": "^1.81.1",
     "vscode-test": "^1.4.0",
-    "webpack": "^4.44.1",
+    "webpack": "^4.46.0",
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
@@ -474,6 +502,7 @@
     "@types/json-schema": "^7.0.7",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
+    "classnames": "^2.3.1",
     "highlight.js": "^10.5.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
@@ -481,6 +510,7 @@
     "rimraf": "^3.0.2",
     "semver": "^7.3.4",
     "shelljs": "^0.8.4",
+    "shortid": "^2.2.16",
     "tempy": "^1.0.0",
     "uuid": "^8.3.2",
     "vscode-nls": "^5.0.0",

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as _ from "lodash";
-
+import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import host from "./host";
 import logger from "./utils/logger";
@@ -74,15 +74,29 @@ class State {
     return this.running;
   }
 
-  async setLogin(state: boolean) {
-    await vscode.commands.executeCommand("setContext", "login", state);
-    await vscode.commands.executeCommand("Nocalhost.refresh");
-    this.login = state;
-    if (this.login) {
-      host.startAutoRefresh();
-    } else {
-      host.stopAutoRefresh();
+  // async setLogin(state: boolean) {
+  //   await vscode.commands.executeCommand("setContext", "visibleTree", state);
+  //   await vscode.commands.executeCommand("Nocalhost.refresh");
+  //   this.login = state;
+  //   if (this.login) {
+  //     host.startAutoRefresh();
+  //   } else {
+  //     host.stopAutoRefresh();
+  //   }
+  // }
+
+  async refreshTree() {
+    if (!isExistCluster()) {
+      await vscode.commands.executeCommand("setContext", "emptyCluster", false);
     }
+
+    await vscode.commands.executeCommand(
+      "setContext",
+      "Nocalhost.visibleTree",
+      true
+    );
+    await vscode.commands.executeCommand("Nocalhost.refresh");
+    host.startAutoRefresh();
   }
 
   setRunning(running: boolean) {

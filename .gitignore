@@ -1,6 +1,13 @@
 out/
 dist/
 static/renderer/
-node_modules
+node_modules/
 .vscode-test/
 *.vsix
+*/.vs/
+*.lsif
+*.db
+.DS_Store
+npm-debug.log
+Thumbs.db
+yarn-error.log

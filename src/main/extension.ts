@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-
+import * as fs from "fs";
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
@@ -12,9 +12,11 @@ import {
   NH_CONFIG_DIR,
   PLUGIN_CONFIG_DIR,
   TMP_APP,
+  LOCAL_PATH,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
+  SERVER_CLUSTER_LIST,
   TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
   WELCOME_DID_SHOW,
@@ -46,6 +48,7 @@ import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 import messageBus from "./utils/messageBus";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
+import { isExistCluster } from "./clusters/utils";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -59,7 +62,10 @@ export async function activate(context: vscode.ExtensionContext) {
   // const dataCenter: DataCenter = DataCenter.getInstance();
   // dataCenter.addListener(() => appTreeProvider.refresh());
 
-  let homeWebViewProvider = new HomeWebViewProvider(context.extensionUri);
+  let homeWebViewProvider = new HomeWebViewProvider(
+    context.extensionUri,
+    appTreeProvider
+  );
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -123,21 +129,9 @@ export async function activate(context: vscode.ExtensionContext) {
   ];
 
   context.subscriptions.push(...subs);
-  const jwt = host.getGlobalState(JWT);
-  if (jwt) {
-    state.setLogin(true);
-  }
-  const isLocal = host.getGlobalState(IS_LOCAL);
-  if (isLocal) {
-    await vscode.commands.executeCommand("setContext", "local", true);
-  }
+
   host.getOutputChannel().show(true);
   await registerYamlSchemaSupport();
-  await vscode.commands.executeCommand(
-    "setContext",
-    "extensionActivated",
-    true
-  );
 
   await messageBus.init();
 
@@ -168,7 +162,21 @@ export async function activate(context: vscode.ExtensionContext) {
       host.disposeApp(data.devspaceName, data.appName);
     }
   });
-
+  await vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    true
+  );
+  if (isExistCluster()) {
+    await state.refreshTree();
+  } else {
+    await vscode.commands.executeCommand(
+      "setContext",
+      "Nocalhost.visibleTree",
+      true
+    );
+    await vscode.commands.executeCommand("setContext", "emptyCluster", true);
+  }
   launchDevspace();
 }
 
@@ -250,6 +258,7 @@ function launchDevspace() {
 }
 
 export function deactivate() {
+  host.removeGlobalState("Downloading");
   host.dispose();
 }
 
@@ -271,6 +280,7 @@ export async function updateServerConfigStatus() {
 
 async function init(context: vscode.ExtensionContext) {
   host.setContext(context);
+  host.removeGlobalState("Downloading");
   fileUtil.mkdir(NH_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_CONFIG_DIR);
   fileUtil.mkdir(KUBE_CONFIG_DIR);
@@ -290,7 +300,9 @@ async function init(context: vscode.ExtensionContext) {
     host.setGlobalState(WELCOME_DID_SHOW, true);
   }
 }
-
+process.on("exit", function (code) {
+  host.removeGlobalState("Downloading");
+});
 process.on("uncaughtException", (error) => {
   logger.error(`[uncatch exception] ${error.message} ${error.stack}`);
   if (error.message === "read ENOTCONN") {
