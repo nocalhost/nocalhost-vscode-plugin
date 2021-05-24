@@ -1,9 +1,38 @@
 import * as fs from "fs";
 import * as path from "path";
+import { ColorThemeKind } from "vscode";
 import * as yaml from "yaml";
+import * as os from "os";
 import * as vscode from "vscode";
 import host from "../host";
-import { ColorThemeKind } from "vscode";
+import { KUBE_CONFIG_DIR } from "../constants";
+
+export async function writeKubeConfigFile(
+  data: string,
+  fileName: string
+): Promise<string> {
+  if (!fs.existsSync(KUBE_CONFIG_DIR)) {
+    fs.mkdirSync(KUBE_CONFIG_DIR);
+  }
+  const filePath = path.resolve(KUBE_CONFIG_DIR, fileName);
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filePath, data, { encoding: "utf-8" }, (err) => {
+      if (err) {
+        reject(null);
+      }
+      resolve(filePath);
+    });
+  });
+}
+
+export function getYamlDefaultContext(yaml: any) {
+  const contexts = yaml.contexts || [];
+  const currentContext = yaml["current-context"];
+  if (currentContext) {
+    return currentContext;
+  }
+  return contexts.length > 0 ? contexts[0].name : null;
+}
 
 export async function readYaml(filePath: string) {
   const data = await readFile(filePath);
@@ -29,6 +58,18 @@ export function readFile(fliePath: string): Promise<string> {
       resolve(data);
     });
   });
+}
+
+export function writeFileAsync(filePath: string, writeData: string) {
+  const isExist = fs.existsSync(filePath);
+  if (isExist) {
+    const data = fs.readFileSync(filePath).toString();
+    if (data === writeData) {
+      return;
+    }
+  }
+
+  fs.writeFileSync(filePath, writeData, { mode: 0o600 });
 }
 
 export async function writeFile(filePath: string, data: string | Uint8Array) {

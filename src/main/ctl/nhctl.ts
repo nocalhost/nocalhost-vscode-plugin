@@ -219,6 +219,24 @@ export async function upgrade(
   );
 }
 
+export async function associate(
+  kubeconfigPath: string,
+  namespace: string,
+  appName: string,
+  dir: string,
+  type: string,
+  workLoadName: string
+) {
+  const command = nhctlCommand(
+    kubeconfigPath,
+    namespace,
+    `dev associate ${appName} -s ${dir} -t ${type} -d ${workLoadName}`
+  );
+
+  const result = await execAsyncWithReturn(command, []);
+  return result.stdout;
+}
+
 export async function uninstall(
   host: Host,
   kubeconfigPath: string,
@@ -270,7 +288,6 @@ export async function devStart(
   if (storageClass) {
     options += ` --storage-class ${storageClass}`;
   }
-
   if (container) {
     options += ` --container ${container}`;
   }
@@ -282,7 +299,7 @@ export async function devStart(
     }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
-  const isLocal = host.getGlobalState(IS_LOCAL);
+  // const isLocal = host.getGlobalState(IS_LOCAL);
   // if (isLocal) {
   //   const res = await ga.send({
   //     category: "command",
@@ -498,7 +515,6 @@ export async function endDevMode(
       );
       host.log(`[cmd] ${end}`, true);
 
-      const isLocal = host.getGlobalState(IS_LOCAL);
       // if (isLocal) {
       //   await ga.send({
       //     category: "command",
@@ -584,6 +600,74 @@ export async function printAppInfo(
   );
   host.log(`[cmd] ${printAppCommand}`, true);
   await execChildProcessAsync(host, printAppCommand, []);
+}
+
+// ~/.nh/bin/nhctl profile get bookinfo-coding -d centos-01 --container xxx  --key image -t xxx  -n xxx --kubeconfig xxx
+export async function getImageByContainer(props: {
+  kubeConfigPath: string;
+  namespace: string;
+  appName: string;
+  workloadName: string;
+  containerName: string;
+  workloadType: string;
+}): Promise<{
+  image: string;
+} | null> {
+  const {
+    appName,
+    workloadName,
+    kubeConfigPath,
+    containerName,
+    workloadType,
+    namespace,
+  } = props;
+  const configCommand = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `profile get ${appName} -d ${workloadName || ""} --container ${
+      containerName || ""
+    } --key image -t ${workloadType.toLowerCase()}`
+  );
+  const result = await execAsyncWithReturn(configCommand, []);
+  try {
+    return JSON.parse(result.stdout);
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function profileConfig(props: {
+  kubeConfigPath: string;
+  namespace: string;
+  appName: string;
+  containerName: string;
+  workloadType: string;
+  workloadName: string;
+  key: string;
+  value: string;
+}) {
+  const {
+    value,
+    workloadType,
+    containerName,
+    key,
+    workloadName,
+    kubeConfigPath,
+    namespace,
+    appName,
+  } = props;
+  const command = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `profile set ${appName} -d ${
+      workloadName || ""
+    } -t ${workloadType.toLowerCase()} --container ${
+      containerName || ""
+    } --key ${key} --value ${value}`
+  );
+  const result = await execAsyncWithReturn(command, []);
+  return result;
 }
 
 export async function getConfig(
@@ -891,6 +975,10 @@ export async function checkVersion() {
       );
     }
   } else {
+    if (host.getGlobalState("Downloading")) {
+      return;
+    }
+    host.setGlobalState("Downloading", true);
     await host.showProgressing("Downloading nhctl", () => {
       return new Promise((res, rej) => {
         request(sourcePath)
@@ -900,10 +988,18 @@ export async function checkVersion() {
             })
           )
           .on("close", (code: number) => {
+            host.removeGlobalState("Downloading");
             host.log("download end", true);
             res(true);
           })
+          .on("complete", () => {
+            console.log("aaaa");
+          })
+          .on("success", () => {
+            console.log("aaaa");
+          })
           .on("error", (error: Error) => {
+            host.removeGlobalState("Downloading");
             host.log(error.message + "\n" + error.stack, true);
             rej(error);
           });
@@ -921,5 +1017,7 @@ export function nhctlCommand(
     NH_BIN,
     host.isWindow() ? "nhctl.exe" : "nhctl"
   );
-  return `${nhctlPath} ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
+  const command = `${nhctlPath} ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
+  console.log(command);
+  return command;
 }

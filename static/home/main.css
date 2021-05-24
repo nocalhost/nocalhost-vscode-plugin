@@ -1,36 +1,87 @@
 body {
-	background-color: transparent;
+    background-color: transparent;
+}
+
+.nocalhost-tab-item {
+    width: 50%;
+    height: 50px;
+    color: var(--vscode-dropdown-border);
+    font-size: 12px;
+    color: rgb(151, 151, 151);
+    font-family: PingFangSC-Medium;
+    text-align: center;
+}
+
+.nocalhost-tab {
+    display: flex;
+    align-items: center;
+    transition: color .3s;
+}
+
+.nocalhost-tab-item-active {
+    color: var(--vscode-button-foreground);
+}
+
+.MuiTabs-indicator {
+    background-color: var(--vscode-button-background)!important;
+}
+
+.nocalhost-tab-item {
+    width: 50%;
+    height: 50px;
+    padding: 6px 3px;
+    font-size: 12px;
+}
+
+.MuiTabs-scroller .MuiTab-root {
+    text-transform: none;
+}
+
+.kubeConfig-select {
+    margin-bottom: 10px;
+}
+
+body.vscode-dark .kubeConfig-add-btn {
+    background-color: rgba(97, 97, 97, 0.31);
+}
+
+body.vscode-dark .nocalhost-tab-item {
+    width: 50%;
+    height: 50px;
+    padding: 6px 3px;
+    font-size: 12px;
+    background-color: rgba(97, 97, 97, 0.31);
 }
 
 .base-url {
-	display: flex;
-	margin: 10px 0 0 0 auto;
+    display: flex;
+    margin: 10px 0 0 0 auto;
 }
 
 .sign-in {
-	display: block;
-	border: none;
-	margin: 5px auto;
+    display: block;
+    border: none;
+    margin: 5px auto;
 }
 
 .type {
-	margin: 10px auto;
+    margin: 10px auto;
 }
 
 .normal {
-	display: block;
-	width: 100%;
+    display: block;
+    width: 100%;
 }
 
 .flex {
-	display: flex;
-	align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 .icon {
-	margin-left: 5px;
+    margin-left: 5px;
 }
 
 .icon:hover {
-	cursor: pointer;
+    cursor: pointer;
 }

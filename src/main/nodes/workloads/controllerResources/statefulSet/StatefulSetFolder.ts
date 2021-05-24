@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-
+import { orderBy } from "lodash";
 import * as kubectl from "../../../../ctl/kubectl";
 import ConfigService, {
   NocalhostConfig,
@@ -102,6 +102,6 @@ export class StatefulSetFolder extends KubernetesResourceFolder {
       return node;
     });
 
-    return result;
+    return orderBy(result, ["metadata.name"]);
   }
 }

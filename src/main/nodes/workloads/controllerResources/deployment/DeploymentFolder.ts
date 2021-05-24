@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-
+import * as fs from "fs";
+import { orderBy } from "lodash";
 import * as kubectl from "../../../../ctl/kubectl";
 import ConfigService, {
   NocalhostConfig,
@@ -15,6 +16,7 @@ import {
 } from "../../../types/nodeType";
 import { List, Resource, ResourceStatus } from "../../../types/resourceType";
 import { Deployment } from "./Deployment";
+import host from "../../../../host";
 
 export class DeploymentFolder extends KubernetesResourceFolder {
   public resourceType = "Deployments";
@@ -33,6 +35,9 @@ export class DeploymentFolder extends KubernetesResourceFolder {
       appNode.namespace,
       appNode.name
     );
+    if (!appNode.parent.hasInit) {
+      await appNode.parent.updateData(true);
+    }
     const resource = this.filterResource(list.items, appNode);
     const obj = {
       resource: resource,
@@ -99,7 +104,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
       );
       return node;
     });
-    return result;
+    return orderBy(result, ["metadata.name"]);
   }
 
   // TODO: DO NOT DELETE, FOR: [webview integration]

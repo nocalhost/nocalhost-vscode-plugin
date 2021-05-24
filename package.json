@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.2",
+  "version": "0.4.21",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -44,13 +44,13 @@
           "id": "Nocalhost",
           "name": "Nocalhost",
           "type": "tree",
-          "when": "login || local"
+          "when": "extensionActivated && Nocalhost.visibleTree"
         },
         {
           "id": "Nocalhost.Home",
           "name": "Nocalhost",
           "type": "webview",
-          "when": "!login && !local"
+          "when": "extensionActivated && !Nocalhost.visibleTree"
         }
       ]
     },
@@ -63,7 +63,7 @@
       {
         "view": "Nocalhost",
         "contents": "%noApps.description%",
-        "when": "extensionActivated && login"
+        "when": "extensionActivated && emptyCluster"
       }
     ],
     "menus": {
@@ -99,19 +99,14 @@
           "group": "navigation"
         },
         {
-          "command": "Nocalhost.signout",
-          "when": "extensionActivated && view == Nocalhost && login",
-          "group": "overflow"
+          "command": "Nocalhost.ClustersView",
+          "when": "extensionActivated && !Nocalhost.visibleTree",
+          "group": "navigation"
         },
         {
           "command": "Nocalhost.addKubeconfig",
-          "when": "extensionActivated && view == Nocalhost && local",
-          "group": "overflow"
-        },
-        {
-          "command": "Nocalhost.signout",
-          "when": "extensionActivated && view == Nocalhost && local",
-          "group": "overflow"
+          "when": "extensionActivated && view == Nocalhost",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -125,7 +120,7 @@
         },
         {
           "command": "Nocalhost.showApp",
-          "when": "viewItem =~ /^devspace/i",
+          "when": "viewItem =~ /^devspace-server/i",
           "group": "inline@0"
         },
         {
@@ -145,7 +140,7 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet)-(info|info-local|warn-local)-(?!developing)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet)-(info|warn)-(?!developing)/i",
           "group": "inline@0"
         },
         {
@@ -229,6 +224,11 @@
           "group": "navigation"
         },
         {
+          "command": "Nocalhost.signout",
+          "when": "viewItem =~ /^kubeconfig$/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.deleteKubeConfig",
           "when": "viewItem =~ /^kubeconfig-local/i",
           "group": "navigation"
@@ -251,8 +251,16 @@
         "title": "Debug"
       },
       {
+        "command": "Nocalhost.clearLocalCluster",
+        "title": "Clear local cluster"
+      },
+      {
         "command": "Nocalhost.run",
         "title": "Run"
+      },
+      {
+        "command": "Nocalhost.ClustersView",
+        "title": "Clusters"
       },
       {
         "command": "Nocalhost.loadWorkloads",
@@ -278,16 +286,14 @@
       {
         "command": "Nocalhost.refresh",
         "title": "Refresh",
+        "alt": "Refresh",
         "icon": "$(refresh)"
       },
       {
         "command": "Nocalhost.addKubeconfig",
-        "title": "Add Kubeconfig"
-      },
-      {
-        "command": "Nocalhost.signout",
-        "title": "Quit",
-        "icon": "$(sign-out)"
+        "title": "Add Cluster",
+        "alt": "Add Cluster",
+        "icon": "$(add)"
       },
       {
         "command": "Nocalhost.showApp",
@@ -314,6 +320,10 @@
       {
         "command": "Nocalhost.deleteKubeConfig",
         "title": "Delete"
+      },
+      {
+        "command": "Nocalhost.signout",
+        "title": "Logout"
       },
       {
         "command": "getWordloadList",
@@ -492,6 +502,7 @@
     "@types/json-schema": "^7.0.7",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
+    "classnames": "^2.3.1",
     "highlight.js": "^10.5.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
@@ -499,6 +510,7 @@
     "rimraf": "^3.0.2",
     "semver": "^7.3.4",
     "shelljs": "^0.8.4",
+    "shortid": "^2.2.16",
     "tempy": "^1.0.0",
     "uuid": "^8.3.2",
     "vscode-nls": "^5.0.0",
