@@ -302,7 +302,6 @@ async function init(context: vscode.ExtensionContext) {
     host.setGlobalState(WELCOME_DID_SHOW, true);
   }
 }
-
 process.on("exit", function (code) {
   host.removeGlobalState("Downloading");
 });
