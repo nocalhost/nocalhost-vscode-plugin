@@ -27,7 +27,7 @@ export default class DeleteKubeConfigCommand implements ICommand {
     }
     let tmpPath = [...(localClusterNodes || [])];
     let deleted: LocalClusterNode[] = [];
-    if (localClusterNodes.length > 1) {
+    if (localClusterNodes.length > 0) {
       deleted = tmpPath.splice(index, 1);
     } else {
       tmpPath = [];

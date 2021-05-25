@@ -46,6 +46,7 @@ import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFol
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 import messageBus from "./utils/messageBus";
+import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
 import { isExistCluster } from "./clusters/utils";
@@ -291,6 +292,7 @@ async function init(context: vscode.ExtensionContext) {
   host.setGlobalState("extensionPath", context.extensionPath);
   updateServerConfigStatus();
   await checkVersion();
+  LocalClusterService.verifyLocalCluster();
 
   const welcomeDidShow: boolean | undefined = host.getGlobalState(
     WELCOME_DID_SHOW
@@ -300,6 +302,7 @@ async function init(context: vscode.ExtensionContext) {
     host.setGlobalState(WELCOME_DID_SHOW, true);
   }
 }
+
 process.on("exit", function (code) {
   host.removeGlobalState("Downloading");
 });

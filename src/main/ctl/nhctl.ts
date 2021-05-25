@@ -948,6 +948,10 @@ export async function checkVersion() {
     );
 
     if (isDownloadNhctl) {
+      if (host.getGlobalState("Downloading")) {
+        return;
+      }
+      host.setGlobalState("Downloading", true);
       await host.showProgressing("Downloading nhctl", () => {
         return new Promise((res, rej) => {
           request(sourcePath)
@@ -957,9 +961,11 @@ export async function checkVersion() {
               })
             )
             .on("close", () => {
+              host.removeGlobalState("Downloading");
               res(true);
             })
             .on("error", (error: Error) => {
+              host.removeGlobalState("Downloading");
               host.log(error.message + "\n" + error.stack, true);
               rej(error);
             });

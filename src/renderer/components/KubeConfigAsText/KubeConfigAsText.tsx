@@ -19,7 +19,6 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
     onChangeContextValue,
     onChangeKubeConfig,
   } = props;
-  console.log("contextValue", contextValue);
   const options = React.useMemo(() => {
     if (!value) {
       return;
@@ -31,7 +30,18 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
         value: it.name,
       }));
       const defaultContext = opts.length > 0 ? opts[0].value : null;
-      onChangeContextValue(kubeObj["current-context"] || defaultContext);
+      let hasUpdateContext = true;
+      if (contextValue) {
+        hasUpdateContext = !Boolean(
+          opts.find(
+            (it: { label: string; value: string }) => it.value === contextValue
+          )
+        );
+      }
+      if (hasUpdateContext) {
+        onChangeContextValue(kubeObj["current-context"] || defaultContext);
+      }
+
       return opts;
     } catch (e) {
       return [];
@@ -58,7 +68,10 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
       ></textarea>
       <Select
         value={contextValue}
-        onChange={(v) => onChangeContextValue(v)}
+        onChange={(v) => {
+          console.log("vvv", v);
+          onChangeContextValue(v);
+        }}
         options={options}
         className="kubeConfig-select"
       />

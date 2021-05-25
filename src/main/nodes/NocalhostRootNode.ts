@@ -176,7 +176,12 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         // const contexts = kubeConfigObj["contexts"];
         const clusters = kubeConfigObj["clusters"];
         // const defaultNamespace = contexts[0]["context"]["namespace"] || "";
-        const clusterName = clusters[0]["name"];
+        const targetCluster = (clusters || []).find((it: { name: string }) => {
+          return it.name === kubeConfigObj["current-context"];
+        });
+        const clusterName = targetCluster
+          ? targetCluster.name
+          : clusters[0].name;
         text = clusterName;
         const node = new KubeConfigNode(
           res.id,

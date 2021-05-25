@@ -20,6 +20,7 @@ const Select: React.FC<ISelectProps> = (props) => {
   }
   return (
     <select
+      value={value}
       placeholder="select context"
       onChange={handleChange}
       className={className}

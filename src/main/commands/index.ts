@@ -37,11 +37,12 @@ import DeleteKubeConfigCommand from "./DeleteKubeConfigCommand";
 import AddKubeconfig from "./AddKubeconfigCommand";
 import ClustersViewCommand from "./ClustersViewCommand";
 import ClearLocalCluster from "./ClearLocalCluster";
-
+import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
 ) {
+  new ShowClusterInfoCommand(context);
   new ClearLocalCluster(context);
   new ClustersViewCommand(context);
   new EditServiceConfigCommand(context);

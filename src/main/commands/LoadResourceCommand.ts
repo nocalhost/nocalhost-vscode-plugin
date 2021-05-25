@@ -36,16 +36,20 @@ export default class LoadResourceCommand implements ICommand {
         scheme = "Nocalhost";
       }
       const kubeconfig = node.getKubeConfigPath();
-      const uri: vscode.Uri = vscode.Uri.parse(
+      let uri: vscode.Uri = vscode.Uri.parse(
         `${scheme}://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${node.getNameSpace()}`
       );
       const doc: vscode.TextDocument = await vscode.workspace.openTextDocument(
         uri
       );
-      await vscode.window.showTextDocument(doc, {
-        preview: false,
-        preserveFocus: false,
-      });
+      try {
+        await vscode.window.showTextDocument(doc, {
+          preview: false,
+          preserveFocus: false,
+        });
+      } catch (e) {
+        console.log(e);
+      }
 
       const eventCeneter: EventCenter = EventCenter.getInstance();
       eventCeneter.addSaveTextDocumentListener(this.handleSaveTextDocument);
