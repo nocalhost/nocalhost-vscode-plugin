@@ -6,11 +6,12 @@ import * as fs from "fs";
 import * as kubectl from "../ctl/kubectl";
 import { uniq } from "lodash";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
-import { readYaml, writeKubeConfigFile } from "../utils/fileUtil";
+import { readYaml, accessFile } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
 import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
+import logger from "../utils/logger";
 
 export class LocalClusterNode {
   filePath: string;
@@ -77,6 +78,22 @@ export default class LocalCluster {
       kubeConfig,
     };
     return obj;
+  };
+
+  static verifyLocalCluster = () => {
+    let localClusterNodes = host.getGlobalState(LOCAL_PATH) || [];
+    localClusterNodes = localClusterNodes.filter((it: LocalClusterNode) => {
+      if (!it.filePath) {
+        return false;
+      }
+      try {
+        const state = fs.accessSync(it.filePath, fs.constants.R_OK);
+        return !Boolean(state);
+      } catch (e) {
+        return false;
+      }
+    });
+    host.setGlobalState(LOCAL_PATH, localClusterNodes);
   };
 
   static appendLocalClusterByKubeConfig = async (

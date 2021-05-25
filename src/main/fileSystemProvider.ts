@@ -21,7 +21,6 @@ import state from "./state";
 import ConfigService from "./service/configService";
 import { HELM_VALUES_DIR } from "./constants";
 import { KubernetesResourceNode } from "./nodes/abstract/KubernetesResourceNode";
-import { map } from "lodash";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
   static supportScheme = ["Nocalhost", "NocalhostRW"];

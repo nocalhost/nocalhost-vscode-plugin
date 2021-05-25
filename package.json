@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.21",
+  "version": "0.4.22",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -249,6 +249,10 @@
       {
         "command": "Nocalhost.debug",
         "title": "Debug"
+      },
+      {
+        "command": "Nocalhost.showClusterInfo",
+        "title": "Output cluster information"
       },
       {
         "command": "Nocalhost.clearLocalCluster",
