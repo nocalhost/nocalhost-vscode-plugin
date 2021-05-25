@@ -1,5 +1,7 @@
 export const REFRESH = "Nocalhost.refresh";
 
+export const SHOW_CLUSTER_INFO = "Nocalhost.showClusterInfo";
+
 export const CLEAR_LOCAL_CLUSTER = "Nocalhost.clearLocalCluster";
 export const CLEAR_SERVER_CLUSTER = "Nocalhost.clearServerCluster";
 
