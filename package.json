@@ -255,6 +255,10 @@
         "title": "Clear local cluster"
       },
       {
+        "command": "Nocalhost.clearServerCluster",
+        "title": "Clear server cluster"
+      },
+      {
         "command": "Nocalhost.run",
         "title": "Run"
       },
