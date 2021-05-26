@@ -7,6 +7,7 @@ import state from "./state";
 import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
+import logger from "./utils/logger";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -57,48 +58,54 @@ export class Host implements vscode.Disposable {
 
   public stopAutoRefresh() {
     if (this.autoRefreshTimeId) {
-      clearTimeout(this.autoRefreshTimeId);
+      clearInterval(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
   }
 
   public startAutoRefresh() {
     if (this.autoRefreshTimeId) {
-      clearTimeout(this.autoRefreshTimeId);
+      clearInterval(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
 
-    this.autoRefreshTimeId = setTimeout(async () => {
-      const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
-      if (rootNode) {
-        await rootNode.updateData().catch(() => {});
-      }
-      for (const [id, expanded] of state.refreshFolderMap) {
-        if (expanded) {
-          const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-          if (node) {
-            // filter parent is close
-            // function isClose(parentNode: BaseNocalhostNode): boolean {
-            //   const child = parentNode.getParent();
-            //   if (!child) {
-            //     return false;
-            //   }
-            //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
-            //     return true;
-            //   }
+    this.autoRefreshTimeId = setInterval(async () => {
+      try {
+        const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+        if (rootNode) {
+          await rootNode.updateData().catch(() => {});
+        }
+        for (const [id, expanded] of state.refreshFolderMap) {
+          if (expanded) {
+            const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
+            if (node) {
+              // filter parent is close
+              // function isClose(parentNode: BaseNocalhostNode): boolean {
+              //   const child = parentNode.getParent();
+              //   if (!child) {
+              //     return false;
+              //   }
+              //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
+              //     return true;
+              //   }
 
-            //   return isClose(child);
-            // }
-            // const close = isClose(node);
-            await node.updateData().catch(() => {});
-            // if (!close) {
-            //   await node.updateData();
-            // }
+              //   return isClose(child);
+              // }
+              // const close = isClose(node);
+              await node.updateData().catch(() => {});
+              // if (!close) {
+              //   await node.updateData();
+              // }
+            }
           }
         }
+        this.startAutoRefresh();
+      } catch (e) {
+        this.startAutoRefresh();
+        console.log(e);
+        logger.error(e);
       }
-      this.startAutoRefresh();
-    }, 4 * 1000);
+    }, 5 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {
