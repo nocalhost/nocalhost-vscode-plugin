@@ -204,7 +204,6 @@ export default class AccountClusterService {
   async getServiceAccount() {
     try {
       const response = await this.instance.get(`/v1/plugin/service_accounts`);
-
       const res = response.data as ResponseData;
       const serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
       return serviceAccount;

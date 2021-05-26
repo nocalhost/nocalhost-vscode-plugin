@@ -32,9 +32,11 @@ export interface SvcProfile {
   developing: boolean;
   portForwarded: boolean;
   syncing: boolean;
+  possess: boolean;
   remoteSyncthingPort: number;
   remoteSyncthingGUIPort: number;
   localSyncthingPort: number;
+  localconfigloaded: boolean;
   localSyncthingGUIPort: number;
   localAbsoluteSyncDirFromDevStartPlugin: Array<string>;
   devPortForwardList: Array<{

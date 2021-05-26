@@ -21,6 +21,25 @@ export default class EndDevModeCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
+    let result = "Yes";
+    const svcProfile = await nhctl.getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+    if (svcProfile.possess === false) {
+      result = await vscode.window.showInformationMessage(
+        "You are not the dev possessor of this service, are you sure to exit the DevMode?",
+        { modal: true },
+        "Yes",
+        "No"
+      );
+    }
+    if (result !== "Yes") {
+      return;
+    }
     const appNode = node.getAppNode();
     host.getOutputChannel().show(true);
     const devspace = appNode.getParent() as DevSpaceNode;
