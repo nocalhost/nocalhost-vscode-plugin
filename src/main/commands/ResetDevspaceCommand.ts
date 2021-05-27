@@ -5,7 +5,6 @@ import { RESET_DEVSPACE } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import { resetDevspace } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 
@@ -37,7 +36,7 @@ export default class ResetDevspaceCommand implements ICommand {
       node.info.namespace,
       node.info.spaceName
     ).finally(async () => {
-      await resetDevspace(node.info.id);
+      await node.parent.accountClusterService.resetDevspace(node.info.id);
       vscode.commands.executeCommand("Nocalhost.refresh");
       host.showInformationMessage(`reset ${node.info.spaceName}`);
     });

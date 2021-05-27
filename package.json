@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.24",
+  "version": "0.4.25",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -180,7 +180,7 @@
         },
         {
           "command": "Nocalhost.resetDevspace",
-          "when": "viewItem =~ /^devspace/i",
+          "when": "viewItem =~ /^devspace-server/i",
           "group": "navigation"
         },
         {

@@ -79,6 +79,7 @@ export default class AccountClusterService {
   //   }
   //   return resources;
   // }
+
   static getServerClusterRootNodes = async (
     newAccountCluser: AccountClusterNode
   ): Promise<IRootNode[]> => {
@@ -121,6 +122,7 @@ export default class AccountClusterService {
             spaceName: ns.spacename,
             namespace: ns.namespace,
             kubeconfig: sa.kubeconfig,
+            accountClusterService,
             clusterId: sa.clusterId,
             storageClass: sa.storageClass,
             devStartAppendCommand: [
@@ -137,6 +139,7 @@ export default class AccountClusterService {
         userInfo: newAccountCluser.userInfo,
         isServer: true,
         old: [],
+        accountClusterService,
         id: newAccountCluser.id,
         createTime: newAccountCluser.createTime,
         localPath: kubeconfigPath,
@@ -183,7 +186,9 @@ export default class AccountClusterService {
       id: `${userInfo.id}${this.loginInfo.baseUrl}`,
     };
   };
-
+  resetDevspace = async (devSpaceId: number) => {
+    return this.instance.post(`/v1/plugin/${devSpaceId}/recreate`);
+  };
   login = async (loginInfo: LoginInfo) => {
     const response = (
       await this.instance.post("/v1/login", {

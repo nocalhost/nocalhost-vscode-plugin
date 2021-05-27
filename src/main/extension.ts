@@ -183,7 +183,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 function launchDevspace() {
   const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);
-  console.log("currentUri: ", host.getCurrentRootPath());
   if (tmpWorkloadPath !== host.getCurrentRootPath()) {
     return;
   }

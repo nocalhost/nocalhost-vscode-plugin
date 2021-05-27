@@ -7,7 +7,6 @@ import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
 import { KUBE_CONFIG_DIR } from "../constants";
-import { updateAppInstallStatus } from "../api";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";

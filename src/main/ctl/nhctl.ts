@@ -4,9 +4,6 @@ import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
 import * as request from "request";
-
-import ga, { getUUID } from "../utils/ga";
-
 import {
   execAsyncWithReturn,
   execChildProcessAsync,
@@ -294,7 +291,7 @@ export async function devStart(
   const devStartCommand = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} ${options} ${
+    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} --without-terminal  ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
     }`
   );
@@ -929,6 +926,7 @@ export async function checkVersion() {
   const requiredVersion: string = packageJson.nhctl?.version;
   const { sourcePath, destinationPath } = getNhctlPath(requiredVersion);
   const result: ServiceResult = await services.fetchNhctlVersion();
+
   if (!requiredVersion) {
     return;
   }

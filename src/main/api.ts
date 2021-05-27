@@ -1,7 +1,5 @@
 import { AxiosResponse } from "axios";
 import axios from "axios";
-import * as vscode from "vscode";
-import state from "./state";
 import host from "./host";
 import { BASE_URL, JWT, USERINFO } from "./constants";
 import { keysToCamel } from "./utils";

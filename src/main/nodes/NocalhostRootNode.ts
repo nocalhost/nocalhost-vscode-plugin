@@ -167,7 +167,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           res.kubeConfig,
           false,
           res.localPath,
-          res.userInfo
+          res.userInfo,
+          res.accountClusterService
         );
         devs.push(node);
       } else {
@@ -192,7 +193,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           `${kubeStr}`,
           true,
           res.localPath,
-          res.userInfo
+          res.userInfo,
+          null
         );
         devs.push(node);
       }

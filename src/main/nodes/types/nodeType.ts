@@ -1,3 +1,6 @@
+import AccountClusterService, {
+  AccountClusterNode,
+} from "./../../clusters/AccountCluster";
 import * as vscode from "vscode";
 
 export interface AppInfo {
@@ -54,6 +57,7 @@ export interface SvcProfile {
 export interface BaseNocalhostNode {
   label: string;
   type: string;
+  accountClusterService?: AccountClusterService;
   hasInit?: boolean;
   parent: BaseNocalhostNode | undefined | null;
   updateData?: (init: boolean) => Promise<any>;

@@ -134,7 +134,7 @@ export default class StartDevModeCommand implements ICommand {
       "image",
       image as string
     );
-
+    host.log(JSON.stringify(node), true);
     if (
       destDir === true ||
       (destDir && destDir === this.getCurrentRootPath())
