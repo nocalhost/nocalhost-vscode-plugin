@@ -29,6 +29,7 @@ export default class AccountClusterService {
   loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
+  lastServiceAccounts: ServiceAccountInfo[];
   constructor(loginInfo: LoginInfo) {
     this.loginInfo = loginInfo;
     this.instance = axios.create({
@@ -89,12 +90,11 @@ export default class AccountClusterService {
     accountClusterService.accountClusterNode = newAccountCluser;
     accountClusterService.jwt = newAccountCluser.jwt;
     const newRootNodes: IRootNode[] = [];
-    const serviceAccounts = await accountClusterService.getServiceAccount();
+    let serviceAccounts = await accountClusterService.getServiceAccount();
     if (serviceAccounts.length === 0) {
       logger.error(
         `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
       );
-      return;
     }
     const applications: V2ApplicationInfo[] = await accountClusterService.getV2Application();
     for (const sa of serviceAccounts) {
@@ -210,9 +210,15 @@ export default class AccountClusterService {
     try {
       const response = await this.instance.get(`/v1/plugin/service_accounts`);
       const res = response.data as ResponseData;
-      const serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
+      let serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
+      if (!serviceAccount || serviceAccount.length === 0) {
+        serviceAccount = this.lastServiceAccounts;
+      } else {
+        this.lastServiceAccounts = [...serviceAccount];
+      }
       return serviceAccount;
     } catch (e) {
+      logger.error(e);
       console.log(e);
       return [];
     }
