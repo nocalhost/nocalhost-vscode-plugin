@@ -29,6 +29,7 @@ export default class AccountClusterService {
   loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
+  lastServiceAccounts: ServiceAccountInfo[];
   constructor(loginInfo: LoginInfo) {
     this.loginInfo = loginInfo;
     this.instance = axios.create({
@@ -79,6 +80,7 @@ export default class AccountClusterService {
   //   }
   //   return resources;
   // }
+
   static getServerClusterRootNodes = async (
     newAccountCluser: AccountClusterNode
   ): Promise<IRootNode[]> => {
@@ -88,12 +90,11 @@ export default class AccountClusterService {
     accountClusterService.accountClusterNode = newAccountCluser;
     accountClusterService.jwt = newAccountCluser.jwt;
     const newRootNodes: IRootNode[] = [];
-    const serviceAccounts = await accountClusterService.getServiceAccount();
+    let serviceAccounts = await accountClusterService.getServiceAccount();
     if (serviceAccounts.length === 0) {
       logger.error(
         `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
       );
-      return;
     }
     const applications: V2ApplicationInfo[] = await accountClusterService.getV2Application();
     for (const sa of serviceAccounts) {
@@ -121,6 +122,7 @@ export default class AccountClusterService {
             spaceName: ns.spacename,
             namespace: ns.namespace,
             kubeconfig: sa.kubeconfig,
+            accountClusterService,
             clusterId: sa.clusterId,
             storageClass: sa.storageClass,
             devStartAppendCommand: [
@@ -137,6 +139,7 @@ export default class AccountClusterService {
         userInfo: newAccountCluser.userInfo,
         isServer: true,
         old: [],
+        accountClusterService,
         id: newAccountCluser.id,
         createTime: newAccountCluser.createTime,
         localPath: kubeconfigPath,
@@ -183,7 +186,9 @@ export default class AccountClusterService {
       id: `${userInfo.id}${this.loginInfo.baseUrl}`,
     };
   };
-
+  resetDevspace = async (devSpaceId: number) => {
+    return this.instance.post(`/v1/plugin/${devSpaceId}/recreate`);
+  };
   login = async (loginInfo: LoginInfo) => {
     const response = (
       await this.instance.post("/v1/login", {
@@ -204,11 +209,16 @@ export default class AccountClusterService {
   async getServiceAccount() {
     try {
       const response = await this.instance.get(`/v1/plugin/service_accounts`);
-
       const res = response.data as ResponseData;
-      const serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
+      let serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
+      if (!serviceAccount || serviceAccount.length === 0) {
+        serviceAccount = this.lastServiceAccounts;
+      } else {
+        this.lastServiceAccounts = [...serviceAccount];
+      }
       return serviceAccount;
     } catch (e) {
+      logger.error(e);
       console.log(e);
       return [];
     }

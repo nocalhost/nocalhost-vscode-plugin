@@ -1,3 +1,6 @@
+import AccountClusterService, {
+  AccountClusterNode,
+} from "./../../clusters/AccountCluster";
 import * as vscode from "vscode";
 
 export interface AppInfo {
@@ -32,9 +35,11 @@ export interface SvcProfile {
   developing: boolean;
   portForwarded: boolean;
   syncing: boolean;
+  possess: boolean;
   remoteSyncthingPort: number;
   remoteSyncthingGUIPort: number;
   localSyncthingPort: number;
+  localconfigloaded: boolean;
   localSyncthingGUIPort: number;
   localAbsoluteSyncDirFromDevStartPlugin: Array<string>;
   devPortForwardList: Array<{
@@ -52,6 +57,7 @@ export interface SvcProfile {
 export interface BaseNocalhostNode {
   label: string;
   type: string;
+  accountClusterService?: AccountClusterService;
   hasInit?: boolean;
   parent: BaseNocalhostNode | undefined | null;
   updateData?: (init: boolean) => Promise<any>;

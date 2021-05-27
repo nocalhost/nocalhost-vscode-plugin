@@ -3,7 +3,7 @@ import * as fs from "fs";
 
 import { HELM_NH_CONFIG_DIR, KUBE_CONFIG_DIR } from "../constants";
 import state from "../state";
-
+import AccountClusterService from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
 import * as path from "path";
 import { BaseNocalhostNode } from "./types/nodeType";
@@ -29,7 +29,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   public id: string;
   public isLocal: boolean;
   public localPath: string;
-
+  public accountClusterService: AccountClusterService;
   constructor(
     id: string,
     parent: NocalhostRootNode,
@@ -39,7 +39,8 @@ export class KubeConfigNode extends NocalhostFolderNode {
     kubeConfig: string,
     isLocal = false,
     localPath: string,
-    userInfo: IUserInfo
+    userInfo: IUserInfo,
+    accountClusterService: AccountClusterService
   ) {
     super();
     this.id = id;
@@ -53,6 +54,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     this.isLocal = isLocal;
     this.localPath = localPath;
     this.userInfo = userInfo;
+    this.accountClusterService = accountClusterService;
     state.setNode(this.getNodeStateId(), this);
   }
   updateData(): any {

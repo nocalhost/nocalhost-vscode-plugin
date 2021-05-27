@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.22",
+  "version": "0.4.27",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -20,7 +20,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.1-rc"
+    "version": "0.4.4"
   },
   "contributes": {
     "yamlValidation": [
@@ -180,7 +180,7 @@
         },
         {
           "command": "Nocalhost.resetDevspace",
-          "when": "viewItem =~ /^devspace/i",
+          "when": "viewItem =~ /^devspace-server/i",
           "group": "navigation"
         },
         {
@@ -510,6 +510,7 @@
     "@types/json-schema": "^7.0.7",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
+    "camelcase": "^6.2.0",
     "classnames": "^2.3.1",
     "highlight.js": "^10.5.0",
     "lodash": "^4.17.21",

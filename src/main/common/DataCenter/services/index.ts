@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { NH_BIN } from "../../../constants";
 import host from "../../../host";
+import { nhctlCommand } from "../../../ctl/nhctl";
 import DataCenter, { IExecCommandResult } from "../index";
 
 export type ServiceResult = IExecCommandResult;
@@ -41,13 +42,20 @@ async function fetchApplicationConfig(
   return await DataCenter.execCommand(command);
 }
 
-async function fetchNhctlVersion(): Promise<ServiceResult> {
-  const nhctlPath = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
+async function fetchNhctlVersion(dir: string = NH_BIN): Promise<string> {
+  const nhctlPath = path.resolve(dir, host.isWindow() ? "nhctl.exe" : "nhctl");
   const command: string = `${nhctlPath} version`;
-  return await DataCenter.execCommand(command);
+  const result = await DataCenter.execCommand(command);
+  if (result.success) {
+    const matched: string[] | null = result.value.match(
+      /Version:\s*v(\d+(\.+\d+){2})/
+    );
+    if (!matched) {
+      return;
+    }
+    return matched[1];
+  }
+  return null;
 }
 
 async function fetchLogs(
@@ -80,7 +88,7 @@ async function applyKubernetesObject(
   appName: string,
   filePath: string,
   kubeConfig: string,
-  isDir = false
+  namespace?: string
 ): Promise<ServiceResult> {
   // let applyPaths = [filePath];
   // if (isDir) {
@@ -100,7 +108,11 @@ async function applyKubernetesObject(
   //     value: "not found yaml file",
   //   };
   // }
-  const command: string = `nhctl apply ${appName} ${filePath} --kubeconfig ${kubeConfig}`;
+  const command = nhctlCommand(
+    kubeConfig,
+    namespace,
+    `apply ${appName} ${filePath}`
+  );
   return await DataCenter.execCommand(command);
 }
 

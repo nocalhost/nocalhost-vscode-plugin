@@ -50,13 +50,20 @@ export class Deployment extends ControllerResourceNode {
           }
           break;
         case "developing":
-          treeItem.iconPath = resolveVSCodeUri("dev-start.svg");
+          const possess = this.svcProfile.possess;
+          treeItem.iconPath = resolveVSCodeUri(
+            possess === false ? "dev_other.svg" : "dev-start.svg"
+          );
           const container = await this.getContainer();
           if (container) {
             treeItem.label = `${this.label}(${container})`;
           }
           if (portForwardStatus) {
-            treeItem.iconPath = resolveVSCodeUri("Dev_Port_Forwarding.svg");
+            treeItem.iconPath = resolveVSCodeUri(
+              possess === false
+                ? "dev_port_forwarding_other.svg"
+                : "Dev_Port_Forwarding.svg"
+            );
           }
           break;
         case "starting":

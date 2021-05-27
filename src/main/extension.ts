@@ -1,7 +1,7 @@
+import { PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import * as fs from "fs";
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
@@ -183,7 +183,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 function launchDevspace() {
   const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);
-  console.log("currentUri: ", host.getCurrentRootPath());
   if (tmpWorkloadPath !== host.getCurrentRootPath()) {
     return;
   }
@@ -284,6 +283,7 @@ async function init(context: vscode.ExtensionContext) {
   host.removeGlobalState("Downloading");
   fileUtil.mkdir(NH_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_CONFIG_DIR);
+  fileUtil.mkdir(PLUGIN_TEMP_DIR);
   fileUtil.mkdir(KUBE_CONFIG_DIR);
   fileUtil.mkdir(HELM_VALUES_DIR);
   fileUtil.mkdir(HELM_NH_CONFIG_DIR);

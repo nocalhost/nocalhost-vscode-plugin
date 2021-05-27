@@ -192,8 +192,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
             return await services.applyKubernetesObject(
               target.name,
               path,
-              kubeConfig,
-              isDir
+              kubeConfig
             );
           }
         );
