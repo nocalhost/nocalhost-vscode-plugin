@@ -1,4 +1,4 @@
-import * as camelcase from 'camelcase';
+import * as camelcase from "camelcase";
 
 export const keysToCamel = (o: any) => {
   if (isObject(o)) {

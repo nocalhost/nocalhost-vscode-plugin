@@ -1,3 +1,8 @@
+import {
+  PLUGIN_TEMP_DIR,
+  PLUGIN_TEMP_NHCTL,
+  NH_BIN_NHCTL,
+} from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -17,6 +22,7 @@ import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
+import { downloadNhctl } from "../utils/download";
 
 export interface InstalledAppInfo {
   name: string;
@@ -838,6 +844,7 @@ export async function cleanPVC(
 }
 
 export async function getSyncStatus(
+  resourceType: string,
   kubeConfigPath: string,
   namespace: string,
   appName: string,
@@ -846,7 +853,7 @@ export async function getSyncStatus(
   const syncCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync-status ${appName} -d ${workloadName}`
+    `sync-status ${appName} -d ${workloadName} -t ${resourceType}`
   );
   let result: ShellResult = {
     stdout: "",
@@ -907,13 +914,13 @@ function getNhctlPath(version: string) {
   let destinationPath = "";
   if (isLinux) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-linux-amd64?version=v${version}`;
-    destinationPath = path.resolve(NH_BIN, "nhctl");
+    destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
   } else if (isMac) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-darwin-amd64?version=v${version}`;
-    destinationPath = path.resolve(NH_BIN, "nhctl");
+    destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
   } else if (isWindows) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-windows-amd64.exe?version=v${version}`;
-    destinationPath = path.resolve(NH_BIN, "nhctl.exe");
+    destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
   }
 
   return {
@@ -922,53 +929,58 @@ function getNhctlPath(version: string) {
   };
 }
 
+export async function checkDownloadNhclVersion(
+  version: string,
+  nhctlPath: string = PLUGIN_TEMP_DIR
+) {
+  const tempVersion: string = await services.fetchNhctlVersion(nhctlPath);
+  return tempVersion === version;
+}
+
 export async function checkVersion() {
   const requiredVersion: string = packageJson.nhctl?.version;
   const { sourcePath, destinationPath } = getNhctlPath(requiredVersion);
-  const result: ServiceResult = await services.fetchNhctlVersion();
-
+  const currentVersion: string = await services.fetchNhctlVersion();
   if (!requiredVersion) {
     return;
   }
-  if (result.success) {
-    let currentVersion: string = "";
-    const matched: string[] | null = result.value.match(
-      /Version: \s*v{0,1}\d+(\.\d+){2}$/
-    );
-    if (!matched) {
-      return;
-    }
-    currentVersion = matched[1];
-    const isDownloadNhctl: boolean = semver.lt(currentVersion, requiredVersion);
+  if (currentVersion) {
+    // currentVersion < requiredVersion
+    const isUpdateNhctl: boolean = semver.lt(currentVersion, requiredVersion);
+    // currentVersion > requiredVersion
     const isUpgradeExtension: boolean = semver.gt(
       currentVersion,
       requiredVersion
     );
 
-    if (isDownloadNhctl) {
+    if (isUpdateNhctl) {
       if (host.getGlobalState("Downloading")) {
         return;
       }
       host.setGlobalState("Downloading", true);
-      await host.showProgressing("Downloading nhctl", () => {
-        return new Promise((res, rej) => {
-          request(sourcePath)
-            .pipe(
-              fs.createWriteStream(destinationPath as fs.PathLike, {
-                mode: 0o755,
-              })
-            )
-            .on("close", () => {
-              host.removeGlobalState("Downloading");
-              res(true);
-            })
-            .on("error", (error: Error) => {
-              host.removeGlobalState("Downloading");
-              host.log(error.message + "\n" + error.stack, true);
-              rej(error);
-            });
-        });
-      });
+      await host.showProgressing(
+        `Update nhctl to ${requiredVersion}...`,
+        async () => {
+          await downloadNhctl(sourcePath, destinationPath);
+          if (!(await checkDownloadNhclVersion(requiredVersion))) {
+            host.removeGlobalState("Downloading");
+            vscode.window.showErrorMessage("Update failed, please try again");
+            fs.unlinkSync(destinationPath);
+            return;
+          }
+          fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
+          host.removeGlobalState("Downloading");
+          if (!(await checkDownloadNhclVersion(requiredVersion))) {
+            vscode.window.showErrorMessage(
+              `Update failed, please delete ${NH_BIN_NHCTL} file and try again`
+            );
+          } else {
+            vscode.window.showInformationMessage("Update completed");
+          }
+
+          fs.unlinkSync(destinationPath);
+        }
+      );
     }
 
     if (isUpgradeExtension) {
@@ -983,31 +995,16 @@ export async function checkVersion() {
       return;
     }
     host.setGlobalState("Downloading", true);
-    await host.showProgressing("Downloading nhctl", () => {
-      return new Promise((res, rej) => {
-        request(sourcePath)
-          .pipe(
-            fs.createWriteStream(destinationPath as fs.PathLike, {
-              mode: 0o755,
-            })
-          )
-          .on("close", (code: number) => {
-            host.removeGlobalState("Downloading");
-            host.log("download end", true);
-            res(true);
-          })
-          .on("complete", () => {
-            console.log("aaaa");
-          })
-          .on("success", () => {
-            console.log("aaaa");
-          })
-          .on("error", (error: Error) => {
-            host.removeGlobalState("Downloading");
-            host.log(error.message + "\n" + error.stack, true);
-            rej(error);
-          });
-      });
+    await host.showProgressing(`Downloading nhctl`, async () => {
+      await downloadNhctl(sourcePath, destinationPath);
+      fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
+      host.removeGlobalState("Downloading");
+      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+        vscode.window.showErrorMessage(`Download failed, Please try again`);
+      } else {
+        vscode.window.showInformationMessage("Download completed");
+      }
+      fs.unlinkSync(destinationPath);
     });
   }
 }
@@ -1021,7 +1018,9 @@ export function nhctlCommand(
     NH_BIN,
     host.isWindow() ? "nhctl.exe" : "nhctl"
   );
-  const command = `${nhctlPath} ${baseCommand} -n ${namespace} --kubeconfig ${kubeconfigPath}`;
+  const command = `${nhctlPath} ${baseCommand} ${
+    namespace ? `-n ${namespace}` : ""
+  } --kubeconfig ${kubeconfigPath}`;
   console.log(command);
   return command;
 }

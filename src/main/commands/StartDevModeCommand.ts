@@ -134,7 +134,6 @@ export default class StartDevModeCommand implements ICommand {
       "image",
       image as string
     );
-    host.log(JSON.stringify(node), true);
     if (
       destDir === true ||
       (destDir && destDir === this.getCurrentRootPath())
@@ -457,6 +456,7 @@ export default class StartDevModeCommand implements ICommand {
 
     vscode.commands.executeCommand(SYNC_SERVICE, {
       app: appName,
+      resourceType: node.resourceType,
       service: node.name,
       kubeConfigPath: node.getKubeConfigPath(),
       namespace: node.getNameSpace(),

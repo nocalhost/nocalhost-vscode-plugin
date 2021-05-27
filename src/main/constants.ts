@@ -4,12 +4,16 @@ export const ROOT_NODE_KEY = "Nocalhost";
 export const HOME_DIR = homedir();
 export const NH_CONFIG_DIR = path.resolve(HOME_DIR, ".nh");
 export const PLUGIN_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "vscode-plugin");
+export const PLUGIN_TEMP_DIR = path.resolve(PLUGIN_CONFIG_DIR, ".tmp");
+export const PLUGIN_TEMP_NHCTL = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
 export const USER_CONFIG_FULLPATH = path.resolve(
   PLUGIN_CONFIG_DIR,
   "config.json"
 );
 export const NHCTL_DIR = path.resolve(NH_CONFIG_DIR, "nhctl");
 export const NH_BIN = path.resolve(NH_CONFIG_DIR, "bin");
+export const NH_BIN_NHCTL = path.resolve(NH_BIN, "nhctl");
+
 export const KUBE_CONFIG_DIR = path.resolve(PLUGIN_CONFIG_DIR, "kubeConfigs");
 export const HELM_NH_CONFIG_DIR = path.resolve(
   PLUGIN_CONFIG_DIR,

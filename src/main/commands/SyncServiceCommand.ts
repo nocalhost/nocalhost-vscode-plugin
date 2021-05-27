@@ -9,6 +9,7 @@ import host from "../host";
 
 export interface Sync {
   app: string;
+  resourceType: string;
   service: string;
   kubeConfigPath: string;
   namespace: string;
@@ -40,6 +41,7 @@ export default class SyncServiceCommand implements ICommand {
 
     this._id = setInterval(async () => {
       const result = await nhctl.getSyncStatus(
+        syncData.resourceType,
         syncData.kubeConfigPath,
         syncData.namespace,
         syncData.app,
