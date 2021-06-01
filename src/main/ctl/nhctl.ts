@@ -22,7 +22,7 @@ import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
-import { downloadNhctl } from "../utils/download";
+import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 
@@ -956,30 +956,36 @@ export async function checkVersion() {
       if (host.getGlobalState("Downloading")) {
         return;
       }
-      host.setGlobalState("Downloading", true);
-      await host.showProgressing(
-        `Update nhctl to ${requiredVersion}...`,
-        async () => {
-          await downloadNhctl(sourcePath, destinationPath);
-          if (!(await checkDownloadNhclVersion(requiredVersion))) {
-            host.removeGlobalState("Downloading");
-            vscode.window.showErrorMessage("Update failed, please try again");
-            fs.unlinkSync(destinationPath);
-            return;
-          }
-          fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
-          host.removeGlobalState("Downloading");
-          if (!(await checkDownloadNhclVersion(requiredVersion))) {
-            vscode.window.showErrorMessage(
-              `Update failed, please delete ${NH_BIN_NHCTL} file and try again`
-            );
-          } else {
-            vscode.window.showInformationMessage("Update completed");
-          }
-
-          fs.unlinkSync(destinationPath);
+      lock(async (err) => {
+        if (err) {
+          return console.error(err);
         }
-      );
+        host.setGlobalState("Downloading", true);
+        await host.showProgressing(
+          `Update nhctl to ${requiredVersion}...`,
+          async () => {
+            await downloadNhctl(sourcePath, destinationPath);
+            if (!(await checkDownloadNhclVersion(requiredVersion))) {
+              host.removeGlobalState("Downloading");
+              vscode.window.showErrorMessage("Update failed, please try again");
+              fs.unlinkSync(destinationPath);
+              unlock(() => {});
+              return;
+            }
+            fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
+            host.removeGlobalState("Downloading");
+            if (!(await checkDownloadNhclVersion(requiredVersion))) {
+              vscode.window.showErrorMessage(
+                `Update failed, please delete ${NH_BIN_NHCTL} file and try again`
+              );
+            } else {
+              vscode.window.showInformationMessage("Update completed");
+            }
+            unlock(() => {});
+            fs.unlinkSync(destinationPath);
+          }
+        );
+      });
     }
 
     if (isUpgradeExtension) {
@@ -993,17 +999,21 @@ export async function checkVersion() {
     if (host.getGlobalState("Downloading")) {
       return;
     }
-    host.setGlobalState("Downloading", true);
-    await host.showProgressing(`Downloading nhctl`, async () => {
-      await downloadNhctl(sourcePath, destinationPath);
-      fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
-      host.removeGlobalState("Downloading");
-      if (!(await checkDownloadNhclVersion(requiredVersion))) {
-        vscode.window.showErrorMessage(`Download failed, Please try again`);
-      } else {
-        vscode.window.showInformationMessage("Download completed");
-      }
-      fs.unlinkSync(destinationPath);
+    lock(async function (err) {
+      if (err) return console.error(err);
+      host.setGlobalState("Downloading", true);
+      await host.showProgressing(`Downloading nhctl`, async () => {
+        await downloadNhctl(sourcePath, destinationPath);
+        fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
+        host.removeGlobalState("Downloading");
+        unlock(() => {});
+        if (!(await checkDownloadNhclVersion(requiredVersion))) {
+          vscode.window.showErrorMessage(`Download failed, Please try again`);
+        } else {
+          vscode.window.showInformationMessage("Download completed");
+        }
+        fs.unlinkSync(destinationPath);
+      });
     });
   }
 }
