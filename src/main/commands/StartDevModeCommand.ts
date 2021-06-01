@@ -25,6 +25,7 @@ import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as kubectl from "../ctl/kubectl";
 import * as nls from "../../../package.nls.json";
+import { replaceSpacePath } from "../utils/fileUtil";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { appTreeView } from "../extension";
@@ -223,7 +224,9 @@ export default class StartDevModeCommand implements ICommand {
           progress.report({
             message: "cloning code",
           });
-          await git.clone(host, gitUrl as string, [destDir as string]);
+          await git.clone(host, gitUrl as string, [
+            replaceSpacePath(destDir) as string,
+          ]);
         });
       }
     }

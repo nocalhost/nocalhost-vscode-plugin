@@ -23,12 +23,18 @@ import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 import { downloadNhctl } from "../utils/download";
+import { keysToCamel } from "../utils";
+import { IPvc } from "../domain";
 
 export interface InstalledAppInfo {
   name: string;
   type: string;
 }
 
+export type IBaseCommand<T = any> = {
+  kubeConfigPath: string;
+  namespace: string;
+} & T;
 export interface AllInstallAppInfo {
   namespace: string;
   application: Array<InstalledAppInfo>;
@@ -791,20 +797,13 @@ export async function getTemplateConfig(
   return result.stdout;
 }
 
-export interface PVCData {
-  name: string;
-  appName: string;
-  serviceName: string;
-  capacity: string;
-  status: string;
-  mountPath: string;
-}
 export async function listPVC(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string,
-  workloadName?: string
+  props: IBaseCommand<{
+    appName: string;
+    workloadName?: string;
+  }>
 ) {
+  const { kubeConfigPath, namespace, appName, workloadName } = props;
   const configCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
@@ -813,9 +812,9 @@ export async function listPVC(
     } --yaml`
   );
   const result = await execAsyncWithReturn(configCommand, []);
-  let pvcs: PVCData[] = [];
+  let pvcs: IPvc[] = [];
   try {
-    pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+    pvcs = yaml.parse(result.stdout) as Array<IPvc>;
   } catch (error) {
     logger.info("command: " + configCommand + "result: ", result.stdout);
     throw error;
@@ -1007,6 +1006,36 @@ export async function checkVersion() {
       fs.unlinkSync(destinationPath);
     });
   }
+}
+
+export async function cleanPvcByDevSpace(
+  props: IBaseCommand & {
+    pvcName: string;
+  }
+) {
+  const { pvcName, kubeConfigPath, namespace } = props;
+  const command = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `pvc clean --name ${pvcName}`
+  );
+  const result = await execAsyncWithReturn(command, []);
+
+  return result;
+}
+
+export async function getPVCbyDevSpace(props: IBaseCommand): Promise<IPvc[]> {
+  const { kubeConfigPath, namespace } = props;
+  const command = nhctlCommand(kubeConfigPath, namespace, `pvc list  --json`);
+  const result = await execAsyncWithReturn(command, []);
+  if (result.stdout) {
+    try {
+      return keysToCamel(JSON.parse(result.stdout));
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+  return null;
 }
 
 export function nhctlCommand(

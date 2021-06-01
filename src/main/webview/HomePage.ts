@@ -65,18 +65,25 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
         }
         case "initKubePath": {
           const homeDir = os.homedir();
-          const defaultKubePath = path.resolve(homeDir, ".kube", "config");
-          const yaml = await readYaml(defaultKubePath);
-          const contexts = yaml.contexts || [];
-          webviewView.webview.postMessage({
-            type: "initKubePath-response",
-            payload: {
-              defaultKubePath,
-              contexts,
-              currentContext: getYamlDefaultContext(yaml),
-            },
-          });
-          break;
+          try {
+            const defaultKubePath = path.resolve(homeDir, ".kube", "config");
+            const yaml = await readYaml(defaultKubePath);
+            if (!yaml) {
+              break;
+            }
+            const contexts = yaml.contexts || [];
+            webviewView.webview.postMessage({
+              type: "initKubePath-response",
+              payload: {
+                defaultKubePath,
+                contexts,
+                currentContext: getYamlDefaultContext(yaml),
+              },
+            });
+            break;
+          } catch (e) {
+            break;
+          }
         }
         case "local": {
           host.showProgressing("Adding ...", async () => {

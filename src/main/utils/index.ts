@@ -3,7 +3,6 @@ import * as camelcase from "camelcase";
 export const keysToCamel = (o: any) => {
   if (isObject(o)) {
     const n: { [index: string]: any } = {};
-
     Object.keys(o).forEach((k: string) => {
       n[camelcase(k)] = keysToCamel(o[k]);
     });

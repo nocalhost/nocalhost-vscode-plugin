@@ -19,11 +19,12 @@ import { ApplicationInfo, V2ApplicationInfo } from "../api";
 import ConfigService, { NocalhostConfig } from "../service/configService";
 import host from "../host";
 import { SYNC_SERVICE } from "../commands/constants";
+import { NodeType } from "./interfact";
 import { DevSpaceNode } from "./DevSpaceNode";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
-  public type = APP_FOLDER;
+  public type = NodeType.appFolder;
   public id: number;
   public devSpaceId: number;
   public status: number;

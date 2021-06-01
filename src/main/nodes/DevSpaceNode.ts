@@ -14,11 +14,12 @@ import { AppNode } from "./AppNode";
 import * as _ from "lodash";
 import { RefreshData } from "./impl/updateData";
 import { KubeConfigNode } from "./KubeConfigNode";
+import { NodeType } from "./interfact";
 import host from "../host";
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
-  public type = "DEVSPACE";
+  public type = NodeType.devSpace;
   public info: DevspaceInfo;
   public hasInit: boolean;
   public isLocal: boolean;

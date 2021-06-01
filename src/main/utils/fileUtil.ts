@@ -35,9 +35,13 @@ export function getYamlDefaultContext(yaml: any) {
 }
 
 export async function readYaml(filePath: string) {
-  const data = await readFile(filePath);
   let yamlObj = null;
+  const result = await accessFile(filePath);
+  if (!result !== true) {
+    return null;
+  }
   try {
+    const data = await readFile(filePath);
     yamlObj = yaml.parse(data);
   } catch (error) {}
   return yamlObj;
@@ -48,8 +52,11 @@ export async function writeYaml(filePath: string, yamlObj: any) {
   await writeFile(filePath, yamlStr);
 }
 
-export function readFile(fliePath: string): Promise<string> {
-  accessFile(fliePath);
+export async function readFile(fliePath: string): Promise<string> {
+  const result = await accessFile(fliePath);
+  if (!result !== true) {
+    return null;
+  }
   return new Promise((resolve, reject) => {
     fs.readFile(fliePath, { encoding: "utf-8" }, (err, data) => {
       if (err) {
@@ -89,7 +96,7 @@ export function accessFile(filePath: string) {
       if (err) {
         reject(err);
       }
-      resolve(null);
+      resolve(true);
     });
   });
 }
@@ -126,4 +133,11 @@ export function mkdir(fullPath: string) {
     return;
   }
   fs.mkdirSync(fullPath);
+}
+
+export function replaceSpacePath(str: string): string {
+  if (!str) {
+    return str;
+  }
+  return host.isWindow() ? str.replace(/ /g, "\\ ") : `"${str}"`;
 }
