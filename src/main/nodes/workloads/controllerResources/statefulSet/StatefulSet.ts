@@ -88,38 +88,22 @@ export class StatefulSet extends ControllerResourceNode {
       if (this.svcProfile && this.svcProfile.developing) {
         return DeploymentStatus.developing;
       }
-    } else {
-      await this.refreshSvcProfile();
-      if (this.svcProfile && this.svcProfile.developing) {
-        return DeploymentStatus.developing;
-      }
-      const deploy = await kubectl.loadResource(
-        this.getKubeConfigPath(),
-        this.resourceType,
-        appNode.namespace,
-        this.name,
-        "json"
-      );
-      const deploymentObj = JSON.parse(deploy as string) as Resource;
-      const status = deploymentObj.status as ResourceStatus;
-      this.conditionsStatus =
-        status.conditions || ((status as unknown) as string);
     }
-    if (Array.isArray(this.conditionsStatus)) {
-      let available = false;
-      let progressing = false;
-      this.conditionsStatus.forEach((s) => {
-        if (s.type === "Available" && s.status === "True") {
-          status = "running";
-          available = true;
-        } else if (s.type === "Progressing" && s.status === "True") {
-          progressing = true;
-        }
-      });
-
-      if (progressing && !available) {
-        status = "starting";
-      }
+    await this.refreshSvcProfile();
+    if (this.svcProfile && this.svcProfile.developing) {
+      return DeploymentStatus.developing;
+    }
+    const deploy = await kubectl.loadResource(
+      this.getKubeConfigPath(),
+      this.resourceType,
+      appNode.namespace,
+      this.name,
+      "json"
+    );
+    const deploymentObj = JSON.parse(deploy as string) as Resource;
+    const tmpStatus = deploymentObj.status as ResourceStatus;
+    if (tmpStatus.replicas === tmpStatus.readyReplicas) {
+      status = "running";
     }
     if (!status) {
       status = "unknown";

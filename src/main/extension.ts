@@ -50,6 +50,7 @@ import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
 import { isExistCluster } from "./clusters/utils";
+import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
@@ -260,6 +261,7 @@ function launchDevspace() {
 export function deactivate() {
   host.removeGlobalState("Downloading");
   host.dispose();
+  unlock(() => {});
 }
 
 export function checkCtl(name: string) {
@@ -305,6 +307,7 @@ async function init(context: vscode.ExtensionContext) {
 
 process.on("exit", function (code) {
   host.removeGlobalState("Downloading");
+  unlock(() => {});
 });
 process.on("uncaughtException", (error) => {
   logger.error(`[uncatch exception] ${error.message} ${error.stack}`);

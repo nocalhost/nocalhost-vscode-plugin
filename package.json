@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.27",
+  "version": "0.4.32",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -20,7 +20,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.4"
+    "version": "0.4.5"
   },
   "contributes": {
     "yamlValidation": [
@@ -135,7 +135,7 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^(application-(.*)-installed|workload-deployment)/i",
+          "when": "viewItem =~ /^devspace|(application-(.*)-installed|workload-deployment)/i",
           "group": "navigation"
         },
         {

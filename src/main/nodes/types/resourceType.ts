@@ -27,6 +27,8 @@ export interface Resource {
 export interface ResourceStatus {
   conditions: Array<Status>;
   phase: string;
+  replicas?: number;
+  readyReplicas?: number;
 }
 
 export interface ControllerResource extends Resource {

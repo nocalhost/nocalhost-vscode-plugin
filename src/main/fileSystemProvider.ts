@@ -362,9 +362,9 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     }
   }
 
-  private stringify(obj: Object, style: string) {
+  private stringify(obj: any, style: string) {
     if (style === "yaml") {
-      return yaml.stringify(obj);
+      return `${obj.note || ""}${yaml.stringify(obj)}`;
     } else if (style === "json") {
       return JSON.stringify(obj, null, 2);
     }

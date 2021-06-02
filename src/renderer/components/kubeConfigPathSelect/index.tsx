@@ -44,7 +44,7 @@ const KubeConfigPathSelect: React.FC<IKubeConfigPathSelectProps> = (
         <input
           value={value}
           type="text"
-          placeholder="kubeConfigPath"
+          placeholder="Please select kubeConfigPath"
           name="file"
         ></input>
         <span

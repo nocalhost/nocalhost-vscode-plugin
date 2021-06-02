@@ -22,13 +22,19 @@ import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
-import { downloadNhctl } from "../utils/download";
+import { downloadNhctl, lock, unlock } from "../utils/download";
+import { keysToCamel } from "../utils";
+import { IPvc } from "../domain";
 
 export interface InstalledAppInfo {
   name: string;
   type: string;
 }
 
+export type IBaseCommand<T = any> = {
+  kubeConfigPath: string;
+  namespace: string;
+} & T;
 export interface AllInstallAppInfo {
   namespace: string;
   application: Array<InstalledAppInfo>;
@@ -791,20 +797,13 @@ export async function getTemplateConfig(
   return result.stdout;
 }
 
-export interface PVCData {
-  name: string;
-  appName: string;
-  serviceName: string;
-  capacity: string;
-  status: string;
-  mountPath: string;
-}
 export async function listPVC(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string,
-  workloadName?: string
+  props: IBaseCommand<{
+    appName: string;
+    workloadName?: string;
+  }>
 ) {
+  const { kubeConfigPath, namespace, appName, workloadName } = props;
   const configCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
@@ -813,9 +812,9 @@ export async function listPVC(
     } --yaml`
   );
   const result = await execAsyncWithReturn(configCommand, []);
-  let pvcs: PVCData[] = [];
+  let pvcs: IPvc[] = [];
   try {
-    pvcs = yaml.parse(result.stdout) as Array<PVCData>;
+    pvcs = yaml.parse(result.stdout) as Array<IPvc>;
   } catch (error) {
     logger.info("command: " + configCommand + "result: ", result.stdout);
     throw error;
@@ -912,19 +911,24 @@ function getNhctlPath(version: string) {
   const isWindows = host.isWindow();
   let sourcePath = "";
   let destinationPath = "";
+  let binPath = "";
   if (isLinux) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-linux-amd64?version=v${version}`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
+    binPath = path.resolve(NH_BIN, "nhctl");
   } else if (isMac) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-darwin-amd64?version=v${version}`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
+    binPath = path.resolve(NH_BIN, "nhctl");
   } else if (isWindows) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-windows-amd64.exe?version=v${version}`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
+    binPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
   return {
     sourcePath,
+    binPath,
     destinationPath,
   };
 }
@@ -939,7 +943,9 @@ export async function checkDownloadNhclVersion(
 
 export async function checkVersion() {
   const requiredVersion: string = packageJson.nhctl?.version;
-  const { sourcePath, destinationPath } = getNhctlPath(requiredVersion);
+  const { sourcePath, destinationPath, binPath } = getNhctlPath(
+    requiredVersion
+  );
   const currentVersion: string = await services.fetchNhctlVersion();
   if (!requiredVersion) {
     return;
@@ -957,30 +963,36 @@ export async function checkVersion() {
       if (host.getGlobalState("Downloading")) {
         return;
       }
-      host.setGlobalState("Downloading", true);
-      await host.showProgressing(
-        `Update nhctl to ${requiredVersion}...`,
-        async () => {
-          await downloadNhctl(sourcePath, destinationPath);
-          if (!(await checkDownloadNhclVersion(requiredVersion))) {
-            host.removeGlobalState("Downloading");
-            vscode.window.showErrorMessage("Update failed, please try again");
-            fs.unlinkSync(destinationPath);
-            return;
-          }
-          fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
-          host.removeGlobalState("Downloading");
-          if (!(await checkDownloadNhclVersion(requiredVersion))) {
-            vscode.window.showErrorMessage(
-              `Update failed, please delete ${NH_BIN_NHCTL} file and try again`
-            );
-          } else {
-            vscode.window.showInformationMessage("Update completed");
-          }
-
-          fs.unlinkSync(destinationPath);
+      lock(async (err) => {
+        if (err) {
+          return console.error(err);
         }
-      );
+        host.setGlobalState("Downloading", true);
+        await host.showProgressing(
+          `Update nhctl to ${requiredVersion}...`,
+          async () => {
+            await downloadNhctl(sourcePath, destinationPath);
+            if (!(await checkDownloadNhclVersion(requiredVersion))) {
+              host.removeGlobalState("Downloading");
+              vscode.window.showErrorMessage("Update failed, please try again");
+              fs.unlinkSync(destinationPath);
+              unlock(() => {});
+              return;
+            }
+            fs.copyFileSync(destinationPath, binPath);
+            host.removeGlobalState("Downloading");
+            if (!(await checkDownloadNhclVersion(requiredVersion))) {
+              vscode.window.showErrorMessage(
+                `Update failed, please delete ${binPath} file and try again`
+              );
+            } else {
+              vscode.window.showInformationMessage("Update completed");
+            }
+            unlock(() => {});
+            fs.unlinkSync(destinationPath);
+          }
+        );
+      });
     }
 
     if (isUpgradeExtension) {
@@ -994,19 +1006,53 @@ export async function checkVersion() {
     if (host.getGlobalState("Downloading")) {
       return;
     }
-    host.setGlobalState("Downloading", true);
-    await host.showProgressing(`Downloading nhctl`, async () => {
-      await downloadNhctl(sourcePath, destinationPath);
-      fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
-      host.removeGlobalState("Downloading");
-      if (!(await checkDownloadNhclVersion(requiredVersion))) {
-        vscode.window.showErrorMessage(`Download failed, Please try again`);
-      } else {
-        vscode.window.showInformationMessage("Download completed");
-      }
-      fs.unlinkSync(destinationPath);
+    lock(async function (err) {
+      if (err) return console.error(err);
+      host.setGlobalState("Downloading", true);
+      await host.showProgressing(`Downloading nhctl`, async () => {
+        await downloadNhctl(sourcePath, destinationPath);
+        fs.copyFileSync(destinationPath, binPath);
+        host.removeGlobalState("Downloading");
+        unlock(() => {});
+        if (!(await checkDownloadNhclVersion(requiredVersion))) {
+          vscode.window.showErrorMessage(`Download failed, Please try again`);
+        } else {
+          vscode.window.showInformationMessage("Download completed");
+        }
+        fs.unlinkSync(destinationPath);
+      });
     });
   }
+}
+
+export async function cleanPvcByDevSpace(
+  props: IBaseCommand & {
+    pvcName: string;
+  }
+) {
+  const { pvcName, kubeConfigPath, namespace } = props;
+  const command = nhctlCommand(
+    kubeConfigPath,
+    namespace,
+    `pvc clean --name ${pvcName}`
+  );
+  const result = await execAsyncWithReturn(command, []);
+
+  return result;
+}
+
+export async function getPVCbyDevSpace(props: IBaseCommand): Promise<IPvc[]> {
+  const { kubeConfigPath, namespace } = props;
+  const command = nhctlCommand(kubeConfigPath, namespace, `pvc list  --json`);
+  const result = await execAsyncWithReturn(command, []);
+  if (result.stdout) {
+    try {
+      return keysToCamel(JSON.parse(result.stdout));
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+  return null;
 }
 
 export function nhctlCommand(
