@@ -12,6 +12,7 @@ import {
 } from "vscode";
 import * as yaml from "yaml";
 import * as path from "path";
+import { omit } from "lodash";
 import * as querystring from "querystring";
 import * as kubectl from "./ctl/kubectl";
 import * as nhctl from "./ctl/nhctl";
@@ -182,6 +183,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
                   namespace,
                   appName
                 );
+
                 if (appInfo[key] instanceof Array) {
                   result = "";
                   for (let i = 0; i < appInfo[key].length; i++) {
@@ -364,7 +366,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
 
   private stringify(obj: any, style: string) {
     if (style === "yaml") {
-      return `${obj.note || ""}${yaml.stringify(obj)}`;
+      return `${obj.note || ""}${yaml.stringify(omit(obj, "note"))}`;
     } else if (style === "json") {
       return JSON.stringify(obj, null, 2);
     }
