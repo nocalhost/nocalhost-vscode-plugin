@@ -911,19 +911,24 @@ function getNhctlPath(version: string) {
   const isWindows = host.isWindow();
   let sourcePath = "";
   let destinationPath = "";
+  let binPath = "";
   if (isLinux) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-linux-amd64?version=v${version}`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
+    binPath = path.resolve(NH_BIN, "nhctl");
   } else if (isMac) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-darwin-amd64?version=v${version}`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
+    binPath = path.resolve(NH_BIN, "nhctl");
   } else if (isWindows) {
     sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-windows-amd64.exe?version=v${version}`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
+    binPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
   return {
     sourcePath,
+    binPath,
     destinationPath,
   };
 }
@@ -938,7 +943,9 @@ export async function checkDownloadNhclVersion(
 
 export async function checkVersion() {
   const requiredVersion: string = packageJson.nhctl?.version;
-  const { sourcePath, destinationPath } = getNhctlPath(requiredVersion);
+  const { sourcePath, destinationPath, binPath } = getNhctlPath(
+    requiredVersion
+  );
   const currentVersion: string = await services.fetchNhctlVersion();
   if (!requiredVersion) {
     return;
@@ -972,11 +979,11 @@ export async function checkVersion() {
               unlock(() => {});
               return;
             }
-            fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
+            fs.copyFileSync(destinationPath, binPath);
             host.removeGlobalState("Downloading");
             if (!(await checkDownloadNhclVersion(requiredVersion))) {
               vscode.window.showErrorMessage(
-                `Update failed, please delete ${NH_BIN_NHCTL} file and try again`
+                `Update failed, please delete ${binPath} file and try again`
               );
             } else {
               vscode.window.showInformationMessage("Update completed");
@@ -1004,7 +1011,7 @@ export async function checkVersion() {
       host.setGlobalState("Downloading", true);
       await host.showProgressing(`Downloading nhctl`, async () => {
         await downloadNhctl(sourcePath, destinationPath);
-        fs.copyFileSync(destinationPath, NH_BIN_NHCTL);
+        fs.copyFileSync(destinationPath, binPath);
         host.removeGlobalState("Downloading");
         unlock(() => {});
         if (!(await checkDownloadNhclVersion(requiredVersion))) {

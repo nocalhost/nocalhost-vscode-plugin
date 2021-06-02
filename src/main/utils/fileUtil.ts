@@ -37,7 +37,7 @@ export function getYamlDefaultContext(yaml: any) {
 export async function readYaml(filePath: string) {
   let yamlObj = null;
   const result = await accessFile(filePath);
-  if (!result !== true) {
+  if (result !== true) {
     return null;
   }
   try {
@@ -54,7 +54,7 @@ export async function writeYaml(filePath: string, yamlObj: any) {
 
 export async function readFile(fliePath: string): Promise<string> {
   const result = await accessFile(fliePath);
-  if (!result !== true) {
+  if (result !== true) {
     return null;
   }
   return new Promise((resolve, reject) => {
