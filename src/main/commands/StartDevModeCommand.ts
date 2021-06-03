@@ -61,6 +61,14 @@ export default class StartDevModeCommand implements ICommand {
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
+    const svcProfile = await nhctl.getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+    
     const result = await this.getPodAndContainer(node);
     if (!result) {
       return;

@@ -6,6 +6,7 @@ import { RECONNECT_SYNC, OVERRIDE_SYNC, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import * as nhctl from "../ctl/nhctl";
 import host from "../host";
+import logger from "../utils/logger";
 
 export interface Sync {
   app: string;
@@ -48,6 +49,8 @@ export default class SyncServiceCommand implements ICommand {
         syncData.service
       );
       if (!result) {
+        logger.error("sync status is empty");
+
         // hide status bar
         if (this._id) {
           clearInterval(this._id);
@@ -55,6 +58,7 @@ export default class SyncServiceCommand implements ICommand {
         }
         host.statusBar.hide();
         host.outSyncStatusBar.hide();
+        logger.info(JSON.stringify(syncData));
       } else {
         // update status bar
         try {
@@ -84,7 +88,9 @@ export default class SyncServiceCommand implements ICommand {
             host.statusBar.command = reconnectSyncCommand;
           }
           host.statusBar.show();
-        } catch (e) {}
+        } catch (e) {
+          logger.error(e);
+        }
       }
     }, 500);
   }

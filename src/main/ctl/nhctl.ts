@@ -996,10 +996,8 @@ export async function checkVersion() {
     }
 
     if (isUpgradeExtension) {
-      const result:
-        | string
-        | undefined = await vscode.window.showInformationMessage(
-        `Please upgrade extension`
+      vscode.window.showInformationMessage(
+        `Please upgrade extension： Nocalhost`
       );
     }
   } else {
@@ -1034,7 +1032,7 @@ export async function cleanPvcByDevSpace(
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `pvc clean --name ${pvcName}`
+    `pvc clean ${pvcName ? `--name ${pvcName}` : ""}`
   );
   const result = await execAsyncWithReturn(command, []);
 
