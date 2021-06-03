@@ -268,9 +268,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         query.nodeName as string,
         query.resourceType as string
       );
-      const config = host.getGlobalState(query.appName as string);
-      const props = `${query.nodeName}.${query.nodeName}.directory`;
-      let dir = _get(config, props, "${project directory}");
+      let dir = svcProfile.associate ||  "${project directory}";
       if (svcProfile.localconfigloaded) {
         window.showErrorMessage(
           `You should modify your configuration in local file under ${dir}/.nocalhost/config.yaml, and the modification will take effect the next time you enter the DevMode.`

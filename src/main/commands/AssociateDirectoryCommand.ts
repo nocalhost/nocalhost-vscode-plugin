@@ -2,12 +2,12 @@ import * as vscode from "vscode";
 import * as os from "os";
 
 import ICommand from "./ICommand";
-
 import { ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
 import registerCommand from "./register";
+import { IWorkloadConfig } from '../domain/IWorkloadConfig'
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
-import { associate } from "../ctl/nhctl";
+import { associate, getServiceConfig } from "../ctl/nhctl";
 
 import * as kubectl from "../ctl/kubectl";
 
@@ -32,31 +32,36 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       host.showWarnMessage("after exiting develop mode, please try again!");
       return;
     }
-    const result = await this.getPodAndContainer(node);
-    if (!result) {
-      return;
-    }
-    const containerName = result.containerName;
+    // const result = await this.getPodAndContainer(node);
+    // if (!result) {
+    //   return;
+    // }
+    const profile = await getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+
     let appConfig = host.getGlobalState(appName) || {};
-    let workloadConfig = appConfig[node.name] || {};
-    let containerConfig = workloadConfig[containerName] || {};
-    workloadConfig[containerName] = containerConfig;
-    appConfig[node.name] = workloadConfig;
+    let workloadConfig: IWorkloadConfig = appConfig[node.name] || {};
+    workloadConfig.directory = profile.associate;
+    
     const currentUri = this.getCurrentRootPath();
-    let destDir = containerConfig.directory;
+    let destDir = workloadConfig.directory;
     const selectUri = await host.showSelectFolderDialog(
       "Associate local directory",
       vscode.Uri.file(destDir || currentUri || os.homedir())
     );
     if (selectUri && selectUri.length > 0) {
-      containerConfig.directory = selectUri[0].fsPath;
-      workloadConfig[containerName] = containerConfig;
+      workloadConfig.directory = selectUri[0].fsPath;
       appConfig[node.name] = workloadConfig;
       await associate(
         kubeConfigPath,
         namespace,
         appName,
-        containerConfig.directory,
+        workloadConfig.directory,
         node.resourceType,
         workloadName
       );

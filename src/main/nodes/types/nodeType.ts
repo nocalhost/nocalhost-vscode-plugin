@@ -16,6 +16,7 @@ export interface AppInfo {
 }
 
 export interface SvcProfile {
+  
   rawConfig: {
     name: string;
     serviceType: string;
@@ -34,6 +35,7 @@ export interface SvcProfile {
   actualName: string;
   developing: boolean;
   portForwarded: boolean;
+  associate: string;
   syncing: boolean;
   possess: boolean;
   remoteSyncthingPort: number;
