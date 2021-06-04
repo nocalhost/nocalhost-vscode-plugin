@@ -18,8 +18,19 @@ export default class EditServiceConfigCommand implements ICommand {
       return;
     }
     const appNode = node.getAppNode();
+    let protocol = "NocalhostRW";
+    const svcProfile = await getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+    if (svcProfile.localconfigloaded || svcProfile.cmconfigloaded) {
+      protocol = "Nocalhost";
+    }
     const uri = vscode.Uri.parse(
-      `NocalhostRW://nh/config/app/${appNode.name}/services/${
+      `${protocol}://nh/config/app/${appNode.name}/services/${
         node.name
       }.yaml?appName=${node.getAppName()}&nodeName=${node.name}&resourceType=${
         node.resourceType

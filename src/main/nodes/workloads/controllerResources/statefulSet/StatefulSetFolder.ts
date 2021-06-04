@@ -102,6 +102,6 @@ export class StatefulSetFolder extends KubernetesResourceFolder {
       return node;
     });
 
-    return orderBy(result, ["metadata.name"]);
+    return this.sortResource<StatefulSet>(result);
   }
 }

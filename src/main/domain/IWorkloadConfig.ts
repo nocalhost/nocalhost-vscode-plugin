@@ -1,3 +1,3 @@
 export interface IWorkloadConfig {
-    directory: string;
+  directory: string;
 }

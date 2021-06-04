@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-
+import { orderBy } from "lodash";
 import * as kubectl from "../../../../ctl/kubectl";
 import state from "../../../../state";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
@@ -31,6 +31,6 @@ export class DaemonSetFolder extends KubernetesResourceFolder {
         new DaemonSet(this, item.metadata.name, item.metadata.name, item)
     );
 
-    return result;
+    return this.sortResource<DaemonSet>(result);
   }
 }

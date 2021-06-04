@@ -104,7 +104,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
       );
       return node;
     });
-    return orderBy(result, ["metadata.name"]);
+    return this.sortResource<Deployment>(result);
   }
 
   // TODO: DO NOT DELETE, FOR: [webview integration]

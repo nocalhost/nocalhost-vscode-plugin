@@ -4,7 +4,7 @@ import * as os from "os";
 import ICommand from "./ICommand";
 import { ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
 import registerCommand from "./register";
-import { IWorkloadConfig } from '../domain/IWorkloadConfig'
+import { IWorkloadConfig } from "../domain/IWorkloadConfig";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
 import { associate, getServiceConfig } from "../ctl/nhctl";
@@ -47,7 +47,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     let appConfig = host.getGlobalState(appName) || {};
     let workloadConfig: IWorkloadConfig = appConfig[node.name] || {};
     workloadConfig.directory = profile.associate;
-    
+
     const currentUri = this.getCurrentRootPath();
     let destDir = workloadConfig.directory;
     const selectUri = await host.showSelectFolderDialog(

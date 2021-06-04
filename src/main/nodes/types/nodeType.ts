@@ -16,7 +16,6 @@ export interface AppInfo {
 }
 
 export interface SvcProfile {
-  
   rawConfig: {
     name: string;
     serviceType: string;
@@ -32,6 +31,7 @@ export interface SvcProfile {
     syncFilePattern: [];
     ignoreFilePattern: [];
   };
+  cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;
   portForwarded: boolean;

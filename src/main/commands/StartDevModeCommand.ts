@@ -70,8 +70,6 @@ export default class StartDevModeCommand implements ICommand {
       node.resourceType
     );
 
-  
-
     const result = await this.getPodAndContainer(node);
     if (!result) {
       return;
@@ -172,10 +170,10 @@ export default class StartDevModeCommand implements ICommand {
   ) {
     let appConfig = host.getGlobalState(appName) || {};
     let workloadConfig = appConfig[node.name] || {};
-    let containerConfig = workloadConfig[containerName] || {};
+    // let containerConfig = workloadConfig[containerName] || {};
     const currentUri = this.getCurrentRootPath();
-    containerConfig.directory = destDir;
-    workloadConfig[containerName] = containerConfig;
+    workloadConfig.directory = destDir;
+    // workloadConfig[containerName] = containerConfig;
     appConfig[node.name] = workloadConfig;
     host.setGlobalState(appName, appConfig);
     const uri = vscode.Uri.file(destDir);
@@ -359,6 +357,7 @@ export default class StartDevModeCommand implements ICommand {
 
     if (destDir && destDir !== true) {
       workloadConfig.directory = destDir;
+      appConfig[node.name] = workloadConfig;
       host.setGlobalState(appName, appConfig);
       await nhctl.associate(
         node.getKubeConfigPath(),
@@ -366,11 +365,9 @@ export default class StartDevModeCommand implements ICommand {
         node.getAppName(),
         destDir as string,
         node.resourceType,
-        node.name,
+        node.name
       );
     }
-   
-   
 
     return destDir;
   }

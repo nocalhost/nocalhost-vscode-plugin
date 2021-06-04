@@ -34,7 +34,7 @@ export default class AccountClusterService {
     this.loginInfo = loginInfo;
     this.instance = axios.create({
       baseURL: loginInfo.baseUrl,
-      timeout: 1000,
+      timeout: 1000 * 20,
     });
     this.instance.interceptors.request.use((config) => {
       // const jwt = host.getGlobalState(JWT) as string;
@@ -220,7 +220,7 @@ export default class AccountClusterService {
     } catch (e) {
       logger.error(e);
       console.log(e);
-      return [];
+      return this.lastServiceAccounts || [];
     }
   }
 
