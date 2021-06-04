@@ -1,5 +1,7 @@
 import state from "../../state";
 import * as vscode from "vscode";
+import { orderBy } from "lodash";
+import { ControllerResourceNode } from "../workloads/controllerResources/ControllerResourceNode";
 
 import * as kubectl from "../../ctl/kubectl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
@@ -47,6 +49,10 @@ export abstract class KubernetesResourceFolder
   public getKubeConfigPath() {
     const appNode = this.getAppNode();
     return appNode.getKubeConfigPath();
+  }
+
+  public async sortResource<T extends ControllerResourceNode>(arr: Array<T>) {
+    return orderBy(arr, ["metadata.name"]);
   }
 
   public async updateData(isInit?: boolean): Promise<any> {

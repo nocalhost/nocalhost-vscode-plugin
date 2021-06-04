@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-
+import { orderBy } from "lodash";
 import * as kubectl from "../../../../ctl/kubectl";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { CronJob } from "./CronJob";
@@ -31,6 +31,6 @@ export class CronJobFolder extends KubernetesResourceFolder {
       (item) => new CronJob(this, item.metadata.name, item.metadata.name, item)
     );
 
-    return result;
+    return this.sortResource<CronJob>(result);
   }
 }

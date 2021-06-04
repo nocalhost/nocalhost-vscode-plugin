@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-
+import { orderBy } from "lodash";
 import { HELM_NH_CONFIG_DIR, KUBE_CONFIG_DIR } from "../constants";
 import state from "../state";
 import AccountClusterService from "../clusters/AccountCluster";
@@ -96,7 +96,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       devs.push(node);
     }
 
-    return devs;
+    return orderBy(devs, ["label"]);
   }
 
   async getTreeItem() {

@@ -26,24 +26,28 @@ export const lock = function (cb: (err?: any) => void) {
 };
 
 export const unlock = async function (callback: (err?: any) => void) {
-  if (!hasLock) {
-    callback(null);
-    logger.info(`file lock  ${hasLock}`);
-    return;
-  }
-  if ((await accessFile(processDir)) === true) {
-    fs.unlinkSync(processDir);
-  }
-  fs.rmdir(lockDir, (err) => {
-    if (err) {
-      console.log(err);
-      logger.info(`rmdir error`);
-      return callback(err);
+  try {
+    if (!hasLock) {
+      callback(null);
+      logger.info(`file lock  ${hasLock}`);
+      return;
     }
-    logger.info(`rmdir success `);
-    hasLock = false;
-    callback(null);
-  });
+    if ((await accessFile(processDir)) === true) {
+      fs.unlinkSync(processDir);
+    }
+    fs.rmdir(lockDir, (err) => {
+      if (err) {
+        console.log(err);
+        logger.info(`rmdir error`);
+        return callback(err);
+      }
+      logger.info(`rmdir success `);
+      hasLock = false;
+      callback(null);
+    });
+  } catch (e) {
+    logger.error(e);
+  }
 };
 
 export const downloadNhctl = async (

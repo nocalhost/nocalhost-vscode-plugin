@@ -16,7 +16,7 @@ import {
 } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
-import { readYaml } from "../utils/fileUtil";
+import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
 import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
@@ -179,7 +179,9 @@ export async function upgrade(
         config: string;
       }
     | undefined,
-  refOrVersion?: string
+  refOrVersion?: string,
+  valuesPath?: string,
+  valueStr?: string
 ) {
   let resourcePath = "";
   if (resourceDir) {
@@ -213,6 +215,14 @@ export async function upgrade(
     } ${refOrVersion}`;
   }
 
+  if (valuesPath) {
+    upgradeCommand = `${upgradeCommand} -f ${valuesPath}`;
+  }
+
+  if (valueStr) {
+    upgradeCommand = `${upgradeCommand} --set ${valueStr}`;
+  }
+
   host.log("cmd: " + upgradeCommand, true);
   return vscode.window.withProgress(
     {
@@ -236,12 +246,12 @@ export async function associate(
   type: string,
   workLoadName: string
 ) {
+  const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${dir} -t ${type} -d ${workLoadName}`
+    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName}`
   );
-
   const result = await execAsyncWithReturn(command, []);
   return result.stdout;
 }
@@ -859,10 +869,10 @@ export async function getSyncStatus(
     stderr: "",
     code: 0,
   };
-  const r = (await execAsyncWithReturn(
-    syncCommand,
-    []
-  ).catch(() => {})) as ShellResult;
+  const r = (await execAsyncWithReturn(syncCommand, []).catch((e) => {
+    logger.info("Nocalhost.syncService syncCommand");
+    logger.error(e);
+  })) as ShellResult;
 
   if (r) {
     result = r;
@@ -996,10 +1006,8 @@ export async function checkVersion() {
     }
 
     if (isUpgradeExtension) {
-      const result:
-        | string
-        | undefined = await vscode.window.showInformationMessage(
-        `Please upgrade extension`
+      vscode.window.showInformationMessage(
+        `Please upgrade extension： Nocalhost`
       );
     }
   } else {
@@ -1034,7 +1042,7 @@ export async function cleanPvcByDevSpace(
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `pvc clean --name ${pvcName}`
+    `pvc clean ${pvcName ? `--name ${pvcName}` : ""}`
   );
   const result = await execAsyncWithReturn(command, []);
 

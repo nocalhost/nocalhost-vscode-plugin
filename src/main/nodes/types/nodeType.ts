@@ -31,9 +31,11 @@ export interface SvcProfile {
     syncFilePattern: [];
     ignoreFilePattern: [];
   };
+  cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;
   portForwarded: boolean;
+  associate: string;
   syncing: boolean;
   possess: boolean;
   remoteSyncthingPort: number;

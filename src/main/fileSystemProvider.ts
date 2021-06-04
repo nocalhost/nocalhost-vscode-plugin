@@ -260,24 +260,6 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     const type = paths[1];
     const data = this.parse(content.toString(), style);
     const query = querystring.decode(uri.query);
-    if (query.nodeName && query.resourceType) {
-      const svcProfile = await nhctl.getServiceConfig(
-        query.kubeConfigPath as string,
-        query.namespace as string,
-        query.appName as string,
-        query.nodeName as string,
-        query.resourceType as string
-      );
-      const config = host.getGlobalState(query.appName as string);
-      const props = `${query.nodeName}.${query.nodeName}.directory`;
-      let dir = _get(config, props, "${project directory}");
-      if (svcProfile.localconfigloaded) {
-        window.showErrorMessage(
-          `You should modify your configuration in local file under ${dir}/.nocalhost/config.yaml, and the modification will take effect the next time you enter the DevMode.`
-        );
-        return;
-      }
-    }
 
     let id = "";
     if (query) {

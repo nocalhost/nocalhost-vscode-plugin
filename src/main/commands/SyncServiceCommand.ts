@@ -6,6 +6,7 @@ import { RECONNECT_SYNC, OVERRIDE_SYNC, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import * as nhctl from "../ctl/nhctl";
 import host from "../host";
+import logger from "../utils/logger";
 
 export interface Sync {
   app: string;
@@ -34,30 +35,33 @@ export default class SyncServiceCommand implements ICommand {
       this._id = null;
     }
     if (!syncData.app || !syncData.service) {
+      logger.info("syncData.app is null");
       host.statusBar.hide();
       host.outSyncStatusBar.hide();
       return;
     }
 
     this._id = setInterval(async () => {
-      const result = await nhctl.getSyncStatus(
-        syncData.resourceType,
-        syncData.kubeConfigPath,
-        syncData.namespace,
-        syncData.app,
-        syncData.service
-      );
-      if (!result) {
-        // hide status bar
-        if (this._id) {
-          clearInterval(this._id);
-          this._id = null;
-        }
-        host.statusBar.hide();
-        host.outSyncStatusBar.hide();
-      } else {
-        // update status bar
-        try {
+      try {
+        const result = await nhctl.getSyncStatus(
+          syncData.resourceType,
+          syncData.kubeConfigPath,
+          syncData.namespace,
+          syncData.app,
+          syncData.service
+        );
+        if (!result) {
+          // hide status bar
+          if (this._id) {
+            clearInterval(this._id);
+            logger.info("sync-status result empty");
+            this._id = null;
+          }
+          host.statusBar.hide();
+          host.outSyncStatusBar.hide();
+        } else {
+          // update status bar
+
           let r: SyncMsg;
           r = JSON.parse(result) as SyncMsg;
           if (r.outOfSync) {
@@ -84,7 +88,11 @@ export default class SyncServiceCommand implements ICommand {
             host.statusBar.command = reconnectSyncCommand;
           }
           host.statusBar.show();
-        } catch (e) {}
+        }
+      } catch (e) {
+        logger.error("sync-status error");
+        console.log(e);
+        logger.error(e);
       }
     }, 500);
   }

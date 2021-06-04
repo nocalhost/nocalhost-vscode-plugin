@@ -6,6 +6,7 @@ import ICommand from "./ICommand";
 import { UPGRADE_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
+import selectValues from "../common/components/selectValues";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
 import * as kubectl from "../ctl/kubectl";
@@ -136,6 +137,8 @@ export default class UpgradeCommand implements ICommand {
     // await host.showProgressing(`Ending port-forward`, async (progress) => {
     //   await this.endAllPortForward(appNode);
     // });
+
+    const [valuesPath, valueStr] = await selectValues();
     await nhctl
       .upgrade(
         appNode.getKubeConfigPath(),
@@ -146,7 +149,9 @@ export default class UpgradeCommand implements ICommand {
         resourceDir || appNode.resourceDir,
         appNode.appConfig,
         local,
-        refOrVersion
+        refOrVersion,
+        valuesPath,
+        valueStr
       )
       .finally(() => {
         state.deleteAppState(appNode.name, "upgrading", {

@@ -53,6 +53,7 @@ export default class StartDevModeCommand implements ICommand {
     this.context = context;
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
+
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
       host.showWarnMessage("A task is running, please try again later");
@@ -61,6 +62,14 @@ export default class StartDevModeCommand implements ICommand {
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
+    const resourceProfile = await nhctl.getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+
     const result = await this.getPodAndContainer(node);
     if (!result) {
       return;
@@ -79,7 +88,8 @@ export default class StartDevModeCommand implements ICommand {
     const destDir = await this.cloneOrGetFolderDir(
       appName,
       node,
-      result.containerName
+      result.containerName,
+      resourceProfile.associate
     );
     // check image
     let image: string | undefined = await this.getImage(
@@ -160,10 +170,10 @@ export default class StartDevModeCommand implements ICommand {
   ) {
     let appConfig = host.getGlobalState(appName) || {};
     let workloadConfig = appConfig[node.name] || {};
-    let containerConfig = workloadConfig[containerName] || {};
+    // let containerConfig = workloadConfig[containerName] || {};
     const currentUri = this.getCurrentRootPath();
-    containerConfig.directory = destDir;
-    workloadConfig[containerName] = containerConfig;
+    workloadConfig.directory = destDir;
+    // workloadConfig[containerName] = containerConfig;
     appConfig[node.name] = workloadConfig;
     host.setGlobalState(appName, appConfig);
     const uri = vscode.Uri.file(destDir);
@@ -302,7 +312,6 @@ export default class StartDevModeCommand implements ICommand {
     let destDir: string | undefined;
     let appConfig = host.getGlobalState(appName);
     let workloadConfig = appConfig[node.name];
-    let containerConfig = workloadConfig[containerName] || {};
 
     const result = await host.showInformationMessage(
       nls["tips.open"],
@@ -320,7 +329,7 @@ export default class StartDevModeCommand implements ICommand {
         destDir = uris[0].fsPath;
       }
     } else if (result === nls["bt.open.dir"]) {
-      destDir = containerConfig.directory;
+      destDir = workloadConfig.directory;
     }
 
     return destDir;
@@ -329,27 +338,35 @@ export default class StartDevModeCommand implements ICommand {
   private async cloneOrGetFolderDir(
     appName: string,
     node: ControllerNodeApi,
-    containerName: string
+    containerName: string,
+    associateDir: string
   ) {
-    let destDir: string | undefined | boolean;
+    let destDir: string | undefined | boolean = associateDir;
     let appConfig = host.getGlobalState(appName) || {};
     const currentUri = this.getCurrentRootPath();
     let workloadConfig = appConfig[node.name] || {};
-    let containerConfig = workloadConfig[containerName] || {};
-    workloadConfig[containerName] = containerConfig;
-    appConfig[node.name] = workloadConfig;
+    workloadConfig.directory = associateDir;
     host.setGlobalState(appName, appConfig);
-    if (!containerConfig.directory) {
+    if (!workloadConfig.directory) {
       destDir = await this.firstOpen(appName, node, containerName);
-    } else if (currentUri !== containerConfig.directory) {
+    } else if (currentUri !== workloadConfig.directory) {
       destDir = await this.getTargetDirectory(appName, node, containerName);
     } else {
       destDir = true;
     }
 
     if (destDir && destDir !== true) {
-      containerConfig.directory = destDir;
+      workloadConfig.directory = destDir;
+      appConfig[node.name] = workloadConfig;
       host.setGlobalState(appName, appConfig);
+      await nhctl.associate(
+        node.getKubeConfigPath(),
+        node.getNameSpace(),
+        node.getAppName(),
+        destDir as string,
+        node.resourceType,
+        node.name
+      );
     }
 
     return destDir;

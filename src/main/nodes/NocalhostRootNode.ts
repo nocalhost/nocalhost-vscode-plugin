@@ -2,6 +2,8 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import * as yaml from "yaml";
+import { orderBy } from "lodash";
+
 import AccountClusterService, {
   AccountClusterNode,
 } from "../clusters/AccountCluster";
@@ -202,7 +204,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     NocalhostRootNode.childNodes = NocalhostRootNode.childNodes.concat(devs);
 
-    return NocalhostRootNode.childNodes;
+    return orderBy(NocalhostRootNode.childNodes, ["label"]);
   }
 
   private generateInstallType(source: string, originInstallType: string) {

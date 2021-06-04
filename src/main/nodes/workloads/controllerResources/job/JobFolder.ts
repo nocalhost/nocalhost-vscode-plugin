@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { orderBy } from "lodash";
 
 import * as kubectl from "../../../../ctl/kubectl";
 import host from "../../../../host";
@@ -32,6 +33,6 @@ export class JobFolder extends KubernetesResourceFolder {
       (item) => new Job(this, item.metadata.name, item.metadata.name, item)
     );
 
-    return result;
+    return this.sortResource<Job>(result);
   }
 }
