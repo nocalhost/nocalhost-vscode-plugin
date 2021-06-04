@@ -179,7 +179,9 @@ export async function upgrade(
         config: string;
       }
     | undefined,
-  refOrVersion?: string
+  refOrVersion?: string,
+  valuesPath?: string,
+  valueStr?: string
 ) {
   let resourcePath = "";
   if (resourceDir) {
@@ -211,6 +213,14 @@ export async function upgrade(
     upgradeCommand += ` ${
       appType === "helmRepo" ? "--helm-repo-version" : "-r"
     } ${refOrVersion}`;
+  }
+
+  if (valuesPath) {
+    upgradeCommand = `${upgradeCommand} -f ${valuesPath}`;
+  }
+
+  if (valueStr) {
+    upgradeCommand = `${upgradeCommand} --set ${valueStr}`;
   }
 
   host.log("cmd: " + upgradeCommand, true);
