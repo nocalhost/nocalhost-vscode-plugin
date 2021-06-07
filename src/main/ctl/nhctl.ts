@@ -973,11 +973,11 @@ export async function checkVersion() {
       if (host.getGlobalState("Downloading")) {
         return;
       }
+      host.setGlobalState("Downloading", true);
       lock(async (err) => {
         if (err) {
           return console.error(err);
         }
-        host.setGlobalState("Downloading", true);
         await host.showProgressing(
           `Update nhctl to ${requiredVersion}...`,
           async () => {
@@ -1014,9 +1014,9 @@ export async function checkVersion() {
     if (host.getGlobalState("Downloading")) {
       return;
     }
+    host.setGlobalState("Downloading", true);
     lock(async function (err) {
       if (err) return console.error(err);
-      host.setGlobalState("Downloading", true);
       await host.showProgressing(`Downloading nhctl`, async () => {
         await downloadNhctl(sourcePath, destinationPath);
         fs.copyFileSync(destinationPath, binPath);
