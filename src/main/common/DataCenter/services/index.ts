@@ -62,11 +62,12 @@ async function fetchLogs(
   pod: string,
   container: string,
   tail: number,
-  kubeConfig: string
+  kubeConfig: string,
+  namespace: string
 ): Promise<ServiceResult> {
   const command: string = `kubectl logs ${
     tail ? "--tail=" + tail : ""
-  } ${pod} -c ${container} --kubeconfig ${kubeConfig}`;
+  } ${pod} -c ${container} --namespace ${namespace} --kubeconfig ${kubeConfig}`;
   return await DataCenter.execCommand(command);
 }
 

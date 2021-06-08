@@ -108,6 +108,7 @@ const Logs: React.FC = () => {
     fetchLogs,
     [
       {
+        namespace: query.namespace as string,
         id: query.id as string,
         app: query.app as string,
         pod: query.pod as string,

@@ -32,6 +32,7 @@ export default class LogCommand implements ICommand {
           id: node.getNodeStateId(),
           app: node.getAppName(),
           pod: podName,
+          namespace: node.getNameSpace(),
           container: containerName,
         },
       });

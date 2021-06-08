@@ -5,13 +5,14 @@ export interface IFetchLogsParam {
   app: string;
   pod: string;
   container: string;
+  namespace: string;
   tail?: number;
 }
 
 export default function fetchLogs(param: IFetchLogsParam): void {
-  const { id, app, pod, container, tail } = param;
+  const { id, app, pod, container, tail, namespace } = param;
   postMessage({
     type: "logs/fetch",
-    payload: { id, app, pod, container, tail },
+    payload: { id, app, pod, container, namespace, tail },
   });
 }
