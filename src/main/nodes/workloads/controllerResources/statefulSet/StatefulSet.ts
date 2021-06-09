@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 
-import * as kubectl from "../../../../ctl/kubectl";
 import * as nhctl from "../../../../ctl/nhctl";
 import { resolveVSCodeUri } from "../../../../utils/fileUtil";
 import state from "../../../../state";
@@ -93,13 +92,13 @@ export class StatefulSet extends ControllerResourceNode {
     if (this.svcProfile && this.svcProfile.developing) {
       return DeploymentStatus.developing;
     }
-    const deploy = await kubectl.loadResource(
-      this.getKubeConfigPath(),
-      this.resourceType,
-      appNode.namespace,
-      this.name,
-      "json"
-    );
+    const deploy = await nhctl.getLoadResource({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      name: this.name,
+      namespace: appNode.namespace,
+      outputType: "json",
+    });
     const deploymentObj = JSON.parse(deploy as string) as Resource;
     const tmpStatus = deploymentObj.status as ResourceStatus;
     if (tmpStatus.replicas === tmpStatus.readyReplicas) {

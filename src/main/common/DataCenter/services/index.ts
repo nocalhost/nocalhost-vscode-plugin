@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { NH_BIN } from "../../../constants";
 import host from "../../../host";
-import { nhctlCommand } from "../../../ctl/nhctl";
+import { nhctlCommand, NhctlCommand } from "../../../ctl/nhctl";
 import DataCenter, { IExecCommandResult } from "../index";
 
 export type ServiceResult = IExecCommandResult;
@@ -65,14 +65,24 @@ async function fetchLogs(
   kubeConfig: string,
   namespace: string
 ): Promise<ServiceResult> {
-  const command: string = `kubectl logs ${
-    tail ? "--tail=" + tail : ""
-  } ${pod} -c ${container} --namespace ${namespace} --kubeconfig ${kubeConfig}`;
+  const command = NhctlCommand.logs({
+    kubeConfigPath: kubeConfig,
+  })
+    .addArgument(tail ? `--tail=${tail}` : "")
+    .addArgument(pod)
+    .addArgument("--namespace", namespace)
+    .addArgumentStrict("-c", container)
+    .getCommand();
   return await DataCenter.execCommand(command);
 }
 
 async function fetchDeployments(kubeConfig: string): Promise<ServiceResult> {
-  const command: string = `kubectl get Deployments -o json --kubeconfig ${kubeConfig}`;
+  const command = NhctlCommand.get({
+    kubeConfigPath: kubeConfig,
+  })
+    .addArgument("Deployments")
+    .addArgument("-o", "json")
+    .getCommand();
   return await DataCenter.execCommand(command);
 }
 
@@ -81,7 +91,13 @@ async function fetchKubernetesResource(
   name: string,
   kubeConfig: string
 ): Promise<ServiceResult> {
-  const command: string = `kubectl get ${kind} ${name} -o yaml --kubeconfig ${kubeConfig}`;
+  const command = NhctlCommand.get({
+    kubeConfigPath: kubeConfig,
+  })
+    .addArgument(kind)
+    .addArgument(name)
+    .addArgument("-o", "yaml")
+    .getCommand();
   return await DataCenter.execCommand(command);
 }
 
@@ -123,7 +139,13 @@ async function deleteKubernetesObject(
   namespace: string,
   kubeConfig: string
 ): Promise<ServiceResult> {
-  const command: string = `kubectl delete ${kind} ${objectName} -n ${namespace} --kubeconfig ${kubeConfig}`;
+  const command = NhctlCommand.delete({
+    kubeConfigPath: kubeConfig,
+  })
+    .addArgument(kind)
+    .addArgument(objectName)
+    .addArgument("-n", namespace)
+    .getCommand();
   return await DataCenter.execCommand(command);
 }
 

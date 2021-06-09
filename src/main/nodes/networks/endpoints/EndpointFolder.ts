@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 
-import * as kubectl from "../../../ctl/kubectl";
 import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { ENDPOINT_FOLDER } from "../../nodeContants";

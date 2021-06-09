@@ -1,3 +1,4 @@
+import { KubeConfigNode } from "./../nodes/KubeConfigNode";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,7 +8,6 @@ import { INSTALL_APP, REFRESH } from "./constants";
 import registerCommand from "./register";
 import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
-import * as kubectl from "../ctl/kubectl";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 import { List, Resource, ResourceStatus } from "../nodes/types/resourceType";
@@ -360,8 +360,13 @@ export default class InstallCommand implements ICommand {
       new Date().getTime() - startTime < timeout
     ) {
       podNameArr =
-        (await kubectl
-          .getPodNames(name, type, namespace, kubeConfigPath)
+        (await nhctl
+          .getPodNames({
+            name,
+            kind: type,
+            namespace,
+            kubeConfigPath,
+          })
           .catch(() => {})) || [];
     }
 
@@ -369,11 +374,11 @@ export default class InstallCommand implements ICommand {
   }
 
   private async checkBookInfoStatus(appNode: AppNode) {
-    const res = await kubectl.getResourceList(
-      appNode.getKubeConfigPath(),
-      "Deployments",
-      appNode.namespace
-    );
+    const res = await nhctl.getResourceList({
+      kubeConfigPath: appNode.getKubeConfigPath(),
+      kind: "Deployments",
+      namespace: appNode.namespace,
+    });
     const list = JSON.parse(res as string) as List;
     let check = true;
     list.items.map((item) => {

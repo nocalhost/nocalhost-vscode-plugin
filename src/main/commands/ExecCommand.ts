@@ -6,8 +6,8 @@ import { EXEC } from "./constants";
 import registerCommand from "./register";
 import host, { Host } from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
-import * as kubectl from "../ctl/kubectl";
 import * as shell from "../ctl/shell";
+import { getPodNames, NhctlCommand, getContainerNames } from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
 import { NH_BIN } from "../constants";
@@ -81,7 +81,13 @@ export default class ExecCommand implements ICommand {
       let notExist = false;
       const shellObj = await shell
         .execAsyncWithReturn(
-          `kubectl exec ${podName} -c ${constainerName} --kubeconfig ${kubeConfigPath} -- which ${ExecCommand.defaultShells[i]}`,
+          NhctlCommand.exec({
+            kubeConfigPath: kubeConfigPath,
+          })
+            .addArgument(podName)
+            .addArgument("-c", constainerName)
+            .addArgumentTheTail(`-- which ${ExecCommand.defaultShells[i]}`)
+            .getCommand(),
           []
         )
         .catch(() => {
@@ -147,16 +153,22 @@ export default class ExecCommand implements ICommand {
       containerName,
       kubeConfigPath
     );
-    const terminalCommands = new Array<string>();
-    terminalCommands.push("exec");
-    terminalCommands.push("-it", podName);
-    terminalCommands.push("-c", containerName);
-    terminalCommands.push("--kubeconfig", kubeConfigPath);
-    terminalCommands.push("--", shell);
-    const shellPath = "kubectl";
+    // const terminalCommands = new Array<string>();
+    // terminalCommands.push("exec");
+    // terminalCommands.push("-it", podName);
+    // terminalCommands.push("-c", containerName);
+    // terminalCommands.push("--kubeconfig", kubeConfigPath);
+    // terminalCommands.push("--", shell);
+    // const shellPath = "kubectl";
+    const args = NhctlCommand.exec({
+      kubeConfigPath: kubeConfigPath,
+    })
+      .addArgument("-it", podName)
+      .addArgument("-c", containerName)
+      .addArgumentTheTail(`-- ${shell}`).args;
     const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      terminalCommands,
-      process.platform === "win32" ? `${shellPath}.exe` : shellPath,
+      args,
+      NhctlCommand.nhctlPath,
       podName
     );
     terminalDisposed.show();
@@ -184,12 +196,12 @@ export default class ExecCommand implements ICommand {
     if (node instanceof Pod) {
       podName = node.name;
     } else {
-      const podNameArr = await kubectl.getPodNames(
-        node.name,
-        node.resourceType,
-        node.getNameSpace(),
-        kubeConfigPath
-      );
+      const podNameArr = await getPodNames({
+        name: node.name,
+        kind: node.resourceType,
+        namespace: node.getNameSpace(),
+        kubeConfigPath: kubeConfigPath,
+      });
       podName = podNameArr[0];
       status = await node.getStatus();
       if (status !== DeploymentStatus.developing && podNameArr.length > 1) {
@@ -199,11 +211,11 @@ export default class ExecCommand implements ICommand {
     if (!podName) {
       return;
     }
-    const containerNameArr = await kubectl.getContainerNames(
+    const containerNameArr = await getContainerNames({
       podName,
-      kubeConfigPath,
-      node.getNameSpace()
-    );
+      kubeConfigPath: kubeConfigPath,
+      namespace: node.getNameSpace(),
+    });
     let containerName: string | undefined = containerNameArr[0];
     if (status !== DeploymentStatus.developing && containerNameArr.length > 1) {
       containerName = await vscode.window.showQuickPick(containerNameArr);

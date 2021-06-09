@@ -18,7 +18,9 @@ export const lock = function (cb: (err?: any) => void) {
       return cb(error);
     }
     fs.writeFile(processDir, "true", function (err) {
-      if (err) console.error(err);
+      if (err) {
+        console.error(err);
+      }
       hasLock = true;
       return cb();
     });

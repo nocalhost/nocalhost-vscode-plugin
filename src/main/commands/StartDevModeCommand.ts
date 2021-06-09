@@ -23,13 +23,13 @@ import * as path from "path";
 import git from "../ctl/git";
 import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
-import * as kubectl from "../ctl/kubectl";
 import * as nls from "../../../package.nls.json";
 import { replaceSpacePath } from "../utils/fileUtil";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { appTreeView } from "../extension";
 import messageBus from "../utils/messageBus";
+import logger from "../utils/logger";
 
 export interface ControllerNodeApi {
   name: string;
@@ -432,43 +432,11 @@ export default class StartDevModeCommand implements ICommand {
           );
           host.log("sync file end", true);
           host.log("", true);
-          // const container = await ConfigService.getContaienrConfig(
-          //   node.getKubeConfigPath(),
-          //   appName,
-          //   node.name,
-          //   containerName
-          // );
-          // if (
-          //   container &&
-          //   container.dev.portForward &&
-          //   container.dev.portForward.length &&
-          //   container.dev.portForward.length > 0
-          // ) {
-          //   progress.report({
-          //     message: "port forwarding",
-          //   });
-          //   host.log("port forward ...", true);
-          //   await nhctl
-          //     .startPortForward(
-          //       host,
-          //       node.getKubeConfigPath(),
-          //       appName,
-          //       node.name,
-          //       "devPorts",
-          //       node.resourceType,
-          //       container.dev.portForward
-          //     )
-          //     .catch(() => {});
-          //   host.log("port forward end", true);
-          //   host.log("", true);
-          // }
-
-          // progress.report({
-          //   message: "DevMode Started.",
-          // });
           node.setStatus("");
           await vscode.commands.executeCommand(EXEC, node);
         } catch (error) {
+          host.log(error);
+          logger.error(error);
           node.setStatus("");
         }
       }
@@ -584,12 +552,12 @@ export default class StartDevModeCommand implements ICommand {
   async getPodAndContainer(node: ControllerNodeApi) {
     const kubeConfigPath = node.getKubeConfigPath();
     let podName: string | undefined;
-    const podNameArr = await kubectl.getPodNames(
-      node.name,
-      node.resourceType,
-      node.getNameSpace(),
-      kubeConfigPath
-    );
+    const podNameArr = await nhctl.getPodNames({
+      name: node.name,
+      kind: node.resourceType,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: kubeConfigPath,
+    });
     podName = podNameArr[0];
     if (!podName) {
       return;
@@ -597,11 +565,11 @@ export default class StartDevModeCommand implements ICommand {
     let containerName: string | undefined = (await node.getContainer()) || "";
 
     if (!containerName) {
-      const containerNameArr = await kubectl.getContainerNames(
+      const containerNameArr = await nhctl.getContainerNames({
         podName,
         kubeConfigPath,
-        node.getNameSpace()
-      );
+        namespace: node.getNameSpace(),
+      });
       if (containerNameArr.length === 1) {
         containerName = containerNameArr[0];
       } else {

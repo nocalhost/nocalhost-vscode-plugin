@@ -4,7 +4,6 @@ import ICommand from "./ICommand";
 import { PORT_FORWARD } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import * as kubectl from "../ctl/kubectl";
 import * as nhctl from "../ctl/nhctl";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { Resource } from "../nodes/types/resourceType";
@@ -28,12 +27,12 @@ export default class PortForwardCommand implements ICommand {
       const kind = node.resourceType;
       const name = node.name;
 
-      const podNameArr = await kubectl.getRunningPodNames(
+      const podNameArr = await nhctl.getRunningPodNames({
         name,
         kind,
-        node.getNameSpace(),
-        node.getKubeConfigPath()
-      );
+        namespace: node.getNameSpace(),
+        kubeConfigPath: node.getKubeConfigPath(),
+      });
       podName = podNameArr[0];
       if (podNameArr.length > 1) {
         podName = await vscode.window.showQuickPick(podNameArr);
@@ -127,8 +126,13 @@ export default class PortForwardCommand implements ICommand {
       node.setStatus("");
       host.showInformationMessage("Started Port Forward");
     } else {
+      const nhctlCommand = new nhctl.NhctlCommand("port-forward", {
+        kubeConfigPath: node.getKubeConfigPath(),
+      });
       let terminalCommands = ["port-forward", podName, portMap];
       terminalCommands.push("--kubeconfig", node.getKubeConfigPath());
+
+      nhctlCommand.addArgument(podName).addArgument(portMap);
       let shellPath = "kubectl";
 
       let reg = /([0-9]+)|:([0-9]+)|([0-9]+):([0-9]+)/;
@@ -158,12 +162,39 @@ export default class PortForwardCommand implements ICommand {
           // terminalCommands = [`/user:${username}`, command];
         }
       }
-      const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-        terminalCommands,
-        this.getShellPath(sudo, shellPath),
-        "kubectl"
+      // const terminalDisposed = host.invokeInNewTerminalSpecialShell(
+      //   nhctlCommand.args,
+      //   nhctl.NhctlCommand.nhctlPath,
+      //   "nhctl"
+      // );
+      // const terminalDisposed = host.invokeInNewTerminalSpecialShell(
+      //   terminalCommands,
+      //   this.getShellPath(sudo, shellPath),
+      //   "kubectl"
+      // );
+      // terminalDisposed.show();
+      const ports = portMap.split(",").filter((str) => {
+        let reg = /([0-9]+)?:[0-9]+/g;
+        if (reg.exec(str)) {
+          return true;
+        }
+        return false;
+      });
+      if (ports.length <= 0) {
+        host.showErrorMessage("Please input correct content!");
+        return;
+      }
+      await nhctl.startPortForward(
+        host,
+        node.getKubeConfigPath(),
+        node.getNameSpace(),
+        node.getAppName(),
+        node.name,
+        "manual",
+        node.resourceType,
+        ports,
+        podName
       );
-      terminalDisposed.show();
     }
     host.getOutputChannel().show(true);
   }

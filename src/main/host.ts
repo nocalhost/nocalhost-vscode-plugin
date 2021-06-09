@@ -427,20 +427,20 @@ export class Host implements vscode.Disposable {
   }
 
   async check() {
-    const tools = ["kubectl"];
-    for (let i = 0; i < tools.length; i++) {
-      const exist = shell.which(tools[i]);
-      if (!exist) {
-        switch (tools[i]) {
-          case "kubectl": {
-            vscode.window.showErrorMessage(
-              "kubectl not found, please install kubectl first."
-            );
-            break;
-          }
-        }
-      }
-    }
+    // const tools = ["kubectl"];
+    // for (let i = 0; i < tools.length; i++) {
+    //   const exist = shell.which(tools[i]);
+    //   if (!exist) {
+    //     switch (tools[i]) {
+    //       case "kubectl": {
+    //         vscode.window.showErrorMessage(
+    //           "kubectl not found, please install kubectl first."
+    //         );
+    //         break;
+    //       }
+    //     }
+    //   }
+    // }
     await checkVersion();
   }
 

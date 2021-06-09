@@ -1,17 +1,14 @@
 import host from "../host";
 import * as yamlUtils from "yaml";
 import * as path from "path";
-import state from "../state";
 import * as fs from "fs";
-import * as kubectl from "../ctl/kubectl";
-import { uniq } from "lodash";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
 import { readYaml, accessFile } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
 import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
-import logger from "../utils/logger";
+import { getAllNamespace } from "../ctl/nhctl";
 
 export class LocalClusterNode {
   filePath: string;
@@ -46,11 +43,10 @@ export default class LocalCluster {
         defaultNamespace = currentContext.context.namespace;
       }
     }
-    devSpaces = await kubectl.getAllNamespace(
-      filePath,
-      defaultNamespace as string
-    );
-
+    devSpaces = await getAllNamespace({
+      kubeConfigPath: filePath,
+      namespace: defaultNamespace as string,
+    });
     const contextObj = {
       applicationName: "default.application",
       applicationUrl: "",

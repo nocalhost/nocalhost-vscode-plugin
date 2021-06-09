@@ -16,14 +16,23 @@ import {
 } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
+import { get as _get } from "lodash";
 import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
 import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
+import {
+  ControllerResource,
+  List,
+  PodResource,
+  Resource,
+  ResourceStatus,
+} from "../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
+import { DevspaceInfo } from "../api";
 import { IPvc } from "../domain";
 
 export interface InstalledAppInfo {
@@ -33,11 +42,337 @@ export interface InstalledAppInfo {
 
 export type IBaseCommand<T = any> = {
   kubeConfigPath: string;
-  namespace: string;
+  namespace?: string;
 } & T;
 export interface AllInstallAppInfo {
   namespace: string;
   application: Array<InstalledAppInfo>;
+}
+
+export class NhctlCommand {
+  public baseCommand: string = null;
+  public args: string[] = null;
+  private argTheTail: string = null;
+  private baseParams: IBaseCommand = null;
+  public static nhctlPath: string = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  private outputMethod: string = "toJson";
+  constructor(base: string, baseParams?: IBaseCommand<unknown>) {
+    this.baseParams = baseParams;
+    this.args = [];
+    this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
+  }
+  static create(base: string, baseParams?: IBaseCommand<unknown>) {
+    return new NhctlCommand(base, baseParams);
+  }
+  static get(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("get", baseParams);
+  }
+  static exec(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("k exec", baseParams);
+  }
+  static logs(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("k logs", baseParams);
+  }
+  static delete(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("k delete", baseParams);
+  }
+
+  addArgument(arg: string, value?: string | number) {
+    if (arg === "-o" && value) {
+      if (["yaml", "json"].indexOf((value as string).toLowerCase()) !== -1) {
+        this.outputMethod = value as string;
+      }
+    }
+    if (arg) {
+      this.args.push(arg);
+    }
+    if (value) {
+      this.args.push(value as string);
+    }
+    return this;
+  }
+  addArgumentStrict(arg: string, value: string | number) {
+    if (!arg || !value) {
+      return this;
+    }
+    return this.addArgument(arg, value);
+  }
+  addArgumentTheTail(arg: string) {
+    this.argTheTail = arg;
+    return this;
+  }
+  getCommand(): string {
+    if (this.baseParams) {
+      this.addArgumentStrict("--kubeconfig", this.baseParams.kubeConfigPath);
+      this.addArgumentStrict("--namespace", this.baseParams.namespace);
+    }
+    if (this.argTheTail) {
+      this.args.push(this.argTheTail || "");
+    }
+
+    return `${this.baseCommand} ${this.args.join(" ")}`;
+  }
+  toJson() {
+    this.outputMethod = "json";
+    return this;
+  }
+  toString() {
+    this.outputMethod = "string";
+    return this;
+  }
+
+  async exec(hasParse = true) {
+    const command = this.getCommand();
+    const result = await execAsyncWithReturn(command, []);
+    if (!result) {
+      return null;
+    }
+    if (!hasParse) {
+      return result.stdout;
+    }
+    if (this.outputMethod === "json") {
+      if (result && result.stdout) {
+        try {
+          const res = JSON.parse(result.stdout);
+          return res;
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+    if (this.outputMethod === "yaml") {
+      if (result && result.stdout) {
+        try {
+          const res = yaml.parse(result.stdout);
+          return res;
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+    return result.stdout;
+  }
+}
+
+export async function getPodNames(
+  props: IBaseCommand<{
+    kind: string;
+    name: string;
+  }>
+) {
+  let podNameArr: Array<string> = [];
+  let resArr = await getControllerPod(props);
+  if (resArr && resArr.length <= 0) {
+    return podNameArr;
+  }
+  resArr = (resArr as Array<Resource>).filter((res) => {
+    if (res.status) {
+      const status = res.status as ResourceStatus;
+      if (status.phase === "Running" && res.metadata["deletionTimestamp"]) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+  podNameArr = (resArr as Array<Resource>).map((res) => {
+    return res.metadata.name;
+  });
+  return podNameArr;
+}
+export async function getControllerPod(
+  props: IBaseCommand<{
+    kind: string;
+    name: string;
+  }>
+) {
+  const { kubeConfigPath, namespace, kind, name } = props;
+
+  const result = await NhctlCommand.get(props)
+    .addArgument(kind)
+    .addArgument(name)
+    .addArgument("-o", "json")
+    .exec();
+  const labels = _get(result, "info.spec.selector.matchLabels");
+  let labelStrArr = new Array<string>();
+  for (const key in labels) {
+    labelStrArr.push(`${key}=${labels[key]}`);
+  }
+  const labelStr = labelStrArr.join(",");
+  const list = await getResourceList({
+    label: labelStr,
+    kind: "pods",
+    kubeConfigPath,
+    namespace,
+  });
+
+  return list;
+}
+
+export async function getRunningPodNames(
+  props: IBaseCommand<{
+    name: string;
+    kind: string;
+  }>
+) {
+  let podNameArr: Array<string> = [];
+  let resArr = await getControllerPod(props);
+  if (resArr && resArr.length <= 0) {
+    return podNameArr;
+  }
+  resArr = (resArr as Array<Resource>).filter((res) => {
+    if (res.status) {
+      const status = res.status as ResourceStatus;
+      if (status.phase === "Running" && !res.metadata["deletionTimestamp"]) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+  podNameArr = (resArr as Array<Resource>).map((res) => {
+    return res.metadata.name;
+  });
+  return podNameArr;
+}
+
+export async function getContainerNames(
+  props: IBaseCommand<{
+    podName: string;
+  }>
+) {
+  const podStr = await getLoadResource({
+    ...props,
+    kind: "pods",
+    name: props.podName,
+    outputType: "json",
+  });
+  const pod = JSON.parse(podStr as string) as PodResource;
+
+  const containerNameArr = pod.spec.containers.map((c) => {
+    return c.name;
+  });
+
+  return containerNameArr;
+}
+
+export async function getLoadResource(
+  props: IBaseCommand<{
+    kind: string;
+    name: string;
+    outputType: string;
+  }>
+): Promise<string> {
+  const { kind, name, outputType = "yaml" } = props;
+  const result = await NhctlCommand.get(props)
+    .addArgument(kind)
+    .addArgument(name)
+    .addArgument("-o", outputType)
+    .exec();
+  if (outputType === "json") {
+    try {
+      return JSON.stringify(result.info);
+    } catch (e) {
+      console.log(e);
+      logger.error(e);
+      return null;
+    }
+  }
+  if (outputType === "yaml") {
+    try {
+      return yaml.stringify(result.info);
+    } catch (e) {
+      console.log(e);
+      logger.error(e);
+      return null;
+    }
+  }
+  return null;
+}
+
+export async function getResourceList(
+  props: IBaseCommand<{
+    kind: string;
+    label?: string;
+  }>
+) {
+  const { kind, label } = props;
+  const result = await NhctlCommand.get(props)
+    .addArgument(kind)
+    .addArgumentStrict("-l", label)
+    .addArgument("-o", "json")
+    .toJson()
+    .exec();
+  return (result || []).map((it: any) => ({ ...it.info }));
+}
+
+export async function getAllNamespace(props: IBaseCommand<unknown>) {
+  const devspaces = new Array<DevspaceInfo>();
+  const kubeConfig = fs.readFileSync(props.kubeConfigPath);
+  const result = await NhctlCommand.get(props)
+    .addArgument("ns")
+    .addArgument("-o", "json")
+    .toJson()
+    .exec();
+  if (!result) {
+    const devspace: DevspaceInfo = {
+      id: 0,
+      userId: 0,
+      spaceName: props.namespace,
+      clusterId: 0,
+      kubeconfig: `${kubeConfig}`,
+      memory: 0,
+      cpu: 0,
+      spaceResourceLimit: "",
+      namespace: props.namespace,
+      status: 0,
+      storageClass: "",
+      devStartAppendCommand: [],
+    };
+
+    devspaces.push(devspace);
+
+    return devspaces;
+  }
+  (result || []).forEach((it: any) => {
+    const ns = it.info;
+    const devspace: DevspaceInfo = {
+      id: 0,
+      userId: 0,
+      spaceName: ns["metadata"]["name"],
+      clusterId: 0,
+      kubeconfig: `${kubeConfig}`,
+      memory: 0,
+      cpu: 0,
+      spaceResourceLimit: "",
+      namespace: ns["metadata"]["name"],
+      status: 0,
+      storageClass: "",
+      devStartAppendCommand: [],
+    };
+
+    devspaces.push(devspace);
+  });
+  return devspaces;
+}
+
+export async function getAll(params: IBaseCommand) {
+  const result = await NhctlCommand.get(params)
+    .addArgument("all")
+    .addArgument("-o", "json")
+    .exec();
+
+  if (result && result.stdout) {
+    try {
+      const res = JSON.parse(result.stdout);
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export async function getInstalledApp(
@@ -1005,18 +1340,20 @@ export async function checkVersion() {
       });
     }
 
-    if (isUpgradeExtension) {
-      vscode.window.showInformationMessage(
-        `Please upgrade extension： Nocalhost`
-      );
-    }
+    // if (isUpgradeExtension) {
+    //   vscode.window.showInformationMessage(
+    //     `Please upgrade extension： Nocalhost`
+    //   );
+    // }
   } else {
     if (host.getGlobalState("Downloading")) {
       return;
     }
     host.setGlobalState("Downloading", true);
     lock(async function (err) {
-      if (err) return console.error(err);
+      if (err) {
+        return console.error(err);
+      }
       await host.showProgressing(`Downloading nhctl`, async () => {
         await downloadNhctl(sourcePath, destinationPath);
         fs.copyFileSync(destinationPath, binPath);

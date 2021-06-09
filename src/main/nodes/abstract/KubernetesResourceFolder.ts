@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { orderBy } from "lodash";
 import { ControllerResourceNode } from "../workloads/controllerResources/ControllerResourceNode";
 
-import * as kubectl from "../../ctl/kubectl";
+import { getResourceList } from "../../ctl/nhctl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
 import { AppNode } from "../AppNode";
 import { BaseNocalhostNode } from "../types/nodeType";
@@ -57,14 +57,13 @@ export abstract class KubernetesResourceFolder
 
   public async updateData(isInit?: boolean): Promise<any> {
     const appNode = this.getAppNode();
-    const res = await kubectl.getResourceList(
-      this.getKubeConfigPath(),
-      this.resourceType,
-      appNode.namespace
-    );
-    const list = JSON.parse(res as string) as List;
+    const list = await getResourceList({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      namespace: appNode.namespace,
+    });
 
-    const resource = this.filterResource(list.items, appNode);
+    const resource = this.filterResource(list, appNode);
 
     state.setData(this.getNodeStateId(), resource, isInit);
 

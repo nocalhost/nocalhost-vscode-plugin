@@ -9,9 +9,7 @@ import state from "../state";
 import selectValues from "../common/components/selectValues";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
-import * as kubectl from "../ctl/kubectl";
 import { AppNode } from "../nodes/AppNode";
-import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
 
 export default class UpgradeCommand implements ICommand {
   command: string = UPGRADE_APP;
@@ -210,12 +208,12 @@ export default class UpgradeCommand implements ICommand {
         const service = services[i];
         const containers = service.containers;
         let ports: Array<string> = [];
-        const podNameArr = await kubectl.getPodNames(
-          service.name,
-          service.serviceType,
-          appNode.namespace,
-          appNode.getKubeConfigPath()
-        );
+        const podNameArr = await nhctl.getPodNames({
+          name: service.name,
+          kind: service.serviceType,
+          namespace: appNode.namespace,
+          kubeConfigPath: appNode.getKubeConfigPath(),
+        });
         if (podNameArr && podNameArr.length <= 0) {
           host.showErrorMessage("Not found pod");
           return;

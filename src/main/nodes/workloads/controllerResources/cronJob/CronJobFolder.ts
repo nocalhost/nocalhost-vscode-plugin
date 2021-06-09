@@ -1,6 +1,4 @@
 import * as vscode from "vscode";
-import { orderBy } from "lodash";
-import * as kubectl from "../../../../ctl/kubectl";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { CronJob } from "./CronJob";
 import { CRON_JOBS_FOLDER } from "../../../nodeContants";

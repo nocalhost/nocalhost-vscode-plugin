@@ -35,7 +35,7 @@ export default class SyncServiceCommand implements ICommand {
       this._id = null;
     }
     if (!syncData.app || !syncData.service) {
-      logger.info("syncData.app is null");
+      logger.info("syncData.app is null", true);
       host.statusBar.hide();
       host.outSyncStatusBar.hide();
       return;
@@ -53,12 +53,12 @@ export default class SyncServiceCommand implements ICommand {
         if (!result) {
           // hide status bar
           if (this._id) {
-            clearInterval(this._id);
+            // clearInterval(this._id);
             logger.info("sync-status result empty");
-            this._id = null;
+            // this._id = null;
           }
-          host.statusBar.hide();
-          host.outSyncStatusBar.hide();
+          // host.statusBar.hide();
+          // host.outSyncStatusBar.hide();
         } else {
           // update status bar
 
@@ -75,6 +75,7 @@ export default class SyncServiceCommand implements ICommand {
             host.outSyncStatusBar.tooltip = r.outOfSync;
             host.outSyncStatusBar.show();
           } else {
+            // host.log(`r.outOfSync does not exist： ${r.outOfSync}`, true);
             host.outSyncStatusBar.hide();
           }
           host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
@@ -90,7 +91,7 @@ export default class SyncServiceCommand implements ICommand {
           host.statusBar.show();
         }
       } catch (e) {
-        logger.error("sync-status error");
+        logger.info("sync-status error");
         console.log(e);
         logger.error(e);
       }

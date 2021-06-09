@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import { orderBy } from "lodash";
-import * as kubectl from "../../../../ctl/kubectl";
+import { getResourceList } from "../../../../ctl/nhctl";
 import ConfigService, {
   NocalhostConfig,
   NocalhostServiceConfig,
@@ -22,13 +22,12 @@ export class DeploymentFolder extends KubernetesResourceFolder {
   public resourceType = "Deployments";
   public async updateData(isInit?: boolean): Promise<any> {
     const appNode = this.getAppNode();
-    const res = await kubectl.getResourceList(
-      this.getKubeConfigPath(),
-      this.resourceType,
-      appNode.namespace
-    );
-    let list = JSON.parse(res as string) as List;
 
+    const list: Resource[] = await getResourceList({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      namespace: appNode.namespace,
+    });
     const appInfo = await appNode.freshApplicationInfo();
     const appConfig = await ConfigService.getAppConfig(
       appNode.getKubeConfigPath(),
@@ -38,7 +37,7 @@ export class DeploymentFolder extends KubernetesResourceFolder {
     if (!appNode.parent.hasInit) {
       await appNode.parent.updateData(true);
     }
-    const resource = this.filterResource(list.items, appNode);
+    const resource = this.filterResource(list, appNode);
     const obj = {
       resource: resource,
       appInfo,
