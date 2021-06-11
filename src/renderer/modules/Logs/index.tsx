@@ -36,6 +36,7 @@ const useStyles = makeStyles((theme: CustomThemeOptions) =>
       fontSize: 12,
     },
     line: {
+      margin: "8px 0",
       "&:before": {
         display: "inline-block",
         content: "attr(data-line)",

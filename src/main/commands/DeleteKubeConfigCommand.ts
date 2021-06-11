@@ -6,7 +6,7 @@ import { DELETE_KUBECONFIG, REFRESH, SIGN_OUT } from "./constants";
 import registerCommand from "./register";
 import { LOCAL_PATH } from "../constants";
 import state from "../state";
-
+import { isExist } from "../utils/fileUtil";
 import host from "../host";
 import { LocalClusterNode } from "../clusters/LocalCuster";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
@@ -48,8 +48,10 @@ export default class DeleteKubeConfigCommand implements ICommand {
         false
       );
     }
-    deleted.forEach((f) => {
-      fs.unlinkSync(f.filePath);
+    deleted.forEach(async (f) => {
+      if (await isExist(f.filePath)) {
+        fs.unlinkSync(f.filePath);
+      }
     });
 
     // if (tmpPath.length === 0) {
