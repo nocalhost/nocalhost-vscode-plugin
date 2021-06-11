@@ -60,6 +60,7 @@ export async function execChildProcessAsync(
       if (code === 0) {
         resolve(null);
       } else {
+        logger.error(`end dev fail: ${code}`);
         if (errorTips && errorTips.output) {
           host.log(errorTips.output, true);
         }

@@ -222,24 +222,24 @@ export class AppNode extends NocalhostFolderNode {
     if (!this.installed()) {
       return;
     }
-    const svcProfiles =
-      (this.nhctlAppInfo && this.nhctlAppInfo.svcProfile) || [];
-    for (const service of svcProfiles) {
-      if (
-        service.developing &&
-        service.localAbsoluteSyncDirFromDevStartPlugin.length > 0 &&
-        service.localAbsoluteSyncDirFromDevStartPlugin[0] ===
-          host.getCurrentRootPath()
-      ) {
-        vscode.commands.executeCommand(SYNC_SERVICE, {
-          app: this.name,
-          service: service.actualName,
-          kubeConfigPath: this.getKubeConfigPath(),
-          namespace: this.namespace,
-        });
-        break;
-      }
-    }
+    // const svcProfiles =
+    //   (this.nhctlAppInfo && this.nhctlAppInfo.svcProfile) || [];
+    // for (const service of svcProfiles) {
+    //   if (
+    //     service.developing &&
+    //     service.localAbsoluteSyncDirFromDevStartPlugin.length > 0 &&
+    //     service.localAbsoluteSyncDirFromDevStartPlugin[0] ===
+    //       host.getCurrentRootPath()
+    //   ) {
+    //     vscode.commands.executeCommand(SYNC_SERVICE, {
+    //       app: this.name,
+    //       service: service.actualName,
+    //       kubeConfigPath: this.getKubeConfigPath(),
+    //       namespace: this.namespace,
+    //     });
+    //     break;
+    //   }
+    // }
   }
 
   installed(): boolean {
