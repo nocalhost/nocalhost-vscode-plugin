@@ -60,7 +60,7 @@ const rendererConfig = {
   target: "node",
   mode: "production",
   entry: {
-    renderer: "./src/renderer/index.tsx",
+    renderer_v1: "./src/renderer/index.tsx",
     home: "./src/renderer/HomeIndex.tsx",
   },
   output: {
@@ -87,7 +87,7 @@ const rendererConfig = {
       patterns: [
         { from: "./src/renderer/assets/css/atom-one-light.css" },
         { from: "./src/renderer/assets/css/vs2015.css" },
-        { from: "./src/renderer/assets/fonts/DroidSansMono.ttf" },
+        { from: "./src/renderer/assets/fonts/DroidSansMono_v1.ttf" },
       ],
     }),
   ],

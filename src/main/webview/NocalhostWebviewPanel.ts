@@ -252,16 +252,16 @@ export default class NocalhostWebviewPanel {
       return "";
     }
     const bundlePath: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", "renderer.js"))
+      vscode.Uri.file(path.join(extensionPath, "dist", `renderer_v1.js`))
     );
     const syntaxThemeLight: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", "atom-one-light.css"))
+      vscode.Uri.file(path.join(extensionPath, "dist", `atom-one-light.css`))
     );
     const syntaxThemeDark: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", "vs2015.css"))
+      vscode.Uri.file(path.join(extensionPath, "dist", `vs2015.css`))
     );
     const fontPath: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", "DroidSansMono.ttf"))
+      vscode.Uri.file(path.join(extensionPath, "dist", `DroidSansMono_v1.ttf`))
     );
     return `
       <!DOCTYPE html>
