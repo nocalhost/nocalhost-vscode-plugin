@@ -91,7 +91,7 @@ export default class AccountClusterService {
     accountClusterService.jwt = newAccountCluser.jwt;
     const newRootNodes: IRootNode[] = [];
     let serviceAccounts = await accountClusterService.getServiceAccount();
-    if (serviceAccounts.length === 0) {
+    if (!serviceAccounts || serviceAccounts.length === 0) {
       logger.error(
         `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
       );
