@@ -24,7 +24,6 @@ export default class SignOutCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(node: KubeConfigNode) {
-    const demo = host.getGlobalState(SERVER_CLUSTER_LIST);
     let globalUserList: {
       userInfo: IUserInfo;
       jwt: string;
@@ -35,16 +34,15 @@ export default class SignOutCommand implements ICommand {
       }
       return it.id !== node.id;
     });
-
     host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
-    // host.removeGlobalState(JWT);
-    // host.removeGlobalState(EMAIL);
-    // host.removeGlobalState(USER_INFO_LIST);
-    // // remove kubeconfig
-    // this.removeAllKubeconfig();
-    // state.setLogin(false);
     await vscode.commands.executeCommand("Nocalhost.refresh");
+
+    for (let key of state.refreshFolderMap.keys()) {
+      if ((key as string).startsWith(node.getNodeStateId())) {
+        state.refreshFolderMap.set(key, false);
+      }
+    }
 
     if (!isExistCluster()) {
       await vscode.commands.executeCommand(

@@ -118,12 +118,11 @@ export class KubeConfigNode extends NocalhostFolderNode {
         return;
       }
     }
-
     fs.writeFileSync(filePath, writeData, { mode: 0o600 });
   }
 
   getNodeStateId(): string {
-    return `${this.parent.getNodeStateId()}${ID_SPLIT}${this.label}`;
+    return `${this.id}${this.parent.getNodeStateId()}${ID_SPLIT}${this.label}`;
   }
 
   getParent(): NocalhostRootNode {

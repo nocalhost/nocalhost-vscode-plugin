@@ -139,6 +139,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           `${app.id}_${app.devspaceId}_config`
         );
         this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+
         return new AppNode(
           this,
           obj.installType,

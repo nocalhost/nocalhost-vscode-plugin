@@ -117,6 +117,7 @@ export default class CleanPvcCommand implements ICommand {
       case NodeType.appFolder:
         workloadName = null;
         const appNode = node as AppNode;
+        appName = appNode.name;
         clearPvcFn = getCleanPvcOtherFn({
           kubeConfig: node.getKubeConfigPath(),
           namespace,
@@ -126,7 +127,7 @@ export default class CleanPvcCommand implements ICommand {
         pvcs = await getPvcListByOther(
           node.getKubeConfigPath(),
           appNode.namespace,
-          appNode.name,
+          appName,
           workloadName
         );
         break;

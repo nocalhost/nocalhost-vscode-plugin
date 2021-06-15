@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { spawnSync } from "child_process";
+import { NhctlCommand } from "./../ctl/nhctl";
 import { IDebugProvider } from "./IDebugprovider";
 import host from "../host";
 
@@ -83,12 +84,12 @@ export class GoDebugProvider extends IDebugProvider {
     }
     const searchCommand = execCommand[index + 1];
     host.log("searchCommand: " + searchCommand, true);
-    const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
     const args = command.split(" ");
 
     const killCommand = `kill -9 \`ps aux|grep -i '${searchCommand.trim()}'|grep -v grep|awk '{print $2}'\``;
 
     args.push("bash", "-c", `${killCommand}`);
-    spawnSync(`kubectl`, args);
+    spawnSync(NhctlCommand.nhctlPath, args);
   }
 }

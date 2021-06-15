@@ -3,7 +3,7 @@ import ICommand from "./ICommand";
 import { LOG } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import * as kubectl from "../ctl/kubectl";
+import * as nhctl from "../ctl/nhctl";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { Pod } from "../nodes/workloads/pod/Pod";
@@ -32,6 +32,7 @@ export default class LogCommand implements ICommand {
           id: node.getNodeStateId(),
           app: node.getAppName(),
           pod: podName,
+          namespace: node.getNameSpace(),
           container: containerName,
         },
       });
@@ -57,12 +58,12 @@ export default class LogCommand implements ICommand {
     };
 
     if (node instanceof ControllerResourceNode) {
-      const podNameArr = await kubectl.getPodNames(
-        node.name,
-        node.resourceType,
-        node.getNameSpace(),
-        node.getKubeConfigPath()
-      );
+      const podNameArr = await nhctl.getPodNames({
+        name: node.name,
+        kind: node.resourceType,
+        namespace: node.getNameSpace(),
+        kubeConfigPath: node.getKubeConfigPath(),
+      });
       result.podName = podNameArr[0];
       if (podNameArr.length > 1) {
         result.podName = await vscode.window.showQuickPick(podNameArr);
@@ -75,11 +76,11 @@ export default class LogCommand implements ICommand {
     } else {
       return result;
     }
-    const containerNameArr = await kubectl.getContainerNames(
-      result.podName,
-      node.getKubeConfigPath(),
-      node.getNameSpace()
-    );
+    const containerNameArr = await nhctl.getContainerNames({
+      podName: result.podName,
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+    });
     result.containerName = containerNameArr[0];
     if (containerNameArr.length > 1) {
       result.containerName = await vscode.window.showQuickPick(

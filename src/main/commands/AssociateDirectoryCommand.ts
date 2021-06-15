@@ -7,9 +7,7 @@ import registerCommand from "./register";
 import { IWorkloadConfig } from "../domain/IWorkloadConfig";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
-import { associate, getServiceConfig } from "../ctl/nhctl";
-
-import * as kubectl from "../ctl/kubectl";
+import { associate, getServiceConfig, getPodNames } from "../ctl/nhctl";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
   command: string = ASSOCIATE_LOCAL_DIRECTORY;
@@ -76,38 +74,5 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       vscode.workspace.workspaceFolders.length > 0 &&
       vscode.workspace.workspaceFolders[0].uri.fsPath
     );
-  }
-
-  async getPodAndContainer(node: Deployment) {
-    const kubeConfigPath = node.getKubeConfigPath();
-    let podName: string | undefined;
-    const appNode = node.getAppNode();
-    const podNameArr = await kubectl.getPodNames(
-      node.name,
-      node.resourceType,
-      appNode.namespace,
-      kubeConfigPath
-    );
-    podName = podNameArr[0];
-    if (!podName) {
-      return;
-    }
-    const containerNameArr = await kubectl.getContainerNames(
-      podName,
-      kubeConfigPath,
-      appNode.namespace
-    );
-    let containerName: string | undefined = "";
-    if (containerNameArr.length === 1) {
-      containerName = containerNameArr[0];
-    }
-    if (containerNameArr.length > 1) {
-      containerName = await vscode.window.showQuickPick(containerNameArr);
-      if (!containerName) {
-        return;
-      }
-    }
-
-    return { containerName, podName };
   }
 }

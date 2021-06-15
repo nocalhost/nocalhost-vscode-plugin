@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
 import { ChildProcess, spawn, spawnSync } from "child_process";
-
+import { NhctlCommand } from "./../ctl/nhctl";
 import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import { ContainerConfig } from "../service/configService";
 import { IDebugProvider } from "./IDebugprovider";
 import { validate } from "json-schema";
 import logger from "../utils/logger";
-import * as kubectl from "../ctl/kubectl";
+import { getRunningPodNames } from "../ctl/nhctl";
 
 export class DebugSession {
   public async launch(
@@ -63,12 +63,12 @@ export class DebugSession {
     }
     const port =
       (container.dev.debug && container.dev.debug.remoteDebugPort) || 9229;
-    const podNames = await kubectl.getRunningPodNames(
-      node.name,
-      node.resourceType,
-      node.getNameSpace(),
-      node.getKubeConfigPath()
-    );
+    const podNames = await getRunningPodNames({
+      name: node.name,
+      kind: node.resourceType,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+    });
     if (podNames.length < 1) {
       logger.info(`debug: not found pod`);
       return;
@@ -199,12 +199,12 @@ export class DebugSession {
     execCommand: string[],
     terminatedCallback: Function
   ) {
-    const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
     const args = command.split(" ");
     args.push("bash", "-c", `${execCommand.join(" ")}`);
 
     host.log("debug: " + `${args.join(" ")}`, true);
-    const proc = spawn(`kubectl`, args);
+    const proc = spawn(NhctlCommand.nhctlPath, args);
 
     proc.stdout.on("data", function (data) {
       host.log(`${data}`);
@@ -226,9 +226,9 @@ export class DebugSession {
     podName: string,
     kubeconfigPath: string
   ) {
-    const command = `port-forward ${podName} ${port} --kubeconfig ${kubeconfigPath}`;
-    host.log("port-forward: " + `kubectl ${command}`, true);
-    const proc = spawn(`kubectl`, command.split(" "));
+    const command = `port-forward start ${podName} ${port} --kubeconfig ${kubeconfigPath}`;
+    host.log(`port-forward: ${command}`, true);
+    const proc = spawn(NhctlCommand.nhctlPath, command.split(" "));
 
     return proc;
   }
@@ -265,11 +265,11 @@ export class DebugSession {
     kubeconfigPath: string
   ) {
     function check() {
-      const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
       const args = command.split(" ");
 
       args.push("bash", "-c", `netstat -tunlp | grep ${port}`);
-      const result = spawnSync(`kubectl`, args);
+      const result = spawnSync(NhctlCommand.nhctlPath, args);
       if (`${result.stdout}`) {
         return true;
       }

@@ -92,9 +92,13 @@ export default class ConfigService {
     appName: string
   ) {
     const configStr = await nhctl.getConfig(kubeConfigPath, namespace, appName);
-    const config = yaml.parse(configStr) as NocalhostConfig;
-
-    return config;
+    try {
+      const config = yaml.parse(configStr) as NocalhostConfig;
+      return config;
+    } catch (e) {
+      console.log(e);
+      return e;
+    }
   }
 
   static async writeConfig(

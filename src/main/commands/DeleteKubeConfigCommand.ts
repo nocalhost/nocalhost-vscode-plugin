@@ -5,6 +5,8 @@ import ICommand from "./ICommand";
 import { DELETE_KUBECONFIG, REFRESH, SIGN_OUT } from "./constants";
 import registerCommand from "./register";
 import { LOCAL_PATH } from "../constants";
+import state from "../state";
+import { isExist } from "../utils/fileUtil";
 import host from "../host";
 import { LocalClusterNode } from "../clusters/LocalCuster";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
@@ -33,7 +35,11 @@ export default class DeleteKubeConfigCommand implements ICommand {
       tmpPath = [];
     }
     host.setGlobalState(LOCAL_PATH, tmpPath);
-
+    for (let key of state.refreshFolderMap.keys()) {
+      if ((key as string).startsWith(node.getNodeStateId())) {
+        state.refreshFolderMap.set(key, false);
+      }
+    }
     await vscode.commands.executeCommand(REFRESH);
     if (!isExistCluster()) {
       await vscode.commands.executeCommand(
@@ -42,8 +48,10 @@ export default class DeleteKubeConfigCommand implements ICommand {
         false
       );
     }
-    deleted.forEach((f) => {
-      fs.unlinkSync(f.filePath);
+    deleted.forEach(async (f) => {
+      if (await isExist(f.filePath)) {
+        fs.unlinkSync(f.filePath);
+      }
     });
 
     // if (tmpPath.length === 0) {

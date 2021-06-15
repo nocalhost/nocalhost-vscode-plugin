@@ -1,4 +1,5 @@
 import { spawnSync } from "child_process";
+import { NhctlCommand } from "./../ctl/nhctl";
 
 export abstract class IDebugProvider {
   static requiredCommand = ["ps", "awk", "netstat"];
@@ -15,7 +16,7 @@ export abstract class IDebugProvider {
     kubeconfigPath: string,
     execCommand: string[]
   ) {
-    const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
     const args = command.split(" ");
     const sliceCommands = execCommand.join(" ").split("&&");
 
@@ -24,7 +25,7 @@ export abstract class IDebugProvider {
     ].trim()}'|grep -v grep|awk '{print $2}'\``;
 
     args.push("bash", "-c", `${killCommand}`);
-    spawnSync(`kubectl`, args);
+    spawnSync(NhctlCommand.nhctlPath, args);
   }
 
   public async isDebuggerInstalled() {
@@ -33,11 +34,11 @@ export abstract class IDebugProvider {
 
   public checkRequiredCommand(podName: string, kubeconfigPath: string) {
     function check(requiredCommand: string) {
-      const command = `exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
       const args = command.split(" ");
 
       args.push("bash", "-c", `which ${requiredCommand}`);
-      const result = spawnSync(`kubectl`, args);
+      const result = spawnSync(NhctlCommand.nhctlPath, args);
       if (`${result.stdout}`) {
         return true;
       }

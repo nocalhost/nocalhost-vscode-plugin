@@ -36,6 +36,7 @@ const useStyles = makeStyles((theme: CustomThemeOptions) =>
       fontSize: 12,
     },
     line: {
+      margin: "8px 0",
       "&:before": {
         display: "inline-block",
         content: "attr(data-line)",
@@ -108,6 +109,7 @@ const Logs: React.FC = () => {
     fetchLogs,
     [
       {
+        namespace: query.namespace as string,
         id: query.id as string,
         app: query.app as string,
         pod: query.pod as string,

@@ -94,7 +94,8 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
         const result: ServiceResult = await services.applyKubernetesObject(
           appNode.name,
           path,
-          kubeConfig
+          kubeConfig,
+          namespace
         );
         const { success, value } = result;
         if (success) {
@@ -149,10 +150,12 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
         cancellable: false,
       },
       async (progress) => {
+        const namespace: string = target.namespace;
         const result: ServiceResult = await services.applyKubernetesObject(
           selected,
           path,
-          kubeConfig
+          kubeConfig,
+          namespace
         );
         const { success, value } = result;
         if (success) {
@@ -188,11 +191,13 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
         const applyList: Promise<ServiceResult>[] = uris.map(
           async (uri: vscode.Uri) => {
             const path: string = uri.fsPath || uri.path;
+            const namespace: string = target.namespace;
             const isDir: boolean = fs.lstatSync(path).isDirectory();
             return await services.applyKubernetesObject(
               target.name,
               path,
-              kubeConfig
+              kubeConfig,
+              namespace
             );
           }
         );

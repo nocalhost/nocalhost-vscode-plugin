@@ -24,7 +24,8 @@ export default async function fetchLogs(message: IMessage, id: number) {
     payload.pod,
     payload.container,
     payload.tail,
-    kubeConfig
+    kubeConfig,
+    payload.namespace
   );
   const content: string = result.success ? result.value : "";
   const items: string[] = content ? content.split("\n") : [];

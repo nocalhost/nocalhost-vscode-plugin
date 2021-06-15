@@ -14,7 +14,6 @@ import * as yaml from "yaml";
 import * as path from "path";
 import { omit } from "lodash";
 import * as querystring from "querystring";
-import * as kubectl from "./ctl/kubectl";
 import * as nhctl from "./ctl/nhctl";
 import { get as _get } from "lodash";
 import * as shell from "./ctl/shell";
@@ -102,14 +101,13 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           const name = names[0];
           const output = names[1];
           const node = state.getNode(id) as KubernetesResourceNode;
-          result =
-            (await kubectl.loadResource(
-              node.getKubeConfigPath(),
-              kind,
-              namespace,
-              name,
-              output
-            )) || "";
+          result = await nhctl.getLoadResource({
+            kubeConfigPath: node.getKubeConfigPath(),
+            namespace,
+            kind,
+            name,
+            outputType: output,
+          });
           if (result) {
             result = this.sanitizeResource(result);
           }
@@ -118,10 +116,13 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           const node = state.getNode(id) as KubernetesResourceNode;
           const podName = paths[2];
           const containerName = paths[3];
-          const shellObj = await shell.execAsyncWithReturn(
-            `kubectl logs ${podName} -c ${containerName} --kubeconfig ${node.getKubeConfigPath()}`,
-            []
-          );
+          const command = nhctl.NhctlCommand.logs({
+            kubeConfigPath: node.getKubeConfigPath(),
+          })
+            .addArgument(podName)
+            .addArgument("-c", containerName)
+            .getCommand();
+          const shellObj = await shell.execAsyncWithReturn(command, []);
           if (shellObj.code === 0) {
             result = shellObj.stdout;
           } else {

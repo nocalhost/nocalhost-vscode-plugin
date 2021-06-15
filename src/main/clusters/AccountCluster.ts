@@ -3,7 +3,7 @@ import { IUserInfo, IRootNode } from "../domain";
 import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
 import * as path from "path";
-import * as kubectl from "../ctl/kubectl";
+import { getAllNamespace } from "../ctl/nhctl";
 import host from "../host";
 import { getStringHash } from "../utils/common";
 import { uniqBy } from "lodash";
@@ -105,12 +105,15 @@ export default class AccountClusterService {
       const kubeconfigPath = path.resolve(KUBE_CONFIG_DIR, id);
       writeFileAsync(kubeconfigPath, sa.kubeconfig);
       if (sa.privilege) {
-        const devs = await kubectl.getAllNamespace(kubeconfigPath, "default");
+        const devs = await getAllNamespace({
+          kubeConfigPath: kubeconfigPath,
+          namespace: "default",
+        });
         for (const dev of devs) {
           dev.storageClass = sa.storageClass;
           dev.devStartAppendCommand = [
             "--priority-class",
-            "nocalhost-container-criticals",
+            "nocalhost-container-critical",
           ];
           dev.kubeconfig = sa.kubeconfig;
         }
