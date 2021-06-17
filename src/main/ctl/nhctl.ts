@@ -8,7 +8,6 @@ import * as semver from "semver";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
-import * as request from "request";
 import {
   execAsyncWithReturn,
   execChildProcessAsync,
@@ -79,6 +78,9 @@ export class NhctlCommand {
   static delete(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k delete", baseParams);
   }
+  static list(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("list", baseParams);
+  }
 
   addArgument(arg: string, value?: string | number) {
     if (arg === "-o" && value) {
@@ -119,6 +121,12 @@ export class NhctlCommand {
     this.outputMethod = "json";
     return this;
   }
+
+  toYaml() {
+    this.outputMethod = "yaml";
+    return this;
+  }
+
   toString() {
     this.outputMethod = "string";
     return this;
@@ -132,6 +140,16 @@ export class NhctlCommand {
     }
     if (!hasParse) {
       return result.stdout;
+    }
+    if (this.outputMethod === "yaml") {
+      if (result && result.stdout) {
+        try {
+          const res = yaml.parse(result.stdout);
+          return res;
+        } catch (e) {
+          return null;
+        }
+      }
     }
     if (this.outputMethod === "json") {
       if (result && result.stdout) {
@@ -379,23 +397,13 @@ export async function getInstalledApp(
   ns: string,
   kubeconfig: string
 ): Promise<AllInstallAppInfo[]> {
-  const nhctlPath = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
-  const command = `${nhctlPath} list --yaml -n ${ns} --kubeconfig ${kubeconfig}`;
-  const result = await execAsyncWithReturn(command, []);
-
-  let obj: AllInstallAppInfo[] = [];
-
-  if (result && result.stdout) {
-    try {
-      obj = yaml.parse(result.stdout);
-    } catch (error) {
-      logger.info("command: " + command + "result: ", result.stdout);
-      throw error;
-    }
-  }
+  let obj: AllInstallAppInfo[] = await NhctlCommand.list({
+    kubeConfigPath: kubeconfig,
+  })
+    .addArgument("--yaml")
+    .addArgumentStrict("-n", ns)
+    .toYaml()
+    .exec();
 
   return obj.sort((a, b) => {
     if (a.namespace < b.namespace) {
@@ -1280,7 +1288,7 @@ function getNhctlPath(version: string) {
 
 export async function checkDownloadNhclVersion(
   version: string,
-  nhctlPath: string = PLUGIN_TEMP_DIR
+  nhctlPath: string = NH_BIN
 ) {
   const tempVersion: string = await services.fetchNhctlVersion(nhctlPath);
   return tempVersion === version;
@@ -1295,78 +1303,73 @@ export async function checkVersion() {
   if (!requiredVersion) {
     return;
   }
-  if (currentVersion) {
-    // currentVersion < requiredVersion
-    const isUpdateNhctl: boolean = semver.lt(currentVersion, requiredVersion);
-    // currentVersion > requiredVersion
-    const isUpgradeExtension: boolean = semver.gt(
-      currentVersion,
-      requiredVersion
-    );
+  try {
+    if (currentVersion) {
+      // currentVersion < requiredVersion
+      const isUpdateNhctl: boolean = semver.lt(currentVersion, requiredVersion);
+      // currentVersion > requiredVersion
+      const isUpgradeExtension: boolean = semver.gt(
+        currentVersion,
+        requiredVersion
+      );
+      if (isUpdateNhctl) {
+        if (host.getGlobalState("Downloading")) {
+          return;
+        }
+        host.setGlobalState("Downloading", true);
+        lock(async (err) => {
+          if (err) {
+            return console.error(err);
+          }
+          await host.showProgressing(
+            `Update nhctl to ${requiredVersion}...`,
+            async () => {
+              await downloadNhctl(sourcePath, destinationPath);
+              fs.renameSync(destinationPath, binPath);
+              host.removeGlobalState("Downloading");
+              if (!(await checkDownloadNhclVersion(requiredVersion))) {
+                vscode.window.showErrorMessage(
+                  `Update failed, please delete ${binPath} file and try again`
+                );
+              } else {
+                vscode.window.showInformationMessage("Update completed");
+              }
+              unlock(() => {});
+            }
+          );
+        });
+      }
 
-    if (isUpdateNhctl) {
+      // if (isUpgradeExtension) {
+      //   vscode.window.showInformationMessage(
+      //     `Please upgrade extension： Nocalhost`
+      //   );
+      // }
+    } else {
       if (host.getGlobalState("Downloading")) {
         return;
       }
       host.setGlobalState("Downloading", true);
-      lock(async (err) => {
+      lock(async function (err) {
         if (err) {
           return console.error(err);
         }
-        await host.showProgressing(
-          `Update nhctl to ${requiredVersion}...`,
-          async () => {
-            await downloadNhctl(sourcePath, destinationPath);
-            if (!(await checkDownloadNhclVersion(requiredVersion))) {
-              host.removeGlobalState("Downloading");
-              vscode.window.showErrorMessage("Update failed, please try again");
-              fs.unlinkSync(destinationPath);
-              unlock(() => {});
-              return;
-            }
-            fs.copyFileSync(destinationPath, binPath);
-            host.removeGlobalState("Downloading");
-            if (!(await checkDownloadNhclVersion(requiredVersion))) {
-              vscode.window.showErrorMessage(
-                `Update failed, please delete ${binPath} file and try again`
-              );
-            } else {
-              vscode.window.showInformationMessage("Update completed");
-            }
-            unlock(() => {});
-            fs.unlinkSync(destinationPath);
+        await host.showProgressing(`Downloading nhctl`, async () => {
+          await downloadNhctl(sourcePath, destinationPath);
+          fs.renameSync(destinationPath, binPath);
+          host.removeGlobalState("Downloading");
+          unlock(() => {});
+          if (!(await checkDownloadNhclVersion(requiredVersion))) {
+            vscode.window.showErrorMessage(`Download failed, Please try again`);
+          } else {
+            vscode.window.showInformationMessage("Download completed");
           }
-        );
+        });
       });
     }
-
-    // if (isUpgradeExtension) {
-    //   vscode.window.showInformationMessage(
-    //     `Please upgrade extension： Nocalhost`
-    //   );
-    // }
-  } else {
-    if (host.getGlobalState("Downloading")) {
-      return;
-    }
-    host.setGlobalState("Downloading", true);
-    lock(async function (err) {
-      if (err) {
-        return console.error(err);
-      }
-      await host.showProgressing(`Downloading nhctl`, async () => {
-        await downloadNhctl(sourcePath, destinationPath);
-        fs.copyFileSync(destinationPath, binPath);
-        host.removeGlobalState("Downloading");
-        unlock(() => {});
-        if (!(await checkDownloadNhclVersion(requiredVersion))) {
-          vscode.window.showErrorMessage(`Download failed, Please try again`);
-        } else {
-          vscode.window.showInformationMessage("Download completed");
-        }
-        fs.unlinkSync(destinationPath);
-      });
-    });
+  } catch (e) {
+    host.removeGlobalState("Downloading");
+    unlock(() => {});
   }
 }
 
