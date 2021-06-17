@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.45",
+  "version": "0.4.46",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -20,7 +20,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.8"
+    "version": "0.4.9"
   },
   "contributes": {
     "yamlValidation": [
@@ -515,6 +515,7 @@
     "highlight.js": "^10.5.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
+    "path-exists": "^4.0.0",
     "qs": "^6.9.4",
     "rimraf": "^3.0.2",
     "semver": "^7.3.4",
