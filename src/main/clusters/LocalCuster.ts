@@ -3,7 +3,7 @@ import * as yamlUtils from "yaml";
 import * as path from "path";
 import * as fs from "fs";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
-import { readYaml, accessFile } from "../utils/fileUtil";
+import { isExistSync } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
 import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
 import { getStringHash } from "../utils/common";
@@ -27,6 +27,10 @@ export default class LocalCluster {
     let kubeConfig = "";
     let applications: V2ApplicationInfo[] = [];
     let devSpaces: Array<DevspaceInfo> | undefined = new Array();
+    if (!isExistSync(filePath)) {
+      host.log(`no such file or directory: ${filePath}`);
+      return;
+    }
     const kubeStr = fs.readFileSync(filePath);
     const kubeConfigObj = yaml.parse(`${kubeStr}`);
     kubeConfig = `${kubeStr}`;
@@ -82,13 +86,7 @@ export default class LocalCluster {
       if (!it.filePath) {
         return false;
       }
-      try {
-        const state = fs.accessSync(it.filePath, fs.constants.R_OK);
-        return !Boolean(state);
-      } catch (e) {
-        host.log(e, true);
-        return false;
-      }
+      return isExistSync(it.filePath);
     });
     host.setGlobalState(LOCAL_PATH, localClusterNodes);
   };

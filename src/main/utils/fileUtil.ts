@@ -36,7 +36,7 @@ export function getYamlDefaultContext(yaml: any) {
 
 export async function readYaml(filePath: string) {
   let yamlObj = null;
-  const result = await accessFile(filePath);
+  const result = await isExist(filePath);
   if (result !== true) {
     return null;
   }
@@ -52,13 +52,13 @@ export async function writeYaml(filePath: string, yamlObj: any) {
   await writeFile(filePath, yamlStr);
 }
 
-export async function readFile(fliePath: string): Promise<string> {
-  const result = await accessFile(fliePath);
+export async function readFile(filePath: string): Promise<string> {
+  const result = await isExist(filePath);
   if (result !== true) {
     return null;
   }
   return new Promise((resolve, reject) => {
-    fs.readFile(fliePath, { encoding: "utf-8" }, (err, data) => {
+    fs.readFile(filePath, { encoding: "utf-8" }, (err, data) => {
       if (err) {
         reject(err);
       }
@@ -90,15 +90,15 @@ export async function writeFile(filePath: string, data: string | Uint8Array) {
   });
 }
 
-export function accessFile(filePath: string) {
-  return new Promise((resolve, reject) => {
-    fs.access(filePath, (err) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(true);
-    });
-  });
+export function isExistSync(filePath: string) {
+  if (!filePath) {
+    return false;
+  }
+  try {
+    return !Boolean(fs.accessSync(filePath));
+  } catch (e) {
+    return false;
+  }
 }
 
 export function isExist(filePath: string) {

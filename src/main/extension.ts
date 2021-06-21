@@ -172,11 +172,6 @@ export async function activate(context: vscode.ExtensionContext) {
   if (isExistCluster()) {
     await state.refreshTree();
   } else {
-    await vscode.commands.executeCommand(
-      "setContext",
-      "Nocalhost.visibleTree",
-      true
-    );
     await vscode.commands.executeCommand("setContext", "emptyCluster", true);
   }
   launchDevspace();

@@ -20,6 +20,7 @@ import { AppNode } from "./AppNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import host from "../host";
+import { isExistSync } from "../utils/fileUtil";
 import state from "../state";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { IRootNode } from "../domain";
@@ -33,14 +34,18 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public async getLocalData() {
     const localClusterNodes = (
       (host.getGlobalState(LOCAL_PATH) as LocalClusterNode[]) || []
-    ).filter((s) => s.filePath);
+    ).filter((s) => {
+      return isExistSync(s.filePath);
+    });
     const objArr = [];
     for (const localCluster of localClusterNodes || []) {
       try {
         const obj = await LocalCusterService.getLocalClusterRootNode(
           localCluster
         );
-        objArr.push(obj);
+        if (obj) {
+          objArr.push(obj);
+        }
       } catch (e) {
         console.log(e);
         logger.error(e);

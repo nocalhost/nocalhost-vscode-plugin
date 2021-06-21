@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { PLUGIN_TEMP_DIR } from "../constants";
 import * as request from "request";
-import { accessFile } from "../utils/fileUtil";
+import { isExist } from "../utils/fileUtil";
 import host from "../host";
 import logger from "./logger";
 
@@ -34,7 +34,7 @@ export const unlock = async function (callback: (err?: any) => void) {
       logger.info(`file lock  ${hasLock}`);
       return;
     }
-    if ((await accessFile(processDir)) === true) {
+    if ((await isExist(processDir)) === true) {
       fs.unlinkSync(processDir);
     }
     fs.rmdir(lockDir, (err) => {
