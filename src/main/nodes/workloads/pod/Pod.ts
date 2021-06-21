@@ -40,9 +40,6 @@ export class Pod extends ControllerResourceNode {
     if (status) {
       return Promise.resolve(status);
     }
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
-    }
 
     const deploy = await nhctl.getLoadResource({
       kubeConfigPath: this.getKubeConfigPath(),
@@ -52,6 +49,9 @@ export class Pod extends ControllerResourceNode {
       outputType: "json",
     });
     const res = JSON.parse(deploy as string) as Resource;
+    if (this.svcProfile && this.svcProfile.developing) {
+      return [DeploymentStatus.developing, !res?.metadata?.ownerReferences];
+    }
     const tmpStatus = res.status as ResourceStatus;
     if (tmpStatus.phase === "Running") {
       status = "running";
