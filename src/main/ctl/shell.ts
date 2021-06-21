@@ -1,11 +1,49 @@
 import { spawn } from "child_process";
-import host, { Host } from "../host";
+import * as path from "path";
 import * as shell from "shelljs";
+import host, { Host } from "../host";
+import { NH_BIN } from "../constants";
 import logger from "../utils/logger";
 export interface ShellResult {
   code: number;
   stdout: string;
   stderr: string;
+}
+
+export async function opendevSpaceExec(
+  appName: string,
+  workloadName: string,
+  workloadType: string,
+  container: string | null,
+  kubeConfigPath: string,
+  namespace: string,
+  pod: string | null
+) {
+  const terminalCommands = ["dev", "terminal", appName];
+  terminalCommands.push("-d", workloadName);
+  terminalCommands.push("-t", workloadType);
+  if (pod) {
+    terminalCommands.push("--pod", pod);
+  }
+  if (container) {
+    terminalCommands.push("--container", container);
+  }
+  terminalCommands.push("--kubeconfig", kubeConfigPath);
+  terminalCommands.push("-n", namespace);
+  const nhctlPath = path.resolve(
+    NH_BIN,
+    host.isWindow() ? "nhctl.exe" : "nhctl"
+  );
+  const terminalDisposed = host.invokeInNewTerminalSpecialShell(
+    terminalCommands,
+    nhctlPath,
+    workloadName
+  );
+  terminalDisposed.show();
+
+  host.log("", true);
+
+  return terminalDisposed;
 }
 
 export async function execAsyncWithReturn(

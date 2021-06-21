@@ -4,6 +4,7 @@ import * as os from "os";
 import ICommand from "./ICommand";
 import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
+import { opendevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
   TMP_CONTAINER,
@@ -35,7 +36,7 @@ export interface ControllerNodeApi {
   name: string;
   resourceType: string;
   setStatus: (status: string) => Promise<void>;
-  getStatus: () => Promise<string> | string;
+  getStatus: (refresh?: boolean) => Promise<string> | string;
   setContainer: (container: string) => Promise<void>;
   getContainer: () => Promise<string>;
   getKubeConfigPath: () => string;
@@ -399,7 +400,7 @@ export default class StartDevModeCommand implements ICommand {
           dirs = host.formalizePath(currentUri);
           // update deployment label
           node.setContainer(containerName);
-          const namespace = await nhctl.devStart(
+          await nhctl.devStart(
             host,
             node.getKubeConfigPath(),
             node.getNameSpace(),
@@ -433,7 +434,22 @@ export default class StartDevModeCommand implements ICommand {
           host.log("sync file end", true);
           host.log("", true);
           node.setStatus("");
-          await vscode.commands.executeCommand(EXEC, node);
+          // await vscode.commands.executeCommand(EXEC, node);
+          const terminal = await opendevSpaceExec(
+            node.getAppName(),
+            node.name,
+            node.resourceType,
+            "nocalhost-dev",
+            node.getKubeConfigPath(),
+            node.getNameSpace(),
+            null
+          );
+          host.pushDispose(
+            node.getSpaceName(),
+            node.getAppName(),
+            node.name,
+            terminal
+          );
         } catch (error) {
           host.log(error);
           logger.error(error);

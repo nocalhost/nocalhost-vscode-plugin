@@ -31,6 +31,7 @@ export interface SvcProfile {
     syncFilePattern: [];
     ignoreFilePattern: [];
   };
+  readyReplicas: number;
   cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;

@@ -59,5 +59,6 @@ export default class EndDevModeCommand implements ICommand {
     );
     await node.setStatus("");
     await node.setContainer("");
+    await node.getParent().updateData(false);
   }
 }

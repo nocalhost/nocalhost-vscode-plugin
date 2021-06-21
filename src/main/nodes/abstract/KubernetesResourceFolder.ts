@@ -10,8 +10,6 @@ import { BaseNocalhostNode } from "../types/nodeType";
 import { List, Resource } from "../types/resourceType";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { RefreshData } from "../impl/updateData";
-import host from "../../host";
-import { IS_LOCAL } from "../../constants";
 
 export abstract class KubernetesResourceFolder
   extends NocalhostFolderNode
@@ -41,6 +39,11 @@ export abstract class KubernetesResourceFolder
     }
   }
 
+  public async getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
+    return [];
+  }
   public getAppName() {
     const appNode = this.getAppNode();
     return appNode.name;

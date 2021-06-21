@@ -7,11 +7,12 @@ const loggerPath = path.resolve(PLUGIN_CONFIG_DIR, "all-the-logs.log");
 log4js.configure({
   appenders: {
     everything: {
-      type: "file",
+      type: "dateFile",
       filename: loggerPath,
       maxLogSize: 10485760,
+      pattern: "-yyyy-MM-dd",
       backups: 3,
-      compress: true,
+      compress: false,
     },
   },
   categories: {

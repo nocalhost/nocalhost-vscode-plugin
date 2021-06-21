@@ -5,6 +5,7 @@
     "target": "es5",
     "outDir": "../out",
     "rootDir": "../",
+    "experimentalDecorators": true,
     "noImplicitAny": true,
     "strictNullChecks": false,
     "jsx": "react",

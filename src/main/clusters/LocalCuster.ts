@@ -86,6 +86,7 @@ export default class LocalCluster {
         const state = fs.accessSync(it.filePath, fs.constants.R_OK);
         return !Boolean(state);
       } catch (e) {
+        host.log(e, true);
         return false;
       }
     });
