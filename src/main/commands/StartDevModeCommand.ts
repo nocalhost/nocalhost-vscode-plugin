@@ -1,9 +1,11 @@
+import { NhctlCommand } from "./../ctl/nhctl";
 import * as vscode from "vscode";
 import * as os from "os";
 
 import ICommand from "./ICommand";
-import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
+import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
+import { INhCtlGetResult, IDescribeConfig, IK8sResource } from "../domain";
 import { opendevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
@@ -22,6 +24,7 @@ import {
 import host, { Host } from "../host";
 import * as path from "path";
 import git from "../ctl/git";
+import { get as _get } from "lodash";
 import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as nls from "../../../package.nls.json";
@@ -55,6 +58,35 @@ export default class StartDevModeCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
 
+  async getContainers(info: IK8sResource) {
+    let containers: {
+      name: string;
+    }[] = _get(info, "spec.template.spec.containers");
+    if (info.kind.toLowerCase() === "pod") {
+      containers = _get(info, "spec.containers");
+    }
+
+    if (info.kind.toLowerCase() === "cronjob") {
+      containers = _get(info, "spec.jobTemplate.spec.template.spec.containers");
+    }
+
+    const containerNames = (containers || [])
+      .map(({ name }) => name)
+      .filter(Boolean);
+    if (!containerNames || containerNames.length === 0) {
+      vscode.window.showErrorMessage("No container available");
+      return;
+    }
+    let containerName = containerNames[0];
+    if (containers.length > 1) {
+      containerName = await vscode.window.showQuickPick(containerNames);
+      if (!containerName) {
+        return;
+      }
+    }
+    return containerName;
+  }
+
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
       host.showWarnMessage("A task is running, please try again later");
@@ -63,19 +95,22 @@ export default class StartDevModeCommand implements ICommand {
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
-    const resourceProfile = await nhctl.getServiceConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
-      node.name,
-      node.resourceType
-    );
+    const resource: INhCtlGetResult = await NhctlCommand.get({
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+    })
+      .addArgumentStrict(node.resourceType, node.name)
+      .addArgument("-a", node.getAppName())
+      .addArgument("-o", "json")
+      .exec();
 
-    const result = await this.getPodAndContainer(node);
-    if (!result) {
+    const description: IDescribeConfig =
+      resource.description || Object.create(null);
+    const containerName = await this.getContainers(resource.info);
+    if (!containerName) {
       return;
     }
-    if (result.containerName === "nocalhost-dev") {
+    if (containerName === "nocalhost-dev") {
       let r = await host.showInformationMessage(
         `This container is developing. If you continue to choose this container, some problems may occur. Are you sure to continue develop?`,
         { modal: true },
@@ -89,8 +124,8 @@ export default class StartDevModeCommand implements ICommand {
     const destDir = await this.cloneOrGetFolderDir(
       appName,
       node,
-      result.containerName,
-      resourceProfile.associate
+      containerName,
+      description.associate
     );
     // check image
     let image: string | undefined = await this.getImage(
@@ -99,7 +134,7 @@ export default class StartDevModeCommand implements ICommand {
       appName,
       node.name,
       node.resourceType,
-      result.containerName
+      containerName
     );
     if (!image) {
       const result = await host.showInformationMessage(
@@ -142,7 +177,7 @@ export default class StartDevModeCommand implements ICommand {
       appName,
       node.name,
       node.resourceType,
-      result.containerName,
+      containerName,
       "image",
       image as string
     );
@@ -151,14 +186,14 @@ export default class StartDevModeCommand implements ICommand {
       (destDir && destDir === this.getCurrentRootPath())
     ) {
       host.disposeBookInfo();
-      await this.startDevMode(host, appName, node, result.containerName);
+      await this.startDevMode(host, appName, node, containerName);
     } else if (destDir) {
       host.disposeBookInfo();
-      this.saveAndOpenFolder(appName, node, destDir, result.containerName);
+      this.saveAndOpenFolder(appName, node, destDir, containerName);
       messageBus.emit("devstart", {
         name: appName,
         destDir,
-        container: result.containerName,
+        container: containerName,
       });
     }
   }
@@ -305,14 +340,10 @@ export default class StartDevModeCommand implements ICommand {
     return destDir;
   }
 
-  private async getTargetDirectory(
-    appName: string,
-    node: ControllerNodeApi,
-    containerName: string
-  ) {
+  private async getTargetDirectory(appName: string, node: ControllerNodeApi) {
     let destDir: string | undefined;
     let appConfig = host.getGlobalState(appName);
-    let workloadConfig = appConfig[node.name];
+    let workloadConfig = appConfig[node.name] || Object.create(null);
 
     const result = await host.showInformationMessage(
       nls["tips.open"],
@@ -347,11 +378,12 @@ export default class StartDevModeCommand implements ICommand {
     const currentUri = this.getCurrentRootPath();
     let workloadConfig = appConfig[node.name] || {};
     workloadConfig.directory = associateDir;
+    appConfig[node.name] = workloadConfig;
     host.setGlobalState(appName, appConfig);
     if (!workloadConfig.directory) {
       destDir = await this.firstOpen(appName, node, containerName);
     } else if (currentUri !== workloadConfig.directory) {
-      destDir = await this.getTargetDirectory(appName, node, containerName);
+      destDir = await this.getTargetDirectory(appName, node);
     } else {
       destDir = true;
     }
@@ -503,22 +535,6 @@ export default class StartDevModeCommand implements ICommand {
     }
   }
 
-  private async getSvcConfig(
-    kubeConfigPath: string,
-    namespace: string,
-    appName: string,
-    workloadName: string
-  ) {
-    let workloadConfig = await ConfigService.getWorkloadConfig(
-      kubeConfigPath,
-      namespace,
-      appName,
-      workloadName
-    );
-
-    return workloadConfig;
-  }
-
   private async getGitUrl(
     kubeConfigPath: string,
     namespace: string,
@@ -563,41 +579,5 @@ export default class StartDevModeCommand implements ICommand {
       return undefined;
     }
     return result.image;
-  }
-
-  async getPodAndContainer(node: ControllerNodeApi) {
-    const kubeConfigPath = node.getKubeConfigPath();
-    let podName: string | undefined;
-    const podNameArr = await nhctl.getPodNames({
-      name: node.name,
-      kind: node.resourceType,
-      namespace: node.getNameSpace(),
-      kubeConfigPath: kubeConfigPath,
-    });
-    podName = podNameArr[0];
-    if (!podName) {
-      return;
-    }
-    let containerName: string | undefined = (await node.getContainer()) || "";
-
-    if (!containerName) {
-      const containerNameArr = await nhctl.getContainerNames({
-        podName,
-        kubeConfigPath,
-        namespace: node.getNameSpace(),
-      });
-      if (containerNameArr.length === 1) {
-        containerName = containerNameArr[0];
-      } else {
-        if (containerNameArr.length > 1) {
-          containerName = await vscode.window.showQuickPick(containerNameArr);
-          if (!containerName) {
-            return;
-          }
-        }
-      }
-    }
-
-    return { containerName, podName };
   }
 }

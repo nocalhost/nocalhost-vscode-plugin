@@ -1,3 +1,4 @@
+import { IK8sResource } from "./../../domain/IK8sResource";
 import * as vscode from "vscode";
 import state from "../../state";
 import { AppNode } from "../AppNode";
@@ -11,9 +12,8 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
   abstract type: string;
   abstract resourceType: string;
   abstract name: string;
-  abstract info?: any;
   abstract parent: BaseNocalhostNode;
-
+  resource?: IK8sResource;
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
     return `${parentStateId}${ID_SPLIT}${this.name}`;

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as nhctl from "../ctl/nhctl";
 import state from "../state";
-
+import { ClusterSource } from "./../clusters/interface";
 import { ID_SPLIT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
@@ -22,7 +22,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public type = NodeType.devSpace;
   public info: DevspaceInfo;
   public hasInit: boolean;
-  public isLocal: boolean;
+  public clusterSource: ClusterSource;
   public applications: Array<V2ApplicationInfo>;
   public parent: BaseNocalhostNode;
   public installedApps: {
@@ -35,7 +35,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     label: string,
     info: DevspaceInfo,
     applications: Array<V2ApplicationInfo>,
-    isLocal: boolean
+    clusterSource: ClusterSource
   ) {
     super();
     this.hasInit = false;
@@ -44,7 +44,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     this.info = info;
     this.applications = applications;
     this.installedApps = [];
-    this.isLocal = isLocal;
+    this.clusterSource = clusterSource;
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -82,9 +82,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       obj.name = jsonObj["applicationName"];
       obj.appConfig = jsonObj["applicationConfigPath"];
       obj.nocalhostConfig = jsonObj["nocalhostConfig"];
-      let originInstallType = jsonObj["installType"];
-      let source = jsonObj["source"];
-      obj.installType = this.generateInstallType(source, originInstallType);
+      obj.installType = jsonObj["installType"];
       obj.resourceDir = jsonObj["resourceDir"];
     }
 
@@ -228,7 +226,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       vscode.TreeItemCollapsibleState.Collapsed
     );
 
-    treeItem.contextValue = `devspace-${this.isLocal ? "local" : "server"}`;
+    treeItem.contextValue = `devspace-${
+      this.clusterSource === ClusterSource.local ? "local" : "server"
+    }`;
 
     return Promise.resolve(treeItem);
   }

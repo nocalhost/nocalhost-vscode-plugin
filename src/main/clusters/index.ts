@@ -14,6 +14,7 @@ const updateStateRootNodes = (newNode: IRootNode) => {
     resources = [];
   }
   let isCover = false;
+
   if (newNode.id) {
     const index = resources.findIndex((it) => it.id === newNode.id);
     if (index !== -1) {
@@ -28,7 +29,7 @@ const updateStateRootNodes = (newNode: IRootNode) => {
 
   state.setData(ROOT_NODE_KEY, sortResources(resources));
 };
-
+export * from "./interface";
 export {
   sortResources,
   updateStateRootNodes,

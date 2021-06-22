@@ -3,8 +3,6 @@ import state from "../../../../state";
 import { CRON_JOB } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import { DeploymentStatus } from "../../../types/nodeType";
-import * as nhctl from "../../../../ctl/nhctl";
-import { Resource, ResourceStatus, Status } from "../../../types/resourceType";
 
 export class CronJob extends ControllerResourceNode {
   public type = CRON_JOB;

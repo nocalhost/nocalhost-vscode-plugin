@@ -6,7 +6,6 @@ import registerCommand from "./register";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
-import { Resource } from "../nodes/types/resourceType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { Pod } from "../nodes/workloads/pod/Pod";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";

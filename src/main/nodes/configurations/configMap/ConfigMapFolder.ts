@@ -4,7 +4,7 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { CONFIG_MAP_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List, Resource } from "../../types/resourceType";
+import { IK8sResource } from "../../../domain";
 import { ConfigMap } from "./ConfigMap";
 
 export class ConfigMapFolder extends KubernetesResourceFolder {
@@ -24,7 +24,7 @@ export class ConfigMapFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as Resource[];
+    let list = state.getData(this.getNodeStateId()) as IK8sResource[];
     if (!list) {
       list = await this.updateData(true);
     }

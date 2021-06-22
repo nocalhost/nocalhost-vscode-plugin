@@ -4,7 +4,7 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { INGRESS_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List, Resource } from "../../types/resourceType";
+import { IK8sResource } from "../../../domain";
 import { Ingress } from "./Ingress";
 
 export class IngressFolder extends KubernetesResourceFolder {
@@ -23,7 +23,7 @@ export class IngressFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as Resource[];
+    let list = state.getData(this.getNodeStateId()) as IK8sResource[];
     if (!list) {
       list = await this.updateData(true);
     }

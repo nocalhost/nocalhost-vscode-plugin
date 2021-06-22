@@ -3,11 +3,11 @@ import * as vscode from "vscode";
 import { orderBy } from "lodash";
 import { ControllerResourceNode } from "../workloads/controllerResources/ControllerResourceNode";
 
-import { getResourceList } from "../../ctl/nhctl";
+import { NhctlCommand } from "../../ctl/nhctl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
 import { AppNode } from "../AppNode";
 import { BaseNocalhostNode } from "../types/nodeType";
-import { List, Resource } from "../types/resourceType";
+import { IK8sResource } from "../../domain";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { RefreshData } from "../impl/updateData";
 
@@ -60,21 +60,25 @@ export abstract class KubernetesResourceFolder
 
   public async updateData(isInit?: boolean): Promise<any> {
     const appNode = this.getAppNode();
-    const list = await getResourceList({
-      kubeConfigPath: this.getKubeConfigPath(),
-      kind: this.resourceType,
-      namespace: appNode.namespace,
-    });
 
-    const resource = this.filterResource(list, appNode);
+    const list: IK8sResource[] = (
+      (await NhctlCommand.get({
+        kubeConfigPath: this.getKubeConfigPath(),
+        namespace: appNode.namespace,
+      })
+        .addArgument(this.resourceType)
+        .addArgument("-a", appNode.name)
+        .addArgument("-o", "json")
+        .exec()) || []
+    ).map(({ info }: { info: IK8sResource }) => info);
 
-    state.setData(this.getNodeStateId(), resource, isInit);
+    state.setData(this.getNodeStateId(), list, isInit);
 
-    return resource;
+    return list;
   }
 
   private isOther(
-    r: Resource,
+    r: IK8sResource,
     appName: string,
     installedAppName: Array<string>
   ) {
@@ -117,7 +121,7 @@ export abstract class KubernetesResourceFolder
     return false;
   }
 
-  public filterResource(resources: Array<Resource>, appNode: AppNode) {
+  public filterResource(resources: Array<IK8sResource>, appNode: AppNode) {
     // const isLocal = host.getGlobalState(IS_LOCAL);
     // if (isLocal) {
     //   return resources;

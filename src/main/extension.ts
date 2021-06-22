@@ -12,7 +12,6 @@ import {
   NH_CONFIG_DIR,
   PLUGIN_CONFIG_DIR,
   TMP_APP,
-  LOCAL_PATH,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
@@ -51,7 +50,6 @@ import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
 import { isExistCluster } from "./clusters/utils";
 import { unlock } from "./utils/download";
-// import DataCenter from "./common/DataCenter/index";
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -101,7 +99,8 @@ export async function activate(context: vscode.ExtensionContext) {
       node instanceof KubernetesResourceFolder ||
       node instanceof DevSpaceNode
     ) {
-      state.refreshFolderMap.set(node.getNodeStateId(), false);
+      const id = node.getNodeStateId();
+      state.refreshFolderMap.set(id, false);
     }
     if (node instanceof NocalhostFolderNode) {
       node.isExpand = false;

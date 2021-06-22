@@ -8,7 +8,7 @@ import { IRootNode } from "../domain";
 import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
-import { getAllNamespace } from "../ctl/nhctl";
+import { getAllNamespace, NhctlCommand } from "../ctl/nhctl";
 
 export class LocalClusterNode {
   filePath: string;
@@ -24,6 +24,7 @@ export default class LocalCluster {
       return;
     }
     const { filePath, createTime } = newLocalCluster;
+
     let kubeConfig = "";
     let applications: V2ApplicationInfo[] = [];
     let devSpaces: Array<DevspaceInfo> | undefined = new Array();
@@ -68,14 +69,13 @@ export default class LocalCluster {
       context: JSON.stringify(contextObj),
       status: 1,
     });
+
     const obj = {
       id: newLocalCluster.id,
       devSpaces,
       createTime,
       applications,
-      old: [] as ApplicationInfo[],
-      localPath: filePath,
-      kubeConfig,
+      kubeConfigPath: filePath,
     };
     return obj;
   };

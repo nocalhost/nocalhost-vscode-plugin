@@ -1,53 +1,12 @@
+import { IK8sResource } from "../../domain/IK8sResource";
+
 export interface List {
   apiVersion: string;
-  items: Array<Resource>;
+  items: Array<IK8sResource>;
   kind: string;
 }
 
-export interface Status {
-  lastTransitionTime: string;
-  lastUpdateTime: string;
-  message: string;
-  reason: string;
-  status: string;
-  type: string;
-}
-
-export interface Resource {
-  apiVersion: string;
-  items: [];
-  kind: string;
-  metadata: {
-    name: string;
-    [value: string]: any;
-  };
-  status: string | ResourceStatus;
-}
-
-export interface ResourceStatus {
-  conditions: Array<Status>;
-  phase: string;
-  numberReady?: number;
-  replicas?: number;
-  readyReplicas?: number;
-}
-
-export interface ControllerResource extends Resource {
-  metadata: {
-    name: string;
-    labels: {};
-    [value: string]: any;
-  };
-  spec: {
-    selector: {
-      matchLabels: { [value: string]: string };
-      [value: string]: any;
-    };
-    [value: string]: any;
-  };
-}
-
-export interface PodResource extends Resource {
+export interface PodResource extends IK8sResource {
   spec: {
     containers: Array<{
       name: string;
