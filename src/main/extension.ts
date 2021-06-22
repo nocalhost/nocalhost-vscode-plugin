@@ -43,7 +43,7 @@ import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
-import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
+// import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 import messageBus from "./utils/messageBus";
 import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
@@ -132,7 +132,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(...subs);
 
   host.getOutputChannel().show(true);
-  await registerYamlSchemaSupport();
+  // await registerYamlSchemaSupport();
 
   await messageBus.init();
 

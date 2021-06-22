@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.51",
+  "version": "0.4.52",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -431,9 +431,16 @@
       "pre-commit": "yarn run prettier && yarn run lint && yarn run ts-compile-check"
     }
   },
-  "extensionDependencies": [
-    "redhat.vscode-yaml"
+  "extensionDependencies": [],
+  "extensionKind": [
+    "ui",
+    "workspace"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
   "devDependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/data-grid": "^4.0.0-alpha.14",
