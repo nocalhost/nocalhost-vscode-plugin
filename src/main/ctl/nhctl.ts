@@ -18,11 +18,11 @@ import * as yaml from "yaml";
 import { get as _get } from "lodash";
 import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
-import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
-import services, { ServiceResult } from "../common/DataCenter/services";
+import { IS_LOCAL, NH_BIN } from "../constants";
+import services from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
-import { IK8sResource, IResourceStatus } from "../domain";
+import { IK8sResource, IPortForWard, IResourceStatus } from "../domain";
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { DevspaceInfo } from "../api";
@@ -72,6 +72,9 @@ export class NhctlCommand {
   }
   static delete(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k delete", baseParams);
+  }
+  static portForward(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("port-forward", baseParams);
   }
   static list(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("list", baseParams);
@@ -386,6 +389,21 @@ export async function getAll(params: IBaseCommand) {
       throw error;
     }
   }
+}
+
+export async function getPortForWardByApp(
+  props: IBaseCommand<{
+    appName: string;
+  }>
+): Promise<IPortForWard[]> {
+  return await NhctlCommand.portForward({
+    kubeConfigPath: props.kubeConfigPath,
+    namespace: props.namespace,
+  })
+    .addArgument("list", props.appName)
+    .toJson()
+    .addArgument("--json")
+    .exec();
 }
 
 export async function getInstalledApp(
@@ -795,19 +813,21 @@ export async function startPortForward(
 }
 
 export async function endPortForward(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string,
-  workloadName: string,
-  port: string,
-  resourceType: string
+  props: IBaseCommand<{
+    appName: string;
+    workloadName: string;
+    port: string;
+    resourceType: string;
+  }>
 ) {
+  const { appName, port, workloadName, resourceType } = props;
+  const endPortForwardCommand = NhctlCommand.portForward(props)
+    .addArgument("end", appName)
+    .addArgumentStrict("-d", workloadName)
+    .addArgumentStrict("-p", port)
+    .addArgumentStrict("--type", resourceType)
+    .getCommand();
   // nhctl port-forward end coding-agile -d nginx -p 5006:5005
-  const endPortForwardCommand = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `port-forward end ${appName} -d ${workloadName} -p ${port} --type ${resourceType}`
-  );
 
   const sudo = isSudo([port]);
   const isLocal = host.getGlobalState(IS_LOCAL);

@@ -9,3 +9,5 @@ export * from "./IDescribeConfig";
 export * from "./INhCtlGetResult";
 
 export * from "./IK8sResource";
+
+export * from "./IPortForWard";

@@ -188,14 +188,14 @@ export default class UpgradeCommand implements ICommand {
       const service = serivces[i];
       const portForwardList = service.devPortForwardList || [];
       for (let j = 0; j < portForwardList.length; j++) {
-        await nhctl.endPortForward(
-          appNode.getKubeConfigPath(),
-          appNode.namespace,
-          appNode.name,
-          service.actualName,
-          `${portForwardList[j].localport}:${portForwardList[j].remoteport}`,
-          service.rawConfig.serviceType
-        );
+        await nhctl.endPortForward({
+          kubeConfigPath: appNode.getKubeConfigPath(),
+          namespace: appNode.namespace,
+          appName: appNode.name,
+          workloadName: service.actualName,
+          port: `${portForwardList[j].localport}:${portForwardList[j].remoteport}`,
+          resourceType: service.rawConfig.serviceType,
+        });
       }
     }
   }
