@@ -25,7 +25,11 @@ export default class WriteServiceConfigCommand implements ICommand {
       node.name,
       node.resourceType
     );
-    if (svcProfile.localconfigloaded || svcProfile.cmconfigloaded) {
+    if (
+      svcProfile.localconfigloaded ||
+      svcProfile.cmconfigloaded ||
+      svcProfile.annotationsconfigloaded
+    ) {
       protocol = "Nocalhost";
     }
     const appNode = node.getAppNode();

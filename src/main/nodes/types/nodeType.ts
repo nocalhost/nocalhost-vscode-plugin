@@ -32,6 +32,7 @@ export interface SvcProfile {
     ignoreFilePattern: [];
   };
   readyReplicas: number;
+  annotationsconfigloaded?: boolean;
   cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;
