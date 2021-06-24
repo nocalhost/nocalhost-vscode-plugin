@@ -43,7 +43,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           objArr.push(obj);
         }
       } catch (e) {
-        console.log(e);
         logger.error(e);
         host.log(e, true);
       }

@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.50",
+  "version": "0.4.51",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -96,6 +96,11 @@
         {
           "command": "Nocalhost.showApp",
           "when": "viewItem =~ /^devspace-server/i",
+          "group": "inline@0"
+        },
+        {
+          "command": "Nocalhost.installAppSource",
+          "when": "viewItem =~ /^devspace-local/i",
           "group": "inline@0"
         },
         {
@@ -277,6 +282,11 @@
         "title": "Add Cluster",
         "alt": "Add Cluster",
         "icon": "$(add)"
+      },
+      {
+        "command": "Nocalhost.installAppSource",
+        "title": "Install App",
+        "icon": "$(rocket)"
       },
       {
         "command": "Nocalhost.showApp",

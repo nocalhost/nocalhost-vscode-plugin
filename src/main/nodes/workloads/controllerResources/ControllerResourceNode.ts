@@ -5,6 +5,7 @@ import {
 } from "./../../../domain/IK8sResource";
 import * as vscode from "vscode";
 import * as nhctl from "../../../ctl/nhctl";
+import { get as _get } from "lodash";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
 import ConfigService, {
@@ -51,18 +52,18 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   }
 
   public async getPortForwardStatus() {
-    if (this.svcProfile && this.svcProfile.devPortForwardList.length > 0) {
-      const portForwardList = this.svcProfile.devPortForwardList.filter(
-        (item) => {
-          if (item.role === "SYNC") {
-            return false;
-          }
-          return true;
-        }
-      );
-      if (portForwardList.length > 0) {
-        return true;
+    const devPortForwardList = _get(this.svcProfile, "devPortForwardList");
+    if (!Array.isArray(devPortForwardList)) {
+      return false;
+    }
+    const portForwardList = devPortForwardList.filter((item) => {
+      if (item.role === "SYNC") {
+        return false;
       }
+      return true;
+    });
+    if (portForwardList.length > 0) {
+      return true;
     }
     return false;
   }

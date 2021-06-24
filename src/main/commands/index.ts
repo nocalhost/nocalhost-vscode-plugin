@@ -38,7 +38,7 @@ import AddKubeconfig from "./AddKubeconfigCommand";
 import ClustersViewCommand from "./ClustersViewCommand";
 import ClearLocalCluster from "./ClearLocalCluster";
 import ClearServerCluster from "./ClearServerCluster";
-
+import InstallAppSourceCommand from "./InstallAppSourceCommand";
 import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -91,4 +91,5 @@ export default function initCommands(
   new DeleteKubeConfigCommand(context);
   new AddKubeconfig(context);
   new ClearServerCluster(context);
+  new InstallAppSourceCommand(context);
 }

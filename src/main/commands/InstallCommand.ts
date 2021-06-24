@@ -230,7 +230,7 @@ export default class InstallCommand implements ICommand {
       | undefined
   ) {
     host.log(`Installing application: ${appName}`, true);
-    await nhctl.install(
+    await nhctl.install({
       host,
       kubeconfigPath,
       namespace,
@@ -243,8 +243,8 @@ export default class InstallCommand implements ICommand {
       local,
       values,
       valuesStr,
-      refOrVersion
-    );
+      refOrVersion,
+    });
     host.setGlobalState(appName, {});
   }
 

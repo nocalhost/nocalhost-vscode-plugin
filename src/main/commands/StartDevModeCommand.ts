@@ -483,7 +483,6 @@ export default class StartDevModeCommand implements ICommand {
             terminal
           );
         } catch (error) {
-          host.log(error);
           logger.error(error);
           node.setStatus("");
         }

@@ -87,7 +87,7 @@ export default class AccountClusterService {
     accountClusterService.jwt = newAccountClusterNode.jwt;
     const newRootNodes: IRootNode[] = [];
     let serviceAccounts = await accountClusterService.getServiceAccount();
-    if (!serviceAccounts || serviceAccounts.length === 0) {
+    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
       logger.error(
         `${newAccountClusterNode.loginInfo.baseUrl}： No cluster found for ${newAccountClusterNode.loginInfo.username}`
       );
@@ -213,7 +213,7 @@ export default class AccountClusterService {
       const response = await this.instance.get(`/v1/plugin/service_accounts`);
       const res = response.data as ResponseData;
       let serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
-      if (!serviceAccount || serviceAccount.length === 0) {
+      if (!Array.isArray(serviceAccount) || serviceAccount.length === 0) {
         serviceAccount = this.lastServiceAccounts;
       } else {
         this.lastServiceAccounts = [...serviceAccount];
@@ -247,7 +247,7 @@ export default class AccountClusterService {
       return [];
     }
     const applications = await this.getApplication();
-    if (!applications || applications.length === 0) {
+    if (!Array.isArray(applications) || applications.length === 0) {
       return [];
     }
     const result = new Array<V2ApplicationInfo>();

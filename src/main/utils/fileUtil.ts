@@ -141,3 +141,10 @@ export function replaceSpacePath(str: string): string {
   }
   return host.isWindow() ? str.replace(/ /g, "\\ ") : `"${str}"`;
 }
+
+export function getFilesByDir(dirPath: string): string[] {
+  if (!isExistSync(dirPath)) {
+    return [];
+  }
+  return fs.readdirSync(dirPath);
+}

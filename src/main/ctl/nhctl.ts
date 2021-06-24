@@ -80,6 +80,10 @@ export class NhctlCommand {
     return NhctlCommand.create("list", baseParams);
   }
 
+  static install(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("install", baseParams);
+  }
+
   addArgument(arg: string, value?: string | number) {
     if (arg === "-o" && value) {
       if (["yaml", "json"].indexOf((value as string).toLowerCase()) !== -1) {
@@ -94,8 +98,14 @@ export class NhctlCommand {
     }
     return this;
   }
-  addArgumentStrict(arg: string, value: string | number) {
+  addArgumentStrict(arg: string, value: string | number | string[]) {
     if (!arg || !value) {
+      return this;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item: string) => {
+        this.addArgument(arg, item);
+      });
       return this;
     }
     return this.addArgument(arg, value);
@@ -429,26 +439,41 @@ export async function getInstalledApp(
   });
 }
 
-export async function install(
-  host: Host,
-  kubeconfigPath: string,
-  namespace: string,
-  appName: string,
-  appConfig: string,
-  helmNHConfigPath: string,
-  gitUrl: string,
-  installType: string,
-  resourceDir: Array<string>,
+export async function install(props: {
+  host: Host;
+  kubeconfigPath: string;
+  namespace: string;
+  appName: string;
+  appConfig: string;
+  helmNHConfigPath: string;
+  gitUrl: string;
+  installType: string;
+  resourceDir: Array<string>;
   local:
     | {
         localPath: string;
         config: string;
       }
-    | undefined,
-  values?: string,
-  valuesStr?: string,
-  refOrVersion?: string
-) {
+    | undefined;
+  values?: string;
+  valuesStr?: string;
+  refOrVersion?: string;
+}) {
+  const {
+    host,
+    kubeconfigPath,
+    namespace,
+    appName,
+    appConfig,
+    helmNHConfigPath,
+    gitUrl,
+    installType,
+    resourceDir,
+    local,
+    values,
+    valuesStr,
+    refOrVersion,
+  } = props;
   let resourcePath = "";
   if (resourceDir) {
     resourceDir.map((dir) => {
