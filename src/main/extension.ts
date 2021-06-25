@@ -2,6 +2,7 @@ import { PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+import * as fs from "fs";
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
@@ -61,7 +62,6 @@ export async function activate(context: vscode.ExtensionContext) {
   // TODO: DO NOT DELETE, FOR: [webview integration]
   // const dataCenter: DataCenter = DataCenter.getInstance();
   // dataCenter.addListener(() => appTreeProvider.refresh());
-
   let homeWebViewProvider = new HomeWebViewProvider(
     context.extensionUri,
     appTreeProvider
@@ -252,10 +252,11 @@ function launchDevspace() {
   }
 }
 
-export function deactivate() {
-  host.removeGlobalState("Downloading");
+export async function deactivate() {
+  fs.writeFileSync('/Users/zepengcai/.nh/vscode-plugin/.tmp/a.txt', 'aaaaaaa');
+  await unlock(() => { });
   host.dispose();
-  unlock(() => {});
+ 
 }
 
 export function checkCtl(name: string) {
@@ -300,8 +301,15 @@ async function init(context: vscode.ExtensionContext) {
 }
 
 process.on("exit", function (code) {
-  host.removeGlobalState("Downloading");
-  unlock(() => {});
+  unlock(() => { });
+  logger.error('exit vscode process' + code);
+  
+});
+
+process.on('disconnect', function () {
+  unlock(() => { });
+  logger.error('exit vscode process');
+ 
 });
 process.on("uncaughtException", (error) => {
   logger.error(`[uncatch exception] ${error.message} ${error.stack}`);
@@ -318,8 +326,7 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (error: any) => {
   logger.error(
-    `[unhandledRejection] ${(error && error.message) || error} ${
-      error && error.stack
+    `[unhandledRejection] ${(error && error.message) || error} ${error && error.stack
     }`
   );
   if (error && error.message === "read ENOTCONN") {

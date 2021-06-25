@@ -59,6 +59,10 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   async getContainers(info: IK8sResource) {
+    if (!info || !info.kind) {
+      host.log('Missing kind field', true);
+      return;
+    }
     let containers: {
       name: string;
     }[] = _get(info, "spec.template.spec.containers");
@@ -95,6 +99,7 @@ export default class StartDevModeCommand implements ICommand {
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
+    host.log('[start dev] Initializing..', true);
     const resource: INhCtlGetResult = await NhctlCommand.get({
       kubeConfigPath: node.getKubeConfigPath(),
       namespace: node.getNameSpace(),
@@ -110,6 +115,9 @@ export default class StartDevModeCommand implements ICommand {
     if (!containerName) {
       return;
     }
+
+    host.log(`[start dev] Container: ${containerName}`, true);
+
     if (containerName === "nocalhost-dev") {
       let r = await host.showInformationMessage(
         `This container is developing. If you continue to choose this container, some problems may occur. Are you sure to continue develop?`,

@@ -7,7 +7,7 @@ import ConfigService, {
   NocalhostServiceConfig,
 } from "../../service/configService";
 import { NhctlCommand } from "../../ctl/nhctl";
-import { BaseNocalhostNode, SvcProfile } from "../types/nodeType";
+import { BaseNocalhostNode } from "../types/nodeType";
 
 export const kubernetesResourceDevMode = (resourceNode: any) => (
   targetClass: any
@@ -64,6 +64,7 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
         .addArgument("-a", appNode.name)
         .addArgument("-o", "json")
         .exec()) || [];
+        
     const appConfig = await ConfigService.getAppConfig(
       appNode.getKubeConfigPath(),
       appNode.namespace,

@@ -106,6 +106,7 @@ export function isExist(filePath: string) {
     fs.access(filePath, (err) => {
       if (err) {
         resolve(false);
+        return;
       }
       resolve(true);
     });

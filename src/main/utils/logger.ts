@@ -2,7 +2,7 @@ import * as log4js from "log4js";
 import * as path from "path";
 import { PLUGIN_CONFIG_DIR } from "../constants";
 
-const loggerPath = path.resolve(PLUGIN_CONFIG_DIR, "vsc");
+const loggerPath = path.resolve(PLUGIN_CONFIG_DIR, "vsc_log");
 
 log4js.configure({
   appenders: {

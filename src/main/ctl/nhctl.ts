@@ -1,7 +1,5 @@
 import {
-  PLUGIN_TEMP_DIR,
-  PLUGIN_TEMP_NHCTL,
-  NH_BIN_NHCTL,
+  PLUGIN_TEMP_DIR
 } from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
@@ -1353,10 +1351,6 @@ export async function checkVersion() {
         requiredVersion
       );
       if (isUpdateNhctl) {
-        if (host.getGlobalState("Downloading")) {
-          return;
-        }
-        host.setGlobalState("Downloading", true);
         lock(async (err) => {
           if (err) {
             return console.error(err);
@@ -1366,7 +1360,6 @@ export async function checkVersion() {
             async () => {
               await downloadNhctl(sourcePath, destinationPath);
               fs.renameSync(destinationPath, binPath);
-              host.removeGlobalState("Downloading");
               if (!(await checkDownloadNhclVersion(requiredVersion))) {
                 vscode.window.showErrorMessage(
                   `Update failed, please delete ${binPath} file and try again`
@@ -1386,10 +1379,6 @@ export async function checkVersion() {
       //   );
       // }
     } else {
-      if (host.getGlobalState("Downloading")) {
-        return;
-      }
-      host.setGlobalState("Downloading", true);
       lock(async function (err) {
         if (err) {
           return console.error(err);
@@ -1397,7 +1386,6 @@ export async function checkVersion() {
         await host.showProgressing(`Downloading nhctl`, async () => {
           await downloadNhctl(sourcePath, destinationPath);
           fs.renameSync(destinationPath, binPath);
-          host.removeGlobalState("Downloading");
           unlock(() => {});
           if (!(await checkDownloadNhclVersion(requiredVersion))) {
             vscode.window.showErrorMessage(`Download failed, Please try again`);
@@ -1408,7 +1396,6 @@ export async function checkVersion() {
       });
     }
   } catch (e) {
-    host.removeGlobalState("Downloading");
     unlock(() => {});
   }
 }
