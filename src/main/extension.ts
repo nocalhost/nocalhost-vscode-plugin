@@ -253,10 +253,9 @@ function launchDevspace() {
 }
 
 export async function deactivate() {
-  fs.writeFileSync('/Users/zepengcai/.nh/vscode-plugin/.tmp/a.txt', 'aaaaaaa');
-  await unlock(() => { });
+  fs.writeFileSync("/Users/zepengcai/.nh/vscode-plugin/.tmp/a.txt", "aaaaaaa");
+  await unlock(() => {});
   host.dispose();
- 
 }
 
 export function checkCtl(name: string) {
@@ -301,15 +300,13 @@ async function init(context: vscode.ExtensionContext) {
 }
 
 process.on("exit", function (code) {
-  unlock(() => { });
-  logger.error('exit vscode process' + code);
-  
+  unlock(() => {});
+  logger.error("exit vscode process" + code);
 });
 
-process.on('disconnect', function () {
-  unlock(() => { });
-  logger.error('exit vscode process');
- 
+process.on("disconnect", function () {
+  unlock(() => {});
+  logger.error("exit vscode process");
 });
 process.on("uncaughtException", (error) => {
   logger.error(`[uncatch exception] ${error.message} ${error.stack}`);
@@ -326,7 +323,8 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (error: any) => {
   logger.error(
-    `[unhandledRejection] ${(error && error.message) || error} ${error && error.stack
+    `[unhandledRejection] ${(error && error.message) || error} ${
+      error && error.stack
     }`
   );
   if (error && error.message === "read ENOTCONN") {

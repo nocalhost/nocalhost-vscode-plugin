@@ -60,7 +60,7 @@ export default class StartDevModeCommand implements ICommand {
 
   async getContainers(info: IK8sResource) {
     if (!info || !info.kind) {
-      host.log('Missing kind field', true);
+      host.log("Missing kind field", true);
       return;
     }
     let containers: {
@@ -99,7 +99,7 @@ export default class StartDevModeCommand implements ICommand {
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
-    host.log('[start dev] Initializing..', true);
+    host.log("[start dev] Initializing..", true);
     const resource: INhCtlGetResult = await NhctlCommand.get({
       kubeConfigPath: node.getKubeConfigPath(),
       namespace: node.getNameSpace(),

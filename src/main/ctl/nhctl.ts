@@ -1,6 +1,4 @@
-import {
-  PLUGIN_TEMP_DIR
-} from "./../constants";
+import { PLUGIN_TEMP_DIR } from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";

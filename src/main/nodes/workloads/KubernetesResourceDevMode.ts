@@ -64,7 +64,7 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
         .addArgument("-a", appNode.name)
         .addArgument("-o", "json")
         .exec()) || [];
-        
+
     const appConfig = await ConfigService.getAppConfig(
       appNode.getKubeConfigPath(),
       appNode.namespace,
