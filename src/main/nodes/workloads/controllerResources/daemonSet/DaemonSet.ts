@@ -3,12 +3,13 @@ import state from "../../../../state";
 import host from "../../../../host";
 import * as nhctl from "../../../../ctl/nhctl";
 import { DAEMON_SET } from "../../../nodeContants";
-import { IResourceStatus } from "../../../../domain";
+import { Resource, ResourceStatus } from "../../../types/resourceType";
 import { DeploymentStatus, BaseNocalhostNode } from "../../../types/nodeType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 export class DaemonSet extends ControllerResourceNode {
   public type = DAEMON_SET;
   public resourceType = "daemonSet";
+  private firstRender = true;
 
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
@@ -22,7 +23,11 @@ export class DaemonSet extends ControllerResourceNode {
       treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
       }-${status}`;
+      if (this.firstRender) {
+        this.firstRender = false;
+      }
     } catch (e) {
+      this.firstRender = false;
       host.log(e, true);
     }
 
@@ -44,8 +49,15 @@ export class DaemonSet extends ControllerResourceNode {
     if (this.svcProfile && this.svcProfile.developing) {
       return DeploymentStatus.developing;
     }
-
-    const tmpStatus = this.resource.status as IResourceStatus;
+    const deploy = await nhctl.getLoadResource({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      name: this.name,
+      namespace: appNode.namespace,
+      outputType: "json",
+    });
+    const deploymentObj = JSON.parse(deploy as string) as Resource;
+    const tmpStatus = deploymentObj.status as ResourceStatus;
     if (tmpStatus.numberReady > 0) {
       status = "running";
     }

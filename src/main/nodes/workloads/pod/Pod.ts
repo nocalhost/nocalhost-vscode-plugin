@@ -1,10 +1,14 @@
 import * as vscode from "vscode";
 
 import state from "../../../state";
+import * as nhctl from "../../../ctl/nhctl";
+
+import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import { POD } from "../../nodeContants";
 import { ControllerResourceNode } from "../controllerResources/ControllerResourceNode";
+import { BaseNocalhostNode } from "../../types/nodeType";
 import { DeploymentStatus } from "../../types/nodeType";
-import { IResourceStatus } from "../../../domain";
+import { Resource, ResourceStatus, Status } from "../../types/resourceType";
 
 export class Pod extends ControllerResourceNode {
   public type = POD;
@@ -12,7 +16,7 @@ export class Pod extends ControllerResourceNode {
 
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
-    const [status, dev] = await this.getStatusPod();
+    const [status, dev] = await this.getStatus();
     const [icon, label] = await this.getIconAndLabelByStatus(status);
     treeItem.iconPath = icon;
     treeItem.label = label;
@@ -23,7 +27,7 @@ export class Pod extends ControllerResourceNode {
 
     return treeItem;
   }
-  public async getStatusPod(refresh = false) {
+  public async getStatus(refresh = false) {
     const appNode = this.getAppNode();
     let status = state.getAppState(
       appNode.name,
@@ -33,20 +37,28 @@ export class Pod extends ControllerResourceNode {
     if (refresh) {
       await this.refreshSvcProfile();
     }
-    const resource = this.resource;
-    if (this.svcProfile && this.svcProfile.developing) {
-      return [
-        DeploymentStatus.developing,
-        !resource?.metadata?.ownerReferences,
-      ];
+    if (status) {
+      return Promise.resolve(status);
     }
-    const tmpStatus = resource.status as IResourceStatus;
+
+    const deploy = await nhctl.getLoadResource({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      name: this.name,
+      namespace: appNode.namespace,
+      outputType: "json",
+    });
+    const res = JSON.parse(deploy as string) as Resource;
+    if (this.svcProfile && this.svcProfile.developing) {
+      return [DeploymentStatus.developing, !res?.metadata?.ownerReferences];
+    }
+    const tmpStatus = res.status as ResourceStatus;
     if (tmpStatus.phase === "Running") {
       status = "running";
     }
     if (!status) {
       status = "unknown";
     }
-    return [status, !resource?.metadata?.ownerReferences];
+    return [status, !res?.metadata?.ownerReferences];
   }
 }

@@ -4,7 +4,7 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { SERVICE_FOLDER, ID_SPLIT } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { IK8sResource } from "../../../domain";
+import { List, Resource } from "../../types/resourceType";
 import { Service } from "./Service";
 
 export class ServiceFolder extends KubernetesResourceFolder {
@@ -27,7 +27,7 @@ export class ServiceFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let resource = state.getData(this.getNodeStateId()) as IK8sResource[];
+    let resource = state.getData(this.getNodeStateId()) as Resource[];
     if (!resource) {
       resource = await this.updateData(true);
     }

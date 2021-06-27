@@ -19,10 +19,16 @@ import services from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 import { IK8sResource, IPortForWard, IResourceStatus } from "../domain";
+import {
+  ControllerResource,
+  List,
+  PodResource,
+  Resource,
+  ResourceStatus,
+} from "../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { DevspaceInfo } from "../api";
-import { PodResource } from "../nodes/types/resourceType";
 import { IPvc } from "../domain";
 
 export interface InstalledAppInfo {
@@ -190,9 +196,9 @@ export async function getPodNames(
   if (resArr && resArr.length <= 0) {
     return podNameArr;
   }
-  resArr = (resArr as Array<IK8sResource>).filter((res) => {
+  resArr = (resArr as Array<Resource>).filter((res) => {
     if (res.status) {
-      const status = res.status as IResourceStatus;
+      const status = res.status as ResourceStatus;
       if (status.phase === "Running" && res.metadata["deletionTimestamp"]) {
         return false;
       }
@@ -200,7 +206,7 @@ export async function getPodNames(
 
     return true;
   });
-  podNameArr = (resArr as Array<IK8sResource>).map((res) => {
+  podNameArr = (resArr as Array<Resource>).map((res) => {
     return res.metadata.name;
   });
   return podNameArr;
@@ -245,9 +251,9 @@ export async function getRunningPodNames(
   if (resArr && resArr.length <= 0) {
     return podNameArr;
   }
-  resArr = (resArr as Array<IK8sResource>).filter((res) => {
+  resArr = (resArr as Array<Resource>).filter((res) => {
     if (res.status) {
-      const status = res.status as IResourceStatus;
+      const status = res.status as ResourceStatus;
       if (status.phase === "Running" && !res.metadata["deletionTimestamp"]) {
         return true;
       }
@@ -255,7 +261,7 @@ export async function getRunningPodNames(
 
     return false;
   });
-  podNameArr = (resArr as Array<IK8sResource>).map((res) => {
+  podNameArr = (resArr as Array<Resource>).map((res) => {
     return res.metadata.name;
   });
   return podNameArr;

@@ -1,11 +1,11 @@
-import { NhctlCommand } from "./../ctl/nhctl";
 import * as vscode from "vscode";
 import * as os from "os";
-
-import ICommand from "./ICommand";
-import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
-import registerCommand from "./register";
 import { INhCtlGetResult, IDescribeConfig, IK8sResource } from "../domain";
+import ICommand from "./ICommand";
+import { NhctlCommand } from "./../ctl/nhctl";
+import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
+import registerCommand from "./register";
+import { get as _get } from "lodash";
 import { opendevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
@@ -24,7 +24,6 @@ import {
 import host, { Host } from "../host";
 import * as path from "path";
 import git from "../ctl/git";
-import { get as _get } from "lodash";
 import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as nls from "../../../package.nls.json";
@@ -348,10 +347,14 @@ export default class StartDevModeCommand implements ICommand {
     return destDir;
   }
 
-  private async getTargetDirectory(appName: string, node: ControllerNodeApi) {
+  private async getTargetDirectory(
+    appName: string,
+    node: ControllerNodeApi,
+    containerName: string
+  ) {
     let destDir: string | undefined;
     let appConfig = host.getGlobalState(appName);
-    let workloadConfig = appConfig[node.name] || Object.create(null);
+    let workloadConfig = appConfig[node.name];
 
     const result = await host.showInformationMessage(
       nls["tips.open"],
@@ -386,12 +389,11 @@ export default class StartDevModeCommand implements ICommand {
     const currentUri = this.getCurrentRootPath();
     let workloadConfig = appConfig[node.name] || {};
     workloadConfig.directory = associateDir;
-    appConfig[node.name] = workloadConfig;
     host.setGlobalState(appName, appConfig);
     if (!workloadConfig.directory) {
       destDir = await this.firstOpen(appName, node, containerName);
     } else if (currentUri !== workloadConfig.directory) {
-      destDir = await this.getTargetDirectory(appName, node);
+      destDir = await this.getTargetDirectory(appName, node, containerName);
     } else {
       destDir = true;
     }
@@ -542,6 +544,22 @@ export default class StartDevModeCommand implements ICommand {
     }
   }
 
+  private async getSvcConfig(
+    kubeConfigPath: string,
+    namespace: string,
+    appName: string,
+    workloadName: string
+  ) {
+    let workloadConfig = await ConfigService.getWorkloadConfig(
+      kubeConfigPath,
+      namespace,
+      appName,
+      workloadName
+    );
+
+    return workloadConfig;
+  }
+
   private async getGitUrl(
     kubeConfigPath: string,
     namespace: string,
@@ -586,5 +604,41 @@ export default class StartDevModeCommand implements ICommand {
       return undefined;
     }
     return result.image;
+  }
+
+  async getPodAndContainer(node: ControllerNodeApi) {
+    const kubeConfigPath = node.getKubeConfigPath();
+    let podName: string | undefined;
+    const podNameArr = await nhctl.getPodNames({
+      name: node.name,
+      kind: node.resourceType,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: kubeConfigPath,
+    });
+    podName = podNameArr[0];
+    if (!podName) {
+      return;
+    }
+    let containerName: string | undefined = (await node.getContainer()) || "";
+
+    if (!containerName) {
+      const containerNameArr = await nhctl.getContainerNames({
+        podName,
+        kubeConfigPath,
+        namespace: node.getNameSpace(),
+      });
+      if (containerNameArr.length === 1) {
+        containerName = containerNameArr[0];
+      } else {
+        if (containerNameArr.length > 1) {
+          containerName = await vscode.window.showQuickPick(containerNameArr);
+          if (!containerName) {
+            return;
+          }
+        }
+      }
+    }
+
+    return { containerName, podName };
   }
 }

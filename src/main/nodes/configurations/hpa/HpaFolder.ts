@@ -4,9 +4,7 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { HPA_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-
-import { IK8sResource } from "../../../domain";
-
+import { List, Resource } from "../../types/resourceType";
 import { HPANode } from "./Hpa";
 
 export class HPAFolder extends KubernetesResourceFolder {
@@ -25,7 +23,7 @@ export class HPAFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as IK8sResource[];
+    let list = state.getData(this.getNodeStateId()) as Resource[];
     if (!list) {
       list = await this.updateData(true);
     }

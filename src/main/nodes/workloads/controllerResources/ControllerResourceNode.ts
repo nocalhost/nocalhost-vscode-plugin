@@ -1,8 +1,3 @@
-import {
-  IK8sResource,
-  IStatus,
-  IResourceStatus,
-} from "./../../../domain/IK8sResource";
 import * as vscode from "vscode";
 import * as nhctl from "../../../ctl/nhctl";
 import { get as _get } from "lodash";
@@ -17,11 +12,9 @@ import {
   DeploymentStatus,
   SvcProfile,
 } from "../../types/nodeType";
+import { Status, Resource, ResourceStatus } from "../../types/resourceType";
 
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
-  public label: string;
-  public name: string;
-
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
     treeItem.contextValue = `workload-${this.resourceType}`;
@@ -29,14 +22,14 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   }
   constructor(
     public parent: BaseNocalhostNode,
-    public resource: IK8sResource,
-    public conditionsStatus?: Array<IStatus> | string,
+    public label: string,
+    public name: string,
+    public conditionsStatus?: Array<Status> | string,
     public svcProfile?: SvcProfile | undefined | null,
-    public nocalhostService?: NocalhostServiceConfig | undefined | null
+    public nocalhostService?: NocalhostServiceConfig | undefined | null,
+    public info?: any
   ) {
     super();
-    this.label = resource.metadata.name;
-    this.name = resource.metadata.name;
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -108,53 +101,13 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     return [iconPath, label];
   }
 
-  public async getStatus(refresh = false) {
+  public getStatus(): string | Promise<string> {
     const appNode = this.getAppNode();
-    let status = state.getAppState(
+    const status = state.getAppState(
       appNode.name,
       `${this.getNodeStateId()}_status`
     );
-    if (status) {
-      return Promise.resolve(status);
-    }
-
-    if (refresh) {
-      await this.refreshSvcProfile();
-    }
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
-    }
-
-    const resourceStatus = this.resource.status as IResourceStatus;
-    const conditionsStatus = resourceStatus.conditions;
-    if (Array.isArray(conditionsStatus)) {
-      let available = false;
-      let progressing = false;
-      conditionsStatus.forEach((s) => {
-        if (s.type === "Available" && s.status === "True") {
-          status = "running";
-          available = true;
-        } else if (s.type === "Progressing" && s.status === "True") {
-          progressing = true;
-        }
-      });
-
-      if (progressing && !available) {
-        status = "starting";
-      }
-    }
-    if (!status) {
-      status = "unknown";
-    }
     return status;
-  }
-
-  public async isDeveloping() {
-    if (this.svcProfile && this.svcProfile.developing) {
-      return true;
-    }
-
-    return false;
   }
 
   /**

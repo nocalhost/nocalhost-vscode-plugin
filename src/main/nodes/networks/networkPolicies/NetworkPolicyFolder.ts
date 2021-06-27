@@ -3,7 +3,7 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { NETWORK_POLICIES_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { IK8sResource } from "../../../domain";
+import { List, Resource } from "../../types/resourceType";
 import { NetworkPolicy } from "./NetworkPolicy";
 
 export class NetworkPolicyFolder extends KubernetesResourceFolder {
@@ -22,7 +22,7 @@ export class NetworkPolicyFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as IK8sResource[];
+    let list = state.getData(this.getNodeStateId()) as Resource[];
     if (!list) {
       list = await this.updateData(true);
     }

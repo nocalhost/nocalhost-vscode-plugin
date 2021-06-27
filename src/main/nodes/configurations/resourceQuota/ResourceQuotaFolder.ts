@@ -4,8 +4,7 @@ import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { RESOURCE_QUOTA_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { IK8sResource } from "../../../domain";
-
+import { List, Resource } from "../../types/resourceType";
 import { ResourceQuota } from "./ResourceQuota";
 
 export class ResourceQuotaFolder extends KubernetesResourceFolder {
@@ -25,7 +24,7 @@ export class ResourceQuotaFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as IK8sResource[];
+    let list = state.getData(this.getNodeStateId()) as Resource[];
     if (!list) {
       list = await this.updateData(true);
     }

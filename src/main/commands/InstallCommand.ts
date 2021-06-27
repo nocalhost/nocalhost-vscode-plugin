@@ -8,8 +8,7 @@ import registerCommand from "./register";
 import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
-import { IResourceStatus } from "../domain";
-import { List } from "../nodes/types/resourceType";
+import { List, ResourceStatus } from "../nodes/types/resourceType";
 import logger from "../utils/logger";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 
@@ -381,7 +380,7 @@ export default class InstallCommand implements ICommand {
     const list = JSON.parse(res as string) as List;
     let check = true;
     list.items.map((item) => {
-      const conditionStatus = item.status as IResourceStatus;
+      const conditionStatus = item.status as ResourceStatus;
       if (conditionStatus && conditionStatus.conditions) {
         const conditions = conditionStatus.conditions;
         let isAvaiable = false;

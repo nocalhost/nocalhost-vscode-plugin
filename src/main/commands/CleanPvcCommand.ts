@@ -92,7 +92,7 @@ export default class CleanPvcCommand implements ICommand {
         workloadName = null;
         clearPvcFn = getCleanPvcDevSpaceFn(
           node.getKubeConfigPath(),
-          (node as DevSpaceNode).info.namespace
+          node.info.namespace
         );
         pvcs = await getPvcListByDevSpace(node as DevSpaceNode);
         break;

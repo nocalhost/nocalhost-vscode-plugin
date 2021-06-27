@@ -4,8 +4,3 @@ export interface LoginInfo {
   password: string;
   baseUrl: string;
 }
-
-export enum ClusterSource {
-  local = 0,
-  server = 1,
-}

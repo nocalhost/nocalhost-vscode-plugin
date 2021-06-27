@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 
+import * as nhctl from "../../../../ctl/nhctl";
 import state from "../../../../state";
 import { STATEFUL_SET } from "../../../nodeContants";
 import { DeploymentStatus } from "../../../types/nodeType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
-import { IResourceStatus } from "../../../../domain";
+import { Resource, ResourceStatus, Status } from "../../../types/resourceType";
 
 export class StatefulSet extends ControllerResourceNode {
   public type = STATEFUL_SET;
@@ -43,9 +44,15 @@ export class StatefulSet extends ControllerResourceNode {
     if (this.svcProfile && this.svcProfile.developing) {
       return DeploymentStatus.developing;
     }
-
-    const resource = this.resource;
-    const tmpStatus = resource.status as IResourceStatus;
+    const deploy = await nhctl.getLoadResource({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      name: this.name,
+      namespace: appNode.namespace,
+      outputType: "json",
+    });
+    const res = JSON.parse(deploy as string) as Resource;
+    const tmpStatus = res.status as ResourceStatus;
     if (tmpStatus.replicas === tmpStatus.readyReplicas) {
       status = "running";
     }

@@ -34,12 +34,12 @@ export default class SignInCommand implements ICommand {
   async execCommand(info: LoginInfo) {
     host.showProgressing("Logging in ...", async () => {
       try {
-        const newAccountClusterNode = await AccountClusterService.appendClusterByLoginInfo(
+        const newServerNode = await AccountClusterService.appendClusterByLoginInfo(
           info
         );
-        if (newAccountClusterNode) {
+        if (newServerNode) {
           const newNodes: IRootNode[] = await AccountClusterService.getServerClusterRootNodes(
-            newAccountClusterNode
+            newServerNode
           );
           newNodes.forEach((i) => {
             updateStateRootNodes(i);

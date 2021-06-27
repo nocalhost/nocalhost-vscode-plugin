@@ -17,10 +17,6 @@ export default class DeleteKubeConfigCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(node: KubeConfigNode) {
-    if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
-      return;
-    }
     const localClusterNodes: LocalClusterNode[] = host.getGlobalState(
       LOCAL_PATH
     ) as LocalClusterNode[];

@@ -13,7 +13,7 @@ import {
   V2ApplicationInfo,
   ServiceAccountInfo,
 } from "../api";
-import { LoginInfo, ClusterSource } from "./interface";
+import { LoginInfo } from "./interface";
 import { writeFileAsync } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 
@@ -78,32 +78,31 @@ export default class AccountClusterService {
   }
 
   static getServerClusterRootNodes = async (
-    newAccountClusterNode: AccountClusterNode
+    newAccountCluser: AccountClusterNode
   ): Promise<IRootNode[]> => {
     const accountClusterService = new AccountClusterService(
-      newAccountClusterNode.loginInfo
+      newAccountCluser.loginInfo
     );
-    accountClusterService.accountClusterNode = newAccountClusterNode;
-    accountClusterService.jwt = newAccountClusterNode.jwt;
+    accountClusterService.accountClusterNode = newAccountCluser;
+    accountClusterService.jwt = newAccountCluser.jwt;
     const newRootNodes: IRootNode[] = [];
     let serviceAccounts = await accountClusterService.getServiceAccount();
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
       logger.error(
-        `${newAccountClusterNode.loginInfo.baseUrl}： No cluster found for ${newAccountClusterNode.loginInfo.username}`
+        `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
       );
-      return newRootNodes;
     }
     const applications: V2ApplicationInfo[] = await accountClusterService.getV2Application();
     for (const sa of serviceAccounts) {
       let devSpaces: Array<DevspaceInfo> | undefined = new Array();
       const id = getStringHash(
-        `${newAccountClusterNode.loginInfo.baseUrl}${sa.clusterId}${newAccountClusterNode.userInfo.id}_config`
+        `${newAccountCluser.loginInfo.baseUrl}${sa.clusterId}${newAccountCluser.userInfo.id}_config`
       );
-      const kubeConfigPath = path.resolve(KUBE_CONFIG_DIR, id);
-      writeFileAsync(kubeConfigPath, sa.kubeconfig);
+      const kubeconfigPath = path.resolve(KUBE_CONFIG_DIR, id);
+      writeFileAsync(kubeconfigPath, sa.kubeconfig);
       if (sa.privilege) {
         const devs = await getAllNamespace({
-          kubeConfigPath,
+          kubeConfigPath: kubeconfigPath,
           namespace: "default",
         });
         for (const dev of devs) {
@@ -136,12 +135,14 @@ export default class AccountClusterService {
       const obj: IRootNode = {
         devSpaces,
         applications,
-        userInfo: newAccountClusterNode.userInfo,
-        clusterSource: ClusterSource.server,
+        userInfo: newAccountCluser.userInfo,
+        isServer: true,
+        old: [],
         accountClusterService,
-        id: newAccountClusterNode.id,
-        createTime: newAccountClusterNode.createTime,
-        kubeConfigPath,
+        id: newAccountCluser.id,
+        createTime: newAccountCluser.createTime,
+        localPath: kubeconfigPath,
+        kubeConfig: sa.kubeconfig,
       };
       newRootNodes.push(obj);
     }
@@ -151,7 +152,7 @@ export default class AccountClusterService {
 
   static appendClusterByLoginInfo = async (loginInfo: LoginInfo) => {
     const accountServer = new AccountClusterService(loginInfo);
-    const newAccountClusterNode: AccountClusterNode = await accountServer.buildAccountClusterNode();
+    const newAccountCluser = await accountServer.buildAccountClusterNode();
 
     let globalAccountClusterList = host.getGlobalState(SERVER_CLUSTER_LIST);
     if (!Array.isArray(globalAccountClusterList)) {
@@ -161,23 +162,19 @@ export default class AccountClusterService {
       (it: AccountClusterNode) => it.id
     );
     const oldAccountIndex = globalAccountClusterList.findIndex(
-      (it: AccountClusterNode) => it.id === newAccountClusterNode.id
+      (it: AccountClusterNode) => it.id === newAccountCluser.id
     );
     if (oldAccountIndex !== -1) {
-      globalAccountClusterList.splice(
-        oldAccountIndex,
-        1,
-        newAccountClusterNode
-      );
+      globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluser);
     } else {
-      globalAccountClusterList.push(newAccountClusterNode);
+      globalAccountClusterList.push(newAccountCluser);
     }
     globalAccountClusterList = uniqBy(globalAccountClusterList, "id");
     host.setGlobalState(SERVER_CLUSTER_LIST, globalAccountClusterList);
-    return newAccountClusterNode;
+    return newAccountCluser;
   };
 
-  buildAccountClusterNode = async (): Promise<AccountClusterNode> => {
+  buildAccountClusterNode = async () => {
     await this.login(this.loginInfo);
     const userInfo = await this.getUserInfo();
     return {
@@ -253,7 +250,7 @@ export default class AccountClusterService {
     const result = new Array<V2ApplicationInfo>();
     for (let i = 0; i < applications.length; i++) {
       const context = JSON.parse(applications[i].context);
-      context.install_type = applications[i].application_type;
+      // context.install_type = applications[i].application_type;
       const app: V2ApplicationInfo = {
         id: applications[i].id,
         userId: applications[i]["user_id"],

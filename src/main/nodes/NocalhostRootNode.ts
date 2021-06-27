@@ -1,4 +1,3 @@
-import { AppNode } from "./AppNode";
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
@@ -9,18 +8,23 @@ import AccountClusterService, {
   AccountClusterNode,
 } from "../clusters/AccountCluster";
 import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
-import { ClusterSource } from "../clusters/interface";
 import { sortResources } from "../clusters";
 import logger from "../utils/logger";
 
-import { LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
+import {
+  HELM_NH_CONFIG_DIR,
+  LOCAL_PATH,
+  SERVER_CLUSTER_LIST,
+} from "../constants";
+import { AppNode } from "./AppNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import host from "../host";
-import { isExistSync, readYaml } from "../utils/fileUtil";
+import { isExistSync } from "../utils/fileUtil";
 import state from "../state";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { IRootNode } from "../domain";
+import { ApplicationInfo } from "../api";
 
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<BaseNocalhostNode> = [];
@@ -88,7 +92,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
   constructor(public parent: BaseNocalhostNode | null) {
-    console.log(AppNode);
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -110,26 +113,77 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     const devs: KubeConfigNode[] = [];
     let text = "";
     for (const res of resources) {
-      if (res.clusterSource === ClusterSource.server) {
-        const kubeConfigObj = await readYaml(res.kubeConfigPath);
+      const appNode = (res.old || []).map((app: ApplicationInfo) => {
+        let context = app.context;
+        let obj: {
+          url?: string;
+          name?: string;
+          appConfig?: string;
+          nocalhostConfig?: string;
+          installType: string;
+          resourceDir: Array<string>;
+        } = {
+          installType: "rawManifest",
+          resourceDir: ["manifest/templates"],
+        };
+        if (context) {
+          let jsonObj = JSON.parse(context);
+          obj.url = jsonObj["applicationUrl"];
+          obj.name = jsonObj["applicationName"];
+          obj.appConfig = jsonObj["applicationConfigPath"];
+          obj.nocalhostConfig = jsonObj["nocalhostConfig"];
+          let originInstallType = jsonObj["installType"];
+          let source = jsonObj["source"];
+          obj.installType = this.generateInstallType(source, originInstallType);
+          obj.resourceDir = jsonObj["resourceDir"];
+        }
+
+        const nhConfigPath = path.resolve(
+          HELM_NH_CONFIG_DIR,
+          `${app.id}_${app.devspaceId}_config`
+        );
+        this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+
+        return new AppNode(
+          this,
+          obj.installType,
+          obj.resourceDir,
+          app.spaceName || obj.name || `app_${app.id}`,
+          obj.appConfig || "",
+          obj.nocalhostConfig || "",
+          app.id,
+          app.devspaceId,
+          app.status,
+          app.installStatus,
+          app.kubeconfig,
+          app
+        );
+      });
+
+      if (res.isServer) {
+        const kubeConfigObj = yaml.parse(res.kubeConfig);
         const clusters = kubeConfigObj && kubeConfigObj["clusters"];
         const clusterName =
           clusters && clusters.length > 0 ? clusters[0]["name"] : "";
-        const node = new KubeConfigNode({
-          id: res.id,
-          parent: this,
-          label: clusterName,
-          devSpaceInfos: res.devSpaces,
-          applications: res.applications,
-          kubeConfigPath: res.kubeConfigPath,
-          userInfo: res.userInfo,
-          clusterSource: ClusterSource.server,
-          accountClusterService: res.accountClusterService,
-        });
+        const node = new KubeConfigNode(
+          res.id,
+          this,
+          clusterName,
+          res.devSpaces,
+          res.applications,
+          res.kubeConfig,
+          false,
+          res.localPath,
+          res.userInfo,
+          res.accountClusterService
+        );
         devs.push(node);
       } else {
-        const kubeConfigObj = await readYaml(res.kubeConfigPath);
+        const kubeStr = fs.readFileSync(res.localPath);
+        const kubeConfigObj = yaml.parse(`${kubeStr}`);
+        // const contexts = kubeConfigObj["contexts"];
         const clusters = kubeConfigObj["clusters"];
+        // const defaultNamespace = contexts[0]["context"]["namespace"] || "";
         const targetCluster = (clusters || []).find((it: { name: string }) => {
           return it.name === kubeConfigObj["current-context"];
         });
@@ -137,17 +191,18 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           ? targetCluster.name
           : clusters[0].name;
         text = clusterName;
-        const node = new KubeConfigNode({
-          id: res.id,
-          clusterSource: ClusterSource.local,
-          parent: this,
-          label: clusterName,
-          devSpaceInfos: res.devSpaces,
-          applications: res.applications,
-          kubeConfigPath: res.kubeConfigPath,
-          userInfo: res.userInfo,
-          accountClusterService: null,
-        });
+        const node = new KubeConfigNode(
+          res.id,
+          this,
+          clusterName,
+          res.devSpaces,
+          res.applications,
+          `${kubeStr}`,
+          true,
+          res.localPath,
+          res.userInfo,
+          null
+        );
         devs.push(node);
       }
     }
@@ -156,6 +211,32 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     return orderBy(NocalhostRootNode.childNodes, ["label"]);
   }
+
+  private generateInstallType(source: string, originInstallType: string) {
+    let type = "helmRepo";
+
+    if (source === "git" && originInstallType === "rawManifest") {
+      type = "rawManifest";
+    } else if (source === "git" && originInstallType === "helm_chart") {
+      type = "helmGit";
+    } else if (source === "local") {
+      type = originInstallType;
+    }
+    return type;
+  }
+
+  private writeFile(filePath: string, writeData: string) {
+    const isExist = fs.existsSync(filePath);
+    if (isExist) {
+      const data = fs.readFileSync(filePath).toString();
+      if (data === writeData) {
+        return;
+      }
+    }
+
+    fs.writeFileSync(filePath, writeData, { mode: 0o600 });
+  }
+
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     let treeItem = new vscode.TreeItem(
       this.label,

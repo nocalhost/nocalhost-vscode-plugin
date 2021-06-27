@@ -1,7 +1,11 @@
 import * as vscode from "vscode";
 
+import * as nhctl from "../../../../ctl/nhctl";
 import ConfigService from "../../../../service/configService";
+import state from "../../../../state";
 import { DEPLOYMENT } from "../../../nodeContants";
+import { DeploymentStatus } from "../../../types/nodeType";
+import { Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
 import host from "../../../../host";
@@ -32,6 +36,75 @@ export class Deployment extends ControllerResourceNode {
     }
 
     return treeItem;
+  }
+
+  public async isDeveloping() {
+    if (this.svcProfile && this.svcProfile.developing) {
+      return true;
+    }
+
+    return false;
+  }
+
+  public async getStatus(refresh = false) {
+    const appNode = this.getAppNode();
+    let status = state.getAppState(
+      appNode.name,
+      `${this.getNodeStateId()}_status`
+    );
+    if (status) {
+      return Promise.resolve(status);
+    }
+
+    if (refresh) {
+      await this.refreshSvcProfile();
+    }
+    if (this.svcProfile && this.svcProfile.developing) {
+      return DeploymentStatus.developing;
+    }
+
+    const deploy = await nhctl.getLoadResource({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      name: this.name,
+      namespace: appNode.namespace,
+      outputType: "json",
+    });
+    const deploymentObj = JSON.parse(deploy as string) as Resource;
+    status = deploymentObj.status as ResourceStatus;
+    this.conditionsStatus =
+      status.conditions || ((status as unknown) as string);
+    if (Array.isArray(this.conditionsStatus)) {
+      let available = false;
+      let progressing = false;
+      this.conditionsStatus.forEach((s) => {
+        if (s.type === "Available" && s.status === "True") {
+          status = "running";
+          available = true;
+        } else if (s.type === "Progressing" && s.status === "True") {
+          progressing = true;
+        }
+      });
+
+      if (progressing && !available) {
+        status = "starting";
+      }
+    }
+    if (!status) {
+      status = "unknown";
+    }
+    return status;
+  }
+
+  public async refreshSvcProfile() {
+    const appNode = this.getAppNode();
+    this.svcProfile = await nhctl.getServiceConfig(
+      appNode.getKubeConfigPath(),
+      appNode.namespace,
+      appNode.name,
+      this.name,
+      this.resourceType
+    );
   }
 
   public async checkConfig() {
