@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.55",
+  "version": "0.4.56",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
