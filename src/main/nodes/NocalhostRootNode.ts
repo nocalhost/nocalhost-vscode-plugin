@@ -167,7 +167,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
       if (res.isServer) {
         const kubeConfigObj = yaml.parse(res.kubeConfig);
-        const contexts = kubeConfigObj && kubeConfigObj["clusters"];
+        const contexts = kubeConfigObj["contexts"];
 
         const targetContext = (contexts || []).find(
           (item: { name: string }) => {
@@ -191,7 +191,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       } else {
         const kubeStr = fs.readFileSync(res.localPath);
         const kubeConfigObj = yaml.parse(`${kubeStr}`);
-        const contexts = kubeConfigObj && kubeConfigObj["clusters"];
+        const contexts = kubeConfigObj["contexts"];
 
         const targetContext = (contexts || []).find(
           (item: { name: string }) => {
