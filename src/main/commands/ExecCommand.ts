@@ -34,14 +34,14 @@ export default class ExecCommand implements ICommand {
       return;
     }
     if (!(node instanceof Pod)) {
-      const status = await node.getStatus();
+      const status = await node.getStatus(true);
       let container = result.containerName;
       let pod = result.podName;
       if (status === DeploymentStatus.developing) {
         container = "nocalhost-dev";
         pod = "";
       }
-      const terminal = await this.opendevSpaceExec(
+      const terminal = await shell.opendevSpaceExec(
         node.getAppName(),
         node.name,
         node.resourceType,
@@ -107,42 +107,6 @@ export default class ExecCommand implements ICommand {
     return defaultShell;
   }
 
-  async opendevSpaceExec(
-    appName: string,
-    workloadName: string,
-    workloadType: string,
-    container: string | null,
-    kubeConfigPath: string,
-    namespace: string,
-    pod: string | null
-  ) {
-    const terminalCommands = ["dev", "terminal", appName];
-    terminalCommands.push("-d", workloadName);
-    terminalCommands.push("-t", workloadType);
-    if (pod) {
-      terminalCommands.push("--pod", pod);
-    }
-    if (container) {
-      terminalCommands.push("--container", container);
-    }
-    terminalCommands.push("--kubeconfig", kubeConfigPath);
-    terminalCommands.push("-n", namespace);
-    const nhctlPath = path.resolve(
-      NH_BIN,
-      host.isWindow() ? "nhctl.exe" : "nhctl"
-    );
-    const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      terminalCommands,
-      nhctlPath,
-      workloadName
-    );
-    terminalDisposed.show();
-
-    host.log("", true);
-
-    return terminalDisposed;
-  }
-
   private async execCore(
     kubeConfigPath: string,
     podName: string,
@@ -203,7 +167,7 @@ export default class ExecCommand implements ICommand {
         kubeConfigPath: kubeConfigPath,
       });
       podName = podNameArr[0];
-      status = await node.getStatus();
+      status = await node.getStatus(true);
       if (status !== DeploymentStatus.developing && podNameArr.length > 1) {
         podName = await vscode.window.showQuickPick(podNameArr);
       }

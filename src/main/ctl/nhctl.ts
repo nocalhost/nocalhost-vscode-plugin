@@ -1,8 +1,4 @@
-import {
-  PLUGIN_TEMP_DIR,
-  PLUGIN_TEMP_NHCTL,
-  NH_BIN_NHCTL,
-} from "./../constants";
+import { PLUGIN_TEMP_DIR } from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -18,10 +14,11 @@ import * as yaml from "yaml";
 import { get as _get } from "lodash";
 import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
-import { IS_LOCAL, NH_BIN, NOCALHOST_INSTALLATION_LINK } from "../constants";
-import services, { ServiceResult } from "../common/DataCenter/services";
+import { IS_LOCAL, NH_BIN } from "../constants";
+import services from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
+import { IK8sResource, IPortForWard, IResourceStatus } from "../domain";
 import {
   ControllerResource,
   List,
@@ -78,8 +75,15 @@ export class NhctlCommand {
   static delete(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k delete", baseParams);
   }
+  static portForward(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("port-forward", baseParams);
+  }
   static list(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("list", baseParams);
+  }
+
+  static install(baseParams?: IBaseCommand<unknown>) {
+    return NhctlCommand.create("install", baseParams);
   }
 
   addArgument(arg: string, value?: string | number) {
@@ -96,8 +100,14 @@ export class NhctlCommand {
     }
     return this;
   }
-  addArgumentStrict(arg: string, value: string | number) {
+  addArgumentStrict(arg: string, value: string | number | string[]) {
     if (!arg || !value) {
+      return this;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item: string) => {
+        this.addArgument(arg, item);
+      });
       return this;
     }
     return this.addArgument(arg, value);
@@ -393,6 +403,21 @@ export async function getAll(params: IBaseCommand) {
   }
 }
 
+export async function getPortForWardByApp(
+  props: IBaseCommand<{
+    appName: string;
+  }>
+): Promise<IPortForWard[]> {
+  return await NhctlCommand.portForward({
+    kubeConfigPath: props.kubeConfigPath,
+    namespace: props.namespace,
+  })
+    .addArgument("list", props.appName)
+    .toJson()
+    .addArgument("--json")
+    .exec();
+}
+
 export async function getInstalledApp(
   ns: string,
   kubeconfig: string
@@ -416,26 +441,41 @@ export async function getInstalledApp(
   });
 }
 
-export async function install(
-  host: Host,
-  kubeconfigPath: string,
-  namespace: string,
-  appName: string,
-  appConfig: string,
-  helmNHConfigPath: string,
-  gitUrl: string,
-  installType: string,
-  resourceDir: Array<string>,
+export async function install(props: {
+  host: Host;
+  kubeconfigPath: string;
+  namespace: string;
+  appName: string;
+  appConfig: string;
+  helmNHConfigPath: string;
+  gitUrl: string;
+  installType: string;
+  resourceDir: Array<string>;
   local:
     | {
         localPath: string;
         config: string;
       }
-    | undefined,
-  values?: string,
-  valuesStr?: string,
-  refOrVersion?: string
-) {
+    | undefined;
+  values?: string;
+  valuesStr?: string;
+  refOrVersion?: string;
+}) {
+  const {
+    host,
+    kubeconfigPath,
+    namespace,
+    appName,
+    appConfig,
+    helmNHConfigPath,
+    gitUrl,
+    installType,
+    resourceDir,
+    local,
+    values,
+    valuesStr,
+    refOrVersion,
+  } = props;
   let resourcePath = "";
   if (resourceDir) {
     resourceDir.map((dir) => {
@@ -800,19 +840,21 @@ export async function startPortForward(
 }
 
 export async function endPortForward(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string,
-  workloadName: string,
-  port: string,
-  resourceType: string
+  props: IBaseCommand<{
+    appName: string;
+    workloadName: string;
+    port: string;
+    resourceType: string;
+  }>
 ) {
+  const { appName, port, workloadName, resourceType } = props;
+  const endPortForwardCommand = NhctlCommand.portForward(props)
+    .addArgument("end", appName)
+    .addArgumentStrict("-d", workloadName)
+    .addArgumentStrict("-p", port)
+    .addArgumentStrict("--type", resourceType)
+    .getCommand();
   // nhctl port-forward end coding-agile -d nginx -p 5006:5005
-  const endPortForwardCommand = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `port-forward end ${appName} -d ${workloadName} -p ${port} --type ${resourceType}`
-  );
 
   const sudo = isSudo([port]);
   const isLocal = host.getGlobalState(IS_LOCAL);
@@ -1313,10 +1355,6 @@ export async function checkVersion() {
         requiredVersion
       );
       if (isUpdateNhctl) {
-        if (host.getGlobalState("Downloading")) {
-          return;
-        }
-        host.setGlobalState("Downloading", true);
         lock(async (err) => {
           if (err) {
             return console.error(err);
@@ -1326,7 +1364,6 @@ export async function checkVersion() {
             async () => {
               await downloadNhctl(sourcePath, destinationPath);
               fs.renameSync(destinationPath, binPath);
-              host.removeGlobalState("Downloading");
               if (!(await checkDownloadNhclVersion(requiredVersion))) {
                 vscode.window.showErrorMessage(
                   `Update failed, please delete ${binPath} file and try again`
@@ -1346,10 +1383,6 @@ export async function checkVersion() {
       //   );
       // }
     } else {
-      if (host.getGlobalState("Downloading")) {
-        return;
-      }
-      host.setGlobalState("Downloading", true);
       lock(async function (err) {
         if (err) {
           return console.error(err);
@@ -1357,7 +1390,6 @@ export async function checkVersion() {
         await host.showProgressing(`Downloading nhctl`, async () => {
           await downloadNhctl(sourcePath, destinationPath);
           fs.renameSync(destinationPath, binPath);
-          host.removeGlobalState("Downloading");
           unlock(() => {});
           if (!(await checkDownloadNhclVersion(requiredVersion))) {
             vscode.window.showErrorMessage(`Download failed, Please try again`);
@@ -1368,7 +1400,6 @@ export async function checkVersion() {
       });
     }
   } catch (e) {
-    host.removeGlobalState("Downloading");
     unlock(() => {});
   }
 }

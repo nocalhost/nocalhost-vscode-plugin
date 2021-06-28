@@ -24,6 +24,11 @@ export default class SignOutCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(node: KubeConfigNode) {
+    if (!node) {
+      host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
+
     let globalUserList: {
       userInfo: IUserInfo;
       jwt: string;
@@ -36,13 +41,12 @@ export default class SignOutCommand implements ICommand {
     });
     host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
-    await vscode.commands.executeCommand("Nocalhost.refresh");
-
     for (let key of state.refreshFolderMap.keys()) {
       if ((key as string).startsWith(node.getNodeStateId())) {
         state.refreshFolderMap.set(key, false);
       }
     }
+    await vscode.commands.executeCommand("Nocalhost.refresh");
 
     if (!isExistCluster()) {
       await vscode.commands.executeCommand(

@@ -2,16 +2,18 @@ import * as log4js from "log4js";
 import * as path from "path";
 import { PLUGIN_CONFIG_DIR } from "../constants";
 
-const loggerPath = path.resolve(PLUGIN_CONFIG_DIR, "all-the-logs.log");
+const loggerPath = path.resolve(PLUGIN_CONFIG_DIR, "vsc_log");
 
 log4js.configure({
   appenders: {
     everything: {
-      type: "file",
+      type: "dateFile",
       filename: loggerPath,
       maxLogSize: 10485760,
+      daysToKeep: 3,
+      pattern: "yyyy-MM-dd",
       backups: 3,
-      compress: true,
+      compress: false,
     },
   },
   categories: {

@@ -19,7 +19,7 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
     return `${parentStateId}${ID_SPLIT}${this.name}`;
   }
 
-  getParent(element: BaseNocalhostNode): BaseNocalhostNode {
+  getParent(): BaseNocalhostNode {
     return this.parent;
   }
   getChildren(
@@ -46,7 +46,7 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
     if (parent) {
       node = parent.getParent(parent);
     } else {
-      node = this.getParent(this);
+      node = this.getParent();
     }
     if (node instanceof AppNode) {
       return node;

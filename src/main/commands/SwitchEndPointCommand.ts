@@ -23,7 +23,6 @@ export default class SwitchEndPointCommand implements ICommand {
     const newValue: string | undefined = await host.showInputBox(options);
     if (newValue) {
       host.setGlobalState(BASE_URL, newValue);
-      await vscode.commands.executeCommand("setContext", "serverConfig", true);
       host.showInformationMessage("configured api server");
     }
   }

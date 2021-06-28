@@ -1,9 +1,12 @@
 import * as vscode from "vscode";
 import * as os from "os";
-
+import { INhCtlGetResult, IDescribeConfig, IK8sResource } from "../domain";
 import ICommand from "./ICommand";
+import { NhctlCommand } from "./../ctl/nhctl";
 import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
+import { get as _get } from "lodash";
+import { opendevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
   TMP_CONTAINER,
@@ -35,7 +38,7 @@ export interface ControllerNodeApi {
   name: string;
   resourceType: string;
   setStatus: (status: string) => Promise<void>;
-  getStatus: () => Promise<string> | string;
+  getStatus: (refresh?: boolean) => Promise<string> | string;
   setContainer: (container: string) => Promise<void>;
   getContainer: () => Promise<string>;
   getKubeConfigPath: () => string;
@@ -54,6 +57,39 @@ export default class StartDevModeCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
 
+  async getContainers(info: IK8sResource) {
+    if (!info || !info.kind) {
+      host.log("Missing kind field", true);
+      return;
+    }
+    let containers: {
+      name: string;
+    }[] = _get(info, "spec.template.spec.containers");
+    if (info.kind.toLowerCase() === "pod") {
+      containers = _get(info, "spec.containers");
+    }
+
+    if (info.kind.toLowerCase() === "cronjob") {
+      containers = _get(info, "spec.jobTemplate.spec.template.spec.containers");
+    }
+
+    const containerNames = (containers || [])
+      .map(({ name }) => name)
+      .filter(Boolean);
+    if (!containerNames || containerNames.length === 0) {
+      vscode.window.showErrorMessage("No container available");
+      return;
+    }
+    let containerName = containerNames[0];
+    if (containers.length > 1) {
+      containerName = await vscode.window.showQuickPick(containerNames);
+      if (!containerName) {
+        return;
+      }
+    }
+    return containerName;
+  }
+
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
       host.showWarnMessage("A task is running, please try again later");
@@ -62,19 +98,26 @@ export default class StartDevModeCommand implements ICommand {
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
-    const resourceProfile = await nhctl.getServiceConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
-      node.name,
-      node.resourceType
-    );
+    host.log("[start dev] Initializing..", true);
+    const resource: INhCtlGetResult = await NhctlCommand.get({
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+    })
+      .addArgumentStrict(node.resourceType, node.name)
+      .addArgument("-a", node.getAppName())
+      .addArgument("-o", "json")
+      .exec();
 
-    const result = await this.getPodAndContainer(node);
-    if (!result) {
+    const description: IDescribeConfig =
+      resource.description || Object.create(null);
+    const containerName = await this.getContainers(resource.info);
+    if (!containerName) {
       return;
     }
-    if (result.containerName === "nocalhost-dev") {
+
+    host.log(`[start dev] Container: ${containerName}`, true);
+
+    if (containerName === "nocalhost-dev") {
       let r = await host.showInformationMessage(
         `This container is developing. If you continue to choose this container, some problems may occur. Are you sure to continue develop?`,
         { modal: true },
@@ -88,8 +131,8 @@ export default class StartDevModeCommand implements ICommand {
     const destDir = await this.cloneOrGetFolderDir(
       appName,
       node,
-      result.containerName,
-      resourceProfile.associate
+      containerName,
+      description.associate
     );
     // check image
     let image: string | undefined = await this.getImage(
@@ -98,7 +141,7 @@ export default class StartDevModeCommand implements ICommand {
       appName,
       node.name,
       node.resourceType,
-      result.containerName
+      containerName
     );
     if (!image) {
       const result = await host.showInformationMessage(
@@ -141,7 +184,7 @@ export default class StartDevModeCommand implements ICommand {
       appName,
       node.name,
       node.resourceType,
-      result.containerName,
+      containerName,
       "image",
       image as string
     );
@@ -150,14 +193,14 @@ export default class StartDevModeCommand implements ICommand {
       (destDir && destDir === this.getCurrentRootPath())
     ) {
       host.disposeBookInfo();
-      await this.startDevMode(host, appName, node, result.containerName);
+      await this.startDevMode(host, appName, node, containerName);
     } else if (destDir) {
       host.disposeBookInfo();
-      this.saveAndOpenFolder(appName, node, destDir, result.containerName);
+      this.saveAndOpenFolder(appName, node, destDir, containerName);
       messageBus.emit("devstart", {
         name: appName,
         destDir,
-        container: result.containerName,
+        container: containerName,
       });
     }
   }
@@ -399,7 +442,7 @@ export default class StartDevModeCommand implements ICommand {
           dirs = host.formalizePath(currentUri);
           // update deployment label
           node.setContainer(containerName);
-          const namespace = await nhctl.devStart(
+          await nhctl.devStart(
             host,
             node.getKubeConfigPath(),
             node.getNameSpace(),
@@ -433,9 +476,23 @@ export default class StartDevModeCommand implements ICommand {
           host.log("sync file end", true);
           host.log("", true);
           node.setStatus("");
-          await vscode.commands.executeCommand(EXEC, node);
+          // await vscode.commands.executeCommand(EXEC, node);
+          const terminal = await opendevSpaceExec(
+            node.getAppName(),
+            node.name,
+            node.resourceType,
+            "nocalhost-dev",
+            node.getKubeConfigPath(),
+            node.getNameSpace(),
+            null
+          );
+          host.pushDispose(
+            node.getSpaceName(),
+            node.getAppName(),
+            node.name,
+            terminal
+          );
         } catch (error) {
-          host.log(error);
           logger.error(error);
           node.setStatus("");
         }

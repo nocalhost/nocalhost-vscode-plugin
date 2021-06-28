@@ -27,6 +27,7 @@ export interface Resource {
 export interface ResourceStatus {
   conditions: Array<Status>;
   phase: string;
+  numberReady?: number;
   replicas?: number;
   readyReplicas?: number;
 }

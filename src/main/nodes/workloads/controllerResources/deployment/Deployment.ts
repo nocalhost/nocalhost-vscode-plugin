@@ -1,79 +1,30 @@
 import * as vscode from "vscode";
 
 import * as nhctl from "../../../../ctl/nhctl";
-import ConfigService, {
-  NocalhostServiceConfig,
-} from "../../../../service/configService";
+import ConfigService from "../../../../service/configService";
 import state from "../../../../state";
-import { resolveVSCodeUri } from "../../../../utils/fileUtil";
 import { DEPLOYMENT } from "../../../nodeContants";
-import {
-  BaseNocalhostNode,
-  DeploymentStatus,
-  SvcProfile,
-} from "../../../types/nodeType";
-import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
+import { DeploymentStatus } from "../../../types/nodeType";
+import { Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
-import host from "../../../../host";
+import logger from "../../../../utils/logger";
 
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
   public resourceType = "deployment";
   private firstRender = true;
 
-  constructor(
-    public parent: BaseNocalhostNode,
-    public label: string,
-    public name: string,
-    private conditionsStatus: Array<Status> | string,
-    private svcProfile: SvcProfile | undefined | null,
-    private nocalhostService: NocalhostServiceConfig | undefined | null,
-    public info?: any
-  ) {
-    super();
-    state.setNode(this.getNodeStateId(), this);
-  }
-
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
     let status = "";
     try {
       status = await this.getStatus();
-      const portForwardStatus = await this.getPortForwardStatus();
-      switch (status) {
-        case "running":
-          treeItem.iconPath = resolveVSCodeUri("status-running.svg");
-          if (portForwardStatus) {
-            treeItem.iconPath = resolveVSCodeUri("Normal_Port_Forwarding.svg");
-          }
-          break;
-        case "developing":
-          const possess = this.svcProfile.possess;
-          treeItem.iconPath = resolveVSCodeUri(
-            possess === false ? "dev_other.svg" : "dev-start.svg"
-          );
-          const container = await this.getContainer();
-          if (container) {
-            treeItem.label = `${this.label}(${container})`;
-          }
-          if (portForwardStatus) {
-            treeItem.iconPath = resolveVSCodeUri(
-              possess === false
-                ? "dev_port_forwarding_other.svg"
-                : "Dev_Port_Forwarding.svg"
-            );
-          }
-          break;
-        case "starting":
-          treeItem.iconPath = resolveVSCodeUri("loading.svg");
-          break;
-        case "unknown":
-          treeItem.iconPath = resolveVSCodeUri("status-unknown.svg");
-          break;
-      }
+      const [icon, label] = await this.getIconAndLabelByStatus(status);
+      treeItem.iconPath = icon;
+      treeItem.label = label;
       const check = await this.checkConfig();
-      treeItem.contextValue = `${treeItem.contextValue}-${
+      treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
       }-${status}`;
       if (this.firstRender) {
@@ -81,7 +32,8 @@ export class Deployment extends ControllerResourceNode {
       }
     } catch (e) {
       this.firstRender = false;
-      host.log(e, true);
+      logger.error("deployment getTreeItem");
+      logger.error(e);
     }
 
     return treeItem;
@@ -95,7 +47,7 @@ export class Deployment extends ControllerResourceNode {
     return false;
   }
 
-  public async getStatus() {
+  public async getStatus(refresh = false) {
     const appNode = this.getAppNode();
     let status = state.getAppState(
       appNode.name,
@@ -103,6 +55,10 @@ export class Deployment extends ControllerResourceNode {
     );
     if (status) {
       return Promise.resolve(status);
+    }
+
+    if (refresh) {
+      await this.refreshSvcProfile();
     }
 
     if (this.firstRender) {
@@ -146,23 +102,6 @@ export class Deployment extends ControllerResourceNode {
       status = "unknown";
     }
     return status;
-  }
-
-  public async getPortForwardStatus() {
-    if (this.svcProfile && this.svcProfile.devPortForwardList.length > 0) {
-      const portForwardList = this.svcProfile.devPortForwardList.filter(
-        (item) => {
-          if (item.role === "SYNC") {
-            return false;
-          }
-          return true;
-        }
-      );
-      if (portForwardList.length > 0) {
-        return true;
-      }
-    }
-    return false;
   }
 
   public async refreshSvcProfile() {

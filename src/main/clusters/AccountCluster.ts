@@ -14,7 +14,7 @@ import {
   ServiceAccountInfo,
 } from "../api";
 import { LoginInfo } from "./interface";
-import { writeFileAsync } from "../utils/fileUtil";
+import { writeFileLock } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 
 export class AccountClusterNode {
@@ -38,7 +38,6 @@ export default class AccountClusterService {
     });
     this.instance.interceptors.request.use((config) => {
       // const jwt = host.getGlobalState(JWT) as string;
-      const jwt = this.jwt;
       if (!config.baseURL) {
         throw new Error("please config your api server");
       }
@@ -49,10 +48,26 @@ export default class AccountClusterService {
       return config;
     });
     this.instance.interceptors.response.use(
-      async function (response: AxiosResponse<ResponseData>) {
+      async (response: AxiosResponse<ResponseData>) => {
         const res = response.data;
         if ([20103, 20111].includes(res.code)) {
-          host.log(`Please login again ${loginInfo.username}`, true);
+          host.log(
+            `Please login again ${loginInfo.baseUrl || ""}：${
+              loginInfo.username || ""
+            }`,
+            true
+          );
+          if (this.accountClusterNode) {
+            let globalClusterRootNodes: AccountClusterNode[] =
+              host.getGlobalState(SERVER_CLUSTER_LIST) || [];
+            const index = globalClusterRootNodes.findIndex(
+              ({ id }) => id === this.accountClusterNode.id
+            );
+            if (index !== -1) {
+              globalClusterRootNodes.splice(index, 1);
+              host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
+            }
+          }
         }
         if (res.code !== 0) {
           // vscode.window.showErrorMessage(res.message || "");
@@ -67,23 +82,12 @@ export default class AccountClusterService {
     );
   }
 
-  // static getLocalClusterRootNode = async (newAccountCluser: AccountClusterNode) => {
-  //   let resources = state.getData(ROOT_NODE_KEY) as IRootNode[];
-  //   const oldLength = resources.length;
-  //   if (!Array.isArray(resources)) {
-  //     resources = []
-  //   }
-  //   const newRootNodes = await AccountClusterService.getAccountClusterNodes(newAccountCluser) || []
-  //   resources = [...resources, ...newRootNodes]
-  //   if (oldLength !== resources.length) {
-  //     state.setData(ROOT_NODE_KEY, resources);
-  //   }
-  //   return resources;
-  // }
-
   static getServerClusterRootNodes = async (
     newAccountCluser: AccountClusterNode
   ): Promise<IRootNode[]> => {
+    if (!newAccountCluser) {
+      return [];
+    }
     const accountClusterService = new AccountClusterService(
       newAccountCluser.loginInfo
     );
@@ -91,7 +95,7 @@ export default class AccountClusterService {
     accountClusterService.jwt = newAccountCluser.jwt;
     const newRootNodes: IRootNode[] = [];
     let serviceAccounts = await accountClusterService.getServiceAccount();
-    if (!serviceAccounts || serviceAccounts.length === 0) {
+    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
       logger.error(
         `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
       );
@@ -103,7 +107,7 @@ export default class AccountClusterService {
         `${newAccountCluser.loginInfo.baseUrl}${sa.clusterId}${newAccountCluser.userInfo.id}_config`
       );
       const kubeconfigPath = path.resolve(KUBE_CONFIG_DIR, id);
-      writeFileAsync(kubeconfigPath, sa.kubeconfig);
+      writeFileLock(kubeconfigPath, sa.kubeconfig);
       if (sa.privilege) {
         const devs = await getAllNamespace({
           kubeConfigPath: kubeconfigPath,
@@ -193,6 +197,7 @@ export default class AccountClusterService {
     return this.instance.post(`/v1/plugin/${devSpaceId}/recreate`);
   };
   login = async (loginInfo: LoginInfo) => {
+    logger.info("logging in。..");
     const response = (
       await this.instance.post("/v1/login", {
         email: loginInfo.username,
@@ -203,6 +208,7 @@ export default class AccountClusterService {
     if (response.data && response.data.token) {
       this.jwt = `Bearer ${response.data.token}`;
     }
+    logger.info("login end");
     return this.jwt;
     // this.userInfo = await this.getUserInfo();
     // this.loginInfo.password = null;
@@ -214,7 +220,7 @@ export default class AccountClusterService {
       const response = await this.instance.get(`/v1/plugin/service_accounts`);
       const res = response.data as ResponseData;
       let serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
-      if (!serviceAccount || serviceAccount.length === 0) {
+      if (!Array.isArray(serviceAccount) || serviceAccount.length === 0) {
         serviceAccount = this.lastServiceAccounts;
       } else {
         this.lastServiceAccounts = [...serviceAccount];
@@ -248,19 +254,19 @@ export default class AccountClusterService {
       return [];
     }
     const applications = await this.getApplication();
-    if (!applications || applications.length === 0) {
+    if (!Array.isArray(applications) || applications.length === 0) {
       return [];
     }
     const result = new Array<V2ApplicationInfo>();
     for (let i = 0; i < applications.length; i++) {
+      const context = JSON.parse(applications[i].context);
+      // context.install_type = applications[i].application_type;
       const app: V2ApplicationInfo = {
         id: applications[i].id,
         userId: applications[i]["user_id"],
         public: applications[i].public,
         editable: applications[i].editable,
-        context: JSON.stringify(
-          keysToCamel(JSON.parse(applications[i].context))
-        ),
+        context: JSON.stringify(keysToCamel(context)),
         status: applications[i].status,
       };
       result.push(app);

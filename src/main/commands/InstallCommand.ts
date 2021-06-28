@@ -1,16 +1,14 @@
-import { KubeConfigNode } from "./../nodes/KubeConfigNode";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 
 import ICommand from "./ICommand";
-import { INSTALL_APP, REFRESH } from "./constants";
+import { INSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
-import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
-import { List, Resource, ResourceStatus } from "../nodes/types/resourceType";
+import { List, ResourceStatus } from "../nodes/types/resourceType";
 import logger from "../utils/logger";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 
@@ -231,7 +229,7 @@ export default class InstallCommand implements ICommand {
       | undefined
   ) {
     host.log(`Installing application: ${appName}`, true);
-    await nhctl.install(
+    await nhctl.install({
       host,
       kubeconfigPath,
       namespace,
@@ -244,8 +242,8 @@ export default class InstallCommand implements ICommand {
       local,
       values,
       valuesStr,
-      refOrVersion
-    );
+      refOrVersion,
+    });
     host.setGlobalState(appName, {});
   }
 

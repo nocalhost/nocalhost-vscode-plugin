@@ -4,6 +4,7 @@
     "typeRoots": ["../src/main/typings"],
     "module": "commonjs",
     "target": "es6",
+    "experimentalDecorators": true,
     "outDir": "../out",
     "strictNullChecks": false,
     "rootDir": "../",

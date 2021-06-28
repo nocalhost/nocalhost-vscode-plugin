@@ -1,7 +1,18 @@
 import * as vscode from "vscode";
-
+import * as nhctl from "../../../ctl/nhctl";
+import { get as _get } from "lodash";
+import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
+import ConfigService, {
+  NocalhostServiceConfig,
+} from "../../../service/configService";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
+import {
+  BaseNocalhostNode,
+  DeploymentStatus,
+  SvcProfile,
+} from "../../types/nodeType";
+import { Status, Resource, ResourceStatus } from "../../types/resourceType";
 
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
   async getTreeItem(): Promise<vscode.TreeItem> {
@@ -9,14 +20,85 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     treeItem.contextValue = `workload-${this.resourceType}`;
     return treeItem;
   }
+  constructor(
+    public parent: BaseNocalhostNode,
+    public label: string,
+    public name: string,
+    public conditionsStatus?: Array<Status> | string,
+    public svcProfile?: SvcProfile | undefined | null,
+    public nocalhostService?: NocalhostServiceConfig | undefined | null,
+    public info?: any
+  ) {
+    super();
+    state.setNode(this.getNodeStateId(), this);
+  }
 
-  public getStatus(): string | Promise<string> {
+  public async refreshSvcProfile() {
     const appNode = this.getAppNode();
-    const status = state.getAppState(
+    this.svcProfile = await nhctl.getServiceConfig(
+      appNode.getKubeConfigPath(),
+      appNode.namespace,
       appNode.name,
-      `${this.getNodeStateId()}_status`
+      this.name,
+      this.resourceType
     );
-    return status;
+  }
+
+  public async getPortForwardStatus() {
+    const devPortForwardList = _get(this.svcProfile, "devPortForwardList");
+    if (!Array.isArray(devPortForwardList)) {
+      return false;
+    }
+    const portForwardList = devPortForwardList.filter((item) => {
+      if (item.role === "SYNC") {
+        return false;
+      }
+      return true;
+    });
+    if (portForwardList.length > 0) {
+      return true;
+    }
+    return false;
+  }
+
+  public async getIconAndLabelByStatus(
+    status: string
+  ): Promise<[vscode.Uri, string]> {
+    const portForwardStatus = await this.getPortForwardStatus();
+    let iconPath,
+      label = this.label;
+    switch (status) {
+      case "running":
+        iconPath = resolveVSCodeUri("status-running.svg");
+        if (portForwardStatus) {
+          iconPath = resolveVSCodeUri("Normal_Port_Forwarding.svg");
+        }
+        break;
+      case "developing":
+        const possess = this.svcProfile.possess;
+        iconPath = resolveVSCodeUri(
+          possess === false ? "dev_other.svg" : "dev-start.svg"
+        );
+        const container = await this.getContainer();
+        if (container) {
+          label = `${this.label}(${container})`;
+        }
+        if (portForwardStatus) {
+          iconPath = resolveVSCodeUri(
+            possess === false
+              ? "dev_port_forwarding_other.svg"
+              : "Dev_Port_Forwarding.svg"
+          );
+        }
+        break;
+      case "starting":
+        iconPath = resolveVSCodeUri("loading.svg");
+        break;
+      case "unknown":
+        iconPath = resolveVSCodeUri("status-unknown.svg");
+        break;
+    }
+    return [iconPath, label];
   }
 
   /**
@@ -83,5 +165,44 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
 
   public checkConfig() {
     return Promise.resolve(true);
+  }
+
+  public async getStatus(refresh = false) {
+    const appNode = this.getAppNode();
+    let status = state.getAppState(
+      appNode.name,
+      `${this.getNodeStateId()}_status`
+    );
+    if (refresh) {
+      await this.refreshSvcProfile();
+    }
+    if (status) {
+      return Promise.resolve(status);
+    }
+
+    if (this.svcProfile && this.svcProfile.developing) {
+      return DeploymentStatus.developing;
+    }
+
+    await this.refreshSvcProfile();
+    if (this.svcProfile && this.svcProfile.developing) {
+      return DeploymentStatus.developing;
+    }
+    const deploy = await nhctl.getLoadResource({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      name: this.name,
+      namespace: appNode.namespace,
+      outputType: "json",
+    });
+    const res = JSON.parse(deploy as string) as Resource;
+    const tmpStatus = res.status as ResourceStatus;
+    if (tmpStatus.replicas === tmpStatus.readyReplicas) {
+      status = "running";
+    }
+    if (!status) {
+      status = "unknown";
+    }
+    return status;
   }
 }

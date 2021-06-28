@@ -2,6 +2,7 @@ import { PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+import * as fs from "fs";
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
@@ -44,7 +45,7 @@ import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
-import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
+// import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 import messageBus from "./utils/messageBus";
 import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
@@ -63,7 +64,6 @@ export async function activate(context: vscode.ExtensionContext) {
   // TODO: DO NOT DELETE, FOR: [webview integration]
   // const dataCenter: DataCenter = DataCenter.getInstance();
   // dataCenter.addListener(() => appTreeProvider.refresh());
-
   let homeWebViewProvider = new HomeWebViewProvider(
     context.extensionUri,
     appTreeProvider
@@ -133,7 +133,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(...subs);
 
   host.getOutputChannel().show(true);
-  await registerYamlSchemaSupport();
+  // await registerYamlSchemaSupport();
 
   await messageBus.init();
 
@@ -172,11 +172,6 @@ export async function activate(context: vscode.ExtensionContext) {
   if (isExistCluster()) {
     await state.refreshTree();
   } else {
-    await vscode.commands.executeCommand(
-      "setContext",
-      "Nocalhost.visibleTree",
-      true
-    );
     await vscode.commands.executeCommand("setContext", "emptyCluster", true);
   }
   launchDevspace();
@@ -258,10 +253,10 @@ function launchDevspace() {
   }
 }
 
-export function deactivate() {
-  host.removeGlobalState("Downloading");
+export async function deactivate() {
+  fs.writeFileSync("/Users/zepengcai/.nh/vscode-plugin/.tmp/a.txt", "aaaaaaa");
+  await unlock(() => {});
   host.dispose();
-  unlock(() => {});
 }
 
 export function checkCtl(name: string) {
@@ -306,8 +301,13 @@ async function init(context: vscode.ExtensionContext) {
 }
 
 process.on("exit", function (code) {
-  host.removeGlobalState("Downloading");
   unlock(() => {});
+  logger.error("exit vscode process" + code);
+});
+
+process.on("disconnect", function () {
+  unlock(() => {});
+  logger.error("exit vscode process");
 });
 process.on("uncaughtException", (error) => {
   logger.error(`[uncatch exception] ${error.message} ${error.stack}`);

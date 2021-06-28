@@ -10,8 +10,6 @@ import { BaseNocalhostNode } from "../types/nodeType";
 import { List, Resource } from "../types/resourceType";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { RefreshData } from "../impl/updateData";
-import host from "../../host";
-import { IS_LOCAL } from "../../constants";
 
 export abstract class KubernetesResourceFolder
   extends NocalhostFolderNode
@@ -41,6 +39,11 @@ export abstract class KubernetesResourceFolder
     }
   }
 
+  public async getChildren(
+    parent?: BaseNocalhostNode
+  ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
+    return [];
+  }
   public getAppName() {
     const appNode = this.getAppNode();
     return appNode.name;
@@ -52,7 +55,7 @@ export abstract class KubernetesResourceFolder
   }
 
   public async sortResource<T extends ControllerResourceNode>(arr: Array<T>) {
-    return orderBy(arr, ["metadata.name"]);
+    return orderBy(arr, ["name"]);
   }
 
   public async updateData(isInit?: boolean): Promise<any> {

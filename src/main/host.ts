@@ -280,7 +280,7 @@ export class Host implements vscode.Disposable {
     return new Promise((res, rej) => {
       setTimeout(() => {
         res(undefined);
-      }, 20 * 1000);
+      }, 4 * 1000);
       if (options) {
         vscode.window.showInformationMessage(msg, options, ...items).then(
           (value) => {
