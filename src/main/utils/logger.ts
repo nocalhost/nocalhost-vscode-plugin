@@ -11,7 +11,7 @@ log4js.configure({
       filename: loggerPath,
       maxLogSize: 10485760,
       daysToKeep: 3,
-      pattern: "-yyyy-MM-dd",
+      pattern: "yyyy-MM-dd",
       backups: 3,
       compress: false,
     },

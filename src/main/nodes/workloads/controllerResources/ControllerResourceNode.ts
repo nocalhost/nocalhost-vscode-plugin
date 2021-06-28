@@ -101,15 +101,6 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     return [iconPath, label];
   }
 
-  public getStatus(): string | Promise<string> {
-    const appNode = this.getAppNode();
-    const status = state.getAppState(
-      appNode.name,
-      `${this.getNodeStateId()}_status`
-    );
-    return status;
-  }
-
   /**
    *
    * @param status
@@ -174,5 +165,44 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
 
   public checkConfig() {
     return Promise.resolve(true);
+  }
+
+  public async getStatus(refresh = false) {
+    const appNode = this.getAppNode();
+    let status = state.getAppState(
+      appNode.name,
+      `${this.getNodeStateId()}_status`
+    );
+    if (refresh) {
+      await this.refreshSvcProfile();
+    }
+    if (status) {
+      return Promise.resolve(status);
+    }
+
+    if (this.svcProfile && this.svcProfile.developing) {
+      return DeploymentStatus.developing;
+    }
+
+    await this.refreshSvcProfile();
+    if (this.svcProfile && this.svcProfile.developing) {
+      return DeploymentStatus.developing;
+    }
+    const deploy = await nhctl.getLoadResource({
+      kubeConfigPath: this.getKubeConfigPath(),
+      kind: this.resourceType,
+      name: this.name,
+      namespace: appNode.namespace,
+      outputType: "json",
+    });
+    const res = JSON.parse(deploy as string) as Resource;
+    const tmpStatus = res.status as ResourceStatus;
+    if (tmpStatus.replicas === tmpStatus.readyReplicas) {
+      status = "running";
+    }
+    if (!status) {
+      status = "unknown";
+    }
+    return status;
   }
 }

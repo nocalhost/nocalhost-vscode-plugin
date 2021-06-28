@@ -9,6 +9,7 @@ import { ControllerResourceNode } from "../controllerResources/ControllerResourc
 import { BaseNocalhostNode } from "../../types/nodeType";
 import { DeploymentStatus } from "../../types/nodeType";
 import { Resource, ResourceStatus, Status } from "../../types/resourceType";
+import logger from "../../../utils/logger";
 
 export class Pod extends ControllerResourceNode {
   public type = POD;
@@ -16,14 +17,19 @@ export class Pod extends ControllerResourceNode {
 
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
-    const [status, dev] = await this.getStatus();
-    const [icon, label] = await this.getIconAndLabelByStatus(status);
-    treeItem.iconPath = icon;
-    treeItem.label = label;
-    const check = await this.checkConfig();
-    treeItem.contextValue = `${treeItem.contextValue}-${dev ? "dev-" : ""}${
-      check ? "info" : "warn"
-    }-${status}`;
+    try {
+      const [status, dev] = await this.getStatus();
+      const [icon, label] = await this.getIconAndLabelByStatus(status);
+      treeItem.iconPath = icon;
+      treeItem.label = label;
+      const check = await this.checkConfig();
+      treeItem.contextValue = `${treeItem.contextValue}-${dev ? "dev-" : ""}${
+        check ? "info" : "warn"
+      }-${status}`;
+    } catch (e) {
+      logger.error("pod getTreeItem");
+      logger.error(e);
+    }
 
     return treeItem;
   }
@@ -33,14 +39,12 @@ export class Pod extends ControllerResourceNode {
       appNode.name,
       `${this.getNodeStateId()}_status`
     );
-
     if (refresh) {
       await this.refreshSvcProfile();
     }
     if (status) {
       return Promise.resolve(status);
     }
-
     const deploy = await nhctl.getLoadResource({
       kubeConfigPath: this.getKubeConfigPath(),
       kind: this.resourceType,

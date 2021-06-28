@@ -33,38 +33,4 @@ export class DaemonSet extends ControllerResourceNode {
 
     return treeItem;
   }
-
-  public async getStatus(refresh = false) {
-    const appNode = this.getAppNode();
-    let status = state.getAppState(
-      appNode.name,
-      `${this.getNodeStateId()}_status`
-    );
-    if (refresh) {
-      await this.refreshSvcProfile();
-    }
-    if (status) {
-      return Promise.resolve(status);
-    }
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
-    }
-    const deploy = await nhctl.getLoadResource({
-      kubeConfigPath: this.getKubeConfigPath(),
-      kind: this.resourceType,
-      name: this.name,
-      namespace: appNode.namespace,
-      outputType: "json",
-    });
-    const deploymentObj = JSON.parse(deploy as string) as Resource;
-    const tmpStatus = deploymentObj.status as ResourceStatus;
-    if (tmpStatus.numberReady > 0) {
-      status = "running";
-    }
-    if (!status) {
-      status = "unknown";
-    }
-
-    return status;
-  }
 }

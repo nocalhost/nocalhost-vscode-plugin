@@ -25,8 +25,10 @@ export default class SignOutCommand implements ICommand {
   }
   async execCommand(node: KubeConfigNode) {
     if (!node) {
+      host.showWarnMessage("A task is running, please try again later");
       return;
     }
+
     let globalUserList: {
       userInfo: IUserInfo;
       jwt: string;

@@ -14,7 +14,7 @@ import {
   ServiceAccountInfo,
 } from "../api";
 import { LoginInfo } from "./interface";
-import { writeFileAsync } from "../utils/fileUtil";
+import { writeFileLock } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 
 export class AccountClusterNode {
@@ -51,7 +51,12 @@ export default class AccountClusterService {
       async (response: AxiosResponse<ResponseData>) => {
         const res = response.data;
         if ([20103, 20111].includes(res.code)) {
-          host.log(`Please login again ${loginInfo.username}`, true);
+          host.log(
+            `Please login again ${loginInfo.baseUrl || ""}：${
+              loginInfo.username || ""
+            }`,
+            true
+          );
           if (this.accountClusterNode) {
             let globalClusterRootNodes: AccountClusterNode[] =
               host.getGlobalState(SERVER_CLUSTER_LIST) || [];
@@ -80,6 +85,9 @@ export default class AccountClusterService {
   static getServerClusterRootNodes = async (
     newAccountCluser: AccountClusterNode
   ): Promise<IRootNode[]> => {
+    if (!newAccountCluser) {
+      return [];
+    }
     const accountClusterService = new AccountClusterService(
       newAccountCluser.loginInfo
     );
@@ -99,7 +107,7 @@ export default class AccountClusterService {
         `${newAccountCluser.loginInfo.baseUrl}${sa.clusterId}${newAccountCluser.userInfo.id}_config`
       );
       const kubeconfigPath = path.resolve(KUBE_CONFIG_DIR, id);
-      writeFileAsync(kubeconfigPath, sa.kubeconfig);
+      writeFileLock(kubeconfigPath, sa.kubeconfig);
       if (sa.privilege) {
         const devs = await getAllNamespace({
           kubeConfigPath: kubeconfigPath,
@@ -189,6 +197,7 @@ export default class AccountClusterService {
     return this.instance.post(`/v1/plugin/${devSpaceId}/recreate`);
   };
   login = async (loginInfo: LoginInfo) => {
+    logger.info("logging in。..");
     const response = (
       await this.instance.post("/v1/login", {
         email: loginInfo.username,
@@ -199,6 +208,7 @@ export default class AccountClusterService {
     if (response.data && response.data.token) {
       this.jwt = `Bearer ${response.data.token}`;
     }
+    logger.info("login end");
     return this.jwt;
     // this.userInfo = await this.getUserInfo();
     // this.loginInfo.password = null;

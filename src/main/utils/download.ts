@@ -6,7 +6,7 @@ import { isExist } from "./fileUtil";
 import host from "../host";
 import logger from "./logger";
 
-const lockDir = path.resolve(PLUGIN_TEMP_DIR, "config.lock");
+const lockDir = path.resolve(PLUGIN_TEMP_DIR, "config_vsc.lock");
 const processDir = path.resolve(lockDir, `${process.pid}`);
 export const lock = function (cb?: (err?: any) => void) {
   fs.mkdir(lockDir, function (error) {

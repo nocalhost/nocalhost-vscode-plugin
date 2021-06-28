@@ -55,7 +55,7 @@ export abstract class KubernetesResourceFolder
   }
 
   public async sortResource<T extends ControllerResourceNode>(arr: Array<T>) {
-    return orderBy(arr, ["metadata.name"]);
+    return orderBy(arr, ["name"]);
   }
 
   public async updateData(isInit?: boolean): Promise<any> {

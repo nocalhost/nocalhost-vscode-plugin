@@ -2,7 +2,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import * as yaml from "yaml";
-import { orderBy } from "lodash";
+import { orderBy, get } from "lodash";
 
 import AccountClusterService, {
   AccountClusterNode,
@@ -10,6 +10,7 @@ import AccountClusterService, {
 import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
 import { sortResources } from "../clusters";
 import logger from "../utils/logger";
+import { writeFileLock } from "../utils/fileUtil";
 
 import {
   HELM_NH_CONFIG_DIR,
@@ -37,6 +38,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     ).filter((s) => {
       return isExistSync(s.filePath);
     });
+    logger.info(`[localClusterNodes]: ${JSON.stringify(localClusterNodes)}`);
     const objArr = [];
     for (const localCluster of localClusterNodes || []) {
       try {
@@ -47,6 +49,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           objArr.push(obj);
         }
       } catch (e) {
+        logger.error("[getLocalData error]");
         logger.error(e);
         host.log(e, true);
       }
@@ -57,7 +60,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     let globalClusterRootNodes: AccountClusterNode[] =
       host.getGlobalState(SERVER_CLUSTER_LIST) || [];
     globalClusterRootNodes = globalClusterRootNodes.filter(
-      (it: AccountClusterNode) => it.id
+      (it: AccountClusterNode) => it?.id
+    );
+    logger.info(
+      `[globalClusterRootNodes]: ${JSON.stringify(globalClusterRootNodes)}`
     );
     let objArr: any = [];
     for (
@@ -73,9 +79,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           )) || [];
         objArr = [...objArr, ...result];
       } catch (e) {
-        console.log(e);
+        logger.error("[getServerData error]");
         logger.error(e);
-        host.log(e, true);
       }
     }
     return objArr;
@@ -113,7 +118,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     const devs: KubeConfigNode[] = [];
     let text = "";
     for (const res of resources) {
-      const appNode = (res.old || []).map((app: ApplicationInfo) => {
+      const appNode = (res.old || []).map(async (app: ApplicationInfo) => {
         let context = app.context;
         let obj: {
           url?: string;
@@ -142,7 +147,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           HELM_NH_CONFIG_DIR,
           `${app.id}_${app.devspaceId}_config`
         );
-        this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+        await writeFileLock(nhConfigPath, obj.nocalhostConfig || "");
 
         return new AppNode(
           this,
@@ -162,9 +167,14 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
       if (res.isServer) {
         const kubeConfigObj = yaml.parse(res.kubeConfig);
-        const clusters = kubeConfigObj && kubeConfigObj["clusters"];
-        const clusterName =
-          clusters && clusters.length > 0 ? clusters[0]["name"] : "";
+        const contexts = kubeConfigObj && kubeConfigObj["clusters"];
+
+        const targetContext = (contexts || []).find(
+          (item: { name: string }) => {
+            return item.name === kubeConfigObj["current-context"];
+          }
+        );
+        const clusterName = get(targetContext, "context.cluster", "devpool");
         const node = new KubeConfigNode(
           res.id,
           this,
@@ -181,16 +191,14 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       } else {
         const kubeStr = fs.readFileSync(res.localPath);
         const kubeConfigObj = yaml.parse(`${kubeStr}`);
-        // const contexts = kubeConfigObj["contexts"];
-        const clusters = kubeConfigObj["clusters"];
-        // const defaultNamespace = contexts[0]["context"]["namespace"] || "";
-        const targetCluster = (clusters || []).find((it: { name: string }) => {
-          return it.name === kubeConfigObj["current-context"];
-        });
-        const clusterName = targetCluster
-          ? targetCluster.name
-          : clusters[0].name;
-        text = clusterName;
+        const contexts = kubeConfigObj && kubeConfigObj["clusters"];
+
+        const targetContext = (contexts || []).find(
+          (item: { name: string }) => {
+            return item.name === kubeConfigObj["current-context"];
+          }
+        );
+        const clusterName = get(targetContext, "context.cluster", "devpool");
         const node = new KubeConfigNode(
           res.id,
           this,
@@ -223,18 +231,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       type = originInstallType;
     }
     return type;
-  }
-
-  private writeFile(filePath: string, writeData: string) {
-    const isExist = fs.existsSync(filePath);
-    if (isExist) {
-      const data = fs.readFileSync(filePath).toString();
-      if (data === writeData) {
-        return;
-      }
-    }
-
-    fs.writeFileSync(filePath, writeData, { mode: 0o600 });
   }
 
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {

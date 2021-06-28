@@ -1,11 +1,3 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
-import { orderBy } from "lodash";
-import { getResourceList } from "../../../../ctl/nhctl";
-import ConfigService, {
-  NocalhostConfig,
-  NocalhostServiceConfig,
-} from "../../../../service/configService";
 import state from "../../../../state";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { DEPLOYMENT_FOLDER } from "../../../nodeContants";

@@ -1,11 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import { ColorThemeKind } from "vscode";
+import * as ProperLockfile from "proper-lockfile";
 import * as yaml from "yaml";
-import * as os from "os";
 import * as vscode from "vscode";
 import host from "../host";
 import { KUBE_CONFIG_DIR } from "../constants";
+import logger from "./logger";
 
 export async function writeKubeConfigFile(
   data: string,
@@ -65,6 +66,17 @@ export async function readFile(filePath: string): Promise<string> {
       resolve(data);
     });
   });
+}
+
+export function writeFileLock(filePath: string, writeData: string) {
+  return ProperLockfile.lock(filePath)
+    .then((release: () => void) => {
+      writeFileAsync(filePath, writeData);
+      return release();
+    })
+    .catch((e: any) => {
+      logger.error(`[file lock]: ${filePath}`);
+    });
 }
 
 export function writeFileAsync(filePath: string, writeData: string) {

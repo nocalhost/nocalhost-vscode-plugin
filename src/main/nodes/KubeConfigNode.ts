@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import { orderBy } from "lodash";
-import { HELM_NH_CONFIG_DIR, KUBE_CONFIG_DIR } from "../constants";
+import { HELM_NH_CONFIG_DIR } from "../constants";
 import state from "../state";
 import AccountClusterService from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
@@ -9,6 +9,7 @@ import * as path from "path";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
+import { writeFileLock } from "../utils/fileUtil";
 import { DevspaceInfo, V2ApplicationInfo } from "../api";
 import * as _ from "lodash";
 import { DevSpaceNode } from "./DevSpaceNode";
@@ -72,7 +73,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     };
     const devs: DevSpaceNode[] = [];
 
-    res.applications.forEach((app) => {
+    res.applications.forEach(async (app) => {
       let context = app.context;
       const obj = {
         nocalhostConfig: "",
@@ -83,7 +84,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       }
 
       const nhConfigPath = path.resolve(HELM_NH_CONFIG_DIR, `${app.id}_config`);
-      this.writeFile(nhConfigPath, obj.nocalhostConfig || "");
+      await writeFileLock(nhConfigPath, obj.nocalhostConfig || "");
     });
     for (const d of res.devSpaces) {
       const node = new DevSpaceNode(
@@ -108,17 +109,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
     treeItem.contextValue = `kubeconfig${this.isLocal ? "-local" : ""}`;
 
     return Promise.resolve(treeItem);
-  }
-
-  private writeFile(filePath: string, writeData: string) {
-    const isExist = fs.existsSync(filePath);
-    if (isExist) {
-      const data = fs.readFileSync(filePath).toString();
-      if (data === writeData) {
-        return;
-      }
-    }
-    fs.writeFileSync(filePath, writeData, { mode: 0o600 });
   }
 
   getNodeStateId(): string {

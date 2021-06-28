@@ -11,6 +11,7 @@ import {
   AccountCluster as AccountClusterService,
   updateStateRootNodes,
 } from "../clusters";
+import logger from "../utils/logger";
 
 interface LoginInfo {
   username: string;
@@ -60,6 +61,8 @@ export default class SignInCommand implements ICommand {
 
         vscode.window.showInformationMessage("login successful");
       } catch (e) {
+        logger.error("[sigin]");
+        logger.error(e);
         vscode.window.showWarningMessage(e && e.error && e.error.message);
       }
     });

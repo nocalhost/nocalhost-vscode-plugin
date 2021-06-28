@@ -8,7 +8,7 @@ import { DeploymentStatus } from "../../../types/nodeType";
 import { Resource, ResourceStatus } from "../../../types/resourceType";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import validate from "../../../../utils/validate";
-import host from "../../../../host";
+import logger from "../../../../utils/logger";
 
 export class Deployment extends ControllerResourceNode {
   public type = DEPLOYMENT;
@@ -32,7 +32,8 @@ export class Deployment extends ControllerResourceNode {
       }
     } catch (e) {
       this.firstRender = false;
-      host.log(e, true);
+      logger.error("deployment getTreeItem");
+      logger.error(e);
     }
 
     return treeItem;
@@ -59,21 +60,28 @@ export class Deployment extends ControllerResourceNode {
     if (refresh) {
       await this.refreshSvcProfile();
     }
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
-    }
 
-    const deploy = await nhctl.getLoadResource({
-      kubeConfigPath: this.getKubeConfigPath(),
-      kind: this.resourceType,
-      name: this.name,
-      namespace: appNode.namespace,
-      outputType: "json",
-    });
-    const deploymentObj = JSON.parse(deploy as string) as Resource;
-    status = deploymentObj.status as ResourceStatus;
-    this.conditionsStatus =
-      status.conditions || ((status as unknown) as string);
+    if (this.firstRender) {
+      if (this.svcProfile && this.svcProfile.developing) {
+        return DeploymentStatus.developing;
+      }
+    } else {
+      await this.refreshSvcProfile();
+      if (this.svcProfile && this.svcProfile.developing) {
+        return DeploymentStatus.developing;
+      }
+      const deploy = await nhctl.getLoadResource({
+        kubeConfigPath: this.getKubeConfigPath(),
+        kind: this.resourceType,
+        name: this.name,
+        namespace: appNode.namespace,
+        outputType: "json",
+      });
+      const deploymentObj = JSON.parse(deploy as string) as Resource;
+      const status = deploymentObj.status as ResourceStatus;
+      this.conditionsStatus =
+        status.conditions || ((status as unknown) as string);
+    }
     if (Array.isArray(this.conditionsStatus)) {
       let available = false;
       let progressing = false;
