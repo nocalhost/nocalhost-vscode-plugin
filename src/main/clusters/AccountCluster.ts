@@ -99,6 +99,7 @@ export default class AccountClusterService {
       logger.error(
         `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
       );
+      return [];
     }
     const applications: V2ApplicationInfo[] = await accountClusterService.getV2Application();
     for (const sa of serviceAccounts) {
