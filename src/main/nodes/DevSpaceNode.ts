@@ -15,7 +15,6 @@ import * as _ from "lodash";
 import { RefreshData } from "./impl/updateData";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { NodeType } from "./interfact";
-import host from "../host";
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
@@ -48,21 +47,6 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     state.setNode(this.getNodeStateId(), this);
   }
 
-  public generateInstallType(source: string, originInstallType: string) {
-    let type = "helmRepo";
-
-    if (source === "git" && originInstallType === "rawManifest") {
-      type = "rawManifest";
-    } else if (source === "git" && originInstallType === "helm_chart") {
-      type = "helmGit";
-    } else if (source === "git" && originInstallType === "kustomize") {
-      type = "kustomizeGit";
-    } else if (source === "local") {
-      type = originInstallType;
-    }
-    return type;
-  }
-
   public buildAppNode(app: V2ApplicationInfo) {
     let context = app.context;
     let obj: {
@@ -82,9 +66,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       obj.name = jsonObj["applicationName"];
       obj.appConfig = jsonObj["applicationConfigPath"];
       obj.nocalhostConfig = jsonObj["nocalhostConfig"];
-      let originInstallType = jsonObj["installType"];
-      let source = jsonObj["source"];
-      obj.installType = this.generateInstallType(source, originInstallType);
+      obj.installType = jsonObj["installType"];
       obj.resourceDir = jsonObj["resourceDir"];
     }
 

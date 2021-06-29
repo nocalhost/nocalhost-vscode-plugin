@@ -261,6 +261,7 @@ export default class AccountClusterService {
     const result = new Array<V2ApplicationInfo>();
     for (let i = 0; i < applications.length; i++) {
       const context = JSON.parse(applications[i].context);
+      context.install_type = applications[i].application_type;
       // context.install_type = applications[i].application_type;
       const app: V2ApplicationInfo = {
         id: applications[i].id,
