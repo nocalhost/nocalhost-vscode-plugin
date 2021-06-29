@@ -69,6 +69,10 @@ export async function readFile(filePath: string): Promise<string> {
 }
 
 export function writeFileLock(filePath: string, writeData: string) {
+  if (!isExistSync(filePath)) {
+    writeFileAsync(filePath, writeData);
+    return;
+  }
   return ProperLockfile.lock(filePath)
     .then((release: () => void) => {
       writeFileAsync(filePath, writeData);
