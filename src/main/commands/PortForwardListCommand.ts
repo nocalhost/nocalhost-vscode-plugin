@@ -91,7 +91,7 @@ async function portForWardByResource(
     node.resourceType
   );
   if (!svcProfile) {
-    host.showErrorMessage("not get service config");
+    host.showErrorMessage("port forward list empty");
     return;
   }
   const portForwardList = svcProfile.devPortForwardList.filter(filter);
