@@ -254,7 +254,6 @@ function launchDevspace() {
 }
 
 export async function deactivate() {
-  fs.writeFileSync("/Users/zepengcai/.nh/vscode-plugin/.tmp/a.txt", "aaaaaaa");
   await unlock(() => {});
   host.dispose();
 }
