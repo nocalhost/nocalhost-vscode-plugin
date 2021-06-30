@@ -3,6 +3,7 @@ import { PLUGIN_TEMP_DIR } from "./constants";
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as fs from "fs";
+import { execAsyncWithReturn } from "./ctl/shell";
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
@@ -212,6 +213,7 @@ function launchDevspace() {
     const node: ControllerNodeApi = {
       name: tmpWorkload,
       resourceType: tmpResourceType,
+      getParent: () => null,
       setStatus: async (status: string): Promise<void> => {
         if (status) {
           await state.setAppState(tmpApp, `${tmpStatusId}`, status, {
@@ -276,7 +278,6 @@ export async function updateServerConfigStatus() {
 
 async function init(context: vscode.ExtensionContext) {
   host.setContext(context);
-  host.removeGlobalState("Downloading");
   fileUtil.mkdir(NH_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_TEMP_DIR);

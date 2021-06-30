@@ -1,4 +1,6 @@
 import { spawnSync } from "child_process";
+import host from "../host";
+import logger from "../utils/logger";
 import { NhctlCommand } from "./../ctl/nhctl";
 
 export abstract class IDebugProvider {
@@ -25,6 +27,9 @@ export abstract class IDebugProvider {
     ].trim()}'|grep -v grep|awk '{print $2}'\``;
 
     args.push("bash", "-c", `${killCommand}`);
+    const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
+    host.log(`debug: ${cmd}`);
+    logger.error(`[cmd]: ${cmd}`);
     spawnSync(NhctlCommand.nhctlPath, args);
   }
 
@@ -37,7 +42,7 @@ export abstract class IDebugProvider {
       const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
       const args = command.split(" ");
 
-      args.push("bash", "-c", `which ${requiredCommand}`);
+      args.push(`which ${requiredCommand}`);
       const result = spawnSync(NhctlCommand.nhctlPath, args);
       if (`${result.stdout}`) {
         return true;

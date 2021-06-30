@@ -269,6 +269,9 @@ export class DebugSession {
       const args = command.split(" ");
 
       args.push("bash", "-c", `netstat -tunlp | grep ${port}`);
+      const cmd = args.join(" ");
+      host.log(`debug： ${NhctlCommand.nhctlPath} ${cmd}`, true);
+      logger.info(`[cmd]: ${cmd}`);
       const result = spawnSync(NhctlCommand.nhctlPath, args);
       if (`${result.stdout}`) {
         return true;

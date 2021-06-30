@@ -48,7 +48,8 @@ export async function opendevSpaceExec(
 
 export async function execAsyncWithReturn(
   command: string,
-  args: Array<any>
+  args: Array<any>,
+  startTime?: number
 ): Promise<ShellResult> {
   // host.log(`[cmd] ${command}`, true);
   return new Promise((resolve, reject) => {
@@ -61,6 +62,12 @@ export async function execAsyncWithReturn(
     let err = `execute command fail: ${command}`;
     proc.on("close", (code) => {
       if (code === 0) {
+        if (startTime !== undefined) {
+          const end = Date.now() - startTime;
+          if (end > 1000) {
+            logger.info("[Time-consuming]: ${end}");
+          }
+        }
         resolve({ stdout, stderr, code });
       } else {
         reject(new Error(`${err}. ${stderr}`));

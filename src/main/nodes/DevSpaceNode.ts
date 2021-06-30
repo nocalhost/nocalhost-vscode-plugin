@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as nhctl from "../ctl/nhctl";
 import state from "../state";
-
+import { ClusterSource } from "../common/define";
 import { ID_SPLIT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
@@ -9,7 +9,7 @@ import { NetworkFolderNode } from "./networks/NetworkFolderNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
-import { DevspaceInfo, V2ApplicationInfo } from "../api";
+import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { AppNode } from "./AppNode";
 import * as _ from "lodash";
 import { RefreshData } from "./impl/updateData";
@@ -19,10 +19,10 @@ import { NodeType } from "./interfact";
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
   public type = NodeType.devSpace;
-  public info: DevspaceInfo;
+  public info: IDevSpaceInfo;
   public hasInit: boolean;
-  public isLocal: boolean;
-  public applications: Array<V2ApplicationInfo>;
+  public clusterSource: ClusterSource;
+  public applications: Array<IV2ApplicationInfo>;
   public parent: BaseNocalhostNode;
   public installedApps: {
     name: string;
@@ -32,9 +32,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   constructor(
     parent: BaseNocalhostNode,
     label: string,
-    info: DevspaceInfo,
-    applications: Array<V2ApplicationInfo>,
-    isLocal: boolean
+    info: IDevSpaceInfo,
+    applications: Array<IV2ApplicationInfo>,
+    clusterSource: ClusterSource
   ) {
     super();
     this.hasInit = false;
@@ -43,11 +43,11 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     this.info = info;
     this.applications = applications;
     this.installedApps = [];
-    this.isLocal = isLocal;
+    this.clusterSource = clusterSource;
     state.setNode(this.getNodeStateId(), this);
   }
 
-  public buildAppNode(app: V2ApplicationInfo) {
+  public buildAppNode(app: IV2ApplicationInfo) {
     let context = app.context;
     let obj: {
       url?: string;
@@ -210,7 +210,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       vscode.TreeItemCollapsibleState.Collapsed
     );
 
-    treeItem.contextValue = `devspace-${this.isLocal ? "local" : "server"}`;
+    treeItem.contextValue = `devspace-${
+      this.clusterSource === ClusterSource.local ? "local" : "server"
+    }`;
 
     return Promise.resolve(treeItem);
   }

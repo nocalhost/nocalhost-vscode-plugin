@@ -19,6 +19,14 @@ export interface IK8sResource {
   apiVersion: string;
   status: string | IResourceStatus;
   kind: string;
+  ["current-context"]?: string;
+  contexts?: {
+    name: string;
+    context: {
+      namespace: string;
+      cluster: string;
+    };
+  }[];
   metadata: {
     annotations: {
       [key: string]: string;

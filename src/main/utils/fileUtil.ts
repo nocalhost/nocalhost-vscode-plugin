@@ -5,26 +5,7 @@ import * as ProperLockfile from "proper-lockfile";
 import * as yaml from "yaml";
 import * as vscode from "vscode";
 import host from "../host";
-import { KUBE_CONFIG_DIR } from "../constants";
 import logger from "./logger";
-
-export async function writeKubeConfigFile(
-  data: string,
-  fileName: string
-): Promise<string> {
-  if (!fs.existsSync(KUBE_CONFIG_DIR)) {
-    fs.mkdirSync(KUBE_CONFIG_DIR);
-  }
-  const filePath = path.resolve(KUBE_CONFIG_DIR, fileName);
-  return new Promise((resolve, reject) => {
-    fs.writeFile(filePath, data, { encoding: "utf-8" }, (err) => {
-      if (err) {
-        reject(null);
-      }
-      resolve(filePath);
-    });
-  });
-}
 
 export function getYamlDefaultContext(yaml: any) {
   const contexts = yaml.contexts || [];
@@ -37,6 +18,7 @@ export function getYamlDefaultContext(yaml: any) {
 
 export async function readYaml(filePath: string) {
   let yamlObj = null;
+  logger.info(`[read yaml]: ${filePath}`);
   const result = await isExist(filePath);
   if (result !== true) {
     return null;
@@ -44,16 +26,15 @@ export async function readYaml(filePath: string) {
   try {
     const data = await readFile(filePath);
     yamlObj = yaml.parse(data);
-  } catch (error) {}
+  } catch (e) {
+    logger.error(e);
+  }
   return yamlObj;
 }
 
-export async function writeYaml(filePath: string, yamlObj: any) {
-  const yamlStr = yaml.stringify(yamlObj);
-  await writeFile(filePath, yamlStr);
-}
-
 export async function readFile(filePath: string): Promise<string> {
+  logger.info(`[read file]: ${filePath}`);
+
   const result = await isExist(filePath);
   if (result !== true) {
     return null;
@@ -69,6 +50,8 @@ export async function readFile(filePath: string): Promise<string> {
 }
 
 export function writeFileLock(filePath: string, writeData: string) {
+  logger.info(`[write file lock]: ${filePath}`);
+
   if (!isExistSync(filePath)) {
     writeFileAsync(filePath, writeData);
     return;
@@ -84,6 +67,8 @@ export function writeFileLock(filePath: string, writeData: string) {
 }
 
 export function writeFileAsync(filePath: string, writeData: string) {
+  logger.info(`[write file async]: ${filePath}`);
+
   const isExist = fs.existsSync(filePath);
   if (isExist) {
     const data = fs.readFileSync(filePath).toString();

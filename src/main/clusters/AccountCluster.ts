@@ -1,5 +1,12 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { IUserInfo, IRootNode } from "../domain";
+import {
+  IResponseData,
+  IServiceAccountInfo,
+  IDevSpaceInfo,
+  IV2ApplicationInfo,
+  IUserInfo,
+  IRootNode,
+} from "../domain";
 import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
 import * as path from "path";
@@ -7,15 +14,10 @@ import { getAllNamespace } from "../ctl/nhctl";
 import host from "../host";
 import { getStringHash } from "../utils/common";
 import { uniqBy } from "lodash";
-import {
-  ResponseData,
-  DevspaceInfo,
-  V2ApplicationInfo,
-  ServiceAccountInfo,
-} from "../api";
 import { LoginInfo } from "./interface";
 import { writeFileLock } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
+import { ClusterSource } from "../common/define";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -29,7 +31,7 @@ export default class AccountClusterService {
   loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
-  lastServiceAccounts: ServiceAccountInfo[];
+  lastServiceAccounts: IServiceAccountInfo[];
   constructor(loginInfo: LoginInfo) {
     this.loginInfo = loginInfo;
     this.instance = axios.create({
@@ -48,7 +50,7 @@ export default class AccountClusterService {
       return config;
     });
     this.instance.interceptors.response.use(
-      async (response: AxiosResponse<ResponseData>) => {
+      async (response: AxiosResponse<IResponseData>) => {
         const res = response.data;
         if ([20103, 20111].includes(res.code)) {
           host.log(
@@ -101,17 +103,17 @@ export default class AccountClusterService {
       );
       return [];
     }
-    const applications: V2ApplicationInfo[] = await accountClusterService.getV2Application();
+    const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
     for (const sa of serviceAccounts) {
-      let devSpaces: Array<DevspaceInfo> | undefined = new Array();
+      let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
       const id = getStringHash(
         `${newAccountCluser.loginInfo.baseUrl}${sa.clusterId}${newAccountCluser.userInfo.id}_config`
       );
-      const kubeconfigPath = path.resolve(KUBE_CONFIG_DIR, id);
-      writeFileLock(kubeconfigPath, sa.kubeconfig);
+      const kubeConfigPath = path.resolve(KUBE_CONFIG_DIR, id);
+      await writeFileLock(kubeConfigPath, sa.kubeconfig);
       if (sa.privilege) {
         const devs = await getAllNamespace({
-          kubeConfigPath: kubeconfigPath,
+          kubeConfigPath: kubeConfigPath,
           namespace: "default",
         });
         for (const dev of devs) {
@@ -125,7 +127,7 @@ export default class AccountClusterService {
         devSpaces.push(...devs);
       } else {
         for (const ns of sa.namespacePacks) {
-          const devInfo: DevspaceInfo = {
+          const devInfo: IDevSpaceInfo = {
             id: ns.spaceId,
             spaceName: ns.spacename,
             namespace: ns.namespace,
@@ -145,13 +147,11 @@ export default class AccountClusterService {
         devSpaces,
         applications,
         userInfo: newAccountCluser.userInfo,
-        isServer: true,
-        old: [],
+        clusterSource: ClusterSource.server,
         accountClusterService,
         id: newAccountCluser.id,
         createTime: newAccountCluser.createTime,
-        localPath: kubeconfigPath,
-        kubeConfig: sa.kubeconfig,
+        kubeConfigPath,
       };
       newRootNodes.push(obj);
     }
@@ -205,7 +205,7 @@ export default class AccountClusterService {
         password: loginInfo.password,
         from: "plugin",
       })
-    ).data as ResponseData;
+    ).data as IResponseData;
     if (response.data && response.data.token) {
       this.jwt = `Bearer ${response.data.token}`;
     }
@@ -219,8 +219,8 @@ export default class AccountClusterService {
   async getServiceAccount() {
     try {
       const response = await this.instance.get(`/v1/plugin/service_accounts`);
-      const res = response.data as ResponseData;
-      let serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
+      const res = response.data as IResponseData;
+      let serviceAccount: IServiceAccountInfo[] = keysToCamel(res.data) || [];
       if (!Array.isArray(serviceAccount) || serviceAccount.length === 0) {
         serviceAccount = this.lastServiceAccounts;
       } else {
@@ -240,7 +240,7 @@ export default class AccountClusterService {
       const response = await this.instance.get(
         `/v1/users/${userInfo.id}/applications`
       );
-      const res = response.data as ResponseData;
+      const res = response.data as IResponseData;
       const applications = res.data || [];
       return applications;
     } catch (e) {
@@ -248,7 +248,7 @@ export default class AccountClusterService {
     }
   }
 
-  async getV2Application(): Promise<V2ApplicationInfo[]> {
+  async getV2Application(): Promise<IV2ApplicationInfo[]> {
     const { userInfo } = this.accountClusterNode;
     const userId = userInfo.id;
     if (!userId) {
@@ -258,12 +258,12 @@ export default class AccountClusterService {
     if (!Array.isArray(applications) || applications.length === 0) {
       return [];
     }
-    const result = new Array<V2ApplicationInfo>();
+    const result = new Array<IV2ApplicationInfo>();
     for (let i = 0; i < applications.length; i++) {
       const context = JSON.parse(applications[i].context);
       context.install_type = applications[i].application_type;
       // context.install_type = applications[i].application_type;
-      const app: V2ApplicationInfo = {
+      const app: IV2ApplicationInfo = {
         id: applications[i].id,
         userId: applications[i]["user_id"],
         public: applications[i].public,

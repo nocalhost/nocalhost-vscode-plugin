@@ -99,13 +99,12 @@ export class Host implements vscode.Disposable {
             }
           }
         }
-        this.startAutoRefresh();
       } catch (e) {
         this.startAutoRefresh();
         console.log(e);
         logger.error(e);
       }
-    }, 5 * 1000);
+    }, 10 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {

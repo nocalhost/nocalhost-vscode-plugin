@@ -26,7 +26,11 @@ export default class EditServiceConfigCommand implements ICommand {
       node.name,
       node.resourceType
     );
-    if (svcProfile.localconfigloaded || svcProfile.cmconfigloaded) {
+    if (
+      svcProfile.localconfigloaded ||
+      svcProfile.cmconfigloaded ||
+      svcProfile.annotationsconfigloaded
+    ) {
       protocol = "Nocalhost";
     }
     const uri = vscode.Uri.parse(

@@ -18,7 +18,7 @@ import { IS_LOCAL, NH_BIN } from "../constants";
 import services from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
-import { IK8sResource, IPortForWard, IResourceStatus } from "../domain";
+import { IDevSpaceInfo, IPortForWard } from "../domain";
 import {
   ControllerResource,
   List,
@@ -28,7 +28,6 @@ import {
 } from "../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
-import { DevspaceInfo } from "../api";
 import { IPvc } from "../domain";
 
 export interface InstalledAppInfo {
@@ -144,7 +143,7 @@ export class NhctlCommand {
 
   async exec(hasParse = true) {
     const command = this.getCommand();
-    const result = await execAsyncWithReturn(command, []);
+    const result = await execAsyncWithReturn(command, [], Date.now());
     if (!result) {
       return null;
     }
@@ -338,7 +337,7 @@ export async function getResourceList(
 }
 
 export async function getAllNamespace(props: IBaseCommand<unknown>) {
-  const devspaces = new Array<DevspaceInfo>();
+  const devspaces = new Array<IDevSpaceInfo>();
   const kubeConfig = fs.readFileSync(props.kubeConfigPath);
   const result = await NhctlCommand.get(props)
     .addArgument("ns")
@@ -346,7 +345,7 @@ export async function getAllNamespace(props: IBaseCommand<unknown>) {
     .toJson()
     .exec();
   if (!result) {
-    const devspace: DevspaceInfo = {
+    const devspace: IDevSpaceInfo = {
       id: 0,
       userId: 0,
       spaceName: props.namespace,
@@ -367,7 +366,7 @@ export async function getAllNamespace(props: IBaseCommand<unknown>) {
   }
   (result || []).forEach((it: any) => {
     const ns = it.info;
-    const devspace: DevspaceInfo = {
+    const devspace: IDevSpaceInfo = {
       id: 0,
       userId: 0,
       spaceName: ns["metadata"]["name"],
