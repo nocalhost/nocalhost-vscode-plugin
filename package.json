@@ -212,6 +212,11 @@
           "command": "Nocalhost.deleteKubeConfig",
           "when": "viewItem =~ /^kubeconfig-local/i",
           "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.rename",
+          "when": "viewItem =~ /^kubeconfig-local/i",
+          "group": "navigation"
         }
       ]
     },
@@ -249,6 +254,10 @@
       {
         "command": "Nocalhost.ClustersView",
         "title": "Clusters"
+      },
+      {
+        "command": "Nocalhost.rename",
+        "title": "Rename"
       },
       {
         "command": "Nocalhost.loadWorkloads",

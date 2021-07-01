@@ -23,13 +23,23 @@ import { KubeConfigNode } from "./KubeConfigNode";
 import { IRootNode } from "../domain";
 import { ClusterSource } from "../common/define";
 
-function getClusterName(kubeConfigObj: IK8sResource) {
+async function getClusterName(res: IRootNode) {
+  if (res.clusterSource === ClusterSource.local) {
+    const localClusterNode = LocalCusterService.getClusterNodeByKubeConfigPath(
+      res.kubeConfigPath
+    );
+    if (localClusterNode && localClusterNode.clusterNickName) {
+      return localClusterNode.clusterNickName;
+    }
+  }
+  const kubeConfigObj = await readYaml(res.kubeConfigPath);
   const contexts = kubeConfigObj["contexts"];
 
   const targetContext = (contexts || []).find((item: { name: string }) => {
     return item.name === kubeConfigObj["current-context"];
   });
-  return get(targetContext, "context.cluster", "devpool");
+  const clusterName = get(targetContext, "context.cluster", "devpool");
+  return clusterName;
 }
 export class NocalhostRootNode implements BaseNocalhostNode {
   private static childNodes: Array<BaseNocalhostNode> = [];
@@ -128,8 +138,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         logger.error(`${res.kubeConfigPath} does not exist`);
         continue;
       }
-      const clusterName = getClusterName(kubeConfigObj);
-
+      const clusterName = await getClusterName(res);
       const node = new KubeConfigNode({
         id: res.id,
         label: clusterName,
@@ -147,19 +156,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     NocalhostRootNode.childNodes = NocalhostRootNode.childNodes.concat(devs);
 
     return orderBy(NocalhostRootNode.childNodes, ["label"]);
-  }
-
-  private generateInstallType(source: string, originInstallType: string) {
-    let type = "helmRepo";
-
-    if (source === "git" && originInstallType === "rawManifest") {
-      type = "rawManifest";
-    } else if (source === "git" && originInstallType === "helm_chart") {
-      type = "helmGit";
-    } else if (source === "local") {
-      type = originInstallType;
-    }
-    return type;
   }
 
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {

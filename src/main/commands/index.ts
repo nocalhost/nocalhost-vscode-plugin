@@ -40,10 +40,12 @@ import ClearLocalCluster from "./ClearLocalCluster";
 import ClearServerCluster from "./ClearServerCluster";
 import InstallAppSourceCommand from "./InstallAppSourceCommand";
 import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
+import RenameCommand from "./RenameCommand";
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
 ) {
+  new RenameCommand(context);
   new ShowClusterInfoCommand(context);
   new ClearLocalCluster(context);
   new ClustersViewCommand(context);

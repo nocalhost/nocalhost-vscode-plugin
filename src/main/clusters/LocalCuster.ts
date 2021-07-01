@@ -14,10 +14,20 @@ import { ClusterSource } from "../common/define";
 export class LocalClusterNode {
   filePath: string;
   id: string;
+  clusterNickName?: string;
   createTime: number;
 }
 
 export default class LocalCluster {
+  static getClusterNodeByKubeConfigPath(
+    kubeConfigPath: string
+  ): LocalClusterNode {
+    const localClusterNodes = host.getGlobalState(LOCAL_PATH) || [];
+    return (localClusterNodes || []).find(
+      (it: LocalClusterNode) => it.filePath === kubeConfigPath
+    );
+  }
+
   static getLocalClusterRootNode = async (
     newLocalCluster: LocalClusterNode
   ): Promise<IRootNode> => {
@@ -72,6 +82,7 @@ export default class LocalCluster {
     const obj: IRootNode = {
       id: newLocalCluster.id,
       devSpaces,
+      clusterName: newLocalCluster.clusterNickName,
       createTime,
       clusterSource: ClusterSource.local,
       applications,

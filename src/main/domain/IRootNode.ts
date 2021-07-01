@@ -14,6 +14,7 @@ export interface IRootNode {
   accountClusterService?: AccountClusterService;
   id?: string;
   createTime?: number;
+  clusterName?: string;
   userInfo?: IUserInfo;
   kubeConfigPath: string;
 }
