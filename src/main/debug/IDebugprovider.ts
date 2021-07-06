@@ -16,9 +16,10 @@ export abstract class IDebugProvider {
   public killContainerDebugProcess(
     podName: string,
     kubeconfigPath: string,
-    execCommand: string[]
+    execCommand: string[],
+    namespace: string
   ) {
-    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
     const args = command.split(" ");
     const sliceCommands = execCommand.join(" ").split("&&");
 
@@ -28,7 +29,7 @@ export abstract class IDebugProvider {
 
     args.push("bash", "-c", `${killCommand}`);
     const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
-    host.log(`debug: ${cmd}`);
+    host.log(`[debug] ${cmd}`, true);
     logger.error(`[cmd]: ${cmd}`);
     spawnSync(NhctlCommand.nhctlPath, args);
   }
@@ -37,12 +38,18 @@ export abstract class IDebugProvider {
     return Promise.resolve(true);
   }
 
-  public checkRequiredCommand(podName: string, kubeconfigPath: string) {
+  public checkRequiredCommand(
+    podName: string,
+    namespace: string,
+    kubeconfigPath: string
+  ) {
     function check(requiredCommand: string) {
-      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace}  --`;
       const args = command.split(" ");
 
       args.push(`which ${requiredCommand}`);
+      host.log(`[cmd]：${NhctlCommand.nhctlPath} ${args.join(" ")}`, true);
+
       const result = spawnSync(NhctlCommand.nhctlPath, args);
       if (`${result.stdout}`) {
         return true;

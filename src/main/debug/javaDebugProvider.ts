@@ -54,9 +54,15 @@ export class JavaDebugProvider extends IDebugProvider {
   public killContainerDebugProcess(
     podName: string,
     kubeconfigPath: string,
-    execCommand: string[]
+    execCommand: string[],
+    namespace: string
   ) {
-    super.killContainerDebugProcess(podName, kubeconfigPath, execCommand);
+    super.killContainerDebugProcess(
+      podName,
+      kubeconfigPath,
+      execCommand,
+      namespace
+    );
     // kill exec program
     const searchCommand = "java";
     host.log("searchCommand: " + searchCommand, true);
