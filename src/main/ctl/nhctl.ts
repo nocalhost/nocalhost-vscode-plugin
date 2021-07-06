@@ -1,4 +1,4 @@
-import { PLUGIN_TEMP_DIR } from "./../constants";
+import { PLUGIN_TEMP_DIR, TEMP_DIR } from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -1336,6 +1336,7 @@ export async function checkDownloadNhclVersion(
 }
 
 export async function checkVersion() {
+  const isWindows = host.isWindow();
   const requiredVersion: string = packageJson.nhctl?.version;
   const { sourcePath, destinationPath, binPath } = getNhctlPath(
     requiredVersion
@@ -1362,6 +1363,10 @@ export async function checkVersion() {
             `Update nhctl to ${requiredVersion}...`,
             async () => {
               await downloadNhctl(sourcePath, destinationPath);
+              // windows A lot of Windows Defender firewall warnings #167
+              if (isWindows) {
+                fs.renameSync(binPath, TEMP_DIR);
+              }
               fs.renameSync(destinationPath, binPath);
               if (!(await checkDownloadNhclVersion(requiredVersion))) {
                 vscode.window.showErrorMessage(

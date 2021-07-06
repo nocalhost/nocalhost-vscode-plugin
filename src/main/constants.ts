@@ -25,6 +25,8 @@ export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   ".kube/config"
 );
 
+export const TEMP_DIR = path.resolve(HOME_DIR, "temp/nhctl");
+
 // LOCAL
 export const IS_LOCAL = "isLocal";
 export const LOCAL_PATH = "localPaths_v2";
