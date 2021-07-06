@@ -1,4 +1,4 @@
-import { homedir } from "os";
+import { homedir, tmpdir } from "os";
 import * as path from "path";
 export const ROOT_NODE_KEY = "Nocalhost";
 export const HOME_DIR = homedir();
@@ -25,7 +25,7 @@ export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   ".kube/config"
 );
 
-export const TEMP_DIR = path.resolve(HOME_DIR, "temp/nhctl");
+export const TEMP_NHCTL_BIN = path.resolve(tmpdir(), "TEMP-NHCTL-BIN");
 
 // LOCAL
 export const IS_LOCAL = "isLocal";

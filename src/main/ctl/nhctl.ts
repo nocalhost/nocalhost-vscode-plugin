@@ -1,4 +1,4 @@
-import { PLUGIN_TEMP_DIR, TEMP_DIR } from "./../constants";
+import { PLUGIN_TEMP_DIR, TEMP_NHCTL_BIN } from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -1365,7 +1365,10 @@ export async function checkVersion() {
               await downloadNhctl(sourcePath, destinationPath);
               // windows A lot of Windows Defender firewall warnings #167
               if (isWindows) {
-                fs.renameSync(binPath, TEMP_DIR);
+                if (fs.existsSync(TEMP_NHCTL_BIN)) {
+                  fs.unlinkSync(TEMP_NHCTL_BIN);
+                }
+                fs.renameSync(binPath, TEMP_NHCTL_BIN);
               }
               fs.renameSync(destinationPath, binPath);
               if (!(await checkDownloadNhclVersion(requiredVersion))) {
