@@ -112,6 +112,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
       case "unknown":
         iconPath = resolveVSCodeUri("status-unknown.svg");
         break;
+      case "failed":
+        iconPath = resolveVSCodeUri("status-failed.svg");
+        break;
     }
     return [iconPath, label];
   }
