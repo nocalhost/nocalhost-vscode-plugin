@@ -74,9 +74,15 @@ export class GoDebugProvider extends IDebugProvider {
   public killContainerDebugProcess(
     podName: string,
     kubeconfigPath: string,
-    execCommand: string[]
+    execCommand: string[],
+    namespace: string
   ) {
-    super.killContainerDebugProcess(podName, kubeconfigPath, execCommand);
+    super.killContainerDebugProcess(
+      podName,
+      kubeconfigPath,
+      execCommand,
+      namespace
+    );
     // kill exec program
     const index = execCommand.indexOf("exec");
     if (index < 0) {

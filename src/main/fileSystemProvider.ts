@@ -351,7 +351,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
 
   private stringify(obj: any, style: string) {
     if (style === "yaml") {
-      return `${obj.note || ""}${yaml.stringify(omit(obj, "note"))}`;
+      return `${obj.__note || ""}${yaml.stringify(omit(obj, "__note"))}`;
     } else if (style === "json") {
       return JSON.stringify(obj, null, 2);
     }

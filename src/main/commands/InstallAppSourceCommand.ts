@@ -1,3 +1,4 @@
+import { KubeConfigNode } from "./../nodes/KubeConfigNode";
 import { NhctlCommand } from "./../ctl/nhctl";
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -290,7 +291,7 @@ export default class InstallAppSourceCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
-  async execCommand(appNode: AppNode) {
+  async execCommand(appNode: DevSpaceNode) {
     if (!appNode) {
       host.showWarnMessage("A task is running, please try again later");
       return;
@@ -346,7 +347,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.helmLocal) {
         await installHelmApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           localPath: dir,
           configPath,
           resourcePath: nocalhostConfig?.application?.resourcePath,
@@ -357,7 +358,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.kustomizeLocal) {
         await installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           appName,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           installType: manifestType,
@@ -367,7 +368,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.rawManifestLocal) {
         await installRawManifastLocal({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           localPath: dir,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           installType: manifestType,
@@ -375,8 +376,6 @@ export default class InstallAppSourceCommand implements ICommand {
           appName,
         });
       }
-
-      return;
     }
 
     if (res === HELM_REPO) {
@@ -410,7 +409,7 @@ export default class InstallAppSourceCommand implements ICommand {
 
       await installHelmRep({
         kubeConfigPath: appNode.getKubeConfigPath(),
-        namespace: appNode.namespace,
+        namespace: appNode?.info?.namespace,
         helmRepoUrl,
         helmRepoVersion,
         chartName: appName,
@@ -481,7 +480,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.helmGit) {
         await installHelmApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
           configPath,
           resourcePath: nocalhostConfig?.application?.resourcePath,
@@ -494,7 +493,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.rawManifestGit) {
         await installRawManifastLocal({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           gitRef,
@@ -506,7 +505,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.kustomizeGit) {
         await installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           gitRef,
@@ -515,7 +514,7 @@ export default class InstallAppSourceCommand implements ICommand {
         });
       }
     }
-    const devspaceNode = appNode.getParent() as DevSpaceNode;
-    devspaceNode.updateData();
+    await appNode.updateData();
+    await vscode.commands.executeCommand("Nocalhost.refresh", appNode);
   }
 }

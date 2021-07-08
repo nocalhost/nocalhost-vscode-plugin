@@ -311,7 +311,7 @@ export default class InstallCommand implements ICommand {
       refOrVersion,
       local
     );
-
+    await vscode.commands.executeCommand("Nocalhost.refresh");
     await host.delay(1000);
     const nocalhostConfig = await appNode.getNocalhostConfig();
     if (
