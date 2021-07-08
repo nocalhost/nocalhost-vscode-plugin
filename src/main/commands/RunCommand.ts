@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
+import * as path from 'path';
 
 import ICommand from "./ICommand";
 import { RUN } from "./constants";
+import { NH_BIN } from '../constants';
 import registerCommand from "./register";
 import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
@@ -84,7 +86,10 @@ export default class RunCommand implements ICommand {
     });
     terminalCommands.push("-n", param.namespace);
     terminalCommands.push("--kubeconfig", param.kubeConfigPath);
-    const shellPath = "nhctl";
+    const shellPath = path.resolve(
+      NH_BIN,
+      host.isWindow() ? "nhctl.exe" : "nhctl"
+    );
 
     const terminal = host.invokeInNewTerminal(
       `${shellPath} ${terminalCommands.join(" ")}`,
