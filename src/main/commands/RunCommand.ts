@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
-import * as path from 'path';
+import * as path from "path";
 
 import ICommand from "./ICommand";
 import { RUN } from "./constants";
-import { NH_BIN } from '../constants';
+import { NH_BIN } from "../constants";
 import registerCommand from "./register";
 import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
