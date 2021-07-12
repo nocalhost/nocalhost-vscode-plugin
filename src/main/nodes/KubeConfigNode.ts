@@ -115,13 +115,14 @@ export class KubeConfigNode extends NocalhostFolderNode {
       vscode.TreeItemCollapsibleState.Collapsed
     );
 
-    treeItem.contextValue = `kubeconfig${this.clusterSource === ClusterSource.local ? "-local" : "-server"
-      }`;
+    treeItem.contextValue = `kubeconfig${
+      this.clusterSource === ClusterSource.local ? "-local" : "-server"
+    }`;
 
     if (this.clusterSource === ClusterSource.server) {
-      const { username, baseUrl } = this.accountClusterService.loginInfo
+      const { username, baseUrl } = this.accountClusterService.loginInfo;
 
-      treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`
+      treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
     }
 
     return Promise.resolve(treeItem);
