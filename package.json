@@ -205,7 +205,7 @@
         },
         {
           "command": "Nocalhost.signout",
-          "when": "viewItem =~ /^kubeconfig$/i",
+          "when": "viewItem =~ /^kubeconfig-server$/i",
           "group": "navigation"
         },
         {

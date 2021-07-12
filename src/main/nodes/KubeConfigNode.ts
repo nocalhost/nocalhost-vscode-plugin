@@ -115,7 +115,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     );
 
     treeItem.contextValue = `kubeconfig${
-      this.clusterSource === ClusterSource.local ? "-local" : "-sever"
+      this.clusterSource === ClusterSource.local ? "-local" : "-server"
     }`;
 
     return Promise.resolve(treeItem);
