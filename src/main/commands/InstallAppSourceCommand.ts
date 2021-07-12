@@ -109,7 +109,7 @@ async function installRawManifastLocal(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, configPath)
+    .addArgumentStrict(`--config`,path.basename(configPath))
     .getCommand();
   await vscode.window.withProgress(
     {
@@ -191,7 +191,7 @@ async function installApp(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, configPath)
+    .addArgumentStrict(`--config`,path.basename(configPath))
     .getCommand();
   await vscode.window.withProgress(
     {
