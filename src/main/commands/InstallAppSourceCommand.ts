@@ -35,7 +35,7 @@ async function getKustomizeYamlPath(): Promise<string> {
   }
   let kustomizeYamlPath = null;
   if (res === "Specify One") {
-    kustomizeYamlPath = await host.showInputBox({
+    kustomizeYamlPath = await host.showInputBoxIgnoreFocus({
       placeHolder: "please input your kustomize path",
     });
   }
@@ -66,7 +66,7 @@ async function getHelmValues(): Promise<[string?, string?]> {
     }
     values = valuesUri[0].fsPath;
   } else if (res === "Specify values") {
-    valuesStr = await host.showInputBox({
+    valuesStr = await host.showInputBoxIgnoreFocus({
       placeHolder: "eg: key1=val1,key2=val2",
     });
 
@@ -256,7 +256,9 @@ async function getNocalhostConfig(dir: string) {
   }
   let configFileName = fileNames[0];
   if (fileNames.length > 1) {
-    const selectedFileName = await vscode.window.showQuickPick(fileNames);
+    const selectedFileName = await vscode.window.showQuickPick(fileNames, {
+      ignoreFocusOut: true,
+    });
     if (!selectedFileName) {
       return;
     }
@@ -383,13 +385,13 @@ export default class InstallAppSourceCommand implements ICommand {
     }
 
     if (res === HELM_REPO) {
-      const helmRepoUrl = await host.showInputBox({
+      const helmRepoUrl = await host.showInputBoxIgnoreFocus({
         placeHolder: "please input your helm chart",
       });
       if (!helmRepoUrl) {
         return;
       }
-      const appName = await host.showInputBox({
+      const appName = await host.showInputBoxIgnoreFocus({
         placeHolder: "please input application name",
       });
       if (!appName) {
@@ -403,7 +405,7 @@ export default class InstallAppSourceCommand implements ICommand {
       );
       let helmRepoVersion = null;
       if (res === "Specify One") {
-        helmRepoVersion = await host.showInputBox({
+        helmRepoVersion = await host.showInputBoxIgnoreFocus({
           placeHolder: "please input the version of chart",
         });
         if (!helmRepoVersion) {
@@ -423,7 +425,7 @@ export default class InstallAppSourceCommand implements ICommand {
     }
 
     if (res === CLONE_GIT) {
-      const gitUrl = await host.showInputBox({
+      const gitUrl = await host.showInputBoxIgnoreFocus({
         placeHolder: "please input your git url",
       });
       if (!gitUrl) {
@@ -442,7 +444,7 @@ export default class InstallAppSourceCommand implements ICommand {
 
       if (r === "Specify one") {
         let msg = "please input the branch of repository";
-        gitRef = await host.showInputBox({
+        gitRef = await host.showInputBoxIgnoreFocus({
           placeHolder: msg,
         });
 

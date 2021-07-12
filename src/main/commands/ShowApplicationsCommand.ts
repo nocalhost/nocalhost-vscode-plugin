@@ -27,7 +27,7 @@ export default class ShowApplicationsCommand implements ICommand {
       return appName;
     });
 
-    const result = await vscode.window.showQuickPick(appNames);
+    const result = await vscode.window.showQuickPick(appNames,{ignoreFocusOut:true});
     if (!result) {
       return;
     }
