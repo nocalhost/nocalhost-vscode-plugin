@@ -103,7 +103,17 @@ export default class AccountClusterService {
       );
       return [];
     }
+    logger.info(
+      `[getServerClusterRootNodes] serviceAccounts length ${
+        (serviceAccounts || []).length
+      }`
+    );
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
+    logger.info(
+      `[getServerClusterRootNodes] applications length ${
+        (applications || []).length
+      }`
+    );
     for (const sa of serviceAccounts) {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
       const id = getStringHash(
