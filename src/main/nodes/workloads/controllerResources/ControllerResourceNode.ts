@@ -83,6 +83,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     let iconPath,
       label = this.label;
     switch (status) {
+      case "complete":
       case "running":
         iconPath = resolveVSCodeUri("status-running.svg");
         if (portForwardStatus) {
@@ -111,6 +112,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         break;
       case "unknown":
         iconPath = resolveVSCodeUri("status-unknown.svg");
+        break;
+      case "failed":
+        iconPath = resolveVSCodeUri("status-failed.svg");
         break;
     }
     return [iconPath, label];

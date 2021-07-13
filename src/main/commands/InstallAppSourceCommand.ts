@@ -11,7 +11,7 @@ import {
 import * as tempy from "tempy";
 
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
-import { replaceSpacePath } from "../utils/fileUtil";
+import { replaceSpacePath, readYamlSync } from "../utils/fileUtil";
 import git from "../ctl/git";
 import ICommand from "./ICommand";
 import { INSTALL_APP_SOURCE } from "./constants";
@@ -240,10 +240,14 @@ async function installKustomizeApp(props: {
 async function getNocalhostConfig(dir: string) {
   const dirPath = path.resolve(dir, ".nocalhost");
   let fileNames = getFilesByDir(dirPath);
-  fileNames = (fileNames || []).filter((fileName) => {
-    const extname = path.extname(fileName);
-    return [".yaml", ".yml"].includes(extname);
-  });
+  fileNames = (fileNames || [])
+    .filter((fileName) => {
+      const extname = path.extname(fileName);
+      return [".yaml", ".yml"].includes(extname);
+    })
+    .filter((fileName) => {
+      return Boolean(readYamlSync(path.resolve(dirPath, fileName)));
+    });
   if (fileNames.length === 0) {
     vscode.window.showWarningMessage(
       "No config.yaml available for this directory"

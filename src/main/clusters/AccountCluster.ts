@@ -18,6 +18,8 @@ import { LoginInfo } from "./interface";
 import { writeFileLock } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
+import * as packageJson from "../../../package.json";
+import * as semver from "semver";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -103,7 +105,17 @@ export default class AccountClusterService {
       );
       return [];
     }
+    logger.info(
+      `[getServerClusterRootNodes] serviceAccounts length ${
+        (serviceAccounts || []).length
+      }`
+    );
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
+    logger.info(
+      `[getServerClusterRootNodes] applications length ${
+        (applications || []).length
+      }`
+    );
     for (const sa of serviceAccounts) {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
       const id = getStringHash(
@@ -245,6 +257,26 @@ export default class AccountClusterService {
       return applications;
     } catch (e) {
       return [];
+    }
+  }
+  async getVersion() {
+    try {
+      const response = await this.instance.get("/v1/version");
+      return response.data as { data?: { version: string } };
+    } catch (e) {
+      return {};
+    }
+  }
+
+  async checkVersion(): Promise<void> {
+    const res = await this.getVersion();
+    if (res.data?.version) {
+      const { version } = res.data;
+      if (semver.gt(packageJson.serverVersion, version)) {
+        throw new Error(
+          `please upgrade api server version.(${packageJson.serverVersion} or higher)`
+        );
+      }
     }
   }
 

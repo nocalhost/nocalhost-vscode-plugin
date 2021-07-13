@@ -16,6 +16,24 @@ export function getYamlDefaultContext(yaml: any) {
   return contexts.length > 0 ? contexts[0].name : null;
 }
 
+export function readYamlSync(filePath: string) {
+  logger.info(`[read yaml sync]: ${filePath}`);
+  if (!isExistSync(filePath)) {
+    return null;
+  }
+  const data = fs.readFileSync(filePath, { encoding: "utf-8" });
+  if (!data) {
+    return null;
+  }
+  let yamlObj = null;
+  try {
+    yamlObj = yaml.parse(data);
+  } catch (e) {
+    yamlObj = null;
+    logger.error(e);
+  }
+  return yamlObj;
+}
 export async function readYaml(filePath: string) {
   let yamlObj = null;
   logger.info(`[read yaml]: ${filePath}`);

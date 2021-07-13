@@ -10,6 +10,8 @@ import selectValues from "../common/components/selectValues";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
+import AccountClusterService from "../clusters/AccountCluster";
+import { DevSpaceNode } from "../nodes/DevSpaceNode";
 
 export default class UpgradeCommand implements ICommand {
   command: string = UPGRADE_APP;
@@ -19,6 +21,15 @@ export default class UpgradeCommand implements ICommand {
   async execCommand(appNode: AppNode) {
     if (!appNode) {
       host.showWarnMessage("A task is running, please try again later");
+      return;
+    }
+
+    const accountClusterService: AccountClusterService = (appNode.parent as DevSpaceNode)
+      .parent.accountClusterService;
+    try {
+      await accountClusterService.checkVersion();
+    } catch (error) {
+      host.showErrorMessage(error.message);
       return;
     }
 
