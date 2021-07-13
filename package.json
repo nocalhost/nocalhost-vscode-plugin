@@ -185,7 +185,7 @@
         },
         {
           "command": "Nocalhost.deleteKubernetesObject",
-          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(running|starting|unknown))?$/i",
+          "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(complete|running|starting|unknown))?$/i",
           "group": "1"
         },
         {
