@@ -64,6 +64,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     this.kubeConfigPath = kubeConfigPath;
     this.userInfo = userInfo;
     this.accountClusterService = accountClusterService;
+
     state.setNode(this.getNodeStateId(), this);
   }
   updateData(): any {
@@ -117,6 +118,12 @@ export class KubeConfigNode extends NocalhostFolderNode {
     treeItem.contextValue = `kubeconfig${
       this.clusterSource === ClusterSource.local ? "-local" : "-server"
     }`;
+
+    if (this.clusterSource === ClusterSource.server) {
+      const { username, baseUrl } = this.accountClusterService.loginInfo;
+
+      treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
+    }
 
     return Promise.resolve(treeItem);
   }
