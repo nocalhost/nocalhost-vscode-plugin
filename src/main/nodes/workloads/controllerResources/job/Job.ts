@@ -20,10 +20,6 @@ export class Job extends ControllerResourceNode {
 
       treeItem.tooltip = `${this.label}(${status})`;
 
-      if (status === "complete") {
-        status = "running";
-      }
-
       const [icon, label] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
