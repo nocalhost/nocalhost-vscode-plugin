@@ -109,7 +109,10 @@ async function installRawManifastLocal(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, path.basename(configPath))
+    .addArgumentStrict(
+      `--config`,
+      configPath ? path.basename(configPath) : null
+    )
     .getCommand();
   await vscode.window.withProgress(
     {
@@ -191,7 +194,10 @@ async function installApp(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, path.basename(configPath))
+    .addArgumentStrict(
+      `--config`,
+      configPath ? path.basename(configPath) : null
+    )
     .getCommand();
   await vscode.window.withProgress(
     {
@@ -226,6 +232,7 @@ async function installKustomizeApp(props: {
   kubeConfigPath: string;
   namespace: string;
   gitUrl?: string;
+  localPath?: string;
   installType: string;
   gitRef?: string;
   resourcePath?: string[];
@@ -363,6 +370,7 @@ export default class InstallAppSourceCommand implements ICommand {
         await installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
+          localPath: dir,
           appName,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           installType: manifestType,
