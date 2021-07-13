@@ -42,6 +42,12 @@ export default class SignInCommand implements ICommand {
           const newNodes: IRootNode[] = await AccountClusterService.getServerClusterRootNodes(
             newServerNode
           );
+          if (newNodes.length === 0) {
+            vscode.window.showWarningMessage(
+              `No cluster found for ${info.username || "account"}`
+            );
+            return;
+          }
           newNodes.forEach((i) => {
             updateStateRootNodes(i);
           });

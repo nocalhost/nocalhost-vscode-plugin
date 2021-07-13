@@ -122,7 +122,10 @@ export default class CopyTerminalCommand implements ICommand {
       host.isWindow() ? "nhctl.exe" : "nhctl"
     );
     host.copyTextToclipboard(`${shellPath} ${terminalCommands.join(" ")}`);
-    host.showInformationMessage("Copyed Terminal");
+
+    host.showInformationMessage(
+      "please open terminal and paste command to open new shell."
+    );
   }
 
   private async execCore(
@@ -152,7 +155,10 @@ export default class CopyTerminalCommand implements ICommand {
       .addArgumentTheTail(`-- ${shell || ""}`)
       .getCommand();
     host.copyTextToclipboard(command);
-    host.showInformationMessage("Copyed Terminal");
+
+    host.showInformationMessage(
+      "please open terminal and paste command to open new shell."
+    );
   }
 
   /**

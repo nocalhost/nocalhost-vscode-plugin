@@ -5,6 +5,7 @@ import { SHOW_APP, INSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import AccountClusterService from "../clusters/AccountCluster";
 
 export default class ShowApplicationsCommand implements ICommand {
   command: string = SHOW_APP;
@@ -18,6 +19,16 @@ export default class ShowApplicationsCommand implements ICommand {
       host.showWarnMessage("A task is running, please try again later");
       return;
     }
+
+    const accountClusterService: AccountClusterService =
+      node.info.accountClusterService;
+    try {
+      await accountClusterService.checkVersion();
+    } catch (error) {
+      host.showErrorMessage(error.message);
+      return;
+    }
+
     const apps = node.getUninstallApps();
     // show appName
     const appNames = apps.map((app) => {

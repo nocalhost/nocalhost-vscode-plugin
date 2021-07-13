@@ -252,6 +252,16 @@ export class Host implements vscode.Disposable {
     return vscode.window.showInputBox(options);
   }
 
+  public showProgressingToken<R>(
+    options: vscode.ProgressOptions,
+    task: (
+      progress: Progress<{ message?: string; increment?: number }>,
+      token: vscode.CancellationToken
+    ) => Thenable<R>
+  ) {
+    return vscode.window.withProgress(options, task);
+  }
+
   public showProgressing(
     title: string,
     aciton: (
