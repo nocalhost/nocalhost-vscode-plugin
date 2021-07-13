@@ -54,6 +54,7 @@ export const RECONNECT_SYNC = "Nocalhost.reconnectSync";
 // debug
 export const DEBUG = "Nocalhost.debug";
 export const RUN = "Nocalhost.run";
+export const OPEN_PROJECT = "Nocalhost.openProject";
 
 // local
 export const DELETE_KUBECONFIG = "Nocalhost.deleteKubeConfig";

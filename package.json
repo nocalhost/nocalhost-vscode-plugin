@@ -86,12 +86,19 @@
       ],
       "view/item/context": [
         {
+          "command": "Nocalhost.openProject",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-developing/i",
+          "group": "developing@1"
+        },
+        {
           "command": "Nocalhost.debug",
-          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i"
+          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i",
+          "group": "developing@2"
         },
         {
           "command": "Nocalhost.run",
-          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i"
+          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i",
+          "group": "developing@3"
         },
         {
           "command": "Nocalhost.showApp",
@@ -418,6 +425,10 @@
       {
         "command": "Nocalhost.associateLocalDirectory",
         "title": "%AssociateLocalDir%"
+      },
+      {
+        "command": "Nocalhost.openProject",
+        "title": "%OpenProject%"
       }
     ]
   },
