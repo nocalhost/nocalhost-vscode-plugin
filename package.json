@@ -1,8 +1,8 @@
 {
-  "name": "nocalhost",
+  "name": "Nocalhost",
   "version": "0.4.57",
-  "displayName": "nocalhost-vscode-plugin",
-  "description": "vscode extension for nocalhost",
+  "displayName": "Nocalhost",
+  "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
   "icon": "images/icon.png",
   "repository": {
@@ -13,7 +13,7 @@
     "vscode": "^1.52.0"
   },
   "categories": [
-    "Other"
+    "Other", "k8s", "Kubernetes", "cloud-native", "cloud"
   ],
   "activationEvents": [
     "onStartupFinished"

@@ -1,48 +1,28 @@
-# nocalhost-vscode-plugin
+# Nocalhost for Visual Code
 
-Nocalhost is Cloud Native Development Environment. This is a vscode plugin for nocalhost to help connect IDE and Kubernetes smoothly.
+Nocalhost for VS Code brings the power and convenience of IDEs to cloud-native Kubernetes application development. Nocalhost providing
 
-## Features
+# Key Features
 
-- Login to nocalhost API Server and list the applications to coding
-- Install and Uninstall applications to Kubernetes
-- Start Developing micro serivce
-    - Auto checkout codes from Git Repo
-    - Auto Port-forward
-    - Auto Sync code files to dev-container
+## Start cloud-native application development in one click
 
-## Requirements
+Nocalhost helps you spend less time on environment configuration, you can easily connect to any Kubernetes environment in one click, and focus on developing your app. 
 
-You need do these before using this plugin:
+## Deploy
 
-- Install and configure kubectl
-- Install helm(If you use helm)
-- Install nhctl
-- Obtain a user account on Nocalhost-web from Administors.
+You can deploy any Manifest Yaml, Helm and Kustomize applications by just few clicks.
 
-## Package and Publishing
+## See code change under a second
 
-We use [vsce](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) to package the extension.
+Automatically synchronize the code to container every time you make a change. Nocalhost eliminate the submit, building and pushing cycles,  significantly speed up the feedback loop of development, so you see change in under a second.
 
-## Extension Settings
+## Debug
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+Nocalhost provides the same debugging experience you've used in the IDE even when debugging in remote Kubernetes cluster.
 
-For example:
+# Resources
 
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-## Release Notes
-
-
-### For more information
-
-* [Nocalhost Homepage](https://nocalhost.dev)
-* [GitHub](https://github.com/nocalhost/nocalhost-vscode-plugin)
-
-**Enjoy!**
+- [Quick start:](https://nocalhost.dev/eng/getting-started/) Follow our quick start to enjoy the faster and easier cloud-native application development. 
+- [Documentation:](https://nocalhost.dev/) We have a lot of features to explore. Head over our documentation to discover more.
+- [Talk to us:](https://nocalhost.slack.com/) Connect to the Nocalhost development team by joining our Slack channel. 
+- [File a issue:](https://github.com/nocalhost/nocalhost/issues) If you discover any issue, file a bug and will fix it as soon as possible.
