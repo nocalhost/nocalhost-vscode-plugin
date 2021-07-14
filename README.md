@@ -1,6 +1,6 @@
 # Nocalhost for Visual Code
 
-Nocalhost for VS Code brings the power and convenience of IDEs to cloud-native Kubernetes application development. Nocalhost providing
+Nocalhost for VS Code brings the power and convenience of IDEs to cloud-native Kubernetes application development. 
 
 # Key Features
 
