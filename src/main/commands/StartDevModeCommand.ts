@@ -6,9 +6,10 @@ import { NhctlCommand } from "./../ctl/nhctl";
 import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
-import { get as _get } from "lodash";
+import { get as _get, isEqual, omit } from "lodash";
 import { opendevSpaceExec } from "../ctl/shell";
 import {
+  DEV_ASSOCIATE_LOCAL_DIRECTORYS,
   TMP_APP,
   TMP_CONTAINER,
   TMP_DEVSPACE,
@@ -206,6 +207,48 @@ export default class StartDevModeCommand implements ICommand {
         container: containerName,
       });
     }
+
+    if (destDir !== true) {
+      this.saveDevspace(
+        {
+          app: appName,
+          resourceType: node.resourceType,
+          service: node.name,
+          kubeConfigPath: node.getKubeConfigPath(),
+          namespace: node.getNameSpace(),
+        },
+        destDir
+      );
+    }
+  }
+
+  private saveDevspace(
+    syncServiceData: {
+      app: string;
+      resourceType: string;
+      service: string;
+      kubeConfigPath: string;
+      namespace: string;
+    },
+    destDir: string
+  ) {
+    let devAssociateLocalDirectorys =
+      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) || {};
+    let deleteKey: string[] = [];
+
+    Object.entries(devAssociateLocalDirectorys).forEach(([key, value]) => {
+      if (isEqual(value, syncServiceData)) {
+        deleteKey.push(key);
+      }
+    });
+
+    devAssociateLocalDirectorys = omit(devAssociateLocalDirectorys, deleteKey);
+    devAssociateLocalDirectorys[destDir] = syncServiceData;
+
+    host.setGlobalState(
+      DEV_ASSOCIATE_LOCAL_DIRECTORYS,
+      devAssociateLocalDirectorys
+    );
   }
 
   private saveAndOpenFolder(
