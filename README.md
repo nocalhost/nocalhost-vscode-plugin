@@ -1,6 +1,6 @@
 # Nocalhost for Visual Code
 
-Nocalhost for VS Code brings the power and convenience of IDEs to cloud-native Kubernetes application development. 
+Nocalhost for VS Code brings the power and convenience of IDEs to cloud-native Kubernetes application development. It helps you to increase agility and speed to develop cloud-native applications on Kubernetes.
 
 # Key Features
 
@@ -8,7 +8,7 @@ Nocalhost for VS Code brings the power and convenience of IDEs to cloud-native K
 
 Nocalhost helps you spend less time on environment configuration, you can easily connect to any Kubernetes environment in one click, and focus on developing your app. 
 
-## Deploy
+## Fast deployment
 
 You can deploy any Manifest Yaml, Helm and Kustomize applications by just few clicks.
 
@@ -16,7 +16,7 @@ You can deploy any Manifest Yaml, Helm and Kustomize applications by just few cl
 
 Automatically synchronize the code to container every time you make a change. Nocalhost eliminate the submit, building and pushing cycles,  significantly speed up the feedback loop of development, so you see change in under a second.
 
-## Debug
+## Easy debugging in remote Kubernetes
 
 Nocalhost provides the same debugging experience you've used in the IDE even when debugging in remote Kubernetes cluster.
 
