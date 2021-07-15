@@ -746,6 +746,7 @@ function sudoPortforward(command: string) {
     let stdout = "";
     let stderr = "";
     let err = `execute command fail: ${command}`;
+    host.log(err, true);
     proc.on("close", (code) => {
       if (code === 0) {
         resolve({ stdout, stderr, code });
