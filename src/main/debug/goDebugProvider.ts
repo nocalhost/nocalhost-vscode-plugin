@@ -62,7 +62,7 @@ export class GoDebugProvider extends IDebugProvider {
       return true;
     }
     const answer = await vscode.window.showInformationMessage(
-      `go debugging requires the '${defaultGoDebuggerExtension}' extension. Would you like to install it now?`,
+      `Go debugging requires the '${defaultGoDebuggerExtension}' extension. Would you like to install it now?`,
       "Install Now"
     );
     if (answer === "Install Now") {

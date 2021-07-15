@@ -14,7 +14,7 @@ export default class ViewKubeConfigCommand implements ICommand {
   }
   async execCommand(node: KubeConfigNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 

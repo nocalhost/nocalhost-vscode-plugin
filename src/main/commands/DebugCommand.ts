@@ -18,7 +18,7 @@ export default class DebugCommand implements ICommand {
   }
   async execCommand(node: Deployment) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
@@ -34,7 +34,7 @@ export default class DebugCommand implements ICommand {
           // get current workspaceFolder
           const workspaceFolder = await host.showWorkspaceFolderPick();
           if (!workspaceFolder) {
-            host.showInformationMessage("no workspacefolder");
+            host.showInformationMessage("You need to open a folder before execute this command.");
             return;
           }
           // TODO:

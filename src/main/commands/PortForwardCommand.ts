@@ -19,7 +19,7 @@ export default class PortForwardCommand implements ICommand {
   }
   async execCommand(node: KubernetesResourceNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     let podName: string | undefined;
@@ -43,7 +43,7 @@ export default class PortForwardCommand implements ICommand {
     } else if (node instanceof Pod) {
       podName = node.name;
     } else {
-      host.showInformationMessage("Not support the kind!");
+      host.showInformationMessage("Does not support this type at the moment.");
       return;
     }
 
@@ -146,7 +146,7 @@ export default class PortForwardCommand implements ICommand {
         }
         console.log(match);
       } else {
-        host.showErrorMessage("please input correct content");
+        host.showErrorMessage("Please input correct content");
         return;
       }
       if (sudo) {
