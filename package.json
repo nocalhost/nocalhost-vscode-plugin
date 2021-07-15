@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.62",
+  "version": "0.4.63",
   "displayName": "nocalhost-vscode-plugin",
   "description": "vscode extension for nocalhost",
   "license": "Apache-2.0",
@@ -22,7 +22,6 @@
   "nhctl": {
     "version": "0.4.12"
   },
-  "serverVersion": "0.4.7",
   "contributes": {
     "yamlValidation": [
       {

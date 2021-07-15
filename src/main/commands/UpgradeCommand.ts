@@ -12,6 +12,7 @@ import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 import AccountClusterService from "../clusters/AccountCluster";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import { ClusterSource } from "../common/define";
 
 export default class UpgradeCommand implements ICommand {
   command: string = UPGRADE_APP;
@@ -24,13 +25,18 @@ export default class UpgradeCommand implements ICommand {
       return;
     }
 
-    const accountClusterService: AccountClusterService = (appNode.parent as DevSpaceNode)
-      .parent.accountClusterService;
-    try {
-      await accountClusterService.checkVersion();
-    } catch (error) {
-      host.showErrorMessage(error.message);
-      return;
+    const devSpaceNode = appNode.parent as DevSpaceNode;
+
+    if (devSpaceNode.clusterSource === ClusterSource.server) {
+      const accountClusterService: AccountClusterService =
+        devSpaceNode.parent.accountClusterService;
+
+      try {
+        await accountClusterService.checkVersion();
+      } catch (error) {
+        host.showErrorMessage(error.message);
+        return;
+      }
     }
 
     let refOrVersion: string | undefined;
