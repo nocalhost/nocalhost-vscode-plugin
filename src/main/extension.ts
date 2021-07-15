@@ -1,4 +1,4 @@
-import { PLUGIN_TEMP_DIR } from "./constants";
+import { DEV_ASSOCIATE_LOCAL_DIRECTORYS, PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
@@ -35,7 +35,7 @@ import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import * as shell from "shelljs";
 import state from "./state";
-import { START_DEV_MODE } from "./commands/constants";
+import { START_DEV_MODE, SYNC_SERVICE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
@@ -179,10 +179,20 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 function launchDevspace() {
+  const devAssociateLocalDirectorys =
+    host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) ?? {};
+  const current = devAssociateLocalDirectorys[host.getCurrentRootPath()];
+
+  if (current) {
+    vscode.commands.executeCommand(SYNC_SERVICE, current);
+  }
+
   const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);
+
   if (tmpWorkloadPath !== host.getCurrentRootPath()) {
     return;
   }
+
   const tmpDevspace = host.getGlobalState(TMP_DEVSPACE);
   const tmpNamespace = host.getGlobalState(TMP_NAMESPACE);
   const tmpApp = host.getGlobalState(TMP_APP);
