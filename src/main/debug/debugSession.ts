@@ -27,7 +27,7 @@ export class DebugSession {
     }
     const isInstalled = await debugProvider.isDebuggerInstalled();
     if (!isInstalled) {
-      host.showInformationMessage("please install golang extension.");
+      host.showInformationMessage("Please install golang extension.");
       return;
     }
     // port-forward debug port
@@ -49,7 +49,7 @@ export class DebugSession {
     } else if (containers.length === 1) {
       container = containers[0];
     } else {
-      host.showInformationMessage("Missing container confiuration");
+      host.showInformationMessage("Missing container configuration.");
       return;
     }
     const valid = this.validateDebugConfig(container);

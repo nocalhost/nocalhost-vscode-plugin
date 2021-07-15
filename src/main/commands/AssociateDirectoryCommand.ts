@@ -16,7 +16,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
   }
   async execCommand(node: Deployment) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     let appName: string, workloadName: string | undefined;
@@ -27,7 +27,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
 
     const status = await node.getStatus();
     if (status === "developing") {
-      host.showWarnMessage("after exiting develop mode, please try again!");
+      host.showWarnMessage("You are already in DevMode, please exit and try again");
       return;
     }
     // const result = await this.getPodAndContainer(node);

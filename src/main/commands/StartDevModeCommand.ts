@@ -95,7 +95,7 @@ export default class StartDevModeCommand implements ICommand {
 
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     if (node instanceof ControllerResourceNode && appTreeView) {
@@ -123,7 +123,7 @@ export default class StartDevModeCommand implements ICommand {
 
     if (containerName === "nocalhost-dev") {
       let r = await host.showInformationMessage(
-        `This container is developing. If you continue to choose this container, some problems may occur. Are you sure to continue develop?`,
+        `This container is developing. You may have problem after enter DevMode at the same time. Do you want to continue?`,
         { modal: true },
         "confirm"
       );

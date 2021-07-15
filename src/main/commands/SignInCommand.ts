@@ -65,7 +65,7 @@ export default class SignInCommand implements ICommand {
         );
         this.provider.refresh();
 
-        vscode.window.showInformationMessage("login successful");
+        vscode.window.showInformationMessage("Login successful");
       } catch (e) {
         logger.error("[sigin]");
         logger.error(e);

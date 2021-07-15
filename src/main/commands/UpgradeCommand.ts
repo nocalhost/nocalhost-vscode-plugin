@@ -20,7 +20,7 @@ export default class UpgradeCommand implements ICommand {
   }
   async execCommand(appNode: AppNode) {
     if (!appNode) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
@@ -66,7 +66,7 @@ export default class UpgradeCommand implements ICommand {
         configPath = await vscode.window.showQuickPick(configs);
       } else if (configs.length === 0) {
         // select one
-        host.showErrorMessage("Not found config.yaml");
+        host.showErrorMessage("Can not find config.yaml");
       } else {
         configPath = configs[0];
       }

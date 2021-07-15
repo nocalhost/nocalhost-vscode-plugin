@@ -20,7 +20,7 @@ export default class CopyTerminalCommand implements ICommand {
   }
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     await host.showProgressing("copying ...", async () => {
@@ -124,7 +124,7 @@ export default class CopyTerminalCommand implements ICommand {
     host.copyTextToclipboard(`${shellPath} ${terminalCommands.join(" ")}`);
 
     host.showInformationMessage(
-      "please open terminal and paste command to open new shell."
+      "Please open the terminal and paste this command to open new shell."
     );
   }
 
@@ -157,7 +157,7 @@ export default class CopyTerminalCommand implements ICommand {
     host.copyTextToclipboard(command);
 
     host.showInformationMessage(
-      "please open terminal and paste command to open new shell."
+      "Please open the terminal and paste this command to open new shell."
     );
   }
 
