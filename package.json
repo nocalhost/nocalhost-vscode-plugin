@@ -13,7 +13,10 @@
     "vscode": "^1.52.0"
   },
   "categories": [
-    "Other", "k8s", "Kubernetes", "cloud-native", "cloud"
+    "Other"
+  ],
+  "keywords": [
+    "k8s", "Kubernetes", "cloud-native", "cloud", "debugger"
   ],
   "activationEvents": [
     "onStartupFinished"
