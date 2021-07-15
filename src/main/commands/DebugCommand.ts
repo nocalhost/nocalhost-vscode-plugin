@@ -34,7 +34,9 @@ export default class DebugCommand implements ICommand {
           // get current workspaceFolder
           const workspaceFolder = await host.showWorkspaceFolderPick();
           if (!workspaceFolder) {
-            host.showInformationMessage("You need to open a folder before execute this command.");
+            host.showInformationMessage(
+              "You need to open a folder before execute this command."
+            );
             return;
           }
           // TODO:

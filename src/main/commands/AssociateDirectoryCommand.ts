@@ -27,7 +27,9 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
 
     const status = await node.getStatus();
     if (status === "developing") {
-      host.showWarnMessage("You are already in DevMode, please exit and try again");
+      host.showWarnMessage(
+        "You are already in DevMode, please exit and try again"
+      );
       return;
     }
     // const result = await this.getPodAndContainer(node);

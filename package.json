@@ -16,7 +16,11 @@
     "Other"
   ],
   "keywords": [
-    "k8s", "Kubernetes", "cloud-native", "cloud", "debugger"
+    "k8s",
+    "Kubernetes",
+    "cloud-native",
+    "cloud",
+    "debugger"
   ],
   "activationEvents": [
     "onStartupFinished"

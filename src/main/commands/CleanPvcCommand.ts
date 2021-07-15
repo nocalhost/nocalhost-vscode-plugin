@@ -132,7 +132,9 @@ export default class CleanPvcCommand implements ICommand {
         );
         break;
       default:
-        host.showInformationMessage("Sorry, we do not support this type at the moment.");
+        host.showInformationMessage(
+          "Sorry, we do not support this type at the moment."
+        );
         return;
     }
 
