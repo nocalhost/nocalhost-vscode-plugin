@@ -60,6 +60,7 @@ export async function execAsyncWithReturn(
     let stdout = "";
     let stderr = "";
     let err = `execute command fail: ${command}`;
+    host.log(err, true);
     proc.on("close", (code) => {
       if (code === 0) {
         if (startTime !== undefined) {
@@ -101,6 +102,7 @@ export async function execChildProcessAsync(
     const proc = spawn(command, args, { shell: true, env });
     let errorStr = "";
     let err = `execute command fail: ${command}`;
+    host.log(err, true);
     proc.on("close", (code) => {
       if (code === 0) {
         resolve(null);
