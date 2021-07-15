@@ -20,7 +20,9 @@ export default class ExecCommand implements ICommand {
   }
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage("This service is already in DevMode and you not the initiator, do you want exit the DevMode first?");
+      host.showWarnMessage(
+        "This service is already in DevMode and you not the initiator, do you want exit the DevMode first?"
+      );
       return;
     }
     await host.showProgressing("opening ...", async () => {

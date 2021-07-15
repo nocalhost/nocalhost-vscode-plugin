@@ -310,11 +310,16 @@ export default class AccountClusterService {
 
   async checkVersion(): Promise<void> {
     const res = await this.getVersion();
+
+    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.version}`;
+    logger.info(log);
+    host.log(log, true);
+
     if (res.data?.version) {
       const { version } = res.data;
-      if (semver.gt(packageJson.serverVersion, version)) {
+      if (semver.gt(packageJson.version, version)) {
         throw new Error(
-          `please upgrade api server version.(${packageJson.serverVersion} or higher)`
+          `please upgrade api server version.(${packageJson.version} or higher)`
         );
       }
     }

@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.62",
+  "version": "0.4.63",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -16,7 +16,11 @@
     "Other"
   ],
   "keywords": [
-    "k8s", "Kubernetes", "cloud-native", "cloud", "debugger"
+    "k8s",
+    "Kubernetes",
+    "cloud-native",
+    "cloud",
+    "debugger"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -25,7 +29,6 @@
   "nhctl": {
     "version": "0.4.12"
   },
-  "serverVersion": "0.4.7",
   "contributes": {
     "yamlValidation": [
       {

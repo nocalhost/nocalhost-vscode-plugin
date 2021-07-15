@@ -6,6 +6,7 @@ import registerCommand from "./register";
 import host from "../host";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import AccountClusterService from "../clusters/AccountCluster";
+import { ClusterSource } from "../common/define";
 
 export default class ShowApplicationsCommand implements ICommand {
   command: string = SHOW_APP;
@@ -20,13 +21,15 @@ export default class ShowApplicationsCommand implements ICommand {
       return;
     }
 
-    const accountClusterService: AccountClusterService =
-      node.info.accountClusterService;
-    try {
-      await accountClusterService.checkVersion();
-    } catch (error) {
-      host.showErrorMessage(error.message);
-      return;
+    if (node.clusterSource === ClusterSource.server) {
+      const accountClusterService: AccountClusterService =
+        node.parent.accountClusterService;
+      try {
+        await accountClusterService.checkVersion();
+      } catch (error) {
+        host.showErrorMessage(error.message);
+        return;
+      }
     }
 
     const apps = node.getUninstallApps();

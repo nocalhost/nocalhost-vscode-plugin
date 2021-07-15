@@ -109,7 +109,9 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
 
   private async applyLocalFile(target: any): Promise<void> {
     if (!state.isLogin()) {
-      vscode.window.showWarningMessage("Please login to Nocalhost Server first.");
+      vscode.window.showWarningMessage(
+        "Please login to Nocalhost Server first."
+      );
       return;
     }
     const path: string = target.fsPath || target.path;

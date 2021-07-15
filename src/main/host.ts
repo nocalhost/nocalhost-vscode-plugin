@@ -424,7 +424,9 @@ export class Host implements vscode.Disposable {
 
   async showWorkspaceFolderPick(): Promise<vscode.WorkspaceFolder | undefined> {
     if (!vscode.workspace.workspaceFolders) {
-      vscode.window.showErrorMessage("You need to open a folder before execute this command.");
+      vscode.window.showErrorMessage(
+        "You need to open a folder before execute this command."
+      );
       return undefined;
     } else if (vscode.workspace.workspaceFolders.length === 1) {
       return vscode.workspace.workspaceFolders[0];
