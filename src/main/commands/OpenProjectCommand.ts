@@ -15,7 +15,7 @@ export default class OpenProjectCommand implements ICommand {
 
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     const status = await node.getStatus();

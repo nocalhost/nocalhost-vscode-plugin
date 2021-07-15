@@ -25,7 +25,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
       switch (scheme) {
         case "Nocalhost": {
           await vscode.window.showInformationMessage(
-            "Cannot apply to a developing deployment, please exit the dev mode before apply."
+            "Cannot execute apply command in development state, please exit DevMode and try again."
           );
           break;
         }
@@ -109,7 +109,7 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
 
   private async applyLocalFile(target: any): Promise<void> {
     if (!state.isLogin()) {
-      vscode.window.showWarningMessage("Please sign in to nocalhost first.");
+      vscode.window.showWarningMessage("Please login to Nocalhost Server first.");
       return;
     }
     const path: string = target.fsPath || target.path;

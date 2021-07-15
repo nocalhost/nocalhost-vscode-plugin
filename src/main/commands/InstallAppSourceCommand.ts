@@ -25,7 +25,7 @@ import { AppType } from "../domain/define";
 
 async function getKustomizeYamlPath(): Promise<string> {
   const res = await host.showInformationMessage(
-    " Do you want to specify a Kustomize path ?",
+    " Do you want to specify a Kustomize file path ?",
     { modal: true },
     "Use Default",
     "Specify One"
@@ -36,7 +36,7 @@ async function getKustomizeYamlPath(): Promise<string> {
   let kustomizeYamlPath = null;
   if (res === "Specify One") {
     kustomizeYamlPath = await host.showInputBoxIgnoreFocus({
-      placeHolder: "please input your kustomize path",
+      placeHolder: "Please input your kustomize file path",
     });
   }
   return kustomizeYamlPath;
@@ -109,7 +109,10 @@ async function installRawManifastLocal(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, configPath)
+    .addArgumentStrict(
+      `--config`,
+      configPath ? path.basename(configPath) : null
+    )
     .getCommand();
   await vscode.window.withProgress(
     {
@@ -191,7 +194,10 @@ async function installApp(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, configPath)
+    .addArgumentStrict(
+      `--config`,
+      configPath ? path.basename(configPath) : null
+    )
     .getCommand();
   await vscode.window.withProgress(
     {
@@ -226,6 +232,7 @@ async function installKustomizeApp(props: {
   kubeConfigPath: string;
   namespace: string;
   gitUrl?: string;
+  localPath?: string;
   installType: string;
   gitRef?: string;
   resourcePath?: string[];
@@ -250,7 +257,7 @@ async function getNocalhostConfig(dir: string) {
     });
   if (fileNames.length === 0) {
     vscode.window.showWarningMessage(
-      "No config.yaml available for this directory"
+      "No config.yaml available in this directory"
     );
     return;
   }
@@ -299,7 +306,7 @@ export default class InstallAppSourceCommand implements ICommand {
   }
   async execCommand(appNode: DevSpaceNode) {
     if (!appNode) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
@@ -308,7 +315,7 @@ export default class InstallAppSourceCommand implements ICommand {
     const HELM_REPO = "Helm Repo";
 
     const res = await host.showInformationMessage(
-      "Please select the application installation source",
+      "Please select the installation source of application.",
       { modal: true },
       LOCAL,
       CLONE_GIT,
@@ -365,6 +372,7 @@ export default class InstallAppSourceCommand implements ICommand {
         await installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
+          localPath: dir,
           appName,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           installType: manifestType,
@@ -398,7 +406,7 @@ export default class InstallAppSourceCommand implements ICommand {
         return;
       }
       const res = await host.showInformationMessage(
-        "Which version to install?",
+        "Which version to be installed?",
         { modal: true },
         "Default Version",
         "Specify One"
@@ -406,7 +414,7 @@ export default class InstallAppSourceCommand implements ICommand {
       let helmRepoVersion = null;
       if (res === "Specify One") {
         helmRepoVersion = await host.showInputBoxIgnoreFocus({
-          placeHolder: "please input the version of chart",
+          placeHolder: "Please input the chart version",
         });
         if (!helmRepoVersion) {
           return;
@@ -426,14 +434,14 @@ export default class InstallAppSourceCommand implements ICommand {
 
     if (res === CLONE_GIT) {
       const gitUrl = await host.showInputBoxIgnoreFocus({
-        placeHolder: "please input your git url",
+        placeHolder: "Please input your git url",
       });
       if (!gitUrl) {
         return;
       }
       let gitRef = null;
       const r = await host.showInformationMessage(
-        "Which branch to install(Manifests in Git Repo)?",
+        "Which branch to use (Manifests in Git Repo)?",
         { modal: true },
         "Default Branch",
         "Specify one"
@@ -443,7 +451,7 @@ export default class InstallAppSourceCommand implements ICommand {
       }
 
       if (r === "Specify one") {
-        let msg = "please input the branch of repository";
+        let msg = "Please input the branch of repository";
         gitRef = await host.showInputBoxIgnoreFocus({
           placeHolder: msg,
         });

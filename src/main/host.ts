@@ -424,7 +424,7 @@ export class Host implements vscode.Disposable {
 
   async showWorkspaceFolderPick(): Promise<vscode.WorkspaceFolder | undefined> {
     if (!vscode.workspace.workspaceFolders) {
-      vscode.window.showErrorMessage("This command requires an open folder.");
+      vscode.window.showErrorMessage("You need to open a folder before execute this command.");
       return undefined;
     } else if (vscode.workspace.workspaceFolders.length === 1) {
       return vscode.workspace.workspaceFolders[0];
@@ -466,7 +466,7 @@ export class Host implements vscode.Disposable {
     );
     if (shellResult && shellResult.code === 0) {
       const answer = await vscode.window.showInformationMessage(
-        `Extension '${extensionId}' was successfully installed. Reload to enable it.`,
+        `Extension '${extensionId}' was successfully installed. Please reload IDE to enable it.`,
         "Reload Now"
       );
       if (answer === "Reload Now") {

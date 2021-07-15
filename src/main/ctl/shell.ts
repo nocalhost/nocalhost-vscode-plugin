@@ -70,6 +70,7 @@ export async function execAsyncWithReturn(
         }
         resolve({ stdout, stderr, code });
       } else {
+        host.log(err, true);
         reject(new Error(`${err}. ${stderr}`));
       }
     });
@@ -106,6 +107,7 @@ export async function execChildProcessAsync(
         resolve(null);
       } else {
         logger.error(`end dev fail: ${code}`);
+        host.log(err, true);
         if (errorTips && errorTips.output) {
           host.log(errorTips.output, true);
         }

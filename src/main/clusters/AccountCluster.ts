@@ -27,15 +27,19 @@ export class AccountClusterNode {
   jwt: string | null;
   id: string | null;
   loginInfo: LoginInfo;
+  refreshToken: string | null;
 }
 export default class AccountClusterService {
   instance: AxiosInstance;
   loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
+  refreshToken: string;
   lastServiceAccounts: IServiceAccountInfo[];
+  isRefreshing: boolean;
   constructor(loginInfo: LoginInfo) {
     this.loginInfo = loginInfo;
+    this.isRefreshing = true;
     this.instance = axios.create({
       baseURL: loginInfo.baseUrl,
       timeout: 1000 * 20,
@@ -53,24 +57,15 @@ export default class AccountClusterService {
     });
     this.instance.interceptors.response.use(
       async (response: AxiosResponse<IResponseData>) => {
+        const config = response.config;
         const res = response.data;
+        console.log(res.code);
         if ([20103, 20111].includes(res.code)) {
-          host.log(
-            `Please login again ${loginInfo.baseUrl || ""}：${
-              loginInfo.username || ""
-            }`,
-            true
-          );
-          if (this.accountClusterNode) {
-            let globalClusterRootNodes: AccountClusterNode[] =
-              host.getGlobalState(SERVER_CLUSTER_LIST) || [];
-            const index = globalClusterRootNodes.findIndex(
-              ({ id }) => id === this.accountClusterNode.id
-            );
-            if (index !== -1) {
-              globalClusterRootNodes.splice(index, 1);
-              host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
-            }
+          // refresh token
+          if (this.isRefreshing) {
+            this.isRefreshing = false;
+            await this.getRefreshToken();
+            this.isRefreshing = true;
           }
         }
         if (res.code !== 0) {
@@ -97,6 +92,7 @@ export default class AccountClusterService {
     );
     accountClusterService.accountClusterNode = newAccountCluser;
     accountClusterService.jwt = newAccountCluser.jwt;
+    accountClusterService.refreshToken = newAccountCluser.refreshToken;
     const newRootNodes: IRootNode[] = [];
     let serviceAccounts = await accountClusterService.getServiceAccount();
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
@@ -201,6 +197,7 @@ export default class AccountClusterService {
     return {
       userInfo,
       jwt: this.jwt,
+      refreshToken: this.refreshToken,
       createTime: Date.now(),
       loginInfo: this.loginInfo,
       id: `${userInfo.id}${this.loginInfo.baseUrl}`,
@@ -220,6 +217,7 @@ export default class AccountClusterService {
     ).data as IResponseData;
     if (response.data && response.data.token) {
       this.jwt = `Bearer ${response.data.token}`;
+      this.refreshToken = response.data.refresh_token;
     }
     logger.info("login end");
     return this.jwt;
@@ -227,6 +225,48 @@ export default class AccountClusterService {
     // this.loginInfo.password = null;
     // this.id = `${this.userInfo.id}${this.loginInfo.baseUrl}`;
   };
+
+  // 获取refresh token
+  async getRefreshToken() {
+    const response = await this.instance.post(
+      "/v1/token/refresh",
+      {},
+      {
+        headers: {
+          Reraeb: this.refreshToken,
+        },
+      }
+    );
+    if (response.status === 200 && response.data) {
+      const {
+        data: { token, refresh_token },
+        code,
+      } = response.data;
+      if (code === 0) {
+        this.jwt = token;
+        this.refreshToken = refresh_token;
+        await AccountClusterService.appendClusterByLoginInfo(this.loginInfo);
+      } else {
+        host.log(
+          `Please login again ${this.loginInfo.baseUrl || ""}：${
+            this.loginInfo.username || ""
+          }`,
+          true
+        );
+        if (this.accountClusterNode) {
+          let globalClusterRootNodes: AccountClusterNode[] =
+            host.getGlobalState(SERVER_CLUSTER_LIST) || [];
+          const index = globalClusterRootNodes.findIndex(
+            ({ id }) => id === this.accountClusterNode.id
+          );
+          if (index !== -1) {
+            globalClusterRootNodes.splice(index, 1);
+            host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
+          }
+        }
+      }
+    }
+  }
 
   async getServiceAccount() {
     try {

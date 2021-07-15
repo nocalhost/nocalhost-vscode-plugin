@@ -27,7 +27,7 @@ export default class RunCommand implements ICommand {
   }
   async execCommand(node: Deployment) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     await host.showProgressing("running ...", async () => {
@@ -54,7 +54,7 @@ export default class RunCommand implements ICommand {
       } else if (containers.length === 1) {
         container = containers[0];
       } else {
-        host.showInformationMessage("Missing container confiuration");
+        host.showInformationMessage("Missing container configuration");
         return;
       }
       const valid = this.validateRunConfig(container);

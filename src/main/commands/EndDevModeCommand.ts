@@ -18,7 +18,7 @@ export default class EndDevModeCommand implements ICommand {
   }
   async execCommand(node: ControllerResourceNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     let result = "Yes";
@@ -31,7 +31,7 @@ export default class EndDevModeCommand implements ICommand {
     );
     if (svcProfile.possess === false) {
       result = await vscode.window.showInformationMessage(
-        "You are not the dev possessor of this service, are you sure to exit the DevMode?",
+        "This service is already in DevMode and you not the initiator, do you want exit the DevMode first?",
         { modal: true },
         "Yes",
         "No"
