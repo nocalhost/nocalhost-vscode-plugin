@@ -313,7 +313,6 @@ export default class AccountClusterService {
 
     const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.version}`;
     logger.info(log);
-    host.log(log, true);
 
     if (res.data?.version) {
       const { version } = res.data;
