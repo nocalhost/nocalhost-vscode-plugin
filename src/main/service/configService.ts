@@ -1,6 +1,6 @@
 import * as yaml from "yaml";
 import * as nhctl from "../ctl/nhctl";
-const lineBreakFlag = process.platform === "win32" ? "\n\r" : "\n";
+const lineBreakFlag = "\n";
 export interface JobConfig {
   name: string;
   path: string;
