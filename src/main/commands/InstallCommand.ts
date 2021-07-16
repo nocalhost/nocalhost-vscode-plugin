@@ -27,7 +27,7 @@ export default class InstallCommand implements ICommand {
   }
   async execCommand(appNode: AppNode) {
     if (!appNode) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     let productPagePort = (this.productPagePort = "");
@@ -123,7 +123,7 @@ export default class InstallCommand implements ICommand {
         } else {
           msg = "please input the branch of repository";
         }
-        refOrVersion = await host.showInputBox({
+        refOrVersion = await host.showInputBoxIgnoreFocus({
           placeHolder: msg,
         });
 
@@ -157,7 +157,7 @@ export default class InstallCommand implements ICommand {
           return;
         }
       } else if (res === "Specify values") {
-        valuesStr = await host.showInputBox({
+        valuesStr = await host.showInputBoxIgnoreFocus({
           placeHolder: "eg: key1=val1,key2=val2",
         });
 
@@ -178,7 +178,7 @@ export default class InstallCommand implements ICommand {
         return;
       }
       if (res === "Specify One") {
-        const resPath = await host.showInputBox({
+        const resPath = await host.showInputBoxIgnoreFocus({
           placeHolder: "please input your kustomize path",
         });
         if (!resPath) {
@@ -311,7 +311,7 @@ export default class InstallCommand implements ICommand {
       refOrVersion,
       local
     );
-
+    await vscode.commands.executeCommand("Nocalhost.refresh");
     await host.delay(1000);
     const nocalhostConfig = await appNode.getNocalhostConfig();
     if (

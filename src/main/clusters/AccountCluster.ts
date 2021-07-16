@@ -1,5 +1,12 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { IUserInfo, IRootNode } from "../domain";
+import {
+  IResponseData,
+  IServiceAccountInfo,
+  IDevSpaceInfo,
+  IV2ApplicationInfo,
+  IUserInfo,
+  IRootNode,
+} from "../domain";
 import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
 import * as path from "path";
@@ -7,15 +14,12 @@ import { getAllNamespace } from "../ctl/nhctl";
 import host from "../host";
 import { getStringHash } from "../utils/common";
 import { uniqBy } from "lodash";
-import {
-  ResponseData,
-  DevspaceInfo,
-  V2ApplicationInfo,
-  ServiceAccountInfo,
-} from "../api";
 import { LoginInfo } from "./interface";
 import { writeFileLock } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
+import { ClusterSource } from "../common/define";
+import * as packageJson from "../../../package.json";
+import * as semver from "semver";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -23,15 +27,19 @@ export class AccountClusterNode {
   jwt: string | null;
   id: string | null;
   loginInfo: LoginInfo;
+  refreshToken: string | null;
 }
 export default class AccountClusterService {
   instance: AxiosInstance;
   loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
-  lastServiceAccounts: ServiceAccountInfo[];
+  refreshToken: string;
+  lastServiceAccounts: IServiceAccountInfo[];
+  isRefreshing: boolean;
   constructor(loginInfo: LoginInfo) {
     this.loginInfo = loginInfo;
+    this.isRefreshing = true;
     this.instance = axios.create({
       baseURL: loginInfo.baseUrl,
       timeout: 1000 * 20,
@@ -48,25 +56,16 @@ export default class AccountClusterService {
       return config;
     });
     this.instance.interceptors.response.use(
-      async (response: AxiosResponse<ResponseData>) => {
+      async (response: AxiosResponse<IResponseData>) => {
+        const config = response.config;
         const res = response.data;
+        console.log(res.code);
         if ([20103, 20111].includes(res.code)) {
-          host.log(
-            `Please login again ${loginInfo.baseUrl || ""}：${
-              loginInfo.username || ""
-            }`,
-            true
-          );
-          if (this.accountClusterNode) {
-            let globalClusterRootNodes: AccountClusterNode[] =
-              host.getGlobalState(SERVER_CLUSTER_LIST) || [];
-            const index = globalClusterRootNodes.findIndex(
-              ({ id }) => id === this.accountClusterNode.id
-            );
-            if (index !== -1) {
-              globalClusterRootNodes.splice(index, 1);
-              host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
-            }
+          // refresh token
+          if (this.isRefreshing) {
+            this.isRefreshing = false;
+            await this.getRefreshToken();
+            this.isRefreshing = true;
           }
         }
         if (res.code !== 0) {
@@ -93,6 +92,7 @@ export default class AccountClusterService {
     );
     accountClusterService.accountClusterNode = newAccountCluser;
     accountClusterService.jwt = newAccountCluser.jwt;
+    accountClusterService.refreshToken = newAccountCluser.refreshToken;
     const newRootNodes: IRootNode[] = [];
     let serviceAccounts = await accountClusterService.getServiceAccount();
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
@@ -101,17 +101,27 @@ export default class AccountClusterService {
       );
       return [];
     }
-    const applications: V2ApplicationInfo[] = await accountClusterService.getV2Application();
+    logger.info(
+      `[getServerClusterRootNodes] serviceAccounts length ${
+        (serviceAccounts || []).length
+      }`
+    );
+    const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
+    logger.info(
+      `[getServerClusterRootNodes] applications length ${
+        (applications || []).length
+      }`
+    );
     for (const sa of serviceAccounts) {
-      let devSpaces: Array<DevspaceInfo> | undefined = new Array();
+      let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
       const id = getStringHash(
         `${newAccountCluser.loginInfo.baseUrl}${sa.clusterId}${newAccountCluser.userInfo.id}_config`
       );
-      const kubeconfigPath = path.resolve(KUBE_CONFIG_DIR, id);
-      writeFileLock(kubeconfigPath, sa.kubeconfig);
+      const kubeConfigPath = path.resolve(KUBE_CONFIG_DIR, id);
+      await writeFileLock(kubeConfigPath, sa.kubeconfig);
       if (sa.privilege) {
         const devs = await getAllNamespace({
-          kubeConfigPath: kubeconfigPath,
+          kubeConfigPath: kubeConfigPath,
           namespace: "default",
         });
         for (const dev of devs) {
@@ -125,7 +135,7 @@ export default class AccountClusterService {
         devSpaces.push(...devs);
       } else {
         for (const ns of sa.namespacePacks) {
-          const devInfo: DevspaceInfo = {
+          const devInfo: IDevSpaceInfo = {
             id: ns.spaceId,
             spaceName: ns.spacename,
             namespace: ns.namespace,
@@ -145,13 +155,11 @@ export default class AccountClusterService {
         devSpaces,
         applications,
         userInfo: newAccountCluser.userInfo,
-        isServer: true,
-        old: [],
+        clusterSource: ClusterSource.server,
         accountClusterService,
         id: newAccountCluser.id,
         createTime: newAccountCluser.createTime,
-        localPath: kubeconfigPath,
-        kubeConfig: sa.kubeconfig,
+        kubeConfigPath,
       };
       newRootNodes.push(obj);
     }
@@ -189,6 +197,7 @@ export default class AccountClusterService {
     return {
       userInfo,
       jwt: this.jwt,
+      refreshToken: this.refreshToken,
       createTime: Date.now(),
       loginInfo: this.loginInfo,
       id: `${userInfo.id}${this.loginInfo.baseUrl}`,
@@ -205,9 +214,10 @@ export default class AccountClusterService {
         password: loginInfo.password,
         from: "plugin",
       })
-    ).data as ResponseData;
+    ).data as IResponseData;
     if (response.data && response.data.token) {
       this.jwt = `Bearer ${response.data.token}`;
+      this.refreshToken = response.data.refresh_token;
     }
     logger.info("login end");
     return this.jwt;
@@ -216,11 +226,53 @@ export default class AccountClusterService {
     // this.id = `${this.userInfo.id}${this.loginInfo.baseUrl}`;
   };
 
+  // 获取refresh token
+  async getRefreshToken() {
+    const response = await this.instance.post(
+      "/v1/token/refresh",
+      {},
+      {
+        headers: {
+          Reraeb: this.refreshToken,
+        },
+      }
+    );
+    if (response.status === 200 && response.data) {
+      const {
+        data: { token, refresh_token },
+        code,
+      } = response.data;
+      if (code === 0) {
+        this.jwt = token;
+        this.refreshToken = refresh_token;
+        await AccountClusterService.appendClusterByLoginInfo(this.loginInfo);
+      } else {
+        host.log(
+          `Please login again ${this.loginInfo.baseUrl || ""}：${
+            this.loginInfo.username || ""
+          }`,
+          true
+        );
+        if (this.accountClusterNode) {
+          let globalClusterRootNodes: AccountClusterNode[] =
+            host.getGlobalState(SERVER_CLUSTER_LIST) || [];
+          const index = globalClusterRootNodes.findIndex(
+            ({ id }) => id === this.accountClusterNode.id
+          );
+          if (index !== -1) {
+            globalClusterRootNodes.splice(index, 1);
+            host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
+          }
+        }
+      }
+    }
+  }
+
   async getServiceAccount() {
     try {
       const response = await this.instance.get(`/v1/plugin/service_accounts`);
-      const res = response.data as ResponseData;
-      let serviceAccount: ServiceAccountInfo[] = keysToCamel(res.data) || [];
+      const res = response.data as IResponseData;
+      let serviceAccount: IServiceAccountInfo[] = keysToCamel(res.data) || [];
       if (!Array.isArray(serviceAccount) || serviceAccount.length === 0) {
         serviceAccount = this.lastServiceAccounts;
       } else {
@@ -240,15 +292,39 @@ export default class AccountClusterService {
       const response = await this.instance.get(
         `/v1/users/${userInfo.id}/applications`
       );
-      const res = response.data as ResponseData;
+      const res = response.data as IResponseData;
       const applications = res.data || [];
       return applications;
     } catch (e) {
       return [];
     }
   }
+  async getVersion() {
+    try {
+      const response = await this.instance.get("/v1/version");
+      return response.data as { data?: { version: string } };
+    } catch (e) {
+      return {};
+    }
+  }
 
-  async getV2Application(): Promise<V2ApplicationInfo[]> {
+  async checkVersion(): Promise<void> {
+    const res = await this.getVersion();
+
+    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.version}`;
+    logger.info(log);
+
+    if (res.data?.version) {
+      const { version } = res.data;
+      if (semver.gt(packageJson.version, version)) {
+        throw new Error(
+          `please upgrade api server version.(${packageJson.version} or higher)`
+        );
+      }
+    }
+  }
+
+  async getV2Application(): Promise<IV2ApplicationInfo[]> {
     const { userInfo } = this.accountClusterNode;
     const userId = userInfo.id;
     if (!userId) {
@@ -258,12 +334,12 @@ export default class AccountClusterService {
     if (!Array.isArray(applications) || applications.length === 0) {
       return [];
     }
-    const result = new Array<V2ApplicationInfo>();
+    const result = new Array<IV2ApplicationInfo>();
     for (let i = 0; i < applications.length; i++) {
       const context = JSON.parse(applications[i].context);
       context.install_type = applications[i].application_type;
       // context.install_type = applications[i].application_type;
-      const app: V2ApplicationInfo = {
+      const app: IV2ApplicationInfo = {
         id: applications[i].id,
         userId: applications[i]["user_id"],
         public: applications[i].public,

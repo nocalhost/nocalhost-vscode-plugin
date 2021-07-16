@@ -1,5 +1,5 @@
 import * as yaml from "yaml";
-import { ApplicationInfo, getApplication } from "../../api";
+import { IApplicationInfo } from "../../domain";
 import {
   IApplication,
   IApplicationContext,
@@ -68,9 +68,9 @@ export default class DataCenter {
   }
 
   public async setApplications(timeout?: number): Promise<void> {
-    const results: ApplicationInfo[] = await getApplication("");
+    const results: IApplicationInfo[] = [];
     const applications: Promise<IApplication>[] = results.map(
-      async (result: ApplicationInfo) => {
+      async (result: IApplicationInfo) => {
         const contextObj: any = JSON.parse(result.context || "{}");
         const context: IApplicationContext = {
           source: contextObj.source || "",

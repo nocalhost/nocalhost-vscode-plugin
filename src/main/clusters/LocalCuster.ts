@@ -5,18 +5,29 @@ import * as fs from "fs";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
 import { isExistSync } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
-import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
+import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
 import { getAllNamespace } from "../ctl/nhctl";
+import { ClusterSource } from "../common/define";
 
 export class LocalClusterNode {
   filePath: string;
   id: string;
+  clusterNickName?: string;
   createTime: number;
 }
 
 export default class LocalCluster {
+  static getClusterNodeByKubeConfigPath(
+    kubeConfigPath: string
+  ): LocalClusterNode {
+    const localClusterNodes = host.getGlobalState(LOCAL_PATH) || [];
+    return (localClusterNodes || []).find(
+      (it: LocalClusterNode) => it.filePath === kubeConfigPath
+    );
+  }
+
   static getLocalClusterRootNode = async (
     newLocalCluster: LocalClusterNode
   ): Promise<IRootNode> => {
@@ -25,8 +36,8 @@ export default class LocalCluster {
     }
     const { filePath, createTime } = newLocalCluster;
     let kubeConfig = "";
-    let applications: V2ApplicationInfo[] = [];
-    let devSpaces: Array<DevspaceInfo> | undefined = new Array();
+    let applications: IV2ApplicationInfo[] = [];
+    let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
     if (!isExistSync(filePath)) {
       host.log(`no such file or directory: ${filePath}`);
       return;
@@ -68,14 +79,14 @@ export default class LocalCluster {
       context: JSON.stringify(contextObj),
       status: 1,
     });
-    const obj = {
+    const obj: IRootNode = {
       id: newLocalCluster.id,
       devSpaces,
+      clusterName: newLocalCluster.clusterNickName,
       createTime,
+      clusterSource: ClusterSource.local,
       applications,
-      old: [] as ApplicationInfo[],
-      localPath: filePath,
-      kubeConfig,
+      kubeConfigPath: filePath,
     };
     return obj;
   };

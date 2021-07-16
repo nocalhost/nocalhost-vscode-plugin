@@ -15,7 +15,7 @@ import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
-import { ApplicationInfo, V2ApplicationInfo } from "../api";
+import { IApplicationInfo, IV2ApplicationInfo } from "../domain";
 import ConfigService, { NocalhostConfig } from "../service/configService";
 import host from "../host";
 import { SYNC_SERVICE } from "../commands/constants";
@@ -34,7 +34,7 @@ export class AppNode extends NocalhostFolderNode {
   public helmNHConfig: string;
   public kubeConfig: string;
   public resourceDir: Array<string>;
-  public info: V2ApplicationInfo | ApplicationInfo;
+  public info: IV2ApplicationInfo | IApplicationInfo;
   public parent: BaseNocalhostNode;
   // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
@@ -51,7 +51,7 @@ export class AppNode extends NocalhostFolderNode {
     status: number,
     installStatus: number,
     kubeConfig: string,
-    info: V2ApplicationInfo | ApplicationInfo // api info
+    info: IV2ApplicationInfo | IApplicationInfo // api info
   ) {
     super();
     this.installType = installType;

@@ -24,5 +24,6 @@
   "AssociateLocalDir": "Associate Local Directory",
   "nocalhost.editor.context.label": "Nocalhost",
   "nocalhost.editor.title.context.label": "Nocalhost",
-  "debug": "Debug"
+  "debug": "Debug",
+  "OpenProject": "Open Project"
 }

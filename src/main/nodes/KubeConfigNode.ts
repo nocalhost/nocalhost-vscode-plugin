@@ -6,56 +6,65 @@ import state from "../state";
 import AccountClusterService from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
 import * as path from "path";
+import { ClusterSource } from "../common/define";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
 import { writeFileLock } from "../utils/fileUtil";
-import { DevspaceInfo, V2ApplicationInfo } from "../api";
 import * as _ from "lodash";
 import { DevSpaceNode } from "./DevSpaceNode";
-import { IUserInfo } from "../domain";
+import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
   public type = "KUBECONFIG";
-  public devspaceInfos: DevspaceInfo[];
+  public devSpaceInfos: IDevSpaceInfo[];
   public userInfo: IUserInfo;
-  public kubeConfig: string;
-  public applications: Array<V2ApplicationInfo>;
+  public clusterSource: ClusterSource;
+  public applications: Array<IV2ApplicationInfo>;
   public parent: NocalhostRootNode;
   public installedApps: {
     name: string;
     type: string;
   }[] = [];
   public id: string;
-  public isLocal: boolean;
-  public localPath: string;
+  public kubeConfigPath: string;
   public accountClusterService: AccountClusterService;
-  constructor(
-    id: string,
-    parent: NocalhostRootNode,
-    label: string,
-    devspaceInfos: DevspaceInfo[],
-    applications: Array<V2ApplicationInfo>,
-    kubeConfig: string,
-    isLocal = false,
-    localPath: string,
-    userInfo: IUserInfo,
-    accountClusterService: AccountClusterService
-  ) {
+  constructor(props: {
+    id: string;
+    parent: NocalhostRootNode;
+    label: string;
+    devSpaceInfos: IDevSpaceInfo[];
+    applications: Array<IV2ApplicationInfo>;
+    clusterSource: ClusterSource;
+    kubeConfigPath: string;
+    userInfo: IUserInfo;
+    accountClusterService?: AccountClusterService;
+  }) {
     super();
+    const {
+      id,
+      parent,
+      label,
+      devSpaceInfos,
+      applications,
+      clusterSource,
+      kubeConfigPath,
+      userInfo,
+      accountClusterService,
+    } = props;
     this.id = id;
     this.parent = parent;
+    this.clusterSource = clusterSource;
     this.label =
-      label || (devspaceInfos.length > 0 ? devspaceInfos[0].namespace : "");
-    this.devspaceInfos = devspaceInfos;
+      label || (devSpaceInfos.length > 0 ? devSpaceInfos[0].namespace : "");
+    this.devSpaceInfos = devSpaceInfos;
     this.applications = applications;
     this.installedApps = [];
-    this.kubeConfig = kubeConfig;
-    this.isLocal = isLocal;
-    this.localPath = localPath;
+    this.kubeConfigPath = kubeConfigPath;
     this.userInfo = userInfo;
     this.accountClusterService = accountClusterService;
+
     state.setNode(this.getNodeStateId(), this);
   }
   updateData(): any {
@@ -63,12 +72,12 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   public getKubeConfigPath() {
-    return this.localPath;
+    return this.kubeConfigPath;
   }
 
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
     let res = {
-      devSpaces: this.devspaceInfos,
+      devSpaces: this.devSpaceInfos,
       applications: this.applications,
     };
     const devs: DevSpaceNode[] = [];
@@ -92,7 +101,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
         d.spaceName,
         d,
         res.applications,
-        this.isLocal
+        this.clusterSource
       );
       devs.push(node);
     }
@@ -106,7 +115,15 @@ export class KubeConfigNode extends NocalhostFolderNode {
       vscode.TreeItemCollapsibleState.Collapsed
     );
 
-    treeItem.contextValue = `kubeconfig${this.isLocal ? "-local" : ""}`;
+    treeItem.contextValue = `kubeconfig${
+      this.clusterSource === ClusterSource.local ? "-local" : "-server"
+    }`;
+
+    if (this.clusterSource === ClusterSource.server) {
+      const { username, baseUrl } = this.accountClusterService.loginInfo;
+
+      treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
+    }
 
     return Promise.resolve(treeItem);
   }

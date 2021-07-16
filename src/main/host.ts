@@ -99,13 +99,12 @@ export class Host implements vscode.Disposable {
             }
           }
         }
-        this.startAutoRefresh();
       } catch (e) {
         this.startAutoRefresh();
         console.log(e);
         logger.error(e);
       }
-    }, 5 * 1000);
+    }, 10 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {
@@ -251,6 +250,21 @@ export class Host implements vscode.Disposable {
 
   public showInputBox(options: vscode.InputBoxOptions) {
     return vscode.window.showInputBox(options);
+  }
+  public showInputBoxIgnoreFocus(options: vscode.InputBoxOptions) {
+    options.ignoreFocusOut = true;
+
+    return this.showInputBox(options);
+  }
+
+  public showProgressingToken<R>(
+    options: vscode.ProgressOptions,
+    task: (
+      progress: Progress<{ message?: string; increment?: number }>,
+      token: vscode.CancellationToken
+    ) => Thenable<R>
+  ) {
+    return vscode.window.withProgress(options, task);
   }
 
   public showProgressing(
@@ -410,7 +424,9 @@ export class Host implements vscode.Disposable {
 
   async showWorkspaceFolderPick(): Promise<vscode.WorkspaceFolder | undefined> {
     if (!vscode.workspace.workspaceFolders) {
-      vscode.window.showErrorMessage("This command requires an open folder.");
+      vscode.window.showErrorMessage(
+        "You need to open a folder before execute this command."
+      );
       return undefined;
     } else if (vscode.workspace.workspaceFolders.length === 1) {
       return vscode.workspace.workspaceFolders[0];
@@ -452,7 +468,7 @@ export class Host implements vscode.Disposable {
     );
     if (shellResult && shellResult.code === 0) {
       const answer = await vscode.window.showInformationMessage(
-        `Extension '${extensionId}' was successfully installed. Reload to enable it.`,
+        `Extension '${extensionId}' was successfully installed. Please reload IDE to enable it.`,
         "Reload Now"
       );
       if (answer === "Reload Now") {

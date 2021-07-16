@@ -62,7 +62,7 @@ export class GoDebugProvider extends IDebugProvider {
       return true;
     }
     const answer = await vscode.window.showInformationMessage(
-      `go debugging requires the '${defaultGoDebuggerExtension}' extension. Would you like to install it now?`,
+      `Go debugging requires the '${defaultGoDebuggerExtension}' extension. Would you like to install it now?`,
       "Install Now"
     );
     if (answer === "Install Now") {
@@ -74,9 +74,15 @@ export class GoDebugProvider extends IDebugProvider {
   public killContainerDebugProcess(
     podName: string,
     kubeconfigPath: string,
-    execCommand: string[]
+    execCommand: string[],
+    namespace: string
   ) {
-    super.killContainerDebugProcess(podName, kubeconfigPath, execCommand);
+    super.killContainerDebugProcess(
+      podName,
+      kubeconfigPath,
+      execCommand,
+      namespace
+    );
     // kill exec program
     const index = execCommand.indexOf("exec");
     if (index < 0) {

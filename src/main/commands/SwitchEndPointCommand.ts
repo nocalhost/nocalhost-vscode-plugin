@@ -17,13 +17,13 @@ export default class SwitchEndPointCommand implements ICommand {
   async execCommand() {
     const value: string = host.getGlobalState(BASE_URL);
     const options: vscode.InputBoxOptions = {
-      placeHolder: "input your api server url",
+      placeHolder: "Input your api server url",
       ...(value ? { value } : {}),
     };
     const newValue: string | undefined = await host.showInputBox(options);
     if (newValue) {
       host.setGlobalState(BASE_URL, newValue);
-      host.showInformationMessage("configured api server");
+      host.showInformationMessage("Configured api server");
     }
   }
 }

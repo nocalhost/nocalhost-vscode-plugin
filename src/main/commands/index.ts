@@ -40,10 +40,13 @@ import ClearLocalCluster from "./ClearLocalCluster";
 import ClearServerCluster from "./ClearServerCluster";
 import InstallAppSourceCommand from "./InstallAppSourceCommand";
 import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
+import RenameCommand from "./RenameCommand";
+import OpenProjectCommand from "./OpenProjectCommand";
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
 ) {
+  new RenameCommand(context);
   new ShowClusterInfoCommand(context);
   new ClearLocalCluster(context);
   new ClustersViewCommand(context);
@@ -87,6 +90,7 @@ export default function initCommands(
   // command
   new DebugCommand(context);
   new RunCommand(context);
+  new OpenProjectCommand(context);
 
   new DeleteKubeConfigCommand(context);
   new AddKubeconfig(context);

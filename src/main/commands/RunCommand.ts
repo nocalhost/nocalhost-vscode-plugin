@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
+import * as path from "path";
 
 import ICommand from "./ICommand";
 import { RUN } from "./constants";
+import { NH_BIN } from "../constants";
 import registerCommand from "./register";
 import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
@@ -25,7 +27,7 @@ export default class RunCommand implements ICommand {
   }
   async execCommand(node: Deployment) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     await host.showProgressing("running ...", async () => {
@@ -52,7 +54,7 @@ export default class RunCommand implements ICommand {
       } else if (containers.length === 1) {
         container = containers[0];
       } else {
-        host.showInformationMessage("Missing container confiuration");
+        host.showInformationMessage("Missing container configuration");
         return;
       }
       const valid = this.validateRunConfig(container);
@@ -84,7 +86,10 @@ export default class RunCommand implements ICommand {
     });
     terminalCommands.push("-n", param.namespace);
     terminalCommands.push("--kubeconfig", param.kubeConfigPath);
-    const shellPath = "nhctl";
+    const shellPath = path.resolve(
+      NH_BIN,
+      host.isWindow() ? "nhctl.exe" : "nhctl"
+    );
 
     const terminal = host.invokeInNewTerminal(
       `${shellPath} ${terminalCommands.join(" ")}`,

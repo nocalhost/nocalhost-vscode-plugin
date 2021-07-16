@@ -1,3 +1,4 @@
+import { KubeConfigNode } from "./../nodes/KubeConfigNode";
 import { NhctlCommand } from "./../ctl/nhctl";
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -10,7 +11,7 @@ import {
 import * as tempy from "tempy";
 
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
-import { replaceSpacePath } from "../utils/fileUtil";
+import { replaceSpacePath, readYamlSync } from "../utils/fileUtil";
 import git from "../ctl/git";
 import ICommand from "./ICommand";
 import { INSTALL_APP_SOURCE } from "./constants";
@@ -24,7 +25,7 @@ import { AppType } from "../domain/define";
 
 async function getKustomizeYamlPath(): Promise<string> {
   const res = await host.showInformationMessage(
-    " Do you want to specify a Kustomize path ?",
+    " Do you want to specify a Kustomize file path ?",
     { modal: true },
     "Use Default",
     "Specify One"
@@ -34,8 +35,8 @@ async function getKustomizeYamlPath(): Promise<string> {
   }
   let kustomizeYamlPath = null;
   if (res === "Specify One") {
-    kustomizeYamlPath = await host.showInputBox({
-      placeHolder: "please input your kustomize path",
+    kustomizeYamlPath = await host.showInputBoxIgnoreFocus({
+      placeHolder: "Please input your kustomize file path",
     });
   }
   return kustomizeYamlPath;
@@ -65,7 +66,7 @@ async function getHelmValues(): Promise<[string?, string?]> {
     }
     values = valuesUri[0].fsPath;
   } else if (res === "Specify values") {
-    valuesStr = await host.showInputBox({
+    valuesStr = await host.showInputBoxIgnoreFocus({
       placeHolder: "eg: key1=val1,key2=val2",
     });
 
@@ -108,7 +109,10 @@ async function installRawManifastLocal(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, configPath)
+    .addArgumentStrict(
+      `--config`,
+      configPath ? path.basename(configPath) : null
+    )
     .getCommand();
   await vscode.window.withProgress(
     {
@@ -190,7 +194,10 @@ async function installApp(props: {
     .addArgumentStrict("--git-ref", gitRef)
     .addArgumentStrict("--git-url", gitUrl)
     .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(`--config`, configPath)
+    .addArgumentStrict(
+      `--config`,
+      configPath ? path.basename(configPath) : null
+    )
     .getCommand();
   await vscode.window.withProgress(
     {
@@ -225,6 +232,7 @@ async function installKustomizeApp(props: {
   kubeConfigPath: string;
   namespace: string;
   gitUrl?: string;
+  localPath?: string;
   installType: string;
   gitRef?: string;
   resourcePath?: string[];
@@ -239,19 +247,25 @@ async function installKustomizeApp(props: {
 async function getNocalhostConfig(dir: string) {
   const dirPath = path.resolve(dir, ".nocalhost");
   let fileNames = getFilesByDir(dirPath);
-  fileNames = (fileNames || []).filter((fileName) => {
-    const extname = path.extname(fileName);
-    return [".yaml", ".yml"].includes(extname);
-  });
+  fileNames = (fileNames || [])
+    .filter((fileName) => {
+      const extname = path.extname(fileName);
+      return [".yaml", ".yml"].includes(extname);
+    })
+    .filter((fileName) => {
+      return Boolean(readYamlSync(path.resolve(dirPath, fileName)));
+    });
   if (fileNames.length === 0) {
     vscode.window.showWarningMessage(
-      "No config.yaml available for this directory"
+      "No config.yaml available in this directory"
     );
     return;
   }
   let configFileName = fileNames[0];
   if (fileNames.length > 1) {
-    const selectedFileName = await vscode.window.showQuickPick(fileNames);
+    const selectedFileName = await vscode.window.showQuickPick(fileNames, {
+      ignoreFocusOut: true,
+    });
     if (!selectedFileName) {
       return;
     }
@@ -290,9 +304,9 @@ export default class InstallAppSourceCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
-  async execCommand(appNode: AppNode) {
+  async execCommand(appNode: DevSpaceNode) {
     if (!appNode) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
@@ -301,7 +315,7 @@ export default class InstallAppSourceCommand implements ICommand {
     const HELM_REPO = "Helm Repo";
 
     const res = await host.showInformationMessage(
-      "Please select the application installation source",
+      "Please select the installation source of application.",
       { modal: true },
       LOCAL,
       CLONE_GIT,
@@ -346,7 +360,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.helmLocal) {
         await installHelmApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           localPath: dir,
           configPath,
           resourcePath: nocalhostConfig?.application?.resourcePath,
@@ -357,7 +371,8 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.kustomizeLocal) {
         await installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
+          localPath: dir,
           appName,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           installType: manifestType,
@@ -367,7 +382,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.rawManifestLocal) {
         await installRawManifastLocal({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           localPath: dir,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           installType: manifestType,
@@ -375,33 +390,31 @@ export default class InstallAppSourceCommand implements ICommand {
           appName,
         });
       }
-
-      return;
     }
 
     if (res === HELM_REPO) {
-      const helmRepoUrl = await host.showInputBox({
+      const helmRepoUrl = await host.showInputBoxIgnoreFocus({
         placeHolder: "please input your helm chart",
       });
       if (!helmRepoUrl) {
         return;
       }
-      const appName = await host.showInputBox({
+      const appName = await host.showInputBoxIgnoreFocus({
         placeHolder: "please input application name",
       });
       if (!appName) {
         return;
       }
       const res = await host.showInformationMessage(
-        "Which version to install?",
+        "Which version to be installed?",
         { modal: true },
         "Default Version",
         "Specify One"
       );
       let helmRepoVersion = null;
       if (res === "Specify One") {
-        helmRepoVersion = await host.showInputBox({
-          placeHolder: "please input the version of chart",
+        helmRepoVersion = await host.showInputBoxIgnoreFocus({
+          placeHolder: "Please input the chart version",
         });
         if (!helmRepoVersion) {
           return;
@@ -410,7 +423,7 @@ export default class InstallAppSourceCommand implements ICommand {
 
       await installHelmRep({
         kubeConfigPath: appNode.getKubeConfigPath(),
-        namespace: appNode.namespace,
+        namespace: appNode?.info?.namespace,
         helmRepoUrl,
         helmRepoVersion,
         chartName: appName,
@@ -420,15 +433,15 @@ export default class InstallAppSourceCommand implements ICommand {
     }
 
     if (res === CLONE_GIT) {
-      const gitUrl = await host.showInputBox({
-        placeHolder: "please input your git url",
+      const gitUrl = await host.showInputBoxIgnoreFocus({
+        placeHolder: "Please input your git url",
       });
       if (!gitUrl) {
         return;
       }
       let gitRef = null;
       const r = await host.showInformationMessage(
-        "Which branch to install(Manifests in Git Repo)?",
+        "Which branch to use (Manifests in Git Repo)?",
         { modal: true },
         "Default Branch",
         "Specify one"
@@ -438,8 +451,8 @@ export default class InstallAppSourceCommand implements ICommand {
       }
 
       if (r === "Specify one") {
-        let msg = "please input the branch of repository";
-        gitRef = await host.showInputBox({
+        let msg = "Please input the branch of repository";
+        gitRef = await host.showInputBoxIgnoreFocus({
           placeHolder: msg,
         });
 
@@ -481,7 +494,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.helmGit) {
         await installHelmApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
           configPath,
           resourcePath: nocalhostConfig?.application?.resourcePath,
@@ -494,7 +507,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.rawManifestGit) {
         await installRawManifastLocal({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           gitRef,
@@ -506,7 +519,7 @@ export default class InstallAppSourceCommand implements ICommand {
       if (manifestType === AppType.kustomizeGit) {
         await installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
-          namespace: appNode.namespace,
+          namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
           resourcePath: nocalhostConfig?.application?.resourcePath,
           gitRef,
@@ -515,7 +528,7 @@ export default class InstallAppSourceCommand implements ICommand {
         });
       }
     }
-    const devspaceNode = appNode.getParent() as DevSpaceNode;
-    devspaceNode.updateData();
+    await appNode.updateData();
+    await vscode.commands.executeCommand("Nocalhost.refresh", appNode);
   }
 }

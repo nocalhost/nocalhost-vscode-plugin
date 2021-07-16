@@ -23,6 +23,7 @@ import state from "./state";
 import ConfigService from "./service/configService";
 import { HELM_VALUES_DIR } from "./constants";
 import { KubernetesResourceNode } from "./nodes/abstract/KubernetesResourceNode";
+import logger from "./utils/logger";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
   static supportScheme = ["Nocalhost", "NocalhostRW"];
@@ -187,6 +188,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
 
                 if (appInfo[key] instanceof Array) {
                   result = "";
+                  logger.info(`[file provider array']: ${key}`);
                   for (let i = 0; i < appInfo[key].length; i++) {
                     if (appInfo[key][i] && appInfo[key][i].name === subKey) {
                       result = this.stringify([appInfo[key][i]], style) || "";
@@ -349,7 +351,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
 
   private stringify(obj: any, style: string) {
     if (style === "yaml") {
-      return `${obj.note || ""}${yaml.stringify(omit(obj, "note"))}`;
+      return `${obj.__note || ""}${yaml.stringify(omit(obj, "__note"))}`;
     } else if (style === "json") {
       return JSON.stringify(obj, null, 2);
     }

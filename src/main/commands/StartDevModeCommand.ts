@@ -5,9 +5,11 @@ import ICommand from "./ICommand";
 import { NhctlCommand } from "./../ctl/nhctl";
 import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
-import { get as _get } from "lodash";
+import state from "../state";
+import { get as _get, isEqual, omit } from "lodash";
 import { opendevSpaceExec } from "../ctl/shell";
 import {
+  DEV_ASSOCIATE_LOCAL_DIRECTORYS,
   TMP_APP,
   TMP_CONTAINER,
   TMP_DEVSPACE,
@@ -28,7 +30,7 @@ import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as nls from "../../../package.nls.json";
 import { replaceSpacePath } from "../utils/fileUtil";
-import { DeploymentStatus } from "../nodes/types/nodeType";
+import { BaseNocalhostNode, DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { appTreeView } from "../extension";
 import messageBus from "../utils/messageBus";
@@ -43,6 +45,7 @@ export interface ControllerNodeApi {
   getContainer: () => Promise<string>;
   getKubeConfigPath: () => string;
   getAppName: () => string;
+  getParent: () => BaseNocalhostNode;
   getStorageClass: () => string | undefined;
   getDevStartAppendCommand: () => string | undefined;
   getSpaceName: () => string;
@@ -92,7 +95,7 @@ export default class StartDevModeCommand implements ICommand {
 
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     if (node instanceof ControllerResourceNode && appTreeView) {
@@ -110,7 +113,8 @@ export default class StartDevModeCommand implements ICommand {
 
     const description: IDescribeConfig =
       resource.description || Object.create(null);
-    const containerName = await this.getContainers(resource.info);
+    const containerName =
+      (await node.getContainer()) || (await this.getContainers(resource.info));
     if (!containerName) {
       return;
     }
@@ -119,7 +123,7 @@ export default class StartDevModeCommand implements ICommand {
 
     if (containerName === "nocalhost-dev") {
       let r = await host.showInformationMessage(
-        `This container is developing. If you continue to choose this container, some problems may occur. Are you sure to continue develop?`,
+        `This container is developing. You may have problem after enter DevMode at the same time. Do you want to continue?`,
         { modal: true },
         "confirm"
       );
@@ -203,6 +207,49 @@ export default class StartDevModeCommand implements ICommand {
         container: containerName,
       });
     }
+
+    if (destDir !== true) {
+      this.saveDevspace(
+        {
+          app: appName,
+          resourceType: node.resourceType,
+          service: node.name,
+          kubeConfigPath: node.getKubeConfigPath(),
+          namespace: node.getNameSpace(),
+        },
+        destDir
+      );
+    }
+  }
+
+  // TODO: Clean Devspace
+  private saveDevspace(
+    syncServiceData: {
+      app: string;
+      resourceType: string;
+      service: string;
+      kubeConfigPath: string;
+      namespace: string;
+    },
+    destDir: string
+  ) {
+    let devAssociateLocalDirectorys =
+      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) || {};
+    let deleteKey: string[] = [];
+
+    Object.entries(devAssociateLocalDirectorys).forEach(([key, value]) => {
+      if (isEqual(value, syncServiceData)) {
+        deleteKey.push(key);
+      }
+    });
+
+    devAssociateLocalDirectorys = omit(devAssociateLocalDirectorys, deleteKey);
+    devAssociateLocalDirectorys[destDir] = syncServiceData;
+
+    host.setGlobalState(
+      DEV_ASSOCIATE_LOCAL_DIRECTORYS,
+      devAssociateLocalDirectorys
+    );
   }
 
   private saveAndOpenFolder(
@@ -476,6 +523,12 @@ export default class StartDevModeCommand implements ICommand {
           host.log("sync file end", true);
           host.log("", true);
           node.setStatus("");
+          const parent = node.getParent();
+          if (parent && parent.updateData) {
+            await parent.updateData(true);
+          }
+          await vscode.commands.executeCommand("Nocalhost.refresh", parent);
+
           // await vscode.commands.executeCommand(EXEC, node);
           const terminal = await opendevSpaceExec(
             node.getAppName(),

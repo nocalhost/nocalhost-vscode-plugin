@@ -5,6 +5,8 @@ import { SHOW_APP, INSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import AccountClusterService from "../clusters/AccountCluster";
+import { ClusterSource } from "../common/define";
 
 export default class ShowApplicationsCommand implements ICommand {
   command: string = SHOW_APP;
@@ -15,9 +17,21 @@ export default class ShowApplicationsCommand implements ICommand {
   }
   async execCommand(node: DevSpaceNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
+    if (node.clusterSource === ClusterSource.server) {
+      const accountClusterService: AccountClusterService =
+        node.parent.accountClusterService;
+      try {
+        await accountClusterService.checkVersion();
+      } catch (error) {
+        host.showErrorMessage(error.message);
+        return;
+      }
+    }
+
     const apps = node.getUninstallApps();
     // show appName
     const appNames = apps.map((app) => {
@@ -27,7 +41,9 @@ export default class ShowApplicationsCommand implements ICommand {
       return appName;
     });
 
-    const result = await vscode.window.showQuickPick(appNames);
+    const result = await vscode.window.showQuickPick(appNames, {
+      ignoreFocusOut: true,
+    });
     if (!result) {
       return;
     }
