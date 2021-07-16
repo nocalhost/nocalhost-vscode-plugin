@@ -253,6 +253,9 @@ export default class AccountClusterService {
           }`,
           true
         );
+        host.showWarnMessage(`Please login again ${this.loginInfo.baseUrl || ""}：${
+          this.loginInfo.username || ""
+        }`);
         if (this.accountClusterNode) {
           let globalClusterRootNodes: AccountClusterNode[] =
             host.getGlobalState(SERVER_CLUSTER_LIST) || [];
