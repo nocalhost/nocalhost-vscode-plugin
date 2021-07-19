@@ -14,10 +14,6 @@ export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
   );
-  public outSyncStatusBar = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Left,
-    101
-  );
   public statusBar = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
     100
