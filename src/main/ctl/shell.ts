@@ -70,7 +70,8 @@ export async function execAsyncWithReturn(
         }
         resolve({ stdout, stderr, code });
       } else {
-        host.log(err, true);
+        logger.error(`[cmd] ${command} ${stdout}`);
+        host.log(`[cmd] ${command} ${stdout}`, true);
         reject(new Error(`${err}. ${stderr}`));
       }
     });
