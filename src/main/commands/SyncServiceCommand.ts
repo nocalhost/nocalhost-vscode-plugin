@@ -66,7 +66,7 @@ export default class SyncServiceCommand implements ICommand {
 
           host.statusBar.text = `$(${this.getIcon(r)}) ${r.msg}`;
           host.statusBar.tooltip = r.tips;
-          host.statusBar.command =null
+          host.statusBar.command = null;
 
           if (r.status === "disconnected") {
             const reconnectSyncCommand: vscode.Command = {
@@ -75,8 +75,7 @@ export default class SyncServiceCommand implements ICommand {
               arguments: [syncData],
             };
             host.statusBar.command = reconnectSyncCommand;
-          }
-          else if (r.outOfSync) {
+          } else if (r.outOfSync) {
             const overrideSyncCommand: vscode.Command = {
               title: OVERRIDE_SYNC,
               command: OVERRIDE_SYNC,
@@ -98,10 +97,10 @@ export default class SyncServiceCommand implements ICommand {
   }
 
   getIcon(msg: SyncMsg) {
-    const { status, outOfSync } = msg
+    const { status, outOfSync } = msg;
 
     if (outOfSync) {
-      return "sync-ignored"
+      return "sync-ignored";
     }
 
     let icon = "error";
