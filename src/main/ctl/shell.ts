@@ -102,7 +102,7 @@ export async function execChildProcessAsync(
     logger.info(`[cmd] ${command}`);
     const proc = spawn(command, args, { shell: true, env });
     let errorStr = "";
-    let stdout =  '';
+    let stdout = "";
     let err = `execute command fail: ${command}`;
     proc.on("close", (code) => {
       if (code === 0) {
