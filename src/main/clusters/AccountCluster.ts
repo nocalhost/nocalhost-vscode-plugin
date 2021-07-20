@@ -74,7 +74,7 @@ export default class AccountClusterService {
 
         return response;
       },
-       (error) => {
+      (error) => {
         return Promise.reject({ source: "api", error });
       }
     );
