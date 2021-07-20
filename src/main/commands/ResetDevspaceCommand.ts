@@ -28,7 +28,9 @@ export default class ResetDevspaceCommand implements ICommand {
     }
 
     state.setAppState(node.info.spaceName, "uninstalling", true);
-    vscode.commands.executeCommand("Nocalhost.refresh");
+
+    host.stopAutoRefresh();
+
     host.disposeDevspace(node.info.spaceName);
     await this.reset(
       host,
@@ -37,6 +39,8 @@ export default class ResetDevspaceCommand implements ICommand {
       node.info.spaceName
     ).finally(async () => {
       await node.parent.accountClusterService.resetDevspace(node.info.id);
+      host.autoRefresh();
+      host.startAutoRefresh();
       vscode.commands.executeCommand("Nocalhost.refresh");
       host.showInformationMessage(`reset ${node.info.spaceName}`);
     });

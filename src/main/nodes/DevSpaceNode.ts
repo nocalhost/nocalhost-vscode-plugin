@@ -129,6 +129,10 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
+    if (state.getAppState(this.info.spaceName, "uninstalling") === true) {
+      return [];
+    }
+
     this.installedApps = await this.getInstalledApp(
       this.info.namespace,
       this.getKubeConfigPath()
