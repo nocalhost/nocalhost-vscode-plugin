@@ -319,9 +319,9 @@ export default class InstallAppSourceCommand implements ICommand {
       "Please select the installation source of application.",
       { modal: true },
       LOCAL,
-      INSTALL_QUICK_DEMO,
       CLONE_GIT,
-      HELM_REPO
+      HELM_REPO,
+      INSTALL_QUICK_DEMO
     );
 
     if (res === LOCAL) {
