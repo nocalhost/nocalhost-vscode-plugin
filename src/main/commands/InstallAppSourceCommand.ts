@@ -321,7 +321,7 @@ export default class InstallAppSourceCommand implements ICommand {
       LOCAL,
       INSTALL_QUICK_DEMO,
       CLONE_GIT,
-      HELM_REPO,     
+      HELM_REPO
     );
 
     if (res === LOCAL) {
@@ -532,7 +532,6 @@ export default class InstallAppSourceCommand implements ICommand {
     }
 
     if (res === INSTALL_QUICK_DEMO) {
-
       const savePath = tempy.directory();
       const args = [replaceSpacePath(savePath) as string];
       const bookInfoGitUrl = "https://github.com/nocalhost/bookinfo.git";
@@ -551,7 +550,7 @@ export default class InstallAppSourceCommand implements ICommand {
 
       const manifestType = nocalhostConfig?.application?.manifestType;
       const appName = nocalhostConfig?.application?.name;
-      
+
       await installRawManifastLocal({
         kubeConfigPath: appNode.getKubeConfigPath(),
         namespace: appNode?.info?.namespace,
