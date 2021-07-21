@@ -40,7 +40,7 @@ export default class ResetDevspaceCommand implements ICommand {
     ).finally(async () => {
       await node.parent.accountClusterService.resetDevspace(node.info.id);
       vscode.commands.executeCommand("Nocalhost.refresh", node.parent);
-      
+
       host.startAutoRefresh();
       host.showInformationMessage(`reset ${node.info.spaceName}`);
 
