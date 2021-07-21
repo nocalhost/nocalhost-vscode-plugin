@@ -5,7 +5,7 @@ import { STATEFUL_SET } from "../../../nodeContants";
 import { IResourceStatus } from "../../../../domain";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import logger from "../../../../utils/logger";
-import { checkWorkloadConfig } from '../../../../utils/checkConfig';
+import { checkWorkloadConfig } from "../../../../utils/checkConfig";
 
 export class StatefulSet extends ControllerResourceNode {
   public type = STATEFUL_SET;

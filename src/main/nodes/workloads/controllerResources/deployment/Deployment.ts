@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { DEPLOYMENT } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";
-import { checkWorkloadConfig } from '../../../../utils/checkConfig';
+import { checkWorkloadConfig } from "../../../../utils/checkConfig";
 import logger from "../../../../utils/logger";
 
 export class Deployment extends ControllerResourceNode {
