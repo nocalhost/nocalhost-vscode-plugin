@@ -313,11 +313,13 @@ export default class InstallAppSourceCommand implements ICommand {
     const LOCAL = "Open local directory";
     const CLONE_GIT = "Clone from Git";
     const HELM_REPO = "Helm Repo";
+    const INSTALL_QUICK_DEMO = "Install Quick Demo";
 
     const res = await host.showInformationMessage(
       "Please select the installation source of application.",
       { modal: true },
       LOCAL,
+      INSTALL_QUICK_DEMO,
       CLONE_GIT,
       HELM_REPO
     );
@@ -528,6 +530,38 @@ export default class InstallAppSourceCommand implements ICommand {
         });
       }
     }
+
+    if (res === INSTALL_QUICK_DEMO) {
+      const savePath = tempy.directory();
+      const args = [replaceSpacePath(savePath) as string];
+      const bookInfoGitUrl = "https://github.com/nocalhost/bookinfo.git";
+
+      await git.clone(host, bookInfoGitUrl, args);
+      host.log("git clone finish", true);
+
+      const configFileName = "config.yaml";
+      const dirPath = path.resolve(savePath, ".nocalhost");
+      const configPath = path.resolve(dirPath, configFileName);
+      const nocalhostConfig = await parseNocalhostConfig(configPath);
+
+      if (!nocalhostConfig) {
+        return;
+      }
+
+      const manifestType = nocalhostConfig?.application?.manifestType;
+      const appName = nocalhostConfig?.application?.name;
+
+      await installRawManifastLocal({
+        kubeConfigPath: appNode.getKubeConfigPath(),
+        namespace: appNode?.info?.namespace,
+        gitUrl: bookInfoGitUrl,
+        resourcePath: nocalhostConfig?.application?.resourcePath,
+        installType: manifestType,
+        configPath,
+        appName,
+      });
+    }
+
     await appNode.updateData();
     await vscode.commands.executeCommand("Nocalhost.refresh", appNode);
   }
