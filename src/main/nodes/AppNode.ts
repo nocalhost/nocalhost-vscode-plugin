@@ -193,11 +193,11 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   async getTreeItem() {
-    let info = state.getData(this.getNodeStateId()) as AppInfo;
-    if (!info) {
-      info = await this.getApplicationInfo();
-      state.setData(this.getNodeStateId(), info, true);
-    }
+    // let info = state.getData(this.getNodeStateId()) as AppInfo;
+    // if (!info) {
+    //   info = await this.getApplicationInfo();
+    //   state.setData(this.getNodeStateId(), info, true);
+    // }
     this.installStatus = 1;
     // let collapseState: vscode.TreeItemCollapsibleState;
     // if (this.unInstalled()) {
