@@ -3,7 +3,7 @@ import * as yamlUtils from "yaml";
 import * as path from "path";
 import * as fs from "fs";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
-import { isExistSync } from "../utils/fileUtil";
+import { isExistSync, writeFileAsync } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
 import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
@@ -128,7 +128,7 @@ export default class LocalCluster {
         (it: LocalClusterNode) => it.filePath === resultFilePath
       )
     ) {
-      fs.writeFileSync(resultFilePath, yamlStr, { encoding: "utf-8" });
+      writeFileAsync(resultFilePath, yamlStr);
       localClusterNodes.push(newCluster);
       host.setGlobalState(LOCAL_PATH, localClusterNodes);
       return newCluster;
