@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { DEPLOYMENT } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";
-import validate from "../../../../utils/validate";
+import { checkWorkloadConfig } from '../../../../utils/checkConfig';
 import logger from "../../../../utils/logger";
 
 export class Deployment extends ControllerResourceNode {
@@ -16,7 +16,7 @@ export class Deployment extends ControllerResourceNode {
       const [icon, label] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = await this.checkConfig();
+      const check = checkWorkloadConfig(this.nocalhostService);
       treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
       }-${status}`;
@@ -26,40 +26,6 @@ export class Deployment extends ControllerResourceNode {
     }
 
     return treeItem;
-  }
-
-  public async checkConfig() {
-    const schema = {
-      type: "object",
-      required: ["containers"],
-      properties: {
-        containers: {
-          type: "array",
-          items: {
-            type: "object",
-            required: ["dev"],
-            properties: {
-              dev: {
-                type: "object",
-                required: ["gitUrl", "image"],
-                properties: {
-                  image: {
-                    type: "string",
-                    minLength: 1,
-                  },
-                  gitUrl: {
-                    type: "string",
-                    minLength: 1,
-                  },
-                },
-              },
-            },
-          },
-          minItems: 1,
-        },
-      },
-    };
-    return validate(this.nocalhostService || {}, schema);
   }
 
   public getConfig() {

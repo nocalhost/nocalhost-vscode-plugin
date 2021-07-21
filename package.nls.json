@@ -25,5 +25,6 @@
   "nocalhost.editor.context.label": "Nocalhost",
   "nocalhost.editor.title.context.label": "Nocalhost",
   "debug": "Debug",
-  "OpenProject": "Open Project"
+  "OpenProject": "Open Project",
+  "editManifest": "Edit Manifest"
 }
