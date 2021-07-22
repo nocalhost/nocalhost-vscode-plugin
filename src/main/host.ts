@@ -8,7 +8,6 @@ import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
-import { clearTimeout } from "timers";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -96,10 +95,10 @@ export class Host implements vscode.Disposable {
     }
   }
 
-  public startAutoRefresh() {
+  public async startAutoRefresh() {
     this.stopAutoRefresh();
 
-    this.autoRefresh();
+    await this.autoRefresh();
 
     this.autoRefreshTimeId = setTimeout(async () => {
       this.startAutoRefresh();
