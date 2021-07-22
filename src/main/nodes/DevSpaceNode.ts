@@ -130,7 +130,12 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
   public async updateData(isInit?: boolean): Promise<any> {
     if (state.getAppState(this.info.spaceName, "uninstalling") === true) {
-      return [];
+      return [
+        {
+          name: "default.application",
+          type: "rawManifest",
+        },
+      ];
     }
 
     this.installedApps = await this.getInstalledApp(
