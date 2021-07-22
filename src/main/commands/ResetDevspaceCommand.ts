@@ -7,6 +7,7 @@ import state from "../state";
 import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
 export default class ResetDevspaceCommand implements ICommand {
   command: string = RESET_DEVSPACE;
@@ -39,14 +40,17 @@ export default class ResetDevspaceCommand implements ICommand {
       node.info.spaceName
     ).finally(async () => {
       await node.parent.accountClusterService.resetDevspace(node.info.id);
-      vscode.commands.executeCommand("Nocalhost.refresh", node.parent);
+
+      const nocalhostRootNode = node.parent.parent as NocalhostRootNode;
+
+      await nocalhostRootNode.updateData();
+
+      vscode.commands.executeCommand("Nocalhost.refresh");
 
       host.startAutoRefresh();
       host.showInformationMessage(`reset ${node.info.spaceName}`);
 
-      setTimeout(() => {
-        state.delete(node.info.spaceName);
-      }, 10 * 1000);
+      state.delete(node.info.spaceName);
     });
   }
 
