@@ -27,9 +27,28 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.12"
+    "version": "0.4.17"
   },
   "contributes": {
+    "configuration": [
+      {
+        "title": "Nocalhost",
+        "properties": {
+          "nocalhost.nhctl.checkVersion": {
+            "type": "boolean",
+            "default": true,
+            "description": "%nocalhost.nhctl.checkVersion%",
+            "deprecationMessage": "Debug config"
+          },
+          "nocalhost.apiServer.checkVersion": {
+            "type": "boolean",
+            "default": true,
+            "description": "%nocalhost.apiServer.checkVersion%",
+            "deprecationMessage": "Debug config"
+          }
+        }
+      }
+    ],
     "yamlValidation": [
       {
         "fileMatch": ".nocalhost/*.yaml",
