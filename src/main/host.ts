@@ -15,10 +15,6 @@ export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
   );
-  public outSyncStatusBar = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Left,
-    101
-  );
   public statusBar = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
     100
@@ -64,9 +60,7 @@ export class Host implements vscode.Disposable {
     }
   }
 
-  public async startAutoRefresh() {
-    this.stopAutoRefresh();
-
+  public async autoRefresh() {
     try {
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
@@ -100,6 +94,12 @@ export class Host implements vscode.Disposable {
       this.startAutoRefresh();
       logger.error(e);
     }
+  }
+
+  public startAutoRefresh() {
+    this.stopAutoRefresh();
+
+    this.autoRefresh();
 
     this.autoRefreshTimeId = setTimeout(async () => {
       this.startAutoRefresh();
