@@ -183,6 +183,11 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.loadResource",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
+          "group": "1"
+        },
+        {
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
           "group": "1"
@@ -201,11 +206,6 @@
           "command": "Nocalhost.deleteKubernetesObject",
           "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(complete|running|starting|unknown))?$/i",
           "group": "1"
-        },
-        {
-          "command": "Nocalhost.loadResource",
-          "title": "%loadResource%",
-          "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
           "command": "Nocalhost.applyKubernetesObject",
@@ -381,8 +381,7 @@
       },
       {
         "command": "Nocalhost.loadResource",
-        "title": "%loadResource%",
-        "when": "viewItem =~ /^application-nodefault-installed/i"
+        "title": "%editManifest%"
       },
       {
         "command": "Nocalhost.log",

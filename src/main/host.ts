@@ -8,6 +8,7 @@ import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
+import { clearTimeout } from "timers";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -54,7 +55,7 @@ export class Host implements vscode.Disposable {
 
   public stopAutoRefresh() {
     if (this.autoRefreshTimeId) {
-      clearInterval(this.autoRefreshTimeId);
+      clearTimeout(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
   }
@@ -91,7 +92,6 @@ export class Host implements vscode.Disposable {
       }
     } catch (e) {
       this.startAutoRefresh();
-      console.log(e);
       logger.error(e);
     }
   }
@@ -99,8 +99,10 @@ export class Host implements vscode.Disposable {
   public startAutoRefresh() {
     this.stopAutoRefresh();
 
-    this.autoRefreshTimeId = setInterval(async () => {
-      await this.autoRefresh();
+    this.autoRefresh();
+
+    this.autoRefreshTimeId = setTimeout(async () => {
+      this.startAutoRefresh();
     }, 10 * 1000);
   }
 
