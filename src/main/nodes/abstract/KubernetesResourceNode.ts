@@ -32,11 +32,11 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
       vscode.TreeItemCollapsibleState.None
     );
     treeItem.label = this.label;
-    treeItem.command = {
-      command: "Nocalhost.loadResource",
-      title: "loadResource",
-      arguments: [this],
-    };
+    // treeItem.command = {
+    //   command: "Nocalhost.loadResource",
+    //   title: "loadResource",
+    //   arguments: [this],
+    // };
     return treeItem;
   }
 

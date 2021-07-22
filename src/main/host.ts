@@ -8,15 +8,12 @@ import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
+import { clearTimeout } from "timers";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
-  );
-  public outSyncStatusBar = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Left,
-    101
   );
   public statusBar = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -58,52 +55,54 @@ export class Host implements vscode.Disposable {
 
   public stopAutoRefresh() {
     if (this.autoRefreshTimeId) {
-      clearInterval(this.autoRefreshTimeId);
+      clearTimeout(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
   }
 
-  public startAutoRefresh() {
-    if (this.autoRefreshTimeId) {
-      clearInterval(this.autoRefreshTimeId);
-      this.autoRefreshTimeId = null;
-    }
+  public async autoRefresh() {
+    try {
+      const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+      if (rootNode) {
+        await rootNode.updateData().catch(() => {});
+      }
+      for (const [id, expanded] of state.refreshFolderMap) {
+        if (expanded) {
+          const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
+          if (node) {
+            // filter parent is close
+            // function isClose(parentNode: BaseNocalhostNode): boolean {
+            //   const child = parentNode.getParent();
+            //   if (!child) {
+            //     return false;
+            //   }
+            //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
+            //     return true;
+            //   }
 
-    this.autoRefreshTimeId = setInterval(async () => {
-      try {
-        const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
-        if (rootNode) {
-          await rootNode.updateData().catch(() => {});
-        }
-        for (const [id, expanded] of state.refreshFolderMap) {
-          if (expanded) {
-            const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-            if (node) {
-              // filter parent is close
-              // function isClose(parentNode: BaseNocalhostNode): boolean {
-              //   const child = parentNode.getParent();
-              //   if (!child) {
-              //     return false;
-              //   }
-              //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
-              //     return true;
-              //   }
-
-              //   return isClose(child);
-              // }
-              // const close = isClose(node);
-              await node.updateData().catch(() => {});
-              // if (!close) {
-              //   await node.updateData();
-              // }
-            }
+            //   return isClose(child);
+            // }
+            // const close = isClose(node);
+            await node.updateData().catch(() => {});
+            // if (!close) {
+            //   await node.updateData();
+            // }
           }
         }
-      } catch (e) {
-        this.startAutoRefresh();
-        console.log(e);
-        logger.error(e);
       }
+    } catch (e) {
+      this.startAutoRefresh();
+      logger.error(e);
+    }
+  }
+
+  public startAutoRefresh() {
+    this.stopAutoRefresh();
+
+    this.autoRefresh();
+
+    this.autoRefreshTimeId = setTimeout(async () => {
+      this.startAutoRefresh();
     }, 10 * 1000);
   }
 

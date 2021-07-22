@@ -94,7 +94,8 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
   public getUninstallApps() {
     const installedAppNames = this.installedApps.map((app) => app.name);
-    installedAppNames.push("DEFAULT RESOURCE");
+    // installedAppNames.push("DEFAULT RESOURCE");
+    installedAppNames.push("default.application");
     const arr = this.applications.filter((a) => {
       const context = a.context;
       let jsonObj = JSON.parse(context);
@@ -129,6 +130,15 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
+    if (state.getAppState(this.info.spaceName, "uninstalling") === true) {
+      return [
+        {
+          name: "default.application",
+          type: "rawManifest",
+        },
+      ];
+    }
+
     this.installedApps = await this.getInstalledApp(
       this.info.namespace,
       this.getKubeConfigPath()

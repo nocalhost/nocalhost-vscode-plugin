@@ -60,7 +60,6 @@ export default class AccountClusterService {
       async (response: AxiosResponse<IResponseData>) => {
         const config = response.config;
         const res = response.data;
-        console.log(res.code);
         if ([20103, 20111].includes(res.code)) {
           // refresh token
           if (this.isRefreshing) {
@@ -76,7 +75,7 @@ export default class AccountClusterService {
 
         return response;
       },
-      function (error) {
+      (error) => {
         return Promise.reject({ source: "api", error });
       }
     );
@@ -254,6 +253,11 @@ export default class AccountClusterService {
           }`,
           true
         );
+        // host.showWarnMessage(
+        //   `Please login again ${this.loginInfo.baseUrl || ""}：${
+        //     this.loginInfo.username || ""
+        //   }`
+        // );
         if (this.accountClusterNode) {
           let globalClusterRootNodes: AccountClusterNode[] =
             host.getGlobalState(SERVER_CLUSTER_LIST) || [];
