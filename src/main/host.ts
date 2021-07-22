@@ -66,7 +66,7 @@ export class Host implements vscode.Disposable {
 
   public async startAutoRefresh() {
     this.stopAutoRefresh();
-    
+
     try {
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
