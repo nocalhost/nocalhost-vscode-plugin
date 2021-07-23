@@ -62,7 +62,30 @@ export default class AccountClusterService {
         const res = response.data;
         if ([20103, 20111].includes(res.code)) {
           // refresh token
-          if (this.isRefreshing) {
+          if (config.url === '/v1/token/refresh') {
+            host.log(
+              `Please login again ${this.loginInfo.baseUrl || ""}：${
+                this.loginInfo.username || ""
+              }`,
+              true
+            );
+            host.showWarnMessage(
+              `Please login again ${this.loginInfo.baseUrl || ""}：${
+                this.loginInfo.username || ""
+              }`
+            );
+            if (this.accountClusterNode) {
+              let globalClusterRootNodes: AccountClusterNode[] =
+                host.getGlobalState(SERVER_CLUSTER_LIST) || [];
+              const index = globalClusterRootNodes.findIndex(
+                ({ id }) => id === this.accountClusterNode.id
+              );
+              if (index !== -1) {
+                globalClusterRootNodes.splice(index, 1);
+                host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
+              }
+            }
+          } else if (this.isRefreshing) {
             this.isRefreshing = false;
             await this.getRefreshToken();
             this.isRefreshing = true;
@@ -226,7 +249,7 @@ export default class AccountClusterService {
     // this.id = `${this.userInfo.id}${this.loginInfo.baseUrl}`;
   };
 
-  // 获取refresh token
+  // get refresh token
   async getRefreshToken() {
     const response = await this.instance.post(
       "/v1/token/refresh",
@@ -243,35 +266,38 @@ export default class AccountClusterService {
         code,
       } = response.data;
       if (code === 0) {
-        this.jwt = token;
+        this.jwt =`Bearer ${token}`;
         this.refreshToken = refresh_token;
-        await AccountClusterService.appendClusterByLoginInfo(this.loginInfo);
-      } else {
-        host.log(
-          `Please login again ${this.loginInfo.baseUrl || ""}：${
-            this.loginInfo.username || ""
-          }`,
-          true
-        );
-        // host.showWarnMessage(
-        //   `Please login again ${this.loginInfo.baseUrl || ""}：${
-        //     this.loginInfo.username || ""
-        //   }`
-        // );
-        if (this.accountClusterNode) {
-          let globalClusterRootNodes: AccountClusterNode[] =
-            host.getGlobalState(SERVER_CLUSTER_LIST) || [];
-          const index = globalClusterRootNodes.findIndex(
-            ({ id }) => id === this.accountClusterNode.id
-          );
-          if (index !== -1) {
-            globalClusterRootNodes.splice(index, 1);
-            host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
-          }
-        }
-      }
+        this.updateLoginInfo();
+      } 
     }
   }
+
+ // update login infoo 
+  updateLoginInfo() {
+  const newAccountCluser =  {
+    ...this.accountClusterNode,
+    jwt: this.jwt,
+    refreshToken: this.refreshToken,
+  };
+  let globalAccountClusterList = host.getGlobalState(SERVER_CLUSTER_LIST);
+    if (!Array.isArray(globalAccountClusterList)) {
+      globalAccountClusterList = [];
+    }
+    globalAccountClusterList = globalAccountClusterList.filter(
+      (it: AccountClusterNode) => it.id
+    );
+    const oldAccountIndex = globalAccountClusterList.findIndex(
+      (it: AccountClusterNode) => it.id === newAccountCluser.id
+    );
+    if (oldAccountIndex !== -1) {
+      globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluser);
+    } else {
+      globalAccountClusterList.push(newAccountCluser);
+    }
+    globalAccountClusterList = uniqBy(globalAccountClusterList, "id");
+    host.setGlobalState(SERVER_CLUSTER_LIST, globalAccountClusterList);
+ }
 
   async getServiceAccount() {
     try {
