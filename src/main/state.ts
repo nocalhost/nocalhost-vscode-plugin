@@ -166,6 +166,12 @@ class State {
     }
     this.set(appName, appMap);
   }
+  async cleanAutoRefresh(appNode: BaseNocalhostNode) {
+    this.refreshFolderMap.delete(appNode.getNodeStateId());
+
+    const children = await appNode.getChildren();
+    await children.forEach((node) => this.cleanAutoRefresh(node));
+  }
 }
 
 export default new State();
