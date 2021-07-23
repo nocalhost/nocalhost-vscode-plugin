@@ -28,6 +28,7 @@ export default class SignOutCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+    host.stopAutoRefresh();
 
     let globalUserList: {
       userInfo: IUserInfo;
@@ -41,12 +42,11 @@ export default class SignOutCommand implements ICommand {
     });
     host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
-    for (let key of state.refreshFolderMap.keys()) {
-      if ((key as string).startsWith(node.getNodeStateId())) {
-        state.refreshFolderMap.set(key, false);
-      }
-    }
+    await state.cleanAutoRefresh(node);
+
     await vscode.commands.executeCommand("Nocalhost.refresh");
+
+    host.startAutoRefresh();
 
     if (!isExistCluster()) {
       await vscode.commands.executeCommand(

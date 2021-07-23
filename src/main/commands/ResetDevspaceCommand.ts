@@ -28,9 +28,11 @@ export default class ResetDevspaceCommand implements ICommand {
       return;
     }
 
-    state.setAppState(node.info.spaceName, "uninstalling", true);
-
     host.stopAutoRefresh();
+    await state.cleanAutoRefresh(node);
+
+    state.setAppState(node.info.spaceName, "uninstalling", true);
+    await vscode.commands.executeCommand("Nocalhost.refresh");
 
     host.disposeDevspace(node.info.spaceName);
     await this.reset(
