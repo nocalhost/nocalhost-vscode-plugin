@@ -22,6 +22,7 @@ import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
+import state from "../state";
 
 async function getKustomizeYamlPath(): Promise<string> {
   const res = await host.showInformationMessage(
@@ -178,6 +179,7 @@ async function installApp(props: {
     kubeConfigPath,
     namespace,
   } = props;
+  state.setAppState(appName, "installing", true);
   host.log(`Installing application: ${appName}`, true);
   const installCommand = NhctlCommand.install({
     kubeConfigPath,
@@ -211,6 +213,7 @@ async function installApp(props: {
       });
     }
   );
+  state.deleteAppState(appName, "installing");
 }
 async function installHelmApp(props: {
   appName: string;
