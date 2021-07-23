@@ -188,16 +188,20 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   getChildren(parent?: BaseNocalhostNode): BaseNocalhostNode[] {
+    if (this.installing() || this.unInstalling()) {
+      return [];
+    }
+
     const children: string[] = this.getDefaultChildrenNodes();
     return children.map((type) => this.createChild(type));
   }
 
   async getTreeItem() {
-    let info = state.getData(this.getNodeStateId()) as AppInfo;
-    if (!info) {
-      info = await this.getApplicationInfo();
-      state.setData(this.getNodeStateId(), info, true);
-    }
+    // let info = state.getData(this.getNodeStateId()) as AppInfo;
+    // if (!info) {
+    //   info = await this.getApplicationInfo();
+    //   state.setData(this.getNodeStateId(), info, true);
+    // }
     this.installStatus = 1;
     // let collapseState: vscode.TreeItemCollapsibleState;
     // if (this.unInstalled()) {
@@ -208,10 +212,14 @@ export class AppNode extends NocalhostFolderNode {
     //     vscode.TreeItemCollapsibleState.Collapsed;
     // }
     // await this.getDevelopingNodes();
-    let treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.Collapsed
-    );
+
+    const collapsibleState =
+      this.installing() || this.unInstalling()
+        ? vscode.TreeItemCollapsibleState.None
+        : vscode.TreeItemCollapsibleState.Collapsed;
+
+    let treeItem = new vscode.TreeItem(this.label, collapsibleState);
+
     this.updateIcon(treeItem);
     this.updateContext(treeItem);
     this.updateSyncStatus();

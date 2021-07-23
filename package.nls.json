@@ -25,5 +25,8 @@
   "nocalhost.editor.context.label": "Nocalhost",
   "nocalhost.editor.title.context.label": "Nocalhost",
   "debug": "Debug",
-  "OpenProject": "Open Project"
+  "OpenProject": "Open Project",
+  "editManifest": "Edit Manifest",
+  "nocalhost.apiServer.checkVersion": "Check apiServer version and update automatically",
+  "nocalhost.nhctl.checkVersion": "Check nhctl version and update automatically"
 }

@@ -27,9 +27,28 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.12"
+    "version": "0.4.17"
   },
   "contributes": {
+    "configuration": [
+      {
+        "title": "Nocalhost",
+        "properties": {
+          "nocalhost.nhctl.checkVersion": {
+            "type": "boolean",
+            "default": true,
+            "description": "%nocalhost.nhctl.checkVersion%",
+            "deprecationMessage": "Debug config"
+          },
+          "nocalhost.apiServer.checkVersion": {
+            "type": "boolean",
+            "default": true,
+            "description": "%nocalhost.apiServer.checkVersion%",
+            "deprecationMessage": "Debug config"
+          }
+        }
+      }
+    ],
     "yamlValidation": [
       {
         "fileMatch": ".nocalhost/*.yaml",
@@ -183,6 +202,11 @@
           "group": "1"
         },
         {
+          "command": "Nocalhost.loadResource",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
+          "group": "1"
+        },
+        {
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
           "group": "1"
@@ -201,11 +225,6 @@
           "command": "Nocalhost.deleteKubernetesObject",
           "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(complete|running|starting|unknown))?$/i",
           "group": "1"
-        },
-        {
-          "command": "Nocalhost.loadResource",
-          "title": "%loadResource%",
-          "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
           "command": "Nocalhost.applyKubernetesObject",
@@ -381,8 +400,7 @@
       },
       {
         "command": "Nocalhost.loadResource",
-        "title": "%loadResource%",
-        "when": "viewItem =~ /^application-nodefault-installed/i"
+        "title": "%editManifest%"
       },
       {
         "command": "Nocalhost.log",

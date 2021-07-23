@@ -37,7 +37,6 @@ export default class SyncServiceCommand implements ICommand {
     if (!syncData.app || !syncData.service) {
       logger.info("syncData.app is null", true);
       host.statusBar.hide();
-      host.outSyncStatusBar.hide();
       return;
     }
 
@@ -64,22 +63,11 @@ export default class SyncServiceCommand implements ICommand {
 
           let r: SyncMsg;
           r = JSON.parse(result) as SyncMsg;
-          if (r.outOfSync) {
-            const overrideSyncCommand: vscode.Command = {
-              title: OVERRIDE_SYNC,
-              command: OVERRIDE_SYNC,
-              arguments: [syncData],
-            };
-            host.outSyncStatusBar.text = "$(bell-dot)";
-            host.outSyncStatusBar.command = overrideSyncCommand;
-            host.outSyncStatusBar.tooltip = r.outOfSync;
-            host.outSyncStatusBar.show();
-          } else {
-            // host.log(`r.outOfSync does not exist： ${r.outOfSync}`, true);
-            host.outSyncStatusBar.hide();
-          }
-          host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
+
+          host.statusBar.text = `$(${this.getIcon(r)}) ${r.msg}`;
           host.statusBar.tooltip = r.tips;
+          host.statusBar.command = null;
+
           if (r.status === "disconnected") {
             const reconnectSyncCommand: vscode.Command = {
               title: RECONNECT_SYNC,
@@ -87,7 +75,17 @@ export default class SyncServiceCommand implements ICommand {
               arguments: [syncData],
             };
             host.statusBar.command = reconnectSyncCommand;
+          } else if (r.outOfSync) {
+            const overrideSyncCommand: vscode.Command = {
+              title: OVERRIDE_SYNC,
+              command: OVERRIDE_SYNC,
+              arguments: [syncData],
+            };
+
+            host.statusBar.command = overrideSyncCommand;
+            host.statusBar.tooltip = r.outOfSync;
           }
+
           host.statusBar.show();
         }
       } catch (e) {
@@ -98,8 +96,15 @@ export default class SyncServiceCommand implements ICommand {
     }, 500);
   }
 
-  getIcon(status: string) {
+  getIcon(msg: SyncMsg) {
+    const { status, outOfSync } = msg;
+
+    if (outOfSync) {
+      return "sync-ignored";
+    }
+
     let icon = "error";
+
     switch (status) {
       case "outOfSync":
         icon = "warning";

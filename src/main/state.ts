@@ -166,6 +166,13 @@ class State {
     }
     this.set(appName, appMap);
   }
+  async cleanAutoRefresh(node: BaseNocalhostNode) {
+    for (let key of this.refreshFolderMap.keys()) {
+      if ((key as string).startsWith(node.getNodeStateId())) {
+        this.refreshFolderMap.delete(key);
+      }
+    }
+  }
 }
 
 export default new State();

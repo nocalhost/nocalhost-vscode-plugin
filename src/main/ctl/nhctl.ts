@@ -29,6 +29,7 @@ import {
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
+import { getConfiguration } from "../utils/conifg";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1338,6 +1339,10 @@ export async function checkDownloadNhclVersion(
 }
 
 export async function checkVersion() {
+  if (getConfiguration("nhctl.checkVersion") === false) {
+    return;
+  }
+
   const isWindows = host.isWindow();
   const requiredVersion: string = packageJson.nhctl?.version;
   const { sourcePath, destinationPath, binPath } = getNhctlPath(

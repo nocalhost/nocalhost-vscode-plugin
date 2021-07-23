@@ -11,6 +11,7 @@ import { AppNode } from "../nodes/AppNode";
 import { List, ResourceStatus } from "../nodes/types/resourceType";
 import logger from "../utils/logger";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import state from "../state";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
@@ -228,6 +229,7 @@ export default class InstallCommand implements ICommand {
         }
       | undefined
   ) {
+    state.setAppState(appName, "installing", true);
     host.log(`Installing application: ${appName}`, true);
     await nhctl.install({
       host,
@@ -244,6 +246,7 @@ export default class InstallCommand implements ICommand {
       valuesStr,
       refOrVersion,
     });
+    state.deleteAppState(appName, "installing");
     host.setGlobalState(appName, {});
   }
 
@@ -251,6 +254,15 @@ export default class InstallCommand implements ICommand {
     if (host.bookinfoTimeoutId) {
       clearTimeout(host.bookinfoTimeoutId);
     }
+
+    const devSpaceNode = appNode.parent as DevSpaceNode;
+
+    if (
+      state.getAppState(devSpaceNode.info.spaceName, "uninstalling") === true
+    ) {
+      return;
+    }
+
     if (new Date().getTime() - this.startTime > 5 * 60 * 1000) {
       logger.info("time out to open productpage");
       return;

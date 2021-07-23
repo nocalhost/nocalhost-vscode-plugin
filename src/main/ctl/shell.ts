@@ -65,12 +65,13 @@ export async function execAsyncWithReturn(
         if (startTime !== undefined) {
           const end = Date.now() - startTime;
           if (end > 1000) {
-            logger.info("[Time-consuming]: ${end}");
+            logger.info(`[Time-consuming]: ${command} ${end}`);
           }
         }
         resolve({ stdout, stderr, code });
       } else {
-        host.log(err, true);
+        logger.error(`[cmd] ${command} ${stdout}  ${stderr}`);
+        host.log(`[cmd] ${command} ${stdout} ${stderr}`, true);
         reject(new Error(`${err}. ${stderr}`));
       }
     });
@@ -101,13 +102,14 @@ export async function execChildProcessAsync(
     logger.info(`[cmd] ${command}`);
     const proc = spawn(command, args, { shell: true, env });
     let errorStr = "";
+    let stdout = "";
     let err = `execute command fail: ${command}`;
     proc.on("close", (code) => {
       if (code === 0) {
         resolve(null);
       } else {
-        logger.error(`end dev fail: ${code}`);
-        host.log(err, true);
+        logger.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`);
+        host.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`, true);
         if (errorTips && errorTips.output) {
           host.log(errorTips.output, true);
         }
@@ -116,7 +118,7 @@ export async function execChildProcessAsync(
     });
 
     proc.stdout.on("data", function (data) {
-      host.log("" + data);
+      stdout += data;
     });
 
     proc.stderr.on("data", function (data) {

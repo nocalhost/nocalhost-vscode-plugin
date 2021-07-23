@@ -15,6 +15,7 @@ import * as _ from "lodash";
 import { RefreshData } from "./impl/updateData";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { NodeType } from "./interfact";
+import { resolveVSCodeUri } from "../utils/fileUtil";
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
@@ -94,7 +95,8 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
   public getUninstallApps() {
     const installedAppNames = this.installedApps.map((app) => app.name);
-    installedAppNames.push("DEFAULT RESOURCE");
+    // installedAppNames.push("DEFAULT RESOURCE");
+    installedAppNames.push("default.application");
     const arr = this.applications.filter((a) => {
       const context = a.context;
       let jsonObj = JSON.parse(context);
@@ -129,6 +131,10 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
+    if (this.unInstalling()) {
+      return [];
+    }
+
     this.installedApps = await this.getInstalledApp(
       this.info.namespace,
       this.getKubeConfigPath()
@@ -155,7 +161,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
     return result;
   }
-
+  unInstalling(): boolean {
+    return !!state.getAppState(this.info.spaceName, "uninstalling");
+  }
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
     let data = state.getData(this.getNodeStateId()) as nhctl.InstalledAppInfo[];
 
@@ -209,6 +217,10 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       this.label,
       vscode.TreeItemCollapsibleState.Collapsed
     );
+    if (this.unInstalling()) {
+      treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
+      treeItem.iconPath = resolveVSCodeUri("loading.svg");
+    }
 
     treeItem.contextValue = `devspace-${
       this.clusterSource === ClusterSource.local ? "local" : "server"
