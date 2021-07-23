@@ -62,7 +62,7 @@ export default class AccountClusterService {
         const res = response.data;
         if ([20103, 20111].includes(res.code)) {
           // refresh token
-          if (config.url === '/v1/token/refresh') {
+          if (config.url === "/v1/token/refresh") {
             host.log(
               `Please login again ${this.loginInfo.baseUrl || ""}：${
                 this.loginInfo.username || ""
@@ -82,7 +82,10 @@ export default class AccountClusterService {
               );
               if (index !== -1) {
                 globalClusterRootNodes.splice(index, 1);
-                host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
+                host.setGlobalState(
+                  SERVER_CLUSTER_LIST,
+                  globalClusterRootNodes
+                );
               }
             }
           } else if (this.isRefreshing) {
@@ -266,21 +269,21 @@ export default class AccountClusterService {
         code,
       } = response.data;
       if (code === 0) {
-        this.jwt =`Bearer ${token}`;
+        this.jwt = `Bearer ${token}`;
         this.refreshToken = refresh_token;
         this.updateLoginInfo();
-      } 
+      }
     }
   }
 
- // update login infoo 
+  // update login infoo
   updateLoginInfo() {
-  const newAccountCluser =  {
-    ...this.accountClusterNode,
-    jwt: this.jwt,
-    refreshToken: this.refreshToken,
-  };
-  let globalAccountClusterList = host.getGlobalState(SERVER_CLUSTER_LIST);
+    const newAccountCluser = {
+      ...this.accountClusterNode,
+      jwt: this.jwt,
+      refreshToken: this.refreshToken,
+    };
+    let globalAccountClusterList = host.getGlobalState(SERVER_CLUSTER_LIST);
     if (!Array.isArray(globalAccountClusterList)) {
       globalAccountClusterList = [];
     }
@@ -297,7 +300,7 @@ export default class AccountClusterService {
     }
     globalAccountClusterList = uniqBy(globalAccountClusterList, "id");
     host.setGlobalState(SERVER_CLUSTER_LIST, globalAccountClusterList);
- }
+  }
 
   async getServiceAccount() {
     try {
