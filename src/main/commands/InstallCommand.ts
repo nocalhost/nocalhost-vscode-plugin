@@ -229,6 +229,7 @@ export default class InstallCommand implements ICommand {
         }
       | undefined
   ) {
+    state.setAppState(appName, "installing", true);
     host.log(`Installing application: ${appName}`, true);
     await nhctl.install({
       host,
@@ -245,6 +246,7 @@ export default class InstallCommand implements ICommand {
       valuesStr,
       refOrVersion,
     });
+    state.deleteAppState(appName, "installing");
     host.setGlobalState(appName, {});
   }
 
