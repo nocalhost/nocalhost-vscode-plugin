@@ -28,5 +28,6 @@
   "OpenProject": "Open Project",
   "editManifest": "Edit Manifest",
   "nocalhost.apiServer.checkVersion": "Check apiServer version and update automatically",
-  "nocalhost.nhctl.checkVersion": "Check nhctl version and update automatically"
+  "nocalhost.nhctl.checkVersion": "Check nhctl version and update automatically",
+  "loadKubeConfig": "Load KubeConfig"
 }

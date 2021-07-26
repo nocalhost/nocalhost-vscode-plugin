@@ -24,7 +24,7 @@ import NocalHostServer from "./components/NocalHostServer";
 
 const options = [
   {
-    label: "Add Kubeconfig",
+    label: 'Add KubeConfig',
     value: "local",
   },
   {
