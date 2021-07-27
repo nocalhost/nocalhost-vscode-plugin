@@ -23,7 +23,7 @@ import { AppNode } from "../nodes/AppNode";
 import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
 import state from "../state";
-import * as nls from 'vscode-nls';
+import * as nls from "vscode-nls";
 
 const localize = nls.loadMessageBundle();
 
@@ -316,10 +316,10 @@ export default class InstallAppSourceCommand implements ICommand {
       return;
     }
 
-    const LOCAL = localize('deployLocal', 'Deploy From Local Directory');
-    const CLONE_GIT = localize('deployGit', 'Deploy From Git Repo');
-    const HELM_REPO = localize('deployHelm', 'Deploy From Helm Repo');
-    const INSTALL_QUICK_DEMO = localize('deployDemo', 'Deploy Quick Demo');
+    const LOCAL = localize("deployLocal", "Deploy From Local Directory");
+    const CLONE_GIT = localize("deployGit", "Deploy From Git Repo");
+    const HELM_REPO = localize("deployHelm", "Deploy From Helm Repo");
+    const INSTALL_QUICK_DEMO = localize("deployDemo", "Deploy Quick Demo");
 
     host.log(LOCAL, true);
 
