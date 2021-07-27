@@ -259,7 +259,7 @@ export default class AccountClusterService {
       {},
       {
         headers: {
-          Reraeb: this.refreshToken,
+          Reraeb: this.refreshToken || '',
         },
       }
     );

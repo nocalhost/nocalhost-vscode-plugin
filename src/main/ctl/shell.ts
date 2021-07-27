@@ -49,7 +49,7 @@ export async function opendevSpaceExec(
 export async function execAsyncWithReturn(
   command: string,
   args: Array<any>,
-  startTime?: number
+  startTime?: number,
 ): Promise<ShellResult> {
   // host.log(`[cmd] ${command}`, true);
   return new Promise((resolve, reject) => {
@@ -118,8 +118,21 @@ export async function execChildProcessAsync(
     });
 
     proc.stdout.on("data", function (data) {
-      host.log("" + data);
-      stdout += data;
+      let str = '' + data;
+      host.log(str);
+      stdout +=  data;
+      // waring info show dialog
+      if (str.indexOf('[WARNING]') > -1) {
+        host.showInformationMessage(str, {
+          modal: true
+        });
+      }
+      if ( str.indexOf('[INFO]') > -1) {
+       host.showWarnMessage(str);
+      } 
+      if (str.indexOf('ERROR') > -1) {
+        host.showErrorMessage(str);
+      }
     });
 
     proc.stderr.on("data", function (data) {

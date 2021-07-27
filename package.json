@@ -400,7 +400,7 @@
       },
       {
         "command": "Nocalhost.loadResource",
-        "title": "%nocalhostProfile%"
+        "title": "%editManifest%"
       },
       {
         "command": "Nocalhost.log",
