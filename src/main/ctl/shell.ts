@@ -118,6 +118,7 @@ export async function execChildProcessAsync(
     });
 
     proc.stdout.on("data", function (data) {
+      host.log('' + data);
       stdout += data;
     });
 

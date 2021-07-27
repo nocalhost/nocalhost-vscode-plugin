@@ -120,7 +120,8 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
     });
   }
 
-  const label = <div>{`${i18n.t("loadKubeConfig")}`}</div>;
+  const loadLabel = <div>{`${i18n.t("loadKubeConfig")}`}</div>;
+  const pasteLabel =  <div>{`${i18n.t("pasteAsText")}`}</div>;
 
   return (
     <div>
@@ -136,8 +137,8 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
         variant="fullWidth"
         aria-label="full width tabs"
       >
-        <Tab className="localkube_tab" label={label} value="select" />
-        <Tab label={<div>Paste as text</div>} value="paste" />
+        <Tab className="localkube_tab" label={loadLabel} value="select" />
+        <Tab label={pasteLabel} value="paste" />
       </Tabs>
       <TabPanel name="select" value={localTab}>
         <KubeConfigPathSelect

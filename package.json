@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.63",
+  "version": "0.4.18",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -290,7 +290,7 @@
       },
       {
         "command": "Nocalhost.rename",
-        "title": "Rename"
+        "title": "%rename%"
       },
       {
         "command": "Nocalhost.loadWorkloads",
