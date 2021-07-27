@@ -298,7 +298,7 @@
       },
       {
         "command": "Nocalhost.applyKubernetesObject",
-        "title": "Apply"
+        "title": "Apply New Manifest"
       },
       {
         "command": "Nocalhost.deleteKubernetesObject",
@@ -341,11 +341,11 @@
       },
       {
         "command": "Nocalhost.upgradeApp",
-        "title": "Upgrade App"
+        "title": "%upgradeApp%"
       },
       {
         "command": "Nocalhost.uninstallApp",
-        "title": "Uninstall App",
+        "title": "%uninstallApp%",
         "icon": "$(trash)"
       },
       {
@@ -384,7 +384,7 @@
       },
       {
         "command": "Nocalhost.reset",
-        "title": "%Reset%"
+        "title": "%resetPod%"
       },
       {
         "command": "Nocalhost.resetDevspace",
@@ -400,7 +400,7 @@
       },
       {
         "command": "Nocalhost.loadResource",
-        "title": "%editManifest%"
+        "title": "%nocalhostProfile%"
       },
       {
         "command": "Nocalhost.log",
@@ -420,7 +420,7 @@
       },
       {
         "command": "Nocalhost.editServiceConfig",
-        "title": "%Config%",
+        "title": "%viewDevConfig%",
         "icon": {
           "dark": "images/dark/setting-normal.svg",
           "light": "images/light/setting-normal.svg"
@@ -436,7 +436,7 @@
       },
       {
         "command": "Nocalhost.EditAppConfig",
-        "title": "%Config%",
+        "title": "%developConfig%",
         "icon": {
           "dark": "images/dark/setting-normal.svg",
           "light": "images/light/setting-normal.svg"

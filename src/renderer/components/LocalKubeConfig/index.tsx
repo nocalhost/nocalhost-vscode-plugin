@@ -121,7 +121,7 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
   }
 
   const loadLabel = <div>{`${i18n.t("loadKubeConfig")}`}</div>;
-  const pasteLabel =  <div>{`${i18n.t("pasteAsText")}`}</div>;
+  const pasteLabel = <div>{`${i18n.t("pasteAsText")}`}</div>;
 
   return (
     <div>
