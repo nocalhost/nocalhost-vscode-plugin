@@ -62,7 +62,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
-   await init(context);
+  await init(context);
   let appTreeProvider = new NocalhostAppProvider();
   initCommands(context, appTreeProvider);
 
