@@ -1,16 +1,14 @@
-import * as vscode from "vscode";
-import i18n from "./i18nUtil";
-import zhCN from "./zh-CN.json";
-import en from "./en.json";
-export async function initI18n() {
-  const language = vscode.env.language.toLocaleLowerCase().includes("zh")
-    ? "zhCN"
-    : "en";
-  await i18n.init(
-    {
-      en,
-      zhCN,
-    },
-    language
-  );
-}
+import i18n from "i18next";
+import zhCN from './zh-CN';
+import en from './en';
+
+// language detect
+i18n.init({
+  lng: 'en',
+  resources: {
+    en,
+    zhCN
+  }
+});
+
+export default i18n;

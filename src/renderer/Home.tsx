@@ -12,7 +12,7 @@ import { postMessage, vscode } from "./utils/index";
 import TabPanel from "./components/TabPanel";
 import LocalKubeConfig from "./components/LocalKubeConfig";
 import NocalHostServer from "./components/NocalHostServer";
-
+import i18n from "./i18n";
 // const useStyles = makeStyles({
 //   localToggle: {
 //     height: 35,
@@ -24,11 +24,11 @@ import NocalHostServer from "./components/NocalHostServer";
 
 const options = [
   {
-    label: "Add KubeConfig",
+    label: i18n.t('connect2Cluster'),
     value: "local",
   },
   {
-    label: "Connect to Nocalhost Server",
+    label: i18n.t('connect2Server'),
     value: "server",
   },
 ];
