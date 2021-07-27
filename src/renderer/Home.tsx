@@ -24,11 +24,11 @@ import i18n from "./i18n";
 
 const options = [
   {
-    label: i18n.t('connect2Cluster'),
+    label: i18n.t("connect2Cluster"),
     value: "local",
   },
   {
-    label: i18n.t('connect2Server'),
+    label: i18n.t("connect2Server"),
     value: "server",
   },
 ];

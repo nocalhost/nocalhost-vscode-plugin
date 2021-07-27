@@ -1,14 +1,14 @@
 import i18n from "i18next";
-import zhCN from './zh-CN';
-import en from './en';
+import zhCN from "./zh-CN";
+import en from "./en";
 
 // language detect
 i18n.init({
-  lng: 'en',
+  lng: "en",
   resources: {
     en,
-    zhCN
-  }
+    zhCN,
+  },
 });
 
 export default i18n;
