@@ -16,7 +16,7 @@ import { DevSpaceNode } from "./DevSpaceNode";
 import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { type } from "os";
 
-export type KubeConfigState = { code: 200 | 201, info: string };
+export type KubeConfigState = { code: 200 | 201; info: string };
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
@@ -45,7 +45,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     kubeConfigPath: string;
     userInfo: IUserInfo;
     accountClusterService?: AccountClusterService;
-    state: KubeConfigState
+    state: KubeConfigState;
   }) {
     super();
     const {
@@ -119,11 +119,14 @@ export class KubeConfigNode extends NocalhostFolderNode {
   async getTreeItem() {
     let treeItem = new vscode.TreeItem(
       this.label,
-      this.state.code === 200 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None
+      this.state.code === 200
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
     );
 
-    treeItem.contextValue = `kubeconfig${this.clusterSource === ClusterSource.local ? "-local" : "-server"
-      }`;
+    treeItem.contextValue = `kubeconfig${
+      this.clusterSource === ClusterSource.local ? "-local" : "-server"
+    }`;
 
     if (this.clusterSource === ClusterSource.server) {
       const { username, baseUrl } = this.accountClusterService.loginInfo;
@@ -131,11 +134,12 @@ export class KubeConfigNode extends NocalhostFolderNode {
       treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
     }
 
-    treeItem.description = this.state.code === 200 ? 'Active' : 'Unable to Connect';
+    treeItem.description =
+      this.state.code === 200 ? "Active" : "Unable to Connect";
 
     if (this.state.code !== 200) {
       treeItem.tooltip = this.state.info;
-      treeItem.iconPath=resolveVSCodeUri("status-warning.svg");
+      treeItem.iconPath = resolveVSCodeUri("status-warning.svg");
     }
 
     return Promise.resolve(treeItem);
