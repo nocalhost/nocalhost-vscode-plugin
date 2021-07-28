@@ -10,10 +10,13 @@ import { ClusterSource } from "../common/define";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
-import { writeFileLock } from "../utils/fileUtil";
+import { resolveVSCodeUri, writeFileLock } from "../utils/fileUtil";
 import * as _ from "lodash";
 import { DevSpaceNode } from "./DevSpaceNode";
 import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
+import { type } from "os";
+
+export type KubeConfigState = { code: 200 | 201, info: string };
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
@@ -30,6 +33,8 @@ export class KubeConfigNode extends NocalhostFolderNode {
   public id: string;
   public kubeConfigPath: string;
   public accountClusterService: AccountClusterService;
+
+  private state: KubeConfigState;
   constructor(props: {
     id: string;
     parent: NocalhostRootNode;
@@ -40,6 +45,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     kubeConfigPath: string;
     userInfo: IUserInfo;
     accountClusterService?: AccountClusterService;
+    state: KubeConfigState
   }) {
     super();
     const {
@@ -64,6 +70,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     this.kubeConfigPath = kubeConfigPath;
     this.userInfo = userInfo;
     this.accountClusterService = accountClusterService;
+    this.state = props.state;
 
     state.setNode(this.getNodeStateId(), this);
   }
@@ -112,17 +119,23 @@ export class KubeConfigNode extends NocalhostFolderNode {
   async getTreeItem() {
     let treeItem = new vscode.TreeItem(
       this.label,
-      vscode.TreeItemCollapsibleState.Collapsed
+      this.state.code === 200 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None
     );
 
-    treeItem.contextValue = `kubeconfig${
-      this.clusterSource === ClusterSource.local ? "-local" : "-server"
-    }`;
+    treeItem.contextValue = `kubeconfig${this.clusterSource === ClusterSource.local ? "-local" : "-server"
+      }`;
 
     if (this.clusterSource === ClusterSource.server) {
       const { username, baseUrl } = this.accountClusterService.loginInfo;
 
       treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
+    }
+
+    treeItem.description = this.state.code === 200 ? 'Active' : 'Unable to Connect';
+
+    if (this.state.code !== 200) {
+      treeItem.tooltip = this.state.info;
+      treeItem.iconPath=resolveVSCodeUri("status-warning.svg");
     }
 
     return Promise.resolve(treeItem);
