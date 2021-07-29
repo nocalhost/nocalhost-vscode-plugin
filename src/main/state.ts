@@ -81,14 +81,18 @@ class State {
   // }
 
   async refreshTree() {
-    if (!isExistCluster()) {
-      await vscode.commands.executeCommand("setContext", "emptyCluster", false);
-    }
+    const isExist = isExistCluster();
+
+    await vscode.commands.executeCommand(
+      "setContext",
+      "emptyCluster",
+      !isExist
+    );
 
     await vscode.commands.executeCommand(
       "setContext",
       "Nocalhost.visibleTree",
-      true
+      isExist
     );
     await vscode.commands.executeCommand("Nocalhost.refresh");
     host.startAutoRefresh();
