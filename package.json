@@ -148,8 +148,13 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^devspace|(application-(.*)-installed|workload-deployment)/i",
+          "when": "viewItem =~ /^devspace|(application-(.*)-installed)/i",
           "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.cleanPvc",
+          "when": "viewItem =~ /^workload-deployment/i",
+          "group": "2"
         },
         {
           "command": "Nocalhost.startDevMode",
@@ -179,17 +184,17 @@
         {
           "command": "Nocalhost.exec",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod)-dev/i",
-          "group": "1"
+          "group": "3"
         },
         {
           "command": "Nocalhost.copyTerminal",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
-          "group": "1"
+          "group": "3"
         },
         {
           "command": "Nocalhost.reset",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
-          "group": "1"
+          "group": "2"
         },
         {
           "command": "Nocalhost.resetDevspace",
@@ -225,7 +230,7 @@
         {
           "command": "Nocalhost.associateLocalDirectory",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
-          "group": "1"
+          "group": "0"
         },
         {
           "command": "Nocalhost.deleteKubernetesObject",
