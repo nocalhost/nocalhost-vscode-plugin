@@ -100,6 +100,8 @@ async function installRawManifastLocal(props: {
     resourcePath,
     namespace,
   } = props;
+  state.setAppState(appName, "installing", true);
+  host.log(`Installing application: ${appName}`, true);
   const installCommand = await NhctlCommand.install({
     kubeConfigPath,
     namespace,
@@ -127,6 +129,7 @@ async function installRawManifastLocal(props: {
       });
     }
   );
+  state.deleteAppState(appName, "installing");
 }
 
 async function installHelmRep(props: {
