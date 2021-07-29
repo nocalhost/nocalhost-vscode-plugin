@@ -134,12 +134,13 @@ export class KubeConfigNode extends NocalhostFolderNode {
       treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
     }
 
-    treeItem.description =
-      this.state.code === 200 ? "Active" : "Unable to Connect";
+    treeItem.description = "Active";
+    treeItem.iconPath = resolveVSCodeUri("cluster-active.svg");
 
     if (this.state.code !== 200) {
       treeItem.tooltip = this.state.info;
-      treeItem.iconPath = resolveVSCodeUri("status-warning.svg");
+      treeItem.iconPath = resolveVSCodeUri("cluster-warning.svg");
+      treeItem.description = "Unable to Connect";
     }
 
     return Promise.resolve(treeItem);
