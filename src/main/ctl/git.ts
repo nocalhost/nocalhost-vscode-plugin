@@ -5,8 +5,6 @@ import logger from "../utils/logger";
 
 class Git {
   public async clone(host: Host, gitUrl: string, args: Array<string>) {
-    // HTTP CHECK
-    let beforeCommand: string | undefined;
     if (gitUrl.indexOf("http") === 0) {
       const checkUrl = `${gitUrl}/info/refs?service=git-upload-pack`;
       const httpClient = axios.create();
@@ -39,24 +37,16 @@ class Git {
           }
         });
     } else {
-      beforeCommand = 'GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"';
+      args.push("--config");
+      args.push(
+        'core.sshCommand="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"'
+      );
     }
-    await this.execComandsByArgs(
-      host,
-      ["clone", gitUrl, ...args],
-      beforeCommand
-    );
+    await this.execComandsByArgs(host, ["clone", gitUrl, ...args]);
   }
 
-  public async execComandsByArgs(
-    host: Host,
-    args: Array<string>,
-    beforeCommand?: string
-  ) {
+  public async execComandsByArgs(host: Host, args: Array<string>) {
     let argsStr = "git";
-    if (beforeCommand) {
-      argsStr = `${beforeCommand} git`;
-    }
     args.forEach((arg) => {
       argsStr += ` ${arg}`;
     });
