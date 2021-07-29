@@ -110,12 +110,9 @@ export async function execChildProcessAsync(
       } else {
         logger.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`);
         host.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`, true);
-        if (errorTips && errorTips.output) {
-          host.log(errorTips.output, true);
-        }
-        if (errorStr && !notShow) {
-          host.showErrorMessage(errorStr);
-        }
+        if ((errorTips && errorTips.dialog) || errorStr) {
+        host.showErrorMessage((errorTips && errorTips.dialog) || errorStr);
+      }
         reject((errorTips && errorTips.dialog) || `${err}. ${errorStr}`);
       }
     });
