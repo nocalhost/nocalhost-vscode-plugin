@@ -113,6 +113,9 @@ export async function execChildProcessAsync(
         if (errorTips && errorTips.output) {
           host.log(errorTips.output, true);
         }
+        if (errorStr && !notShow) {
+          host.showErrorMessage(errorStr);
+        }
         reject((errorTips && errorTips.dialog) || `${err}. ${errorStr}`);
       }
     });
@@ -137,9 +140,6 @@ export async function execChildProcessAsync(
 
     proc.stderr.on("data", function (data) {
       errorStr += data + "";
-      if (errorStr && !notShow) {
-        host.showErrorMessage(errorStr);
-      }
       host.log("" + data);
       logger.error(`[cmd] ${command} error: ${data}`);
     });
