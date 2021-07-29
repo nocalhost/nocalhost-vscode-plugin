@@ -44,18 +44,7 @@ export default class SignOutCommand implements ICommand {
 
     await state.cleanAutoRefresh(node);
 
-    await vscode.commands.executeCommand("Nocalhost.refresh");
-
-    host.startAutoRefresh();
-
-    if (!isExistCluster()) {
-      await vscode.commands.executeCommand(
-        "setContext",
-        "Nocalhost.visibleTree",
-        false
-      );
-      return;
-    }
+    await state.refreshTree();
     // remove local
     // host.removeGlobalState(IS_LOCAL);
     // host.removeGlobalState(LOCAL_PATH);
