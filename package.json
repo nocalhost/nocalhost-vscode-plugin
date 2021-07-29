@@ -148,7 +148,12 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^devspace|(application-(.*)-installed|workload-deployment)/i",
+          "when": "viewItem =~ /^devspace|(application-(.*)-installed)/i",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.cleanPvc",
+          "when": "viewItem =~ /^workload-deployment/i",
           "group": "2"
         },
         {
@@ -225,7 +230,7 @@
         {
           "command": "Nocalhost.associateLocalDirectory",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
-          "group": "navigation"
+          "group": "0"
         },
         {
           "command": "Nocalhost.deleteKubernetesObject",
