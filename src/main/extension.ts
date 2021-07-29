@@ -54,6 +54,10 @@ import { HomeWebViewProvider } from "./webview/HomePage";
 import { isExistCluster } from "./clusters/utils";
 import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
+import * as nls from "vscode-nls";
+
+// The example uses the file message format.
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 

@@ -118,7 +118,21 @@ export async function execChildProcessAsync(
     });
 
     proc.stdout.on("data", function (data) {
+      let str = "" + data;
+      host.log(str);
       stdout += data;
+      // waring info show dialog
+      if (str.indexOf("[WARNING]") > -1) {
+        host.showInformationMessage(str, {
+          modal: true,
+        });
+      }
+      if (str.indexOf("[INFO]") > -1) {
+        host.showWarnMessage(str);
+      }
+      if (str.indexOf("ERROR") > -1) {
+        host.showErrorMessage(str);
+      }
     });
 
     proc.stderr.on("data", function (data) {
