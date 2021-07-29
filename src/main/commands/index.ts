@@ -42,7 +42,7 @@ import InstallAppSourceCommand from "./InstallAppSourceCommand";
 import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
 import RenameCommand from "./RenameCommand";
 import OpenProjectCommand from "./OpenProjectCommand";
-import EditManifestCommand from './EditManifestCommand';
+import EditManifestCommand from "./EditManifestCommand";
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
