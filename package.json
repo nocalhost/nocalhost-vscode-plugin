@@ -202,14 +202,20 @@
           "group": "1"
         },
         {
-          "command": "Nocalhost.loadResource",
+          "command": "Nocalhost.editManifest",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
+          "title": "%editManifest%",
           "group": "1"
         },
         {
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
           "group": "1"
+        },
+        {
+          "command": "Nocalhost.loadResource",
+          "title": "%loadResource%",
+          "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
           "command": "Nocalhost.portForwardList",
@@ -400,6 +406,10 @@
       },
       {
         "command": "Nocalhost.loadResource",
+        "title": "%nocalhostProfile%"
+      },
+      {
+        "command": "Nocalhost.editManifest",
         "title": "%editManifest%"
       },
       {
