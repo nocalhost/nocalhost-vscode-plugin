@@ -324,8 +324,6 @@ export default class InstallAppSourceCommand implements ICommand {
     const HELM_REPO = localize("deployHelm", "Deploy From Helm Repo");
     const INSTALL_QUICK_DEMO = localize("deployDemo", "Deploy Quick Demo");
 
-    host.log(LOCAL, true);
-
     const res = await host.showInformationMessage(
       "Please select the installation source of application.",
       { modal: true },
