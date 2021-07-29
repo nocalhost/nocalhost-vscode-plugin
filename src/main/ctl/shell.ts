@@ -111,8 +111,8 @@ export async function execChildProcessAsync(
         logger.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`);
         host.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`, true);
         if ((errorTips && errorTips.dialog) || errorStr) {
-        host.showErrorMessage((errorTips && errorTips.dialog) || errorStr);
-      }
+          host.showErrorMessage((errorTips && errorTips.dialog) || errorStr);
+        }
         reject((errorTips && errorTips.dialog) || `${err}. ${errorStr}`);
       }
     });
