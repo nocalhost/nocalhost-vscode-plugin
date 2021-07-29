@@ -35,6 +35,10 @@ export default class OpenProjectCommand implements ICommand {
       if (currentUri !== uri.fsPath) {
         vscode.commands.executeCommand("vscode.openFolder", uri, true);
       }
+    } else {
+      host.showInformationMessage(
+        "You are not associated with source directory"
+      );
     }
   }
 }
