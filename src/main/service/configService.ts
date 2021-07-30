@@ -44,7 +44,7 @@ export interface ContainerConfig {
     portForward: Array<string>;
     workDir?: string; // default value: "/home/nocalhost-dev"
     persistentVolumeDirs?: Array<string>;
-    command: {
+    command?: {
       build?: Array<string>;
       run?: Array<string>;
       debug?: Array<string>;
