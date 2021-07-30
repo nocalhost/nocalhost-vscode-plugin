@@ -40,7 +40,6 @@ export default class RunCommand implements ICommand {
       const containers = (serviceConfig && serviceConfig.containers) || [];
       let container: ContainerConfig | undefined;
 
-
       if (containers.length > 1) {
         const containerNames = containers.map((c) => c.name);
         const containerName = await vscode.window.showQuickPick(containerNames);
@@ -70,15 +69,17 @@ export default class RunCommand implements ICommand {
       }
 
       if (!container.dev.command?.run?.length) {
-        host.showErrorMessage("Missing parameters. Please configure the run service");
+        host.showErrorMessage(
+          "Missing parameters. Please configure the run service"
+        );
         return;
       }
 
       let commands = [
-        container.dev.shell || 'sh',
+        container.dev.shell || "sh",
         "",
         "",
-        `"${(container.dev.command?.run ?? []).join(" ")}"`
+        `"${(container.dev.command?.run ?? []).join(" ")}"`,
       ];
       const appNode = node.getAppNode();
       await this.exec({
@@ -88,7 +89,7 @@ export default class RunCommand implements ICommand {
         commands,
         namespace: appNode.namespace,
         kubeConfigPath: node.getKubeConfigPath(),
-      }).catch(() => { });
+      }).catch(() => {});
     });
   }
   async exec(param: ExecCommandParam) {
