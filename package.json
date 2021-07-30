@@ -117,11 +117,6 @@
           "group": "developing@1"
         },
         {
-          "command": "Nocalhost.debug",
-          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i",
-          "group": "developing@2"
-        },
-        {
           "command": "Nocalhost.run",
           "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i",
           "group": "developing@3"
