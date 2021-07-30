@@ -34,7 +34,7 @@
   "deployLocal": "Deploy From Local Directory",
   "deployGit": "Deploy From Git Repo",
   "deployHelm": "Deploy From Helm Repo",
-  "deployDemo": "Deploy Quick Demo",
+  "deployDemo": "Deploy Demo",
   "uninstallApp": "Uninstall Application",
   "developConfig": "Development Configs",
   "upgradeApp": "Upgrade Application",
