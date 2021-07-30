@@ -337,6 +337,10 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (error: any) => {
+  if (error === "ignore") {
+    return;
+  }
+
   logger.error(
     `[unhandledRejection] ${(error && error.message) || error} ${
       error && error.stack

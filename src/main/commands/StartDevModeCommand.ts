@@ -3,9 +3,8 @@ import * as os from "os";
 import { INhCtlGetResult, IDescribeConfig, IK8sResource } from "../domain";
 import ICommand from "./ICommand";
 import { NhctlCommand } from "./../ctl/nhctl";
-import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
+import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
-import state from "../state";
 import { get as _get, isEqual, omit } from "lodash";
 import { opendevSpaceExec } from "../ctl/shell";
 import {
@@ -85,10 +84,7 @@ export default class StartDevModeCommand implements ICommand {
     }
     let containerName = containerNames[0];
     if (containers.length > 1) {
-      containerName = await vscode.window.showQuickPick(containerNames);
-      if (!containerName) {
-        return;
-      }
+      containerName = await host.showQuickPick(containerNames);
     }
     return containerName;
   }
@@ -168,7 +164,7 @@ export default class StartDevModeCommand implements ICommand {
           "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/rust:latest",
           "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/php:latest",
         ];
-        image = await vscode.window.showQuickPick(images);
+        image = await host.showQuickPick(images);
       } else if (result === "Custom") {
         image = await host.showInputBox({
           placeHolder: "Please input your image address",
@@ -178,10 +174,7 @@ export default class StartDevModeCommand implements ICommand {
         }
       }
     }
-    if (!image) {
-      await host.showWarnMessage("Please choose image");
-      return;
-    }
+
     await this.saveConfig(
       node.getKubeConfigPath(),
       node.getNameSpace(),
@@ -684,10 +677,7 @@ export default class StartDevModeCommand implements ICommand {
         containerName = containerNameArr[0];
       } else {
         if (containerNameArr.length > 1) {
-          containerName = await vscode.window.showQuickPick(containerNameArr);
-          if (!containerName) {
-            return;
-          }
+          containerName = await host.showQuickPick(containerNameArr);
         }
       }
     }
