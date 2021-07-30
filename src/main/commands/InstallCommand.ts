@@ -245,9 +245,10 @@ export default class InstallCommand implements ICommand {
       values,
       valuesStr,
       refOrVersion,
+    }).finally(()=>{
+      state.deleteAppState(appName, "installing");
+      host.setGlobalState(appName, {});
     });
-    state.deleteAppState(appName, "installing");
-    host.setGlobalState(appName, {});
   }
 
   private async checkStatus(appNode: AppNode, productPagePort: string) {
