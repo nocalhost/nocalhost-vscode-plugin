@@ -21,6 +21,7 @@ import host from "../host";
 import { SYNC_SERVICE } from "../commands/constants";
 import { NodeType } from "./interfact";
 import { DevSpaceNode } from "./DevSpaceNode";
+import { ClusterSource } from "../common/define";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -168,6 +169,11 @@ export class AppNode extends NocalhostFolderNode {
     }
     if (["helmGit", "helmRepo", "helmLocal"].includes(this.installType)) {
       treeItem.contextValue = `${treeItem.contextValue}-helm`;
+    }
+
+    const devspace = this.getParent() as DevSpaceNode;
+    if (devspace.clusterSource === ClusterSource.server) {
+      treeItem.contextValue = `${treeItem.contextValue}-server`;
     }
     // if (this.developingNodes.length > 0) {
     //   treeItem.contextValue = `${treeItem.contextValue}-developing`;
