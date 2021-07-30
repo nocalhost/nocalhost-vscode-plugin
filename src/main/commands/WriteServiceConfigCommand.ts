@@ -38,7 +38,9 @@ export default class WriteServiceConfigCommand implements ICommand {
         node.name
       }.yaml?appName=${node.getAppName()}&nodeName=${node.name}&resourceType=${
         node.resourceType
-      }&workloadType=${node.resourceType}&id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${node.getNameSpace()}`
+      }&workloadType=${
+        node.resourceType
+      }&id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${node.getNameSpace()}`
     );
     let doc = await vscode.workspace.openTextDocument(uri);
     vscode.window.showTextDocument(doc, { preview: true });
