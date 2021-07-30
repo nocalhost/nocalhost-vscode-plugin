@@ -129,7 +129,7 @@ async function installRawManifastLocal(props: {
     () => {
       return execChildProcessAsync(host, installCommand, [], {
         dialog: `Install application (${appName}) fail`,
-      }).finally(()=>{
+      }).finally(() => {
         state.deleteAppState(appName, "installing");
       });
     }
@@ -217,7 +217,7 @@ async function installApp(props: {
     () => {
       return execChildProcessAsync(host, installCommand, [], {
         dialog: `Install application (${appName}) fail`,
-      }).finally(()=>{
+      }).finally(() => {
         state.deleteAppState(appName, "installing");
       });
     }
