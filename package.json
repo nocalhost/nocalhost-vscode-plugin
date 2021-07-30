@@ -142,13 +142,23 @@
           "group": "inline@0"
         },
         {
+          "command": "Nocalhost.cleanPvc",
+          "when": "viewItem =~ /^application-(.*)-installed/i",
+          "group": "application@1"
+        },
+        {
+          "command": "Nocalhost.applyKubernetesObject",
+          "when": "viewItem =~ /^application-(.*)-installed/i",
+          "group": "application@2"
+        },
+        {
           "command": "Nocalhost.upgradeApp",
           "when": "viewItem =~ /^application-nodefault-installed/i",
-          "group": "0"
+          "group": "application@3"
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^devspace|(application-(.*)-installed)/i",
+          "when": "viewItem =~ /^devspace/i",
           "group": "navigation"
         },
         {
@@ -224,8 +234,13 @@
         },
         {
           "command": "Nocalhost.portForwardList",
-          "when": "viewItem =~ /^application-(.*)-installed|^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
           "group": "1"
+        },
+        {
+          "command": "Nocalhost.portForwardList",
+          "when": "viewItem =~ /^application-(.*)-installed/i",
+          "group": "navigation"
         },
         {
           "command": "Nocalhost.associateLocalDirectory",
@@ -236,11 +251,6 @@
           "command": "Nocalhost.deleteKubernetesObject",
           "when": "viewItem =~ /^(workload|network|configuration|storage)-\\w+(-\\w+)?(-(complete|running|starting|unknown))?$/i",
           "group": "1"
-        },
-        {
-          "command": "Nocalhost.applyKubernetesObject",
-          "when": "viewItem =~ /^application-(.*)-installed/i",
-          "group": "navigation"
         },
         {
           "command": "Nocalhost.viewKubeConfig",
