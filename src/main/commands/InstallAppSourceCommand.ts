@@ -322,7 +322,7 @@ export default class InstallAppSourceCommand implements ICommand {
     const LOCAL = localize("deployLocal", "Deploy From Local Directory");
     const CLONE_GIT = localize("deployGit", "Deploy From Git Repo");
     const HELM_REPO = localize("deployHelm", "Deploy From Helm Repo");
-    const INSTALL_QUICK_DEMO = localize("deployDemo", "Deploy Quick Demo");
+    const INSTALL_QUICK_DEMO = localize("deployDemo", "Deploy Demo");
 
     const res = await host.showInformationMessage(
       "Please select the installation source of application.",
