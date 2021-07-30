@@ -231,23 +231,26 @@ export default class InstallCommand implements ICommand {
   ) {
     state.setAppState(appName, "installing", true);
     host.log(`Installing application: ${appName}`, true);
-    await nhctl.install({
-      host,
-      kubeconfigPath,
-      namespace,
-      appName,
-      appConfig,
-      helmNHConfigPath,
-      gitUrl,
-      installType,
-      resourceDir,
-      local,
-      values,
-      valuesStr,
-      refOrVersion,
-    });
-    state.deleteAppState(appName, "installing");
-    host.setGlobalState(appName, {});
+    await nhctl
+      .install({
+        host,
+        kubeconfigPath,
+        namespace,
+        appName,
+        appConfig,
+        helmNHConfigPath,
+        gitUrl,
+        installType,
+        resourceDir,
+        local,
+        values,
+        valuesStr,
+        refOrVersion,
+      })
+      .finally(() => {
+        state.deleteAppState(appName, "installing");
+        host.setGlobalState(appName, {});
+      });
   }
 
   private async checkStatus(appNode: AppNode, productPagePort: string) {
