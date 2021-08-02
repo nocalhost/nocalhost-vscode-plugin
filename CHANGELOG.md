@@ -1,5 +1,27 @@
 # Change Log
 
+
+## NEW Version 
+
+### New Features
+
+- Add icon for syncService
+- Add status for cluster
+- Add guide information when there is no cluster
+
+### Bug Fixes
+
+- Fixed the ssh trust problem when installing application for the first time
+- Fixed the run command
+- Fixed failing to get config of statefulset
+- Fixed status icon of statefulset displaying incorrectly
+
+### Optimization
+
+- Improve the speed of opening application
+- Add prompt when `Open Project` is not associated with a target directory
+- Unify description of menu and page
+
 ## Version 0.4.18 (23 Jul 2021)
 
 ### New Features
@@ -37,23 +59,3 @@
 ### Optimization
 
 - Optimize the automatic closing pop window when installing the application (Now need to close by ESC)
-
-## Version 0.4.19 (1 Aug 2021)
-
-### New Features
-
-- Add icon for syncService
-- Add status for cluster
-- Add guide information when there is no cluster
-
-### Bug Fixes
-
-- Fixed the ssh trust problem when installing application for the first time
-- Fixed the run command
-- Fixed stateful workload get config and state of ⚙️ icon
-
-### Optimization
-
-- Improve the speed of opening application
-- Add prompt when Open Project is not associated with a target
-- Unify menu and page text description
