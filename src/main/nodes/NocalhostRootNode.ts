@@ -22,6 +22,7 @@ import state from "../state";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { IRootNode } from "../domain";
 import { ClusterSource } from "../common/define";
+import { checkCluster } from "../ctl/nhctl";
 
 async function getClusterName(res: IRootNode) {
   if (res.clusterSource === ClusterSource.local) {
@@ -138,6 +139,9 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         logger.error(`${res.kubeConfigPath} does not exist`);
         continue;
       }
+
+      const state = await checkCluster(res.kubeConfigPath);
+
       const clusterName = await getClusterName(res);
       const node = new KubeConfigNode({
         id: res.id,
@@ -149,6 +153,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         userInfo: res.userInfo,
         clusterSource: res.clusterSource,
         accountClusterService: res.accountClusterService,
+        state,
       });
       devs.push(node);
     }

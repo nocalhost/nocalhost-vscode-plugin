@@ -23,6 +23,9 @@ import { AppNode } from "../nodes/AppNode";
 import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
 import state from "../state";
+import * as nls from "vscode-nls";
+
+const localize = nls.loadMessageBundle();
 
 async function getKustomizeYamlPath(): Promise<string> {
   const res = await host.showInformationMessage(
@@ -100,6 +103,8 @@ async function installRawManifastLocal(props: {
     resourcePath,
     namespace,
   } = props;
+  state.setAppState(appName, "installing", true);
+  host.log(`Installing application: ${appName}`, true);
   const installCommand = await NhctlCommand.install({
     kubeConfigPath,
     namespace,
@@ -124,6 +129,8 @@ async function installRawManifastLocal(props: {
     () => {
       return execChildProcessAsync(host, installCommand, [], {
         dialog: `Install application (${appName}) fail`,
+      }).finally(() => {
+        state.deleteAppState(appName, "installing");
       });
     }
   );
@@ -210,10 +217,11 @@ async function installApp(props: {
     () => {
       return execChildProcessAsync(host, installCommand, [], {
         dialog: `Install application (${appName}) fail`,
+      }).finally(() => {
+        state.deleteAppState(appName, "installing");
       });
     }
   );
-  state.deleteAppState(appName, "installing");
 }
 async function installHelmApp(props: {
   appName: string;
@@ -313,10 +321,10 @@ export default class InstallAppSourceCommand implements ICommand {
       return;
     }
 
-    const LOCAL = "Open local directory";
-    const CLONE_GIT = "Clone from Git";
-    const HELM_REPO = "Helm Repo";
-    const INSTALL_QUICK_DEMO = "Install Quick Demo";
+    const LOCAL = localize("deployLocal", "Deploy From Local Directory");
+    const CLONE_GIT = localize("deployGit", "Deploy From Git Repo");
+    const HELM_REPO = localize("deployHelm", "Deploy From Helm Repo");
+    const INSTALL_QUICK_DEMO = localize("deployDemo", "Deploy Demo");
 
     const res = await host.showInformationMessage(
       "Please select the installation source of application.",

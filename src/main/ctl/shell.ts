@@ -110,22 +110,33 @@ export async function execChildProcessAsync(
       } else {
         logger.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`);
         host.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`, true);
-        if (errorTips && errorTips.output) {
-          host.log(errorTips.output, true);
+        if ((errorTips && errorTips.dialog) || errorStr) {
+          host.showErrorMessage((errorTips && errorTips.dialog) || errorStr);
         }
         reject((errorTips && errorTips.dialog) || `${err}. ${errorStr}`);
       }
     });
 
     proc.stdout.on("data", function (data) {
+      let str = "" + data;
+      host.log(str);
       stdout += data;
+      // waring info show dialog
+      if (str.indexOf("[WARNING]") > -1) {
+        host.showInformationMessage(str, {
+          modal: true,
+        });
+      }
+      if (str.indexOf("[INFO]") > -1) {
+        host.showWarnMessage(str);
+      }
+      if (str.indexOf("ERROR") > -1) {
+        host.showErrorMessage(str);
+      }
     });
 
     proc.stderr.on("data", function (data) {
       errorStr += data + "";
-      if (errorStr && !notShow) {
-        host.showErrorMessage(errorStr);
-      }
       host.log("" + data);
       logger.error(`[cmd] ${command} error: ${data}`);
     });

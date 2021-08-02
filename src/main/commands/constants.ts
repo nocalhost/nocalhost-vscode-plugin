@@ -34,6 +34,7 @@ export const RESET_DEVSPACE = "Nocalhost.resetDevspace";
 export const UPGRADE_APP = "Nocalhost.upgradeApp";
 
 export const LOAD_RESOURCE = "Nocalhost.loadResource";
+export const EDIT_MANIFEST = "Nocalhost.editManifest";
 export const LOG = "Nocalhost.log";
 export const PORT_FORWARD = "Nocalhost.portForward";
 export const PORT_FORWARD_LIST = "Nocalhost.portForwardList";

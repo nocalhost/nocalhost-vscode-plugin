@@ -8,7 +8,7 @@ import { IRootNode } from "../domain";
 import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
-import { getAllNamespace } from "../ctl/nhctl";
+import { checkCluster, getAllNamespace } from "../ctl/nhctl";
 import { ClusterSource } from "../common/define";
 
 export class LocalClusterNode {
@@ -58,10 +58,15 @@ export default class LocalCluster {
         defaultNamespace = currentContext.context.namespace;
       }
     }
-    devSpaces = await getAllNamespace({
-      kubeConfigPath: filePath,
-      namespace: defaultNamespace as string,
-    });
+    const state = await checkCluster(filePath);
+
+    if (state.code === 200) {
+      devSpaces = await getAllNamespace({
+        kubeConfigPath: filePath,
+        namespace: defaultNamespace as string,
+      });
+    }
+
     const contextObj = {
       applicationName: "default.application",
       applicationUrl: "",

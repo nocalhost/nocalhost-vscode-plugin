@@ -40,7 +40,7 @@ export default class DebugCommand implements ICommand {
             return;
           }
           // TODO:
-          const supportType = ["node", "go", "java"];
+          const supportType = ["node", "java"];
           const type = await vscode.window.showQuickPick(supportType);
           if (!type) {
             return;

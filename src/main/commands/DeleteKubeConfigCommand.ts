@@ -40,19 +40,11 @@ export default class DeleteKubeConfigCommand implements ICommand {
       tmpPath = [];
     }
     host.setGlobalState(LOCAL_PATH, tmpPath);
-    for (let key of state.refreshFolderMap.keys()) {
-      if ((key as string).startsWith(node.getNodeStateId())) {
-        state.refreshFolderMap.set(key, false);
-      }
-    }
-    await vscode.commands.executeCommand(REFRESH);
-    if (!isExistCluster()) {
-      await vscode.commands.executeCommand(
-        "setContext",
-        "Nocalhost.visibleTree",
-        false
-      );
-    }
+
+    await state.cleanAutoRefresh(node);
+
+    await state.refreshTree();
+
     deleted.forEach(async (f) => {
       if (await isExist(f.filePath)) {
         fs.unlinkSync(f.filePath);

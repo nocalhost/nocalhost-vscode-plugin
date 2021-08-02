@@ -64,7 +64,7 @@ export default class SyncServiceCommand implements ICommand {
           let r: SyncMsg;
           r = JSON.parse(result) as SyncMsg;
 
-          host.statusBar.text = `$(${this.getIcon(r)}) ${r.msg}`;
+          host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
           host.statusBar.tooltip = r.tips;
           host.statusBar.command = null;
 
@@ -96,13 +96,7 @@ export default class SyncServiceCommand implements ICommand {
     }, 500);
   }
 
-  getIcon(msg: SyncMsg) {
-    const { status, outOfSync } = msg;
-
-    if (outOfSync) {
-      return "sync-ignored";
-    }
-
+  getIcon(status: string) {
     let icon = "error";
 
     switch (status) {

@@ -42,6 +42,7 @@ import InstallAppSourceCommand from "./InstallAppSourceCommand";
 import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
 import RenameCommand from "./RenameCommand";
 import OpenProjectCommand from "./OpenProjectCommand";
+import EditManifestCommand from "./EditManifestCommand";
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
@@ -66,6 +67,7 @@ export default function initCommands(
   new InstallCommand(context);
   new UninstallCommand(context);
   new LoadResourceCommand(context);
+  new EditManifestCommand(context);
   new LogCommand(context);
   new PortForwardCommand(context);
   new PortForwardListCommand(context);
