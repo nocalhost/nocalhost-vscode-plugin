@@ -44,16 +44,16 @@
 
 - Add icon for syncService
 - Add status for cluster
-- No cluster add guide information
+- Aadd guide information when there is no cluster
 
 ### Bug Fixes
 
 - Fixed the ssh trust problem when installing application for the first time
 - Fixed the run command
-- Fixed stateful workload get config and state of ⚙️
+- Fixed stateful workload get config and state of ⚙️ icon
 
 ### Optimization
 
 - Improve the speed of opening application
-- Add prommpt wnen Open Project is not associated with a target
-- Unified text description information
+- Add prommpt when Open Project is not associated with a target
+- Unified menu and page text description
