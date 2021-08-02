@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: build
+    name: build test plugin
     runs-on: ubuntu-latest
     steps:
     - name: Set up Node 1.x
@@ -19,12 +19,15 @@ jobs:
 
     - name: Check out code into the project's root directory
       uses: actions/checkout@v2
-
+    
+    - name: Set evn
+      run: echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        
     - name: Update the version of package.json
       run: node scripts/gitVersion.js
 
     - name: Build
-       run: |
+      run: |
         npm i -g yarn
         yarn install
         yarn build
@@ -32,5 +35,4 @@ jobs:
 
     - name: Push to Coding Artifacts
       run: |
-        PLUGIN_VERSION="$(git rev-parse --short HEAD)"
         curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://codingcorp-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${PLUGIN_VERSION}"
