@@ -55,5 +55,5 @@
 ### Optimization
 
 - Improve the speed of opening application
-- Add prommpt when Open Project is not associated with a target
+- Add prompt when Open Project is not associated with a target
 - Unify menu and page text description
