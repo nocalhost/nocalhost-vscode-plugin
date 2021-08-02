@@ -44,7 +44,7 @@
 
 - Add icon for syncService
 - Add status for cluster
-- Aadd guide information when there is no cluster
+- Add guide information when there is no cluster
 
 ### Bug Fixes
 
@@ -56,4 +56,4 @@
 
 - Improve the speed of opening application
 - Add prommpt when Open Project is not associated with a target
-- Unified menu and page text description
+- Unify menu and page text description
