@@ -1,7 +1,7 @@
 # Change Log
 
 
-## NEW Version 
+## Version 0.4.19 (2 Aug 2021)
 
 ### New Features
 
