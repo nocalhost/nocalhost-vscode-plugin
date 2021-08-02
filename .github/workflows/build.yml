@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+    branches: [ chore/coding-artifacts ]
+  pull_request:
+    branches: [ dev ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Node 1.x
+      uses: actions/setup-node@v2.1.3
+      with:
+        node-version: 12.x
+
+    - name: Check out code into the project's root directory
+      uses: actions/checkout@v2
+
+    - name: Update the version of package.json
+      run: node scripts/gitVersion.js
+
+    - name: Build
+       run: |
+        npm i -g yarn
+        yarn install
+        yarn build
+        mv nocalhost-*.vsix nocalhost.vsix
+
+    - name: Push to Coding Artifacts
+      run: |
+        PLUGIN_VERSION="$(git rev-parse --short HEAD)"
+        curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://codingcorp-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${PLUGIN_VERSION}"
