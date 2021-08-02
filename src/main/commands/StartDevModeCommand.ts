@@ -134,6 +134,10 @@ export default class StartDevModeCommand implements ICommand {
       containerName,
       description.associate
     );
+    if (!destDir) {
+      return;
+    }
+
     // check image
     let image: string | undefined = await this.getImage(
       node.getKubeConfigPath(),
