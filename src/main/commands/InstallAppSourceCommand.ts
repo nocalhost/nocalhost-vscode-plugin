@@ -1,25 +1,18 @@
-import { KubeConfigNode } from "./../nodes/KubeConfigNode";
 import { NhctlCommand } from "./../ctl/nhctl";
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as path from "path";
-import {
-  execAsyncWithReturn,
-  execChildProcessAsync,
-  ShellResult,
-} from "../ctl/shell";
+import { execChildProcessAsync } from "../ctl/shell";
 import * as tempy from "tempy";
 
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
-import { replaceSpacePath, readYamlSync } from "../utils/fileUtil";
+import { replaceSpacePath } from "../utils/fileUtil";
+import * as yaml from "yaml";
 import git from "../ctl/git";
 import ICommand from "./ICommand";
 import { INSTALL_APP_SOURCE } from "./constants";
 import registerCommand from "./register";
-import host, { Host } from "../host";
+import host from "../host";
 import { getFilesByDir, readYaml } from "../utils/fileUtil";
-import * as nhctl from "../ctl/nhctl";
-import { AppNode } from "../nodes/AppNode";
 import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
 import state from "../state";
@@ -258,14 +251,21 @@ async function installKustomizeApp(props: {
 async function getNocalhostConfig(dir: string) {
   const dirPath = path.resolve(dir, ".nocalhost");
   let fileNames = getFilesByDir(dirPath);
-  fileNames = (fileNames || [])
-    .filter((fileName) => {
-      const extname = path.extname(fileName);
-      return [".yaml", ".yml"].includes(extname);
-    })
-    .filter((fileName) => {
-      return Boolean(readYamlSync(path.resolve(dirPath, fileName)));
-    });
+  fileNames = (fileNames || []).filter((fileName) => {
+    const extname = path.extname(fileName);
+    return [".yaml", ".yml"].includes(extname);
+  });
+
+  fileNames = (
+    await Promise.all(
+      fileNames.map((fileName) =>
+        readYamlSync(path.resolve(dirPath, fileName)).then((config) => {
+          return config && fileName;
+        })
+      )
+    )
+  ).filter(Boolean);
+
   if (fileNames.length === 0) {
     vscode.window.showWarningMessage(
       "No config.yaml available in this directory"
@@ -284,14 +284,40 @@ async function getNocalhostConfig(dir: string) {
   }
   return configFileName;
 }
+async function readYamlSync(path: string) {
+  let config: INocalhostConfig | null = null;
+  try {
+    const str = await new NhctlCommand("render").addArgument(path).exec();
+    if (str) {
+      config = yaml.parse(str);
+    }
+    const { manifestType } = config?.application;
 
+    if (
+      !manifestType ||
+      ![
+        AppType.helmLocal,
+        AppType.kustomizeLocal,
+        AppType.rawManifestLocal,
+        AppType.helmGit,
+        AppType.kustomizeGit,
+        AppType.rawManifestGit,
+      ].includes(manifestType)
+    ) {
+      return null;
+    }
+  } catch (e) {
+    config = null;
+  }
+  return config;
+}
 async function parseNocalhostConfig(
   configPath: string
 ): Promise<INocalhostConfig | null> {
   if (!configPath) {
     return;
   }
-  const config: INocalhostConfig = await readYaml(configPath);
+  const config: INocalhostConfig = await readYamlSync(configPath);
   if (!config) {
     vscode.window.showErrorMessage(`Unresolved: ${configPath}`);
     return;
