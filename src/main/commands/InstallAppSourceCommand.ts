@@ -12,7 +12,7 @@ import ICommand from "./ICommand";
 import { INSTALL_APP_SOURCE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import { getFilesByDir, readYaml } from "../utils/fileUtil";
+import { getFilesByDir } from "../utils/fileUtil";
 import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
 import state from "../state";
@@ -302,6 +302,7 @@ async function readYamlSync(path: string) {
         AppType.helmGit,
         AppType.kustomizeGit,
         AppType.rawManifestGit,
+        AppType.rawManifest,
       ].includes(manifestType)
     ) {
       return null;
@@ -521,9 +522,12 @@ export default class InstallAppSourceCommand implements ICommand {
       const manifestType = nocalhostConfig?.application?.manifestType;
       const appName = nocalhostConfig?.application?.name;
       if (
-        [AppType.helmGit, AppType.kustomizeGit, AppType.rawManifestGit].indexOf(
-          manifestType
-        ) === -1
+        [
+          AppType.helmGit,
+          AppType.kustomizeGit,
+          AppType.rawManifestGit,
+          AppType.rawManifest,
+        ].indexOf(manifestType) === -1
       ) {
         vscode.window.showErrorMessage(
           `Please choose another installation method`
@@ -543,7 +547,10 @@ export default class InstallAppSourceCommand implements ICommand {
         });
       }
 
-      if (manifestType === AppType.rawManifestGit) {
+      if (
+        manifestType === AppType.rawManifestGit ||
+        manifestType === AppType.rawManifest
+      ) {
         await installRawManifastLocal({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
