@@ -42,7 +42,8 @@ export default function registerCommand(
         } catch (error) {
           host.showErrorMessage(error.message);
           logger.error(
-            `[vscode Command] exec command: ${command}. ${error && error.message
+            `[vscode Command] exec command: ${command}. ${
+              error && error.message
             }: ${error && error.stack}`
           );
         } finally {
