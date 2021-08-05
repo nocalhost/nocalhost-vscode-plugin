@@ -1373,66 +1373,53 @@ export async function checkVersion() {
 
   const currentVersion: string = await services.fetchNhctlVersion();
 
+  // currentVersion < requiredVersion
+  const isUpdateNhctl =
+    currentVersion && semver.lt(currentVersion, requiredVersion);
+
+  if (currentVersion && !isUpdateNhctl) {
+    return;
+  }
+
+  let failedMessage = "Download failed, Please try again";
+  let completedMessage = "Download completed";
+  let progressingTitle = "Downloading nhctl...";
+
+  if (isUpdateNhctl) {
+    failedMessage = `Update failed, please delete ${binPath} file and try again`;
+    completedMessage = "Update completed";
+    progressingTitle = `Update nhctl to ${requiredVersion}...`;
+  }
+
   try {
-    if (currentVersion) {
-      // currentVersion < requiredVersion
-      const isUpdateNhctl: boolean = semver.lt(currentVersion, requiredVersion);
+    await lock();
+    setUpgrade(true);
 
-      if (isUpdateNhctl) {
-        setUpgrade(true);
-
-        await lock();
-
-        await host.showProgressing(
-          `Update nhctl to ${requiredVersion}...`,
-          async (aciton) => {
-            await downloadNhctl(sourcePath, destinationPath, (increment) => {
-              aciton.report({ increment });
-            });
-
-            const isWindows = host.isWindow();
-            // windows A lot of Windows Defender firewall warnings #167
-            if (isWindows) {
-              if (fs.existsSync(TEMP_NHCTL_BIN)) {
-                fs.unlinkSync(TEMP_NHCTL_BIN);
-              }
-              fs.renameSync(binPath, TEMP_NHCTL_BIN);
-            }
-            fs.renameSync(destinationPath, binPath);
-            if (!(await checkDownloadNhclVersion(requiredVersion))) {
-              vscode.window.showErrorMessage(
-                `Update failed, please delete ${binPath} file and try again`
-              );
-            } else {
-              vscode.window.showInformationMessage("Update completed");
-            }
-            unlock();
-          }
-        );
-
-        setUpgrade(false);
-      }
-    } else {
-      await lock();
-      setUpgrade(true);
-
-      await host.showProgressing(`Downloading nhctl`, async (aciton) => {
-        await downloadNhctl(sourcePath, destinationPath, (increment) => {
-          aciton.report({ increment });
-        });
-        fs.renameSync(destinationPath, binPath);
-        unlock();
-        if (!(await checkDownloadNhclVersion(requiredVersion))) {
-          vscode.window.showErrorMessage(`Download failed, Please try again`);
-        } else {
-          vscode.window.showInformationMessage("Download completed");
-        }
+    await host.showProgressing(progressingTitle, async (aciton) => {
+      await downloadNhctl(sourcePath, destinationPath, (increment) => {
+        aciton.report({ increment });
       });
 
-      setUpgrade(false);
-    }
+      // windows A lot of Windows Defender firewall warnings #167
+      if (isUpdateNhctl && host.isWindow()) {
+        if (fs.existsSync(TEMP_NHCTL_BIN)) {
+          fs.unlinkSync(TEMP_NHCTL_BIN);
+        }
+        fs.renameSync(binPath, TEMP_NHCTL_BIN);
+      }
+
+      fs.renameSync(destinationPath, binPath);
+
+      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+        vscode.window.showErrorMessage(failedMessage);
+      } else {
+        vscode.window.showInformationMessage(completedMessage);
+      }
+    });
   } catch (err) {
     console.error(err);
+    vscode.window.showErrorMessage(failedMessage);
+  } finally {
     setUpgrade(false);
     unlock();
   }
