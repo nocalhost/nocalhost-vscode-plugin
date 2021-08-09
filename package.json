@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.70",
+  "version": "0.4.71",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -478,12 +478,12 @@
     ]
   },
   "scripts": {
-    "build": "./node_modules/.bin/vsce package",
+    "build": "test=true && ./node_modules/.bin/vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
     "ts-compile-check": "tsc -p build/tsconfig.extension.json",
     "compile": "webpack --devtool nosources-source-map --config ./build/webpack.config.js",
-    "watch": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/webpack.config.js",
+    "watch": "test=true && webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/webpack.config.js",
     "package": "webpack --mode production --config ./build/webpack.config.js",
     "lint": "eslint src --ext ts",
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",

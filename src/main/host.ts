@@ -63,7 +63,7 @@ export class Host implements vscode.Disposable {
     try {
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
-        await rootNode.updateData().catch(() => {});
+        await rootNode.updateData().catch(() => { });
       }
       for (const [id, expanded] of state.refreshFolderMap) {
         if (expanded) {
@@ -82,7 +82,7 @@ export class Host implements vscode.Disposable {
             //   return isClose(child);
             // }
             // const close = isClose(node);
-            await node.updateData().catch(() => {});
+            await node.updateData().catch(() => { });
             // if (!close) {
             //   await node.updateData();
             // }
@@ -285,7 +285,8 @@ export class Host implements vscode.Disposable {
     msg: string,
     options?: vscode.MessageOptions,
     ...items: string[]
-  ) {
+  ): Thenable<string | undefined> {
+    this.log(msg,true);
     if (options && options.modal) {
       return vscode.window.showInformationMessage(msg, options, ...items);
     }
@@ -478,4 +479,11 @@ export class Host implements vscode.Disposable {
   }
 }
 
-export default new Host();
+let defaultHost: Host = new Host();
+
+if (process.env.test) {
+  let hostTest = require('./host-test').default;
+  defaultHost = new hostTest();
+}
+
+export default defaultHost;
