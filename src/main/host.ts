@@ -63,7 +63,7 @@ export class Host implements vscode.Disposable {
     try {
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
-        await rootNode.updateData().catch(() => { });
+        await rootNode.updateData().catch(() => {});
       }
       for (const [id, expanded] of state.refreshFolderMap) {
         if (expanded) {
@@ -82,7 +82,7 @@ export class Host implements vscode.Disposable {
             //   return isClose(child);
             // }
             // const close = isClose(node);
-            await node.updateData().catch(() => { });
+            await node.updateData().catch(() => {});
             // if (!close) {
             //   await node.updateData();
             // }
