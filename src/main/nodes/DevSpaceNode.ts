@@ -40,11 +40,16 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     super();
     this.hasInit = false;
     this.parent = parent;
-    this.label = label || info.namespace;
     this.info = info;
     this.applications = applications;
     this.installedApps = [];
     this.clusterSource = clusterSource;
+
+    if (label && info.namespace !== label) {
+      label += `(${info.namespace})`;
+    }
+    this.label = label;
+
     state.setNode(this.getNodeStateId(), this);
   }
 

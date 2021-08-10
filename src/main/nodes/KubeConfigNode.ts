@@ -85,7 +85,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       devSpaces: this.devSpaceInfos,
       applications: this.applications,
     };
-    const devs: (DevSpaceNode & { order?: boolean })[] = [];
+    const devs: (DevSpaceNode & { order?: boolean; id?: number })[] = [];
 
     res.applications.forEach(async (app) => {
       let context = app.context;
@@ -108,10 +108,15 @@ export class KubeConfigNode extends NocalhostFolderNode {
         res.applications,
         this.clusterSource
       );
-      devs.push(Object.assign(node, { order: d.spaceOwnType === 'Viewer' }));
+      devs.push(
+        Object.assign(node, {
+          order: d.spaceOwnType === "Viewer",
+          id: d.id,
+        })
+      );
     }
 
-    return orderBy(devs, ["order", "label"]);
+    return orderBy(devs, ["order", "id", "label"]);
   }
 
   async getTreeItem() {
@@ -122,8 +127,9 @@ export class KubeConfigNode extends NocalhostFolderNode {
         : vscode.TreeItemCollapsibleState.None
     );
 
-    treeItem.contextValue = `kubeconfig${this.clusterSource === ClusterSource.local ? "-local" : "-server"
-      }`;
+    treeItem.contextValue = `kubeconfig${
+      this.clusterSource === ClusterSource.local ? "-local" : "-server"
+    }`;
 
     if (this.clusterSource === ClusterSource.server) {
       const { username, baseUrl } = this.accountClusterService.loginInfo;
