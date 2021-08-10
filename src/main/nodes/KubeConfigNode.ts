@@ -135,11 +135,11 @@ export class KubeConfigNode extends NocalhostFolderNode {
     }
 
     treeItem.description = "Active";
-    treeItem.iconPath = resolveVSCodeUri("cluster-active.svg");
+    treeItem.iconPath = resolveVSCodeUri("cluster_active.svg");
 
     if (this.state.code !== 200) {
       treeItem.tooltip = this.state.info;
-      treeItem.iconPath = resolveVSCodeUri("cluster-warning.svg");
+      treeItem.iconPath = resolveVSCodeUri("cluster_warning.svg");
       treeItem.description = "Unable to Connect";
     }
 

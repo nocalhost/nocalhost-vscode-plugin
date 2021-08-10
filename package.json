@@ -58,7 +58,7 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "icon": "images/dark/logo-light.svg",
+          "icon": "images/logo.svg",
           "id": "NocalhostView",
           "title": "Nocalhost"
         }
@@ -383,19 +383,13 @@
       {
         "command": "Nocalhost.startDevMode",
         "title": "%Start.Develop%",
-        "icon": {
-          "dark": "images/dark/dev-start.svg",
-          "light": "images/light/dev-start.svg"
-        },
+        "icon": "images/icon/dev_start.svg",
         "category": "devSpace"
       },
       {
         "command": "Nocalhost.endDevMode",
         "title": "%End.Develop%",
-        "icon": {
-          "dark": "images/dark/dev-end.svg",
-          "light": "images/light/dev-end.svg"
-        },
+        "icon": "images/icon/dev_end.svg",
         "category": "devSpace"
       },
       {
@@ -441,26 +435,17 @@
       {
         "command": "Nocalhost.editServiceConfig",
         "title": "%viewDevConfig%",
-        "icon": {
-          "dark": "images/dark/setting-normal.svg",
-          "light": "images/light/setting-normal.svg"
-        }
+        "icon": "images/icon/setting_normal.svg"
       },
       {
         "command": "Nocalhost.writeServiceConfig",
         "title": "%Config%",
-        "icon": {
-          "dark": "images/dark/setting-warning.svg",
-          "light": "images/light/setting-warning.svg"
-        }
+        "icon": "images/icon/setting_warning.svg"
       },
       {
         "command": "Nocalhost.EditAppConfig",
         "title": "%developConfig%",
-        "icon": {
-          "dark": "images/dark/setting-normal.svg",
-          "light": "images/light/setting-normal.svg"
-        }
+        "icon": "images/icon/setting_normal.svg"
       },
       {
         "command": "Nocalhost.editHelmValues",

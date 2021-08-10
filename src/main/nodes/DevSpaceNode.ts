@@ -219,7 +219,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     );
     if (this.unInstalling()) {
       treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
-      treeItem.iconPath = resolveVSCodeUri("loading.svg");
+      treeItem.iconPath = resolveVSCodeUri("loading.gif");
     }
 
     treeItem.contextValue = `devspace-${
