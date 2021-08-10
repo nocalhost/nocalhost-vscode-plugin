@@ -24,12 +24,8 @@ export default class ShowApplicationsCommand implements ICommand {
     if (node.clusterSource === ClusterSource.server) {
       const accountClusterService: AccountClusterService =
         node.parent.accountClusterService;
-      try {
-        await accountClusterService.checkVersion();
-      } catch (error) {
-        host.showErrorMessage(error.message);
-        return;
-      }
+
+      accountClusterService.checkServerVersion();
     }
 
     const apps = node.getUninstallApps();

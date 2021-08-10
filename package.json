@@ -27,7 +27,8 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.17"
+    "version": "0.4.17",
+    "serverVision": "0.4.7"
   },
   "contributes": {
     "configuration": [
@@ -38,12 +39,6 @@
             "type": "boolean",
             "default": true,
             "description": "%nocalhost.nhctl.checkVersion%",
-            "deprecationMessage": "Debug config"
-          },
-          "nocalhost.apiServer.checkVersion": {
-            "type": "boolean",
-            "default": true,
-            "description": "%nocalhost.apiServer.checkVersion%",
             "deprecationMessage": "Debug config"
           }
         }
