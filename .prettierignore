@@ -3,4 +3,4 @@ out/
 dist/
 static/
 README.md
-.vscode-test/
+.vscode-test

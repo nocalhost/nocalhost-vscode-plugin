@@ -112,10 +112,6 @@ const run = async (executable, args, testsEnv) => {
   return pid;
 };
 
-const stop = async (pid) => {
-  return process.kill(pid, "SIGINT");
-};
-
 const getWebSocketDebuggerUrl = async (port) =>
   new Promise((resolve, reject) => {
     let json = "";
@@ -141,6 +137,5 @@ const getWebSocketDebuggerUrl = async (port) =>
 
 module.exports = {
   start,
-  stop,
   getWebSocketDebuggerUrl,
 };

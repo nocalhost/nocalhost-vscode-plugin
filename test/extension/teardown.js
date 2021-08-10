@@ -1,9 +1,7 @@
-// teardown.js
 const path = require("path");
 const { readFile } = require("fs").promises;
 const rimraf = require("rimraf");
 const os = require("os");
-const { stop } = require(".");
 
 const DIR = path.join(os.tmpdir(), "jest_puppeteer_global_setup");
 
@@ -15,7 +13,12 @@ module.exports = async function () {
     throw new Error("wsEndpoint not found");
   }
 
-  await stop(pid);
+  let isStop = process.kill(pid, "SIGINT");
+
+  if (!isStop) {
+    process.kill(pid, "SIGKILL");
+  }
+
 
   rimraf.sync(DIR);
 };
