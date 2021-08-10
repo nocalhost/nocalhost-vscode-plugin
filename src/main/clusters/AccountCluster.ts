@@ -150,6 +150,7 @@ export default class AccountClusterService {
           kubeConfigPath: kubeConfigPath,
           namespace: "default",
         });
+
         for (const dev of devs) {
           dev.storageClass = sa.storageClass;
           dev.devStartAppendCommand = [
@@ -157,6 +158,19 @@ export default class AccountClusterService {
             "nocalhost-container-critical",
           ];
           dev.kubeconfig = sa.kubeconfig;
+
+          if (sa.privilegeType === "CLUSTER_ADMIN") {
+            dev.spaceOwnType = "Owner";
+            break;
+          }
+
+          if (sa.privilegeType === "CLUSTER_VIEWER") {
+            const ns = sa.namespacePacks.find(
+              (ns) => ns.namespace === dev.namespace
+            );
+
+            dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
+          }
         }
         devSpaces.push(...devs);
       } else {
@@ -169,6 +183,7 @@ export default class AccountClusterService {
             accountClusterService,
             clusterId: sa.clusterId,
             storageClass: sa.storageClass,
+            spaceOwnType: ns.spaceOwnType,
             devStartAppendCommand: [
               "--priority-class",
               "nocalhost-container-critical",
