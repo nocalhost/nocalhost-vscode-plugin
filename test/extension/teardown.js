@@ -19,6 +19,5 @@ module.exports = async function () {
     process.kill(pid, "SIGKILL");
   }
 
-
   rimraf.sync(DIR);
 };
