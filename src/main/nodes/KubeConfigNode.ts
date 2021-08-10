@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
 import { orderBy } from "lodash";
 import { HELM_NH_CONFIG_DIR } from "../constants";
 import state from "../state";
@@ -14,7 +13,6 @@ import { resolveVSCodeUri, writeFileLock } from "../utils/fileUtil";
 import * as _ from "lodash";
 import { DevSpaceNode } from "./DevSpaceNode";
 import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
-import { type } from "os";
 
 export type KubeConfigState = { code: 200 | 201; info: string };
 
@@ -87,7 +85,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       devSpaces: this.devSpaceInfos,
       applications: this.applications,
     };
-    const devs: DevSpaceNode[] = [];
+    const devs: (DevSpaceNode & { order?: boolean })[] = [];
 
     res.applications.forEach(async (app) => {
       let context = app.context;
@@ -110,10 +108,10 @@ export class KubeConfigNode extends NocalhostFolderNode {
         res.applications,
         this.clusterSource
       );
-      devs.push(node);
+      devs.push(Object.assign(node, { order: d.spaceOwnType === 'Viewer' }));
     }
 
-    return orderBy(devs, ["label"]);
+    return orderBy(devs, ["order", "label"]);
   }
 
   async getTreeItem() {
@@ -124,9 +122,8 @@ export class KubeConfigNode extends NocalhostFolderNode {
         : vscode.TreeItemCollapsibleState.None
     );
 
-    treeItem.contextValue = `kubeconfig${
-      this.clusterSource === ClusterSource.local ? "-local" : "-server"
-    }`;
+    treeItem.contextValue = `kubeconfig${this.clusterSource === ClusterSource.local ? "-local" : "-server"
+      }`;
 
     if (this.clusterSource === ClusterSource.server) {
       const { username, baseUrl } = this.accountClusterService.loginInfo;
