@@ -15,7 +15,12 @@ module.exports = async function () {
 
   const pid = await readFile(path.join(DIR, "pid"), "utf8");
 
-  kill(Number(pid), "SIGKILL");
+  kill(Number(pid));
 
   rimraf.sync(DIR);
 };
+
+
+process.on("SIGINT", async () => {
+  await teardown();
+});

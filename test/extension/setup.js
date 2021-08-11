@@ -5,14 +5,16 @@ const path = require("path");
 const mkdirp = require("mkdirp");
 const retry = require("async-retry");
 
+const { start } = require(".");
+const { getWebSocketDebuggerUrl } = require(".");
+const teardown = require('./teardown');
+
 const DIR = path.join(
   os.tmpdir(),
   process.pid.toString(),
   "jest_puppeteer_global_setup"
 );
 
-const { start } = require(".");
-const { getWebSocketDebuggerUrl } = require(".");
 async function setup() {
   const { port, pid } = await start({
     testsEnv: {
