@@ -40,6 +40,7 @@ async function setInputBox(page, text) {
   let input = await page.waitForSelector(".input.empty");
 
   await input.type(text);
+
   await page.keyboard.press("Enter");
 }
 
@@ -108,17 +109,37 @@ async function unInstall(page, node, name) {
     `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`
   );
 }
+
 /**
  *
  * @param {string} name
  * @param {puppeteer.Page} page
  */
-async function existApp(page, name) {
-  return await page.waitForFunction(
-    `document.querySelector(".monaco-list-rows").innerText.endsWith("${name}")`
-  );
-}
+async function isInstallSucceed(page, name) {
+  const app = await page.waitForFunction(function (text) {
 
+    let list = document
+      .querySelector("#workbench\\.parts\\.sidebar")
+      ?.querySelectorAll(".monaco-list-row") ?? [];
+
+    if (list.length) {
+      return Array.from(list).some(node => {
+        if (node.textContent === text) {
+          const icon = node.querySelector(".custom-view-tree-node-item-icon");
+
+          if (icon) {
+            return icon.getAttribute("style").includes("app-connected.svg")
+          }
+        }
+        return false;
+      });
+    }
+
+    return false;
+  }, {}, name);
+
+  return app;
+}
 /**
  *
  * @param {string} name
@@ -213,7 +234,7 @@ module.exports = {
   getInstallApp,
   unInstall,
   getButtons,
-  existApp,
+  isInstallSucceed,
   initialize,
   setInputBox,
   quickPick,

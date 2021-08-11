@@ -14,11 +14,11 @@ const {
 
 const installTests = () => {
   describe("Deploy From Local Directory", () => {
-    let localTmpPath;
+    let bookInfoPath;
     beforeAll(async () => {
-      localTmpPath = path.join(os.tmpdir(), "localTmpPath");
+      bookInfoPath = path.join(os.tmpdir(), process.pid.toString(), "bookInfo");
 
-      rimraf.sync(localTmpPath);
+      rimraf.sync(bookInfoPath);
 
       const spawnSyncReturns = cp.spawnSync(
         "git",
@@ -27,7 +27,7 @@ const installTests = () => {
           "--depth",
           "1",
           "https://github.com/nocalhost/bookinfo.git",
-          localTmpPath,
+          bookInfoPath,
         ],
         {
           encoding: "utf-8",
@@ -40,13 +40,13 @@ const installTests = () => {
       }
     });
     it("kustomize", async () => {
-      await installKustomizeLocal(page, localTmpPath);
+      await installKustomizeLocal(page, bookInfoPath);
     });
     it("helm", async () => {
-      await installHelmLocal(page, localTmpPath);
+      await installHelmLocal(page, bookInfoPath);
     });
     it("manifest", async () => {
-      await installManifestLocal(page, localTmpPath);
+      await installManifestLocal(page, bookInfoPath);
     });
   });
 

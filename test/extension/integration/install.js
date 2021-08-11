@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer-core");
 const {
   getTreeView,
   unInstall,
-  existApp,
+  isInstallSucceed,
   getInstallApp,
   waitForMessage,
   setInputBox,
@@ -15,10 +15,10 @@ const assert = require("assert");
  *
  * @param {puppeteer.Page} page
  */
-async function install() {
+async function install(page) {
   let treeView = await getTreeView(page);
 
-  if (treeView.length == 1) {
+  if (treeView.length === 1) {
     await treeView[0].click();
   }
 
@@ -26,7 +26,7 @@ async function install() {
 
   treeView = await getTreeView(page);
 
-  if (treeView.length == 2) {
+  if (treeView.length === 2) {
     await treeView[1].click();
   }
 
@@ -48,7 +48,7 @@ async function install() {
  * @param {puppeteer.Page} page
  */
 async function checkInstall(page) {
-  assert(await (await existApp(page, "bookinfo")).jsonValue());
+  assert(await (await isInstallSucceed(page, "bookinfo")).jsonValue());
   assert(await checkPort("39080"));
 }
 

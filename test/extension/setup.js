@@ -5,7 +5,11 @@ const path = require("path");
 const mkdirp = require("mkdirp");
 const retry = require("async-retry");
 
-const DIR = path.join(os.tmpdir(), "jest_puppeteer_global_setup");
+const DIR = path.join(
+  os.tmpdir(),
+  process.pid.toString(),
+  "jest_puppeteer_global_setup"
+);
 
 const { start } = require(".");
 const { getWebSocketDebuggerUrl } = require(".");
