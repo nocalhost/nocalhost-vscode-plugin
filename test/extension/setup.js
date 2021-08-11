@@ -19,6 +19,7 @@ async function setup() {
       puppeteer: true,
     },
   });
+
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
     maxRetryTime: 10 * 1000,
   });

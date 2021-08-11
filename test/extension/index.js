@@ -6,6 +6,7 @@ const {
 const getPort = require("get-port");
 const cp = require("child_process");
 const path = require("path");
+const assert = require("assert");
 
 /**
  *
@@ -28,7 +29,7 @@ const start = async (options = {}) => {
 
     const extensionPath = path.join(__dirname, "../../nocalhost.vsix");
 
-    const spawnSyncReturns = cp.spawnSync(
+    const syncReturns = cp.spawnSync(
       cliPath,
       ["--install-extension", extensionPath],
       {
@@ -37,9 +38,11 @@ const start = async (options = {}) => {
       }
     );
 
-    if (spawnSyncReturns.status !== 0) {
-      throw new Error("install-extension error");
-    }
+    assert.strictEqual(
+      0,
+      syncReturns.status,
+      "install-extension error :" + syncReturns.stderr
+    );
   }
 
   const port = await getPort();
@@ -48,15 +51,13 @@ const start = async (options = {}) => {
 
   let args = [
     // https://github.com/microsoft/vscode/issues/84238
-    // "--no-sandbox",
+    "--no-sandbox",
     "--disable-workspace-trust",
     `--remote-debugging-port=${port}`,
 
     "--disable-web-security",
     "--disable-features=IsolateOrigins",
     "--disable-site-isolation-trials",
-    // "-–allow-file-access-from-files",
-    // "--disable-features=IsolateOrigins,site-per-process"
   ];
 
   if (options.launchArgs) {

@@ -92,9 +92,9 @@ async function pasteAsText(page) {
   return await waitForMessage(page, "Success");
 }
 
-(async () => {
-  const page = await initialize();
-  await pasteAsText(page);
-})();
+// (async () => {
+//   const page = await initialize();
+//   await pasteAsText(page);
+// })();
 
 module.exports = { pasteAsText };

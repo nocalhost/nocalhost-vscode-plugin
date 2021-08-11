@@ -2,6 +2,7 @@ const cp = require("child_process");
 const rimraf = require("rimraf");
 const os = require("os");
 const path = require("path");
+const assert = require("assert");
 
 const {
   installHelmGit,
@@ -20,12 +21,12 @@ const installTests = () => {
 
       rimraf.sync(bookInfoPath);
 
-      const spawnSyncReturns = cp.spawnSync(
+      const syncReturns = cp.spawnSync(
         "git",
         [
           "clone",
           "--depth",
-          "1",
+          "1", 
           "https://github.com/nocalhost/bookinfo.git",
           bookInfoPath,
         ],
@@ -35,10 +36,13 @@ const installTests = () => {
         }
       );
 
-      if (spawnSyncReturns.status !== 0) {
-        throw new Error("git clone error");
-      }
+      assert.strictEqual(0, syncReturns.status, syncReturns.stderr);
     });
+
+    afterAll(async () => {
+      rimraf.sync(bookInfoPath);
+    });
+
     it("kustomize", async () => {
       await installKustomizeLocal(page, bookInfoPath);
     });
