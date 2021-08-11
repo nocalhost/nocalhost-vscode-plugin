@@ -48,9 +48,15 @@ const start = async (options = {}) => {
 
   let args = [
     // https://github.com/microsoft/vscode/issues/84238
-    "--no-sandbox",
+    // "--no-sandbox",
     "--disable-workspace-trust",
     `--remote-debugging-port=${port}`,
+
+    "--disable-web-security",
+    "--disable-features=IsolateOrigins",
+    "--disable-site-isolation-trials",
+    // "-–allow-file-access-from-files",
+    // "--disable-features=IsolateOrigins,site-per-process"
   ];
 
   if (options.launchArgs) {

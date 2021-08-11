@@ -10,7 +10,7 @@ const DIR = path.join(
   "jest_puppeteer_global_setup"
 );
 
-module.exports = async function () {
+async function teardown() {
   await global.__BROWSER__.disconnect();
 
   const pid = await readFile(path.join(DIR, "pid"), "utf8");
@@ -18,8 +18,10 @@ module.exports = async function () {
   kill(Number(pid));
 
   rimraf.sync(DIR);
-};
+}
 
 process.on("SIGINT", async () => {
   await teardown();
 });
+
+module.exports = teardown;

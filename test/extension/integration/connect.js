@@ -1,13 +1,14 @@
-const puppeteer = require("puppeteer");
-const { waitForMessage } = require("./index");
+const puppeteer = require("puppeteer-core");
 const assert = require("assert");
+const ncp = require("copy-paste");
+const { waitForMessage, initialize } = require("./index");
 
 /**
  *
  * @param {puppeteer.Page} page
  */
 async function loginServer(page) {
-  const iframe = await login(page);
+  const iframe = await getIframe(page);
   const button = await iframe.$(".nocalhost-tab:last-child");
   await button.click();
 
@@ -37,16 +38,10 @@ async function loginServer(page) {
  *
  * @param {puppeteer.Page} page
  */
-async function login(page) {
-  // const html = await page.evaluate(() => {
-  //   const iframe = document.querySelector("#webview-webviewview-nocalhost-home").querySelector("iframe")
-  //   return new Promise((res,rej)=>{
-  //     iframe.addEventListener("load", () => {
-  //       res(iframe)
-  //     })
-  //   });
-  // })
-  //  await page.waitForTimeout(5*1000);
+async function getIframe(page) {
+  await page.waitForTimeout(5 * 1000);
+
+  const frames = page.mainFrame().childFrames();
 
   const parentHandle = await page.waitForSelector(
     "#webview-webviewview-nocalhost-home .webview.ready"
@@ -55,12 +50,6 @@ async function login(page) {
   const parent = await parentHandle.contentFrame();
 
   assert.ok(parent);
-
-  const html = await parentHandle.evaluate((item) => {
-    return item.innerHTML;
-  });
-
-  assert.ok(html);
 
   const iframeHandle = await parent.waitForSelector("#active-frame");
   const iframe = await iframeHandle.contentFrame();
@@ -73,8 +62,8 @@ async function login(page) {
  *
  * @param {puppeteer.Page} page
  */
-async function loginTextConfig(page) {
-  const iframe = await login(page);
+async function pasteAsText(page) {
+  const iframe = await getIframe(page);
   const tabs = await (await iframe.$(".nocalhost-tab")).$$(":scope > *");
   await tabs[0].click();
 
@@ -83,20 +72,29 @@ async function loginTextConfig(page) {
   );
   await buttons[1].click();
 
-  await iframe.type(
-    '[placeholder="KubeConfig"]',
-    process.env.NOCALHOST_KUBECONFIG
-  );
+  await iframe.focus('[placeholder="KubeConfig"]');
+
+  await new Promise((res) => ncp.copy(process.env.NOCALHOST_KUBECONFIG, res));
+
+  await iframe.evaluateHandle(() => {
+    return new Promise(async (res) => {
+      const text = await navigator.clipboard.readText();
+
+      document.querySelector('[placeholder="KubeConfig"]').value = text;
+      res();
+    });
+  });
+
+  await iframe.type('[placeholder="KubeConfig"]', " ");
 
   await iframe.click(".kubeConfig-add-btn");
 
   return await waitForMessage(page, "Success");
 }
 
-// (async () => {
-//   await initialize(async (page) => {
-//     await loginTextConfig(page);
-//   });
-// })();
+(async () => {
+  const page = await initialize();
+  await pasteAsText(page);
+})();
 
-module.exports = { loginServer, loginTextConfig };
+module.exports = { pasteAsText };

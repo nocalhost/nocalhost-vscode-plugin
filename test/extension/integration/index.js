@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer-core");
 const retry = require("async-retry");
 const isPortReachable = require("is-port-reachable");
 const assert = require("assert");
-const { start } = require("../");
+const { start, getWebSocketDebuggerUrl } = require("../");
 /**
  *
  * @param {puppeteer.Page} page
@@ -150,11 +150,6 @@ async function isInstallSucceed(page, name) {
  * @param {puppeteer.Page} page
  */
 async function getInstallApp(page, name) {
-  await page.waitForFunction(() => {
-    const { innerText } = document.querySelector(".monaco-list-rows");
-    return innerText.endsWith("default") || innerText.startsWith("default");
-  });
-
   const nameList = await page.evaluate(() => {
     return Array.from(document.querySelector(".monaco-list-rows").children).map(
       (item) => item.innerText
