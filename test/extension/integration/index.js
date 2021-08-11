@@ -116,27 +116,31 @@ async function unInstall(page, node, name) {
  * @param {puppeteer.Page} page
  */
 async function isInstallSucceed(page, name) {
-  const app = await page.waitForFunction(function (text) {
+  const app = await page.waitForFunction(
+    function (text) {
+      let list =
+        document
+          .querySelector("#workbench\\.parts\\.sidebar")
+          ?.querySelectorAll(".monaco-list-row") ?? [];
 
-    let list = document
-      .querySelector("#workbench\\.parts\\.sidebar")
-      ?.querySelectorAll(".monaco-list-row") ?? [];
+      if (list.length) {
+        return Array.from(list).some((node) => {
+          if (node.textContent === text) {
+            const icon = node.querySelector(".custom-view-tree-node-item-icon");
 
-    if (list.length) {
-      return Array.from(list).some(node => {
-        if (node.textContent === text) {
-          const icon = node.querySelector(".custom-view-tree-node-item-icon");
-
-          if (icon) {
-            return icon.getAttribute("style").includes("app-connected.svg")
+            if (icon) {
+              return icon.getAttribute("style").includes("app-connected.svg");
+            }
           }
-        }
-        return false;
-      });
-    }
+          return false;
+        });
+      }
 
-    return false;
-  }, {}, name);
+      return false;
+    },
+    {},
+    name
+  );
 
   return app;
 }
