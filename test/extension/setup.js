@@ -7,7 +7,7 @@ const retry = require("async-retry");
 
 const { start } = require(".");
 const { getWebSocketDebuggerUrl } = require(".");
-const teardown = require('./teardown');
+const teardown = require("./teardown");
 
 const DIR = path.join(
   os.tmpdir(),

@@ -20,7 +20,6 @@ module.exports = async function () {
   rimraf.sync(DIR);
 };
 
-
 process.on("SIGINT", async () => {
   await teardown();
 });
