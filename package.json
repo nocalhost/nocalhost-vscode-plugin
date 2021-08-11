@@ -489,7 +489,7 @@
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
     "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
     "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
-    "test:ext": "jest --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
+    "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
     "test:watch": "jest --watch"
   },
   "husky": {

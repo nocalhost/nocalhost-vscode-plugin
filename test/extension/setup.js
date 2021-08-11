@@ -4,10 +4,8 @@ const os = require("os");
 const path = require("path");
 const mkdirp = require("mkdirp");
 const retry = require("async-retry");
-
 const { start } = require(".");
 const { getWebSocketDebuggerUrl } = require(".");
-const teardown = require("./teardown");
 
 const DIR = path.join(
   os.tmpdir(),
