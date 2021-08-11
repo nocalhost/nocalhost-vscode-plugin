@@ -75,7 +75,7 @@ export default class SyncServiceCommand implements ICommand {
               arguments: [syncData],
             };
             host.statusBar.command = reconnectSyncCommand;
-          } else if (r.outOfSync) {
+          } else if (r.outOfSync || r.status === "outOfSync") {
             const overrideSyncCommand: vscode.Command = {
               title: OVERRIDE_SYNC,
               command: OVERRIDE_SYNC,
