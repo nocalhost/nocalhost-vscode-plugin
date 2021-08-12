@@ -13,7 +13,6 @@ export default function registerCommand(
   const dispose = vscode.commands.registerCommand(
     command,
     async (...args: any[]) => {
-      host.check();
       logger.info(`[vscode Command] exec command: ${command}`);
       if (isLock) {
         if (state.isRunning()) {
