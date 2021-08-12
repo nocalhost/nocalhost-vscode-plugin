@@ -34,6 +34,7 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 import { appTreeView } from "../extension";
 import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
+import { existsSync } from "fs";
 
 export interface ControllerNodeApi {
   name: string;
@@ -400,13 +401,7 @@ export default class StartDevModeCommand implements ICommand {
     let appConfig = host.getGlobalState(appName);
     let workloadConfig = appConfig[node.name];
 
-    const result = await host.showInformationMessage(
-      nls["tips.open"],
-      { modal: true },
-      nls["bt.open.other"],
-      nls["bt.open.dir"]
-    );
-    if (result === nls["bt.open.other"]) {
+    const getUrl = async () => {
       const uris = await host.showOpenDialog({
         canSelectFiles: false,
         canSelectFolders: true,
@@ -415,8 +410,32 @@ export default class StartDevModeCommand implements ICommand {
       if (uris && uris.length > 0) {
         destDir = uris[0].fsPath;
       }
+    };
+
+    const result = await host.showInformationMessage(
+      nls["tips.open"],
+      { modal: true },
+      nls["bt.open.other"],
+      nls["bt.open.dir"]
+    );
+    if (result === nls["bt.open.other"]) {
+      await getUrl();
     } else if (result === nls["bt.open.dir"]) {
       destDir = workloadConfig.directory;
+
+      if (!existsSync(destDir)) {
+        destDir = undefined;
+
+        const res = await host.showInformationMessage(
+          "The directory does not exist, do you want to associate the new source code directory.",
+          { modal: true },
+          "Associate"
+        );
+
+        if (res === "Associate") {
+          await getUrl();
+        }
+      }
     }
 
     return destDir;
