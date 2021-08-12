@@ -60,7 +60,7 @@ export default class AccountClusterService {
       async (response: AxiosResponse<IResponseData>) => {
         const config = response.config;
         const res = response.data;
-        if ([20103, 20111].includes(res.code)) {
+        if ([20103].includes(res.code)) {
           // refresh token
           if (config.url === "/v1/token/refresh") {
             host.log(
