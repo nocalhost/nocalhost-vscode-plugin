@@ -42,11 +42,16 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     super();
     this.hasInit = false;
     this.parent = parent;
-    this.label = label || info.namespace;
     this.info = info;
     this.applications = applications;
     this.installedApps = [];
     this.clusterSource = clusterSource;
+
+    if (label && info.namespace !== label) {
+      label += `(${info.namespace})`;
+    }
+    this.label = label || info.namespace;
+
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -246,7 +251,13 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     );
     if (this.unInstalling()) {
       treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
-      treeItem.iconPath = resolveVSCodeUri("loading.svg");
+      treeItem.iconPath = resolveVSCodeUri("loading.gif");
+    } else {
+      const iconName =
+        this.info.spaceOwnType === "Viewer"
+          ? "devspace_viewer.svg"
+          : "devspace.svg";
+      treeItem.iconPath = resolveVSCodeUri(iconName);
     }
 
     treeItem.contextValue = `devspace-${
