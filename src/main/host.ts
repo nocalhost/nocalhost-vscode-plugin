@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { Progress } from "vscode";
 import * as shell from "./ctl/shell";
-import { checkVersion } from "./ctl/nhctl";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
 import * as path from "path";
@@ -438,24 +437,6 @@ export class Host implements vscode.Disposable {
     } else {
       return path.replace(/ /g, "\\ ");
     }
-  }
-
-  async check() {
-    // const tools = ["kubectl"];
-    // for (let i = 0; i < tools.length; i++) {
-    //   const exist = shell.which(tools[i]);
-    //   if (!exist) {
-    //     switch (tools[i]) {
-    //       case "kubectl": {
-    //         vscode.window.showErrorMessage(
-    //           "kubectl not found, please install kubectl first."
-    //         );
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
-    await checkVersion();
   }
 
   async installVscodeExtension(extensionId: string): Promise<boolean> {

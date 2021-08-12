@@ -1,8 +1,4 @@
-import { IK8sResource } from "./../domain/IK8sResource";
-import * as path from "path";
-import * as fs from "fs";
 import * as vscode from "vscode";
-import * as yaml from "yaml";
 import { orderBy, get } from "lodash";
 
 import AccountClusterService, {
@@ -23,6 +19,9 @@ import { KubeConfigNode } from "./KubeConfigNode";
 import { IRootNode } from "../domain";
 import { ClusterSource } from "../common/define";
 import { checkCluster } from "../ctl/nhctl";
+import { DevSpaceNode } from "./DevSpaceNode";
+
+import arrayDiffer = require("array-differ");
 
 async function getClusterName(res: IRootNode) {
   if (res.clusterSource === ClusterSource.local) {
@@ -105,8 +104,47 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     const localData = (await this.getLocalData()) || [];
     const serverData = (await this.getServerData()) || [];
     const resultData = sortResources([...localData, ...serverData]);
+
+    await this.cleanDiffDevSpace(resultData);
+
     state.setData(this.getNodeStateId(), sortResources(resultData), isInit);
     return resultData;
+  }
+
+  private async cleanDiffDevSpace(resources: IRootNode[]) {
+    if (state.getData(this.getNodeStateId())) {
+      const children = await this.getChildren();
+
+      if (children.length) {
+        const diff: string[] = arrayDiffer(
+          children
+            .map((node) => {
+              return (node as KubeConfigNode).devSpaceInfos.map(
+                (item) => item.spaceName || item.namespace
+              );
+            })
+            .flat(1),
+          resources
+            .map((item) =>
+              item.devSpaces.map((item) => item.spaceName || item.namespace)
+            )
+            .flat(1)
+        );
+
+        if (diff.length) {
+          const devSpaceNodes: DevSpaceNode[] = (
+            await Promise.all(
+              children.map((node) => node.getChildren() as DevSpaceNode[])
+            )
+          ).flat(1);
+
+          diff.forEach((name) => {
+            const node = devSpaceNodes.find((item) => item.label === name);
+            node && state.cleanAutoRefresh(node);
+          });
+        }
+      }
+    }
   }
 
   public label: string = "Nocalhost";

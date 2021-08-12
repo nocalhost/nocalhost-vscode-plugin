@@ -20,7 +20,6 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
 import * as semver from "semver";
-import { getConfiguration } from "../utils/conifg";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -342,21 +341,17 @@ export default class AccountClusterService {
     }
   }
 
-  async checkVersion(): Promise<void> {
-    if (getConfiguration("apiServer.checkVersion") === false) {
-      return;
-    }
-
+  async checkServerVersion(): Promise<void> {
     const res = await this.getVersion();
 
-    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.version}`;
+    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.nhctl.serverVision}`;
     logger.info(log);
 
     if (res.data?.version) {
       const { version } = res.data;
       if (semver.gt(packageJson.version, version)) {
-        throw new Error(
-          `please upgrade api server version.(${packageJson.version} or higher)`
+        host.showWarnMessage(
+          `please upgrade api server version.(${packageJson.nhctl.serverVision} or higher)`
         );
       }
     }

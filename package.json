@@ -27,7 +27,8 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.17"
+    "serverVision": "0.4.7",
+    "version": "0.4.21"
   },
   "contributes": {
     "configuration": [
@@ -38,12 +39,6 @@
             "type": "boolean",
             "default": true,
             "description": "%nocalhost.nhctl.checkVersion%",
-            "deprecationMessage": "Debug config"
-          },
-          "nocalhost.apiServer.checkVersion": {
-            "type": "boolean",
-            "default": true,
-            "description": "%nocalhost.apiServer.checkVersion%",
             "deprecationMessage": "Debug config"
           }
         }
@@ -70,7 +65,7 @@
           "id": "Nocalhost",
           "name": "Nocalhost",
           "type": "tree",
-          "when": "extensionActivated && Nocalhost.visibleTree"
+          "when": "nhctl.upgrade || extensionActivated && Nocalhost.visibleTree"
         },
         {
           "id": "Nocalhost.Home",
@@ -84,12 +79,17 @@
       {
         "view": "Nocalhost",
         "contents": "%noReady.description%",
-        "when": "!extensionActivated"
+        "when": "!nhctl.upgrade && !extensionActivated"
       },
       {
         "view": "Nocalhost",
         "contents": "%noApps.description%",
         "when": "extensionActivated && emptyCluster"
+      },
+      {
+        "view": "Nocalhost",
+        "contents": "%tips.nhctl.updating%",
+        "when": "nhctl.upgrade"
       }
     ],
     "menus": {
@@ -508,7 +508,7 @@
   },
   "devDependencies": {
     "@material-ui/core": "^4.11.0",
-    "@material-ui/data-grid": "^4.0.0-alpha.14",
+    "@material-ui/data-grid": "4.0.0-alpha.35",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.57",
     "@testing-library/jest-dom": "^5.11.9",
@@ -524,7 +524,6 @@
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
     "@types/react-router-dom": "^5.1.6",
-    "@types/request": "^2.48.5",
     "@types/semver": "^7.3.4",
     "@types/shelljs": "^0.8.8",
     "@types/sinon": "^9.0.10",
@@ -568,6 +567,7 @@
     "@types/json-schema": "^7.0.7",
     "@types/proper-lockfile": "^4.1.1",
     "ajv": "^6.12.6",
+    "array-differ": "^3.0.0",
     "axios": "^0.21.0",
     "camelcase": "^6.2.0",
     "classnames": "^2.3.1",
@@ -579,7 +579,6 @@
     "log4js": "^6.3.0",
     "proper-lockfile": "^4.1.2",
     "qs": "^6.9.4",
-    "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "semver": "^7.3.4",
     "shelljs": "^0.8.4",

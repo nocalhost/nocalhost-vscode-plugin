@@ -31,12 +31,7 @@ export default class UpgradeCommand implements ICommand {
       const accountClusterService: AccountClusterService =
         devSpaceNode.parent.accountClusterService;
 
-      try {
-        await accountClusterService.checkVersion();
-      } catch (error) {
-        host.showErrorMessage(error.message);
-        return;
-      }
+      accountClusterService.checkServerVersion();
     }
 
     let refOrVersion: string | undefined;
