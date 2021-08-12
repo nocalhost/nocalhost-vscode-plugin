@@ -60,7 +60,7 @@ export default class AccountClusterService {
       async (response: AxiosResponse<IResponseData>) => {
         const config = response.config;
         const res = response.data;
-        if ([20103].includes(res.code)) {
+        if (res.code === 20103) {
           // refresh token
           if (config.url === "/v1/token/refresh") {
             host.log(
@@ -74,26 +74,18 @@ export default class AccountClusterService {
                 this.loginInfo.username || ""
               }`
             );
-            if (this.accountClusterNode) {
-              let globalClusterRootNodes: AccountClusterNode[] =
-                host.getGlobalState(SERVER_CLUSTER_LIST) || [];
-              const index = globalClusterRootNodes.findIndex(
-                ({ id }) => id === this.accountClusterNode.id
-              );
-              if (index !== -1) {
-                globalClusterRootNodes.splice(index, 1);
-                host.setGlobalState(
-                  SERVER_CLUSTER_LIST,
-                  globalClusterRootNodes
-                );
-              }
-            }
+            this.deleteAccountNode();
           } else if (this.isRefreshing) {
             this.isRefreshing = false;
             await this.getRefreshToken();
             this.isRefreshing = true;
           }
         }
+
+        if (res.code === 20111) {
+          this.deleteAccountNode();
+        }
+
         if (res.code !== 0) {
           // vscode.window.showErrorMessage(res.message || "");
           return Promise.reject({ source: "api", error: res });
@@ -272,6 +264,23 @@ export default class AccountClusterService {
         this.jwt = `Bearer ${token}`;
         this.refreshToken = refresh_token;
         this.updateLoginInfo();
+      }
+    }
+  }
+
+  deleteAccountNode() {
+    if (this.accountClusterNode) {
+      let globalClusterRootNodes: AccountClusterNode[] =
+        host.getGlobalState(SERVER_CLUSTER_LIST) || [];
+      const index = globalClusterRootNodes.findIndex(
+        ({ id }) => id === this.accountClusterNode.id
+      );
+      if (index !== -1) {
+        globalClusterRootNodes.splice(index, 1);
+        host.setGlobalState(
+          SERVER_CLUSTER_LIST,
+          globalClusterRootNodes
+        );
       }
     }
   }
