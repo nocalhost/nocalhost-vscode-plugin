@@ -233,8 +233,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       treeItem.iconPath = resolveVSCodeUri(iconName);
     }
 
-    treeItem.contextValue = `devspace-${this.clusterSource === ClusterSource.local ? "local" : "server"
-      }`;
+    treeItem.contextValue = `devspace-${
+      this.clusterSource === ClusterSource.local ? "local" : "server"
+    }`;
 
     return Promise.resolve(treeItem);
   }

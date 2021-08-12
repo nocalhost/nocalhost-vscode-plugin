@@ -64,12 +64,14 @@ export default class AccountClusterService {
           // refresh token
           if (config.url === "/v1/token/refresh") {
             host.log(
-              `Please login again ${this.loginInfo.baseUrl || ""}：${this.loginInfo.username || ""
+              `Please login again ${this.loginInfo.baseUrl || ""}：${
+                this.loginInfo.username || ""
               }`,
               true
             );
             host.showWarnMessage(
-              `Please login again ${this.loginInfo.baseUrl || ""}：${this.loginInfo.username || ""
+              `Please login again ${this.loginInfo.baseUrl || ""}：${
+                this.loginInfo.username || ""
               }`
             );
             if (this.accountClusterNode) {
@@ -126,12 +128,14 @@ export default class AccountClusterService {
       return [];
     }
     logger.info(
-      `[getServerClusterRootNodes] serviceAccounts length ${(serviceAccounts || []).length
+      `[getServerClusterRootNodes] serviceAccounts length ${
+        (serviceAccounts || []).length
       }`
     );
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
     logger.info(
-      `[getServerClusterRootNodes] applications length ${(applications || []).length
+      `[getServerClusterRootNodes] applications length ${
+        (applications || []).length
       }`
     );
     for (const sa of serviceAccounts) {
@@ -164,8 +168,7 @@ export default class AccountClusterService {
 
           if (sa.privilegeType === "CLUSTER_ADMIN") {
             dev.spaceOwnType = "Owner";
-          }
-          else if (sa.privilegeType === "CLUSTER_VIEWER") {
+          } else if (sa.privilegeType === "CLUSTER_VIEWER") {
             dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
           }
         }

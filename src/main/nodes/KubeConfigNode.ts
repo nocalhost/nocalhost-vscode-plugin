@@ -115,7 +115,11 @@ export class KubeConfigNode extends NocalhostFolderNode {
       );
     }
 
-    return orderBy(devs, ["order", "isSpace", "label"],["desc","desc","asc"]);
+    return orderBy(
+      devs,
+      ["order", "isSpace", "label"],
+      ["desc", "desc", "asc"]
+    );
   }
 
   async getTreeItem() {
@@ -126,8 +130,9 @@ export class KubeConfigNode extends NocalhostFolderNode {
         : vscode.TreeItemCollapsibleState.None
     );
 
-    treeItem.contextValue = `kubeconfig${this.clusterSource === ClusterSource.local ? "-local" : "-server"
-      }`;
+    treeItem.contextValue = `kubeconfig${
+      this.clusterSource === ClusterSource.local ? "-local" : "-server"
+    }`;
 
     if (this.clusterSource === ClusterSource.server) {
       const { username, baseUrl } = this.accountClusterService.loginInfo;
