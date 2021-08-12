@@ -1,6 +1,6 @@
 const path = require("path");
 const { readFile } = require("fs").promises;
-const rimraf = require("rimraf");
+const fse = require("fs-extra");
 const os = require("os");
 const kill = require("tree-kill");
 
@@ -17,7 +17,7 @@ async function teardown() {
 
   kill(Number(pid));
 
-  rimraf.sync(DIR);
+  fse.removeSync(DIR);
 }
 
 process.on("SIGINT", async () => {

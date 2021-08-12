@@ -1,12 +1,14 @@
 const http = require("http");
+const cp = require("child_process");
+const path = require("path");
+const fse = require("fs-extra");
+const assert = require("assert");
+
 const {
   downloadAndUnzipVSCode,
   resolveCliPathFromVSCodeExecutablePath,
 } = require("vscode-test");
 const getPort = require("get-port");
-const cp = require("child_process");
-const path = require("path");
-const assert = require("assert");
 
 /**
  *
@@ -17,33 +19,34 @@ const assert = require("assert");
  * @param {object?} options.testsEnv
  */
 const start = async (options = {}) => {
+  const userDataDir = getUserDataDir();
+
   if (!options.vscodeExecutablePath) {
     options.vscodeExecutablePath = await downloadAndUnzipVSCode(
       options.version,
       options.platform
     );
-
-    const cliPath = resolveCliPathFromVSCodeExecutablePath(
-      options.vscodeExecutablePath
-    );
-
-    const extensionPath = path.join(__dirname, "../../nocalhost.vsix");
-
-    const syncReturns = cp.spawnSync(
-      cliPath,
-      ["--install-extension", extensionPath],
-      {
-        encoding: "utf-8",
-        stdio: "inherit",
-      }
-    );
-
-    assert.strictEqual(
-      0,
-      syncReturns.status,
-      "install-extension error :" + syncReturns.stderr
-    );
   }
+
+
+  const cliPath = resolveCliPathFromVSCodeExecutablePath(
+    options.vscodeExecutablePath
+  );
+
+  const syncReturns = cp.spawnSync(
+    cliPath,
+    ["--install-extension", path.join(__dirname, "../../nocalhost.vsix")],
+    {
+      encoding: "utf-8",
+      stdio: "inherit",
+    }
+  );
+
+  assert.strictEqual(
+    0,
+    syncReturns.status,
+    "install-extension error :" + syncReturns.stderr
+  );
 
   const port = await getPort();
 
@@ -53,11 +56,13 @@ const start = async (options = {}) => {
     // https://github.com/microsoft/vscode/issues/84238
     "--no-sandbox",
     "--disable-workspace-trust",
-    `--remote-debugging-port=${port}`,
 
+    `--remote-debugging-port=${port}`,
     "--disable-web-security",
     "--disable-features=IsolateOrigins",
     "--disable-site-isolation-trials",
+    `--remote-debugging-port=${port}`,
+    `--user-data-dir=${userDataDir}`
   ];
 
   if (options.launchArgs) {
@@ -66,6 +71,28 @@ const start = async (options = {}) => {
   const pid = await run(options.vscodeExecutablePath, args, options.testsEnv);
 
   return { pid, port };
+};
+
+const getUserDataDir = () => {
+  const userDataDir = path.join(__dirname, "../../.vscode-test/user-data");
+
+  if (fse.existsSync(userDataDir)) {
+    fse.removeSync(userDataDir);
+  }
+
+  fse.mkdirpSync(path.join(userDataDir, 'User'));
+
+  let defaultSettings = {
+    "window.titleBarStyle": "custom",
+    "workbench.editor.enablePreview": false,
+    "window.restoreFullscreen": true,
+    "telemetry.enableTelemetry": false,
+    "window.newWindowDimensions": "maximized"
+  };
+
+  fse.writeFile(path.join(userDataDir, 'User', 'settings.json'), JSON.stringify(defaultSettings, null, 2));
+
+  return userDataDir;
 };
 
 /**
