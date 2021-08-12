@@ -19,7 +19,10 @@ function readUpdateFile() {
       const result = data.match(regex)[1];
       // const buf = Buffer.from(result);
       // fs.appendFileSync(CHANGELOG_PATH, buf);
-      let file = fs.readFileSync(CHANGELOG_PATH).toString().replace(/# Change Log/, '');
+      let file = fs
+        .readFileSync(CHANGELOG_PATH)
+        .toString()
+        .replace(/# Change Log/, "");
       const buf = Buffer.from(header + result + file);
       fs.writeFileSync(CHANGELOG_PATH, buf);
     });
