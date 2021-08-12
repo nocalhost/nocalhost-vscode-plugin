@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Progress } from "vscode";
+import { CancellationToken, Progress, QuickPickOptions } from "vscode";
 import * as shell from "./ctl/shell";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
@@ -308,6 +308,26 @@ export class Host implements vscode.Disposable {
         );
       }
     });
+  }
+  /**
+   * Shows a selection list allowing multiple selections.
+   *
+   * @param items An array of strings, or a promise that resolves to an array of strings.
+   * @param options Configures the behavior of the selection list.
+   * @param token A token that can be used to signal cancellation.
+   * @return A promise that resolves to the selected items or `undefined`.
+   */
+  async showQuickPick(
+    items: readonly string[] | Thenable<readonly string[]>,
+    options?: QuickPickOptions,
+    token?: CancellationToken
+  ): Promise<string | null> {
+    const result = await vscode.window.showQuickPick(items, options, token);
+
+    if (!result) {
+      return Promise.reject("ignore");
+    }
+    return Promise.resolve(result);
   }
 
   showErrorMessage(msg: string) {
