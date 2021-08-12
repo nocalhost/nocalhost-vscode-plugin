@@ -215,7 +215,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     return result as AppNode[];
   }
 
-  buildApplicationInfo(appName: string) {
+  buildApplicationInfo(appName: string, context: object = {}) {
     const contextObj = {
       applicationName: appName,
       applicationUrl: "",
@@ -224,6 +224,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       source: "",
       resourceDir: "",
       installType: "",
+      ...context,
     };
 
     const app = {

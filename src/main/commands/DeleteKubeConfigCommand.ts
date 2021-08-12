@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import { isExistCluster } from "../clusters/utils";
 import ICommand from "./ICommand";
-import { DELETE_KUBECONFIG, REFRESH, SIGN_OUT } from "./constants";
+import { DELETE_KUBECONFIG } from "./constants";
 import registerCommand from "./register";
 import { LOCAL_PATH } from "../constants";
 import state from "../state";
@@ -10,6 +9,7 @@ import { isExist } from "../utils/fileUtil";
 import host from "../host";
 import { LocalClusterNode } from "../clusters/LocalCuster";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
+import Bookinfo from "../common/bookinfo";
 
 export default class DeleteKubeConfigCommand implements ICommand {
   command: string = DELETE_KUBECONFIG;
@@ -42,6 +42,8 @@ export default class DeleteKubeConfigCommand implements ICommand {
     host.setGlobalState(LOCAL_PATH, tmpPath);
 
     await state.cleanAutoRefresh(node);
+
+    Bookinfo.cleanCheck(node);
 
     await state.refreshTree();
 

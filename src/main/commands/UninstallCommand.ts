@@ -13,6 +13,7 @@ import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import messageBus from "../utils/messageBus";
 import { NocalhostFolderNode } from "../nodes/abstract/NocalhostFolderNode";
 import { BaseNocalhostNode } from "../nodes/types/nodeType";
+import Bookinfo from "../common/bookinfo";
 
 export default class UninstallCommand implements ICommand {
   command: string = UNINSTALL_APP;
@@ -49,6 +50,8 @@ export default class UninstallCommand implements ICommand {
     host.disposeApp(devspace.info.spaceName, appNode.name);
 
     host.startAutoRefresh();
+
+    Bookinfo.cleanCheck(appNode);
 
     await this.uninstall(
       host,
