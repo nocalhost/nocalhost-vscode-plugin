@@ -28,7 +28,6 @@ const start = async (options = {}) => {
     );
   }
 
-
   const cliPath = resolveCliPathFromVSCodeExecutablePath(
     options.vscodeExecutablePath
   );
@@ -62,7 +61,7 @@ const start = async (options = {}) => {
     "--disable-features=IsolateOrigins",
     "--disable-site-isolation-trials",
     `--remote-debugging-port=${port}`,
-    `--user-data-dir=${userDataDir}`
+    `--user-data-dir=${userDataDir}`,
   ];
 
   if (options.launchArgs) {
@@ -80,17 +79,20 @@ const getUserDataDir = () => {
     fse.removeSync(userDataDir);
   }
 
-  fse.mkdirpSync(path.join(userDataDir, 'User'));
+  fse.mkdirpSync(path.join(userDataDir, "User"));
 
   let defaultSettings = {
     "window.titleBarStyle": "custom",
     "workbench.editor.enablePreview": false,
     "window.restoreFullscreen": true,
     "telemetry.enableTelemetry": false,
-    "window.newWindowDimensions": "maximized"
+    "window.newWindowDimensions": "maximized",
   };
 
-  fse.writeFile(path.join(userDataDir, 'User', 'settings.json'), JSON.stringify(defaultSettings, null, 2));
+  fse.writeFile(
+    path.join(userDataDir, "User", "settings.json"),
+    JSON.stringify(defaultSettings, null, 2)
+  );
 
   return userDataDir;
 };

@@ -26,7 +26,7 @@ const installTests = () => {
         [
           "clone",
           "--depth",
-          "1", 
+          "1",
           "https://github.com/nocalhost/bookinfo.git",
           bookInfoPath,
         ],
