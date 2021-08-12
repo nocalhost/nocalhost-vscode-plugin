@@ -48,7 +48,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     if (label && info.namespace !== label) {
       label += `(${info.namespace})`;
     }
-    this.label = label;
+    this.label = label || info.namespace;
 
     state.setNode(this.getNodeStateId(), this);
   }
@@ -233,9 +233,8 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       treeItem.iconPath = resolveVSCodeUri(iconName);
     }
 
-    treeItem.contextValue = `devspace-${
-      this.clusterSource === ClusterSource.local ? "local" : "server"
-    }`;
+    treeItem.contextValue = `devspace-${this.clusterSource === ClusterSource.local ? "local" : "server"
+      }`;
 
     return Promise.resolve(treeItem);
   }
