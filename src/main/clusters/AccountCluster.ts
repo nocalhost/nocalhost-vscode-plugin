@@ -277,10 +277,7 @@ export default class AccountClusterService {
       );
       if (index !== -1) {
         globalClusterRootNodes.splice(index, 1);
-        host.setGlobalState(
-          SERVER_CLUSTER_LIST,
-          globalClusterRootNodes
-        );
+        host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
       }
     }
   }
