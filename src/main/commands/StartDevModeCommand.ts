@@ -95,6 +95,14 @@ export default class StartDevModeCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
+    await NhctlCommand.authCheck({
+      base: "dev",
+      args: ["start", node.getAppName(), "-t" + node.resourceType, node.name],
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+    }).exec();
+
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }

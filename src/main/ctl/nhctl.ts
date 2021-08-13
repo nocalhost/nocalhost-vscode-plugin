@@ -84,7 +84,22 @@ export class NhctlCommand {
   static install(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("install", baseParams);
   }
+  static authCheck(
+    baseParams: IBaseCommand<
+      { args: string[]; base: string } & Required<
+        Pick<IBaseCommand, "namespace">
+      >
+    >
+  ) {
+    const { base, args, ...rest } = baseParams;
 
+    args.push("--auth-check");
+
+    const nhctlCommand = NhctlCommand.create(base, rest);
+    nhctlCommand.args = args;
+
+    return nhctlCommand;
+  }
   addArgument(arg: string, value?: string | number) {
     if (arg === "-o" && value) {
       if (["yaml", "json"].indexOf((value as string).toLowerCase()) !== -1) {
