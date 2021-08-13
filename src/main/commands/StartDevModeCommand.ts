@@ -448,11 +448,16 @@ export default class StartDevModeCommand implements ICommand {
     associateDir: string
   ) {
     let destDir: string | undefined | boolean = associateDir;
+
     let appConfig = host.getGlobalState(appName) || {};
     const currentUri = this.getCurrentRootPath();
+
     let workloadConfig = appConfig[node.name] || {};
     workloadConfig.directory = associateDir;
+
+    appConfig[node.name] = workloadConfig;
     host.setGlobalState(appName, appConfig);
+
     if (!workloadConfig.directory) {
       destDir = await this.firstOpen(appName, node, containerName);
     } else if (currentUri !== workloadConfig.directory) {
