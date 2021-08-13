@@ -43,7 +43,7 @@ class Bookinfo {
 
     host.showProgressingToken(
       {
-        title: "Waiting for deployment",
+        title: "Waiting for deployment ready.",
         cancellable: true,
         location: vscode.ProgressLocation.Notification,
       },
@@ -142,7 +142,7 @@ class Bookinfo {
     const url = `http://127.0.0.1:${this.port}/productpage`;
 
     const res = await host.showInformationMessage(
-      `productpage url: ${url}`,
+      "Do you want to open the browser to access application?",
       { modal: true },
       "go"
     );
