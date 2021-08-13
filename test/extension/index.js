@@ -56,12 +56,11 @@ const start = async (options = {}) => {
     "--no-sandbox",
     "--disable-workspace-trust",
 
-    `--remote-debugging-port=${port}`,
     "--disable-web-security",
     "--disable-features=IsolateOrigins",
     "--disable-site-isolation-trials",
-    `--remote-debugging-port=${port}`,
     `--user-data-dir=${userDataDir}`,
+    `--remote-debugging-port=${port}`,
   ];
 
   if (options.launchArgs) {
