@@ -11,7 +11,7 @@ import {
 } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
-import { get as _get } from "lodash";
+import { get as _get, orderBy } from "lodash";
 import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
 import { IS_LOCAL, NH_BIN } from "../constants";
@@ -429,15 +429,7 @@ export async function getInstalledApp(
     .toYaml()
     .exec();
 
-  return obj.sort((a, b) => {
-    if (a.namespace < b.namespace) {
-      return -1;
-    }
-    if (a.namespace > b.namespace) {
-      return 1;
-    }
-    return 0;
-  });
+  return orderBy(obj, "namespace");
 }
 
 export async function install(props: {
