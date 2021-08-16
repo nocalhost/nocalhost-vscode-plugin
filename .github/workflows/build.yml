@@ -22,7 +22,7 @@ jobs:
     
     - name: Set evn
       run: echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-        
+
     - name: Update the version of package.json
       env:
         MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
@@ -30,11 +30,15 @@ jobs:
 
     - name: Build
       run: |
-        npm i -g yarn
-        yarn install
-        yarn build
-        mv nocalhost-*.vsix nocalhost.vsix
+        yarn
+        vsce package --yarn -o nocalhost.vsix
 
     - name: Push to Coding Artifacts
+      if: ${{ github.ref != 'refs/heads/dev' }}
       run: |
-        curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://codingcorp-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${PLUGIN_VERSION}"
+        curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://codingcorp-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${GITHUB_SHA}"
+    
+    - name: Push to Coding Artifacts
+      if: ${{ github.ref == 'refs/heads/dev' }}
+      run: |
+        curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://codingcorp-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=dev"
