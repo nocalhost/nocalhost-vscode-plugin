@@ -150,7 +150,7 @@ export default class AccountClusterService {
           ];
           dev.kubeconfig = sa.kubeconfig;
 
-          const ns = sa.namespacePacks.find(
+          const ns = sa.namespacePacks?.find(
             (ns) => ns.namespace === dev.namespace
           );
 
