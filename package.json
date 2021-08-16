@@ -281,6 +281,10 @@
     ],
     "commands": [
       {
+        "command": "Nocalhost.resetPlugin",
+        "title": "Nocalhost.resetPlugin"
+      },
+      {
         "command": "Nocalhost.debug",
         "title": "Debug"
       },

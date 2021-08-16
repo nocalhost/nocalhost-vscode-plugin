@@ -43,6 +43,8 @@ import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
 import RenameCommand from "./RenameCommand";
 import OpenProjectCommand from "./OpenProjectCommand";
 import EditManifestCommand from "./EditManifestCommand";
+import ResetPluginCommand from "./ResetPluginCommand";
+
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
@@ -98,4 +100,6 @@ export default function initCommands(
   new AddKubeconfig(context);
   new ClearServerCluster(context);
   new InstallAppSourceCommand(context);
+
+  new ResetPluginCommand(context);
 }
