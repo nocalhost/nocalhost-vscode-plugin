@@ -27,7 +27,7 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "serverVision": "0.4.7",
+    "serverVersion": "0.4.7",
     "version": "0.4.21"
   },
   "contributes": {

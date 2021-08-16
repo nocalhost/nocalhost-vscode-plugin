@@ -365,14 +365,14 @@ export default class AccountClusterService {
   async checkServerVersion(): Promise<void> {
     const res = await this.getVersion();
 
-    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.nhctl.serverVision}`;
+    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.nhctl.serverVersion}`;
     logger.info(log);
 
     if (res.data?.version) {
       const { version } = res.data;
-      if (semver.gt(packageJson.version, version)) {
+      if (semver.gt(packageJson.nhctl.serverVersion, version)) {
         host.showWarnMessage(
-          `please upgrade api server version.(${packageJson.nhctl.serverVision} or higher)`
+          `please upgrade api server version.(${packageJson.nhctl.serverVersion} or higher)`
         );
       }
     }
