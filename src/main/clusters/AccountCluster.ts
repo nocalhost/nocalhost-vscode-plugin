@@ -370,7 +370,7 @@ export default class AccountClusterService {
 
     if (res.data?.version) {
       const { version } = res.data;
-      if (semver.gt(packageJson.version, version)) {
+      if (semver.gt(packageJson.nhctl.serverVision, version)) {
         host.showWarnMessage(
           `please upgrade api server version.(${packageJson.nhctl.serverVision} or higher)`
         );
