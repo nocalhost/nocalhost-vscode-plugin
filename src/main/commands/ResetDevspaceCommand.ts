@@ -7,6 +7,8 @@ import state from "../state";
 import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import Bookinfo from "../common/bookinfo";
 
 export default class ResetDevspaceCommand implements ICommand {
   command: string = RESET_DEVSPACE;
@@ -15,7 +17,7 @@ export default class ResetDevspaceCommand implements ICommand {
   }
   async execCommand(node: DevSpaceNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     const result = await host.showInformationMessage(
@@ -27,8 +29,13 @@ export default class ResetDevspaceCommand implements ICommand {
       return;
     }
 
+    host.stopAutoRefresh();
+    await state.cleanAutoRefresh(node);
+    await Bookinfo.cleanCheck(node);
+
     state.setAppState(node.info.spaceName, "uninstalling", true);
-    vscode.commands.executeCommand("Nocalhost.refresh");
+    await vscode.commands.executeCommand("Nocalhost.refresh");
+
     host.disposeDevspace(node.info.spaceName);
     await this.reset(
       host,
@@ -37,8 +44,17 @@ export default class ResetDevspaceCommand implements ICommand {
       node.info.spaceName
     ).finally(async () => {
       await node.parent.accountClusterService.resetDevspace(node.info.id);
+
+      const nocalhostRootNode = node.parent.parent as NocalhostRootNode;
+
+      await nocalhostRootNode.updateData();
+
       vscode.commands.executeCommand("Nocalhost.refresh");
+
+      host.startAutoRefresh();
       host.showInformationMessage(`reset ${node.info.spaceName}`);
+
+      state.delete(node.info.spaceName);
     });
   }
 
@@ -52,7 +68,6 @@ export default class ResetDevspaceCommand implements ICommand {
     host.showInformationMessage(`Reseting devspace: ${devspaceName}`);
     await nhctl.resetApp(kubeconfigPath, namespace, devspaceName);
     host.removeGlobalState(devspaceName);
-    state.delete(devspaceName);
     host.log(`Devspace ${devspaceName} reset`, true);
     host.showInformationMessage(`Devspace ${devspaceName} reset`);
   }

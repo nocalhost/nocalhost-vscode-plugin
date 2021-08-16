@@ -1,61 +1,74 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
 import { orderBy } from "lodash";
 import { HELM_NH_CONFIG_DIR } from "../constants";
 import state from "../state";
 import AccountClusterService from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
 import * as path from "path";
+import { ClusterSource } from "../common/define";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
-import { writeFileLock } from "../utils/fileUtil";
-import { DevspaceInfo, V2ApplicationInfo } from "../api";
-import * as _ from "lodash";
+import { resolveVSCodeUri, writeFileLock } from "../utils/fileUtil";
 import { DevSpaceNode } from "./DevSpaceNode";
-import { IUserInfo } from "../domain";
+import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
+
+export type KubeConfigState = { code: 200 | 201; info: string };
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
   public type = "KUBECONFIG";
-  public devspaceInfos: DevspaceInfo[];
+  public devSpaceInfos: IDevSpaceInfo[];
   public userInfo: IUserInfo;
-  public kubeConfig: string;
-  public applications: Array<V2ApplicationInfo>;
+  public clusterSource: ClusterSource;
+  public applications: Array<IV2ApplicationInfo>;
   public parent: NocalhostRootNode;
   public installedApps: {
     name: string;
     type: string;
   }[] = [];
   public id: string;
-  public isLocal: boolean;
-  public localPath: string;
+  public kubeConfigPath: string;
   public accountClusterService: AccountClusterService;
-  constructor(
-    id: string,
-    parent: NocalhostRootNode,
-    label: string,
-    devspaceInfos: DevspaceInfo[],
-    applications: Array<V2ApplicationInfo>,
-    kubeConfig: string,
-    isLocal = false,
-    localPath: string,
-    userInfo: IUserInfo,
-    accountClusterService: AccountClusterService
-  ) {
+
+  private state: KubeConfigState;
+  constructor(props: {
+    id: string;
+    parent: NocalhostRootNode;
+    label: string;
+    devSpaceInfos: IDevSpaceInfo[];
+    applications: Array<IV2ApplicationInfo>;
+    clusterSource: ClusterSource;
+    kubeConfigPath: string;
+    userInfo: IUserInfo;
+    accountClusterService?: AccountClusterService;
+    state: KubeConfigState;
+  }) {
     super();
+    const {
+      id,
+      parent,
+      label,
+      devSpaceInfos,
+      applications,
+      clusterSource,
+      kubeConfigPath,
+      userInfo,
+      accountClusterService,
+    } = props;
     this.id = id;
     this.parent = parent;
+    this.clusterSource = clusterSource;
     this.label =
-      label || (devspaceInfos.length > 0 ? devspaceInfos[0].namespace : "");
-    this.devspaceInfos = devspaceInfos;
+      label || (devSpaceInfos.length > 0 ? devSpaceInfos[0].namespace : "");
+    this.devSpaceInfos = devSpaceInfos;
     this.applications = applications;
     this.installedApps = [];
-    this.kubeConfig = kubeConfig;
-    this.isLocal = isLocal;
-    this.localPath = localPath;
+    this.kubeConfigPath = kubeConfigPath;
     this.userInfo = userInfo;
     this.accountClusterService = accountClusterService;
+    this.state = props.state;
+
     state.setNode(this.getNodeStateId(), this);
   }
   updateData(): any {
@@ -63,15 +76,15 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   public getKubeConfigPath() {
-    return this.localPath;
+    return this.kubeConfigPath;
   }
 
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
     let res = {
-      devSpaces: this.devspaceInfos,
+      devSpaces: this.devSpaceInfos,
       applications: this.applications,
     };
-    const devs: DevSpaceNode[] = [];
+    const devs: (DevSpaceNode & { order?: boolean; isSpace?: boolean })[] = [];
 
     res.applications.forEach(async (app) => {
       let context = app.context;
@@ -92,21 +105,49 @@ export class KubeConfigNode extends NocalhostFolderNode {
         d.spaceName,
         d,
         res.applications,
-        this.isLocal
+        this.clusterSource
       );
-      devs.push(node);
+      devs.push(
+        Object.assign(node, {
+          order: d.spaceOwnType !== "Viewer",
+          isSpace: d.spaceId > 0,
+        })
+      );
     }
 
-    return orderBy(devs, ["label"]);
+    return orderBy(
+      devs,
+      ["order", "isSpace", "label"],
+      ["desc", "desc", "asc"]
+    );
   }
 
   async getTreeItem() {
     let treeItem = new vscode.TreeItem(
       this.label,
-      vscode.TreeItemCollapsibleState.Collapsed
+      this.state.code === 200
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
     );
 
-    treeItem.contextValue = `kubeconfig${this.isLocal ? "-local" : ""}`;
+    treeItem.contextValue = `kubeconfig${
+      this.clusterSource === ClusterSource.local ? "-local" : "-server"
+    }`;
+
+    if (this.clusterSource === ClusterSource.server) {
+      const { username, baseUrl } = this.accountClusterService.loginInfo;
+
+      treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
+    }
+
+    treeItem.description = "Active";
+    treeItem.iconPath = resolveVSCodeUri("cluster_active.svg");
+
+    if (this.state.code !== 200) {
+      treeItem.tooltip = this.state.info;
+      treeItem.iconPath = resolveVSCodeUri("cluster_warning.svg");
+      treeItem.description = "Unable to Connect";
+    }
 
     return Promise.resolve(treeItem);
   }

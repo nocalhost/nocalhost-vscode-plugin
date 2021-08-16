@@ -20,7 +20,7 @@ export default class CopyTerminalCommand implements ICommand {
   }
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     await host.showProgressing("copying ...", async () => {
@@ -122,7 +122,10 @@ export default class CopyTerminalCommand implements ICommand {
       host.isWindow() ? "nhctl.exe" : "nhctl"
     );
     host.copyTextToclipboard(`${shellPath} ${terminalCommands.join(" ")}`);
-    host.showInformationMessage("Copyed Terminal");
+
+    host.showInformationMessage(
+      "Please open the terminal and paste this command to open new shell."
+    );
   }
 
   private async execCore(
@@ -152,7 +155,10 @@ export default class CopyTerminalCommand implements ICommand {
       .addArgumentTheTail(`-- ${shell || ""}`)
       .getCommand();
     host.copyTextToclipboard(command);
-    host.showInformationMessage("Copyed Terminal");
+
+    host.showInformationMessage(
+      "Please open the terminal and paste this command to open new shell."
+    );
   }
 
   /**

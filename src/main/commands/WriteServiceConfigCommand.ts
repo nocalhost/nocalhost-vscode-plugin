@@ -14,7 +14,7 @@ export default class WriteServiceConfigCommand implements ICommand {
   }
   async execCommand(node: ControllerResourceNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     let protocol = "NocalhostRW";
@@ -37,6 +37,8 @@ export default class WriteServiceConfigCommand implements ICommand {
       `${protocol}://nh/config/app/${appNode.name}/services/${
         node.name
       }.yaml?appName=${node.getAppName()}&nodeName=${node.name}&resourceType=${
+        node.resourceType
+      }&workloadType=${
         node.resourceType
       }&id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${node.getNameSpace()}`
     );

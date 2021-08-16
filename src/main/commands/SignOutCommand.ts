@@ -17,6 +17,7 @@ import host from "../host";
 import { IUserInfo } from "../domain";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import * as fs from "fs";
+import Bookinfo from "../common/bookinfo";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -25,9 +26,10 @@ export default class SignOutCommand implements ICommand {
   }
   async execCommand(node: KubeConfigNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+    host.stopAutoRefresh();
 
     let globalUserList: {
       userInfo: IUserInfo;
@@ -41,21 +43,11 @@ export default class SignOutCommand implements ICommand {
     });
     host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
-    for (let key of state.refreshFolderMap.keys()) {
-      if ((key as string).startsWith(node.getNodeStateId())) {
-        state.refreshFolderMap.set(key, false);
-      }
-    }
-    await vscode.commands.executeCommand("Nocalhost.refresh");
+    await state.cleanAutoRefresh(node);
 
-    if (!isExistCluster()) {
-      await vscode.commands.executeCommand(
-        "setContext",
-        "Nocalhost.visibleTree",
-        false
-      );
-      return;
-    }
+    Bookinfo.cleanCheck(node);
+
+    await state.refreshTree();
     // remove local
     // host.removeGlobalState(IS_LOCAL);
     // host.removeGlobalState(LOCAL_PATH);

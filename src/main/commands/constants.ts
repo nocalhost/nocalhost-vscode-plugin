@@ -1,11 +1,15 @@
 export const REFRESH = "Nocalhost.refresh";
 
+export const RENAME = "Nocalhost.rename";
+
 export const SHOW_CLUSTER_INFO = "Nocalhost.showClusterInfo";
 
 export const CLEAR_LOCAL_CLUSTER = "Nocalhost.clearLocalCluster";
 export const CLEAR_SERVER_CLUSTER = "Nocalhost.clearServerCluster";
 
 export const SHOW_CONTEXT_GLOBAL = "Nocalhost.showContextGlobal";
+
+export const RESET_PLUGIN = "Nocalhost.resetPlugin";
 
 export const EDIT_SERVICE_CONFIG = "Nocalhost.editServiceConfig";
 export const WRITE_SERVICE_CONFIG = "Nocalhost.writeServiceConfig";
@@ -32,6 +36,7 @@ export const RESET_DEVSPACE = "Nocalhost.resetDevspace";
 export const UPGRADE_APP = "Nocalhost.upgradeApp";
 
 export const LOAD_RESOURCE = "Nocalhost.loadResource";
+export const EDIT_MANIFEST = "Nocalhost.editManifest";
 export const LOG = "Nocalhost.log";
 export const PORT_FORWARD = "Nocalhost.portForward";
 export const PORT_FORWARD_LIST = "Nocalhost.portForwardList";
@@ -52,6 +57,7 @@ export const RECONNECT_SYNC = "Nocalhost.reconnectSync";
 // debug
 export const DEBUG = "Nocalhost.debug";
 export const RUN = "Nocalhost.run";
+export const OPEN_PROJECT = "Nocalhost.openProject";
 
 // local
 export const DELETE_KUBECONFIG = "Nocalhost.deleteKubeConfig";

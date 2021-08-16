@@ -1,6 +1,6 @@
 import * as yaml from "yaml";
 import * as nhctl from "../ctl/nhctl";
-const lineBreakFlag = process.platform === "win32" ? "\n\r" : "\n";
+const lineBreakFlag = "\n";
 export interface JobConfig {
   name: string;
   path: string;
@@ -10,7 +10,7 @@ export interface JobConfig {
 export interface NocalhostServiceConfig {
   name: string;
   nameRegex?: string;
-  note?: string;
+  __note?: string;
   serviceType: string;
   dependLabelSelector: any;
   containers: Array<ContainerConfig>;
@@ -44,7 +44,7 @@ export interface ContainerConfig {
     portForward: Array<string>;
     workDir?: string; // default value: "/home/nocalhost-dev"
     persistentVolumeDirs?: Array<string>;
-    command: {
+    command?: {
       build?: Array<string>;
       run?: Array<string>;
       debug?: Array<string>;
@@ -140,7 +140,7 @@ export default class ConfigService {
     );
     const nodeStr = (nodes || []).join(lineBreakFlag) + lineBreakFlag;
     const config = yaml.parse(configStr) as NocalhostServiceConfig;
-    config.note = nodeStr;
+    config.__note = nodeStr;
     return config;
   }
 

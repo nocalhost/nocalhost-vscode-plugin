@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import { isExistCluster } from "../clusters/utils";
 import ICommand from "./ICommand";
-import { DELETE_KUBECONFIG, REFRESH, SIGN_OUT } from "./constants";
+import { DELETE_KUBECONFIG } from "./constants";
 import registerCommand from "./register";
 import { LOCAL_PATH } from "../constants";
 import state from "../state";
@@ -10,6 +9,7 @@ import { isExist } from "../utils/fileUtil";
 import host from "../host";
 import { LocalClusterNode } from "../clusters/LocalCuster";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
+import Bookinfo from "../common/bookinfo";
 
 export default class DeleteKubeConfigCommand implements ICommand {
   command: string = DELETE_KUBECONFIG;
@@ -18,7 +18,7 @@ export default class DeleteKubeConfigCommand implements ICommand {
   }
   async execCommand(node: KubeConfigNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
@@ -40,19 +40,13 @@ export default class DeleteKubeConfigCommand implements ICommand {
       tmpPath = [];
     }
     host.setGlobalState(LOCAL_PATH, tmpPath);
-    for (let key of state.refreshFolderMap.keys()) {
-      if ((key as string).startsWith(node.getNodeStateId())) {
-        state.refreshFolderMap.set(key, false);
-      }
-    }
-    await vscode.commands.executeCommand(REFRESH);
-    if (!isExistCluster()) {
-      await vscode.commands.executeCommand(
-        "setContext",
-        "Nocalhost.visibleTree",
-        false
-      );
-    }
+
+    await state.cleanAutoRefresh(node);
+
+    Bookinfo.cleanCheck(node);
+
+    await state.refreshTree();
+
     deleted.forEach(async (f) => {
       if (await isExist(f.filePath)) {
         fs.unlinkSync(f.filePath);

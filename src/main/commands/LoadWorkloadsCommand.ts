@@ -13,7 +13,7 @@ export default class LoadWorkloadsCommand implements ICommand {
   }
   async execCommand(node: DeploymentFolder) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     const appName: string = node.getAppName();

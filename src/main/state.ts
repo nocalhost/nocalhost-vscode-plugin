@@ -32,7 +32,10 @@ class State {
 
   public setData(id: string, data: object, isInit?: boolean) {
     const currentData = this.dataMap.get(id);
+    const startTime = Date.now();
     const isSame = _.isEqual(currentData, data);
+
+    const endTime = Date.now();
     this.dataMap.set(id, data);
     if (!isSame && !isInit) {
       this.renderMessage.set(id, new Date().getTime());
@@ -78,14 +81,18 @@ class State {
   // }
 
   async refreshTree() {
-    if (!isExistCluster()) {
-      await vscode.commands.executeCommand("setContext", "emptyCluster", false);
-    }
+    const isExist = isExistCluster();
+
+    await vscode.commands.executeCommand(
+      "setContext",
+      "emptyCluster",
+      !isExist
+    );
 
     await vscode.commands.executeCommand(
       "setContext",
       "Nocalhost.visibleTree",
-      true
+      isExist
     );
     await vscode.commands.executeCommand("Nocalhost.refresh");
     host.startAutoRefresh();
@@ -162,6 +169,14 @@ class State {
       );
     }
     this.set(appName, appMap);
+  }
+  async cleanAutoRefresh(node: BaseNocalhostNode) {
+    for (let key of this.refreshFolderMap.keys()) {
+      if ((key as string).startsWith(node.getNodeStateId())) {
+        logger.debug("cleanAutoRefresh", key);
+        this.refreshFolderMap.delete(key);
+      }
+    }
   }
 }
 

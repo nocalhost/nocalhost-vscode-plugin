@@ -14,7 +14,7 @@ export default class EditServiceConfigCommand implements ICommand {
   }
   async execCommand(node: ControllerResourceNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     const appNode = node.getAppNode();
@@ -26,7 +26,11 @@ export default class EditServiceConfigCommand implements ICommand {
       node.name,
       node.resourceType
     );
-    if (svcProfile.localconfigloaded || svcProfile.cmconfigloaded) {
+    if (
+      svcProfile.localconfigloaded ||
+      svcProfile.cmconfigloaded ||
+      svcProfile.annotationsconfigloaded
+    ) {
       protocol = "Nocalhost";
     }
     const uri = vscode.Uri.parse(

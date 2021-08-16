@@ -1,16 +1,20 @@
-import { ApplicationInfo, DevspaceInfo, V2ApplicationInfo } from "../api";
 import { IUserInfo } from "./IUserInfo";
+import { IApplicationInfo } from "./IApplicationInfo";
+
+import { IDevSpaceInfo } from "./IDevSpaceInfo";
+import { IV2ApplicationInfo } from "./IV2ApplicationInfo";
+
+import { ClusterSource } from "../common/define";
 import AccountClusterService from "../clusters/AccountCluster";
 
 export interface IRootNode {
-  devSpaces: DevspaceInfo[];
-  applications: V2ApplicationInfo[];
-  old: ApplicationInfo[];
-  isServer?: boolean;
+  devSpaces: IDevSpaceInfo[];
+  applications: IV2ApplicationInfo[];
+  clusterSource?: ClusterSource;
   accountClusterService?: AccountClusterService;
   id?: string;
-  localPath: string;
   createTime?: number;
+  clusterName?: string;
   userInfo?: IUserInfo;
-  kubeConfig: string;
+  kubeConfigPath: string;
 }

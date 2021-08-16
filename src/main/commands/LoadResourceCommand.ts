@@ -17,12 +17,12 @@ export default class LoadResourceCommand implements ICommand {
 
   async execCommand(node: KubernetesResourceNode | AppNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     if (node instanceof KubernetesResourceNode) {
       if (!node) {
-        host.showWarnMessage("A task is running, please try again later");
+        host.showWarnMessage("Failed to get node configs, please try again.");
         return;
       }
       const kind: string = node.resourceType;

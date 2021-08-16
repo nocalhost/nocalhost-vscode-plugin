@@ -12,9 +12,17 @@ import {
   DeploymentStatus,
   SvcProfile,
 } from "../../types/nodeType";
+import {
+  IK8sResource,
+  IStatus,
+  IResourceStatus,
+} from "./../../../domain/IK8sResource";
 import { Status, Resource, ResourceStatus } from "../../types/resourceType";
 
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
+  public label: string;
+  public name: string;
+
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
     treeItem.contextValue = `workload-${this.resourceType}`;
@@ -22,14 +30,14 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   }
   constructor(
     public parent: BaseNocalhostNode,
-    public label: string,
-    public name: string,
-    public conditionsStatus?: Array<Status> | string,
+    public resource: IK8sResource,
+    public conditionsStatus?: Array<IStatus> | string,
     public svcProfile?: SvcProfile | undefined | null,
-    public nocalhostService?: NocalhostServiceConfig | undefined | null,
-    public info?: any
+    public nocalhostService?: NocalhostServiceConfig | undefined | null
   ) {
     super();
+    this.label = resource.metadata.name;
+    this.name = resource.metadata.name;
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -60,6 +68,13 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
     return false;
   }
+  public async isDeveloping() {
+    if (this.svcProfile && this.svcProfile.developing) {
+      return true;
+    }
+
+    return false;
+  }
 
   public async getIconAndLabelByStatus(
     status: string
@@ -68,16 +83,17 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     let iconPath,
       label = this.label;
     switch (status) {
+      case "complete":
       case "running":
-        iconPath = resolveVSCodeUri("status-running.svg");
+        iconPath = resolveVSCodeUri("status_running.svg");
         if (portForwardStatus) {
-          iconPath = resolveVSCodeUri("Normal_Port_Forwarding.svg");
+          iconPath = resolveVSCodeUri("normal_port_forwarding.svg");
         }
         break;
       case "developing":
         const possess = this.svcProfile.possess;
         iconPath = resolveVSCodeUri(
-          possess === false ? "dev_other.svg" : "dev-start.svg"
+          possess === false ? "dev_other.svg" : "dev_start.svg"
         );
         const container = await this.getContainer();
         if (container) {
@@ -87,15 +103,18 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
           iconPath = resolveVSCodeUri(
             possess === false
               ? "dev_port_forwarding_other.svg"
-              : "Dev_Port_Forwarding.svg"
+              : "dev_port_forwarding.svg"
           );
         }
         break;
       case "starting":
-        iconPath = resolveVSCodeUri("loading.svg");
+        iconPath = resolveVSCodeUri("loading.gif");
         break;
       case "unknown":
-        iconPath = resolveVSCodeUri("status-unknown.svg");
+        iconPath = resolveVSCodeUri("status_unknown.svg");
+        break;
+      case "failed":
+        iconPath = resolveVSCodeUri("status_failed.svg");
         break;
     }
     return [iconPath, label];
@@ -173,32 +192,34 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
       appNode.name,
       `${this.getNodeStateId()}_status`
     );
-    if (refresh) {
-      await this.refreshSvcProfile();
-    }
     if (status) {
       return Promise.resolve(status);
     }
 
+    if (refresh) {
+      await this.refreshSvcProfile();
+    }
     if (this.svcProfile && this.svcProfile.developing) {
       return DeploymentStatus.developing;
     }
 
-    await this.refreshSvcProfile();
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
-    }
-    const deploy = await nhctl.getLoadResource({
-      kubeConfigPath: this.getKubeConfigPath(),
-      kind: this.resourceType,
-      name: this.name,
-      namespace: appNode.namespace,
-      outputType: "json",
-    });
-    const res = JSON.parse(deploy as string) as Resource;
-    const tmpStatus = res.status as ResourceStatus;
-    if (tmpStatus.replicas === tmpStatus.readyReplicas) {
-      status = "running";
+    const resourceStatus = this.resource.status as IResourceStatus;
+    const conditionsStatus = resourceStatus.conditions;
+    if (Array.isArray(conditionsStatus)) {
+      let available = false;
+      let progressing = false;
+      conditionsStatus.forEach((s) => {
+        if (s.type === "Available" && s.status === "True") {
+          status = "running";
+          available = true;
+        } else if (s.type === "Progressing" && s.status === "True") {
+          progressing = true;
+        }
+      });
+
+      if (progressing && !available) {
+        status = "starting";
+      }
     }
     if (!status) {
       status = "unknown";

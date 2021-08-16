@@ -11,6 +11,9 @@ import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import messageBus from "../utils/messageBus";
+import { NocalhostFolderNode } from "../nodes/abstract/NocalhostFolderNode";
+import { BaseNocalhostNode } from "../nodes/types/nodeType";
+import Bookinfo from "../common/bookinfo";
 
 export default class UninstallCommand implements ICommand {
   command: string = UNINSTALL_APP;
@@ -19,7 +22,7 @@ export default class UninstallCommand implements ICommand {
   }
   async execCommand(appNode: AppNode) {
     if (!appNode) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     const result = await host.showInformationMessage(
@@ -31,13 +34,25 @@ export default class UninstallCommand implements ICommand {
       return;
     }
 
+    host.stopAutoRefresh();
+
+    await state.cleanAutoRefresh(appNode);
+
     state.setAppState(appNode.name, "uninstalling", true);
+
+    await vscode.commands.executeCommand("Nocalhost.refresh");
+
     const devspace = appNode.getParent() as DevSpaceNode;
     messageBus.emit("uninstall", {
       devspaceName: devspace.info.spaceName,
       appName: appNode.name,
     });
     host.disposeApp(devspace.info.spaceName, appNode.name);
+
+    host.startAutoRefresh();
+
+    Bookinfo.cleanCheck(appNode);
+
     await this.uninstall(
       host,
       appNode.getKubeConfigPath(),
@@ -48,7 +63,6 @@ export default class UninstallCommand implements ICommand {
       devspace.updateData();
     });
   }
-
   private async uninstall(
     host: Host,
     kubeconfigPath: string,

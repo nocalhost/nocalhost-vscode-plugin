@@ -48,7 +48,8 @@ export async function opendevSpaceExec(
 
 export async function execAsyncWithReturn(
   command: string,
-  args: Array<any>
+  args: Array<any>,
+  startTime?: number
 ): Promise<ShellResult> {
   // host.log(`[cmd] ${command}`, true);
   return new Promise((resolve, reject) => {
@@ -61,8 +62,16 @@ export async function execAsyncWithReturn(
     let err = `execute command fail: ${command}`;
     proc.on("close", (code) => {
       if (code === 0) {
+        if (startTime !== undefined) {
+          const end = Date.now() - startTime;
+          if (end > 1000) {
+            logger.info(`[Time-consuming]: ${command} ${end}`);
+          }
+        }
         resolve({ stdout, stderr, code });
       } else {
+        logger.error(`[cmd] ${command} ${stdout}  ${stderr}`);
+        host.log(`[cmd] ${command} ${stdout} ${stderr}`, true);
         reject(new Error(`${err}. ${stderr}`));
       }
     });
@@ -93,28 +102,41 @@ export async function execChildProcessAsync(
     logger.info(`[cmd] ${command}`);
     const proc = spawn(command, args, { shell: true, env });
     let errorStr = "";
+    let stdout = "";
     let err = `execute command fail: ${command}`;
     proc.on("close", (code) => {
       if (code === 0) {
         resolve(null);
       } else {
-        logger.error(`end dev fail: ${code}`);
-        if (errorTips && errorTips.output) {
-          host.log(errorTips.output, true);
+        logger.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`);
+        host.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`, true);
+        if ((errorTips && errorTips.dialog) || errorStr) {
+          host.showErrorMessage((errorTips && errorTips.dialog) || errorStr);
         }
         reject((errorTips && errorTips.dialog) || `${err}. ${errorStr}`);
       }
     });
 
     proc.stdout.on("data", function (data) {
-      host.log("" + data);
+      let str = "" + data;
+      host.log(str);
+      stdout += data;
+      // waring info show dialog
+      if (str.indexOf("[WARNING]") > -1) {
+        host.showInformationMessage(str, {
+          modal: true,
+        });
+      }
+      if (str.indexOf("[INFO]") > -1) {
+        host.showWarnMessage(str);
+      }
+      if (str.indexOf("ERROR") > -1) {
+        host.showErrorMessage(str);
+      }
     });
 
     proc.stderr.on("data", function (data) {
       errorStr += data + "";
-      if (errorStr && !notShow) {
-        host.showErrorMessage(errorStr);
-      }
       host.log("" + data);
       logger.error(`[cmd] ${command} error: ${data}`);
     });
