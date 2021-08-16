@@ -182,6 +182,7 @@ async function installApp(props: {
   } = props;
   state.setAppState(appName, "installing", true);
   host.log(`Installing application: ${appName}`, true);
+
   const installCommand = NhctlCommand.install({
     kubeConfigPath,
     namespace,
@@ -348,6 +349,13 @@ export default class InstallAppSourceCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
+    await NhctlCommand.authCheck({
+      base: "install",
+      args: ["checkApp"],
+      kubeConfigPath: appNode.getKubeConfigPath(),
+      namespace: appNode.info.namespace,
+    }).exec();
 
     const LOCAL = localize("deployLocal", "Deploy From Local Directory");
     const CLONE_GIT = localize("deployGit", "Deploy From Git Repo");
