@@ -1,5 +1,25 @@
 # Change Log
 
+## Version 0.4.27 (16 Aug 2021)
+
+#### New Features
+
+- Add cluster status
+- Add guidance of `No cluster information`
+
+#### Refactor & Improvement
+
+- Optimize `syncService` icon
+- Optimize access to apps and increase opening speed
+- Optimize plugin descriptions
+
+#### Bug Fixes
+
+- Fixed the trust issue when installing ssh for the first time
+- Fixed the notification issue of `Open Project` is not associated with a target
+- Fixed `run` command
+- Fixed the config issue of `StatefulSet`
+
 
 ## Version 0.4.19 (2 Aug 2021)
 
