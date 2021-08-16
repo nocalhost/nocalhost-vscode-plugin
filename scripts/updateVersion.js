@@ -22,6 +22,7 @@ const packageJson = JSON.parse(
 
 packageJson.version = version;
 packageJson.nhctl.version = version;
+packageJson.nhctl.serverVersion = process.env.MINIMUNM_VERSION_REQUIREMENT;
 
 fs.unlinkSync(packageJsonUri);
 fs.writeFileSync(packageJsonUri, JSON.stringify(packageJson));

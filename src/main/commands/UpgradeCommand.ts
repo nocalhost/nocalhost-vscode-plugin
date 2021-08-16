@@ -10,6 +10,9 @@ import selectValues from "../common/components/selectValues";
 import host from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
+import AccountClusterService from "../clusters/AccountCluster";
+import { DevSpaceNode } from "../nodes/DevSpaceNode";
+import { ClusterSource } from "../common/define";
 
 export default class UpgradeCommand implements ICommand {
   command: string = UPGRADE_APP;
@@ -18,8 +21,17 @@ export default class UpgradeCommand implements ICommand {
   }
   async execCommand(appNode: AppNode) {
     if (!appNode) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
+    }
+
+    const devSpaceNode = appNode.parent as DevSpaceNode;
+
+    if (devSpaceNode.clusterSource === ClusterSource.server) {
+      const accountClusterService: AccountClusterService =
+        devSpaceNode.parent.accountClusterService;
+
+      accountClusterService.checkServerVersion();
     }
 
     let refOrVersion: string | undefined;
@@ -55,7 +67,7 @@ export default class UpgradeCommand implements ICommand {
         configPath = await vscode.window.showQuickPick(configs);
       } else if (configs.length === 0) {
         // select one
-        host.showErrorMessage("Not found config.yaml");
+        host.showErrorMessage("Can not find config.yaml");
       } else {
         configPath = configs[0];
       }

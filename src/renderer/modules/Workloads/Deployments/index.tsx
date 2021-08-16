@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { useHistory } from "react-router-dom";
 import qs from "qs";
 import { createStyles, makeStyles } from "@material-ui/core";
-import { DataGrid, RowsProp, ColDef } from "@material-ui/data-grid";
+import { DataGrid, GridRowData, GridColumns } from "@material-ui/data-grid";
 import fetchDeployments from "../../../services/fetchDeployments";
 import useInterval from "../../../hooks/useInterval";
 import { store } from "../../../store/store";
@@ -42,7 +42,7 @@ const Deployments: React.FC = () => {
     [search]
   );
 
-  const columns: ColDef[] = [
+  const columns: GridColumns = [
     { field: "name", headerName: "Name", width: 120 },
     { field: "namespace", headerName: "Namespace", width: 130 },
     { field: "pods", headerName: "Pods", width: 120 },
@@ -51,7 +51,7 @@ const Deployments: React.FC = () => {
     { field: "conditions", headerName: "Conditions", width: 120 },
   ];
 
-  const rows: RowsProp = deployments.items.map(
+  const rows: GridRowData[] = deployments.items.map(
     (deployment: IDeployment, index: number) => ({
       id: index + 1,
       name: deployment.name,

@@ -1,4 +1,4 @@
-import { PLUGIN_TEMP_DIR } from "./../constants";
+import { PLUGIN_TEMP_DIR, TEMP_NHCTL_BIN } from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -11,25 +11,24 @@ import {
 } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
-import { get as _get } from "lodash";
+import { get as _get, orderBy } from "lodash";
 import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
 import { IS_LOCAL, NH_BIN } from "../constants";
 import services from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
-import { IK8sResource, IPortForWard, IResourceStatus } from "../domain";
+import { IDevSpaceInfo, IPortForWard } from "../domain";
 import {
-  ControllerResource,
-  List,
   PodResource,
   Resource,
   ResourceStatus,
 } from "../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
-import { DevspaceInfo } from "../api";
 import { IPvc } from "../domain";
+import { getConfiguration } from "../utils/conifg";
+import { KubeConfigState } from "../nodes/KubeConfigNode";
 
 export interface InstalledAppInfo {
   name: string;
@@ -85,7 +84,22 @@ export class NhctlCommand {
   static install(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("install", baseParams);
   }
+  static authCheck(
+    baseParams: IBaseCommand<
+      { args: string[]; base: string } & Required<
+        Pick<IBaseCommand, "namespace">
+      >
+    >
+  ) {
+    const { base, args, ...rest } = baseParams;
 
+    args.push("--auth-check");
+
+    const nhctlCommand = NhctlCommand.create(base, rest);
+    nhctlCommand.args = args;
+
+    return nhctlCommand;
+  }
   addArgument(arg: string, value?: string | number) {
     if (arg === "-o" && value) {
       if (["yaml", "json"].indexOf((value as string).toLowerCase()) !== -1) {
@@ -144,7 +158,7 @@ export class NhctlCommand {
 
   async exec(hasParse = true) {
     const command = this.getCommand();
-    const result = await execAsyncWithReturn(command, []);
+    const result = await execAsyncWithReturn(command, [], Date.now());
     if (!result) {
       return null;
     }
@@ -338,7 +352,7 @@ export async function getResourceList(
 }
 
 export async function getAllNamespace(props: IBaseCommand<unknown>) {
-  const devspaces = new Array<DevspaceInfo>();
+  const devspaces = new Array<IDevSpaceInfo>();
   const kubeConfig = fs.readFileSync(props.kubeConfigPath);
   const result = await NhctlCommand.get(props)
     .addArgument("ns")
@@ -346,7 +360,7 @@ export async function getAllNamespace(props: IBaseCommand<unknown>) {
     .toJson()
     .exec();
   if (!result) {
-    const devspace: DevspaceInfo = {
+    const devspace: IDevSpaceInfo = {
       id: 0,
       userId: 0,
       spaceName: props.namespace,
@@ -367,7 +381,7 @@ export async function getAllNamespace(props: IBaseCommand<unknown>) {
   }
   (result || []).forEach((it: any) => {
     const ns = it.info;
-    const devspace: DevspaceInfo = {
+    const devspace: IDevSpaceInfo = {
       id: 0,
       userId: 0,
       spaceName: ns["metadata"]["name"],
@@ -430,15 +444,7 @@ export async function getInstalledApp(
     .toYaml()
     .exec();
 
-  return obj.sort((a, b) => {
-    if (a.namespace < b.namespace) {
-      return -1;
-    }
-    if (a.namespace > b.namespace) {
-      return 1;
-    }
-    return 0;
-  });
+  return orderBy(obj, "namespace");
 }
 
 export async function install(props: {
@@ -747,10 +753,12 @@ function sudoPortforward(command: string) {
     let stdout = "";
     let stderr = "";
     let err = `execute command fail: ${command}`;
+
     proc.on("close", (code) => {
       if (code === 0) {
         resolve({ stdout, stderr, code });
       } else {
+        host.log(err, true);
         reject(new Error(stderr || err));
       }
     });
@@ -1336,71 +1344,91 @@ export async function checkDownloadNhclVersion(
   return tempVersion === version;
 }
 
-export async function checkVersion() {
-  const requiredVersion: string = packageJson.nhctl?.version;
-  const { sourcePath, destinationPath, binPath } = getNhctlPath(
-    requiredVersion
+function setUpgrade(isUpgrade: boolean) {
+  const KEY = "nhctl.upgrade";
+
+  if (isUpgrade) {
+    host.setGlobalState(KEY, true);
+    host.stopAutoRefresh();
+  } else {
+    host.removeGlobalState(KEY);
+    host.startAutoRefresh();
+  }
+
+  vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    !isUpgrade
   );
-  const currentVersion: string = await services.fetchNhctlVersion();
+  vscode.commands.executeCommand("setContext", KEY, isUpgrade);
+}
+
+export async function checkVersion() {
+  if (getConfiguration("nhctl.checkVersion") === false) {
+    return;
+  }
+
+  const requiredVersion: string = packageJson.nhctl?.version;
+
   if (!requiredVersion) {
     return;
   }
+
+  const { sourcePath, destinationPath, binPath } = getNhctlPath(
+    requiredVersion
+  );
+
+  const currentVersion: string = await services.fetchNhctlVersion();
+
+  // currentVersion < requiredVersion
+  const isUpdateNhctl =
+    currentVersion && semver.lt(currentVersion, requiredVersion);
+
+  if (currentVersion && !isUpdateNhctl) {
+    return;
+  }
+
+  let failedMessage = "Download failed, Please try again";
+  let completedMessage = "Download completed";
+  let progressingTitle = "Downloading nhctl...";
+
+  if (isUpdateNhctl) {
+    failedMessage = `Update failed, please delete ${binPath} file and try again`;
+    completedMessage = "Update completed";
+    progressingTitle = `Update nhctl to ${requiredVersion}...`;
+  }
+
   try {
-    if (currentVersion) {
-      // currentVersion < requiredVersion
-      const isUpdateNhctl: boolean = semver.lt(currentVersion, requiredVersion);
-      // currentVersion > requiredVersion
-      const isUpgradeExtension: boolean = semver.gt(
-        currentVersion,
-        requiredVersion
-      );
-      if (isUpdateNhctl) {
-        lock(async (err) => {
-          if (err) {
-            return console.error(err);
-          }
-          await host.showProgressing(
-            `Update nhctl to ${requiredVersion}...`,
-            async () => {
-              await downloadNhctl(sourcePath, destinationPath);
-              fs.renameSync(destinationPath, binPath);
-              if (!(await checkDownloadNhclVersion(requiredVersion))) {
-                vscode.window.showErrorMessage(
-                  `Update failed, please delete ${binPath} file and try again`
-                );
-              } else {
-                vscode.window.showInformationMessage("Update completed");
-              }
-              unlock(() => {});
-            }
-          );
-        });
+    await lock();
+    setUpgrade(true);
+
+    await host.showProgressing(progressingTitle, async (aciton) => {
+      await downloadNhctl(sourcePath, destinationPath, (increment) => {
+        aciton.report({ increment });
+      });
+
+      // windows A lot of Windows Defender firewall warnings #167
+      if (isUpdateNhctl && host.isWindow()) {
+        if (fs.existsSync(TEMP_NHCTL_BIN)) {
+          fs.unlinkSync(TEMP_NHCTL_BIN);
+        }
+        fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
-      // if (isUpgradeExtension) {
-      //   vscode.window.showInformationMessage(
-      //     `Please upgrade extension： Nocalhost`
-      //   );
-      // }
-    } else {
-      lock(async function (err) {
-        if (err) {
-          return console.error(err);
-        }
-        await host.showProgressing(`Downloading nhctl`, async () => {
-          await downloadNhctl(sourcePath, destinationPath);
-          fs.renameSync(destinationPath, binPath);
-          unlock(() => {});
-          if (!(await checkDownloadNhclVersion(requiredVersion))) {
-            vscode.window.showErrorMessage(`Download failed, Please try again`);
-          } else {
-            vscode.window.showInformationMessage("Download completed");
-          }
-        });
-      });
-    }
-  } catch (e) {
-    unlock(() => {});
+      fs.renameSync(destinationPath, binPath);
+
+      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+        vscode.window.showErrorMessage(failedMessage);
+      } else {
+        vscode.window.showInformationMessage(completedMessage);
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    vscode.window.showErrorMessage(failedMessage);
+  } finally {
+    setUpgrade(false);
+    unlock();
   }
 }
 
@@ -1448,4 +1476,16 @@ export function nhctlCommand(
   } --kubeconfig ${kubeconfigPath}`;
   console.log(command);
   return command;
+}
+
+export async function checkCluster(
+  kubeConfigPath: string
+): Promise<KubeConfigState> {
+  const result = await NhctlCommand.create("check cluster", {
+    kubeConfigPath: kubeConfigPath,
+  })
+    .toJson()
+    .exec();
+
+  return result;
 }

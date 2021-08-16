@@ -79,7 +79,7 @@ export default class CleanPvcCommand implements ICommand {
   }
   async execCommand(node: Deployment | AppNode | DevSpaceNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     let pvcs: IPvcAttr[] = [];
@@ -92,7 +92,7 @@ export default class CleanPvcCommand implements ICommand {
         workloadName = null;
         clearPvcFn = getCleanPvcDevSpaceFn(
           node.getKubeConfigPath(),
-          node.info.namespace
+          (node as DevSpaceNode).info.namespace
         );
         pvcs = await getPvcListByDevSpace(node as DevSpaceNode);
         break;
@@ -132,7 +132,9 @@ export default class CleanPvcCommand implements ICommand {
         );
         break;
       default:
-        host.showInformationMessage("Not support the type");
+        host.showInformationMessage(
+          "Sorry, we do not support this type at the moment."
+        );
         return;
     }
 
@@ -164,7 +166,7 @@ export default class CleanPvcCommand implements ICommand {
         pvcName = pvcMap.get(result);
       }
       clearPvcFn(pvcName);
-      host.showInformationMessage("cleared pvc");
+      host.showInformationMessage("PVC has cleared");
     }
   }
 }

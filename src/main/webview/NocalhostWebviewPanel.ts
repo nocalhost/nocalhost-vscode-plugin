@@ -263,6 +263,7 @@ export default class NocalhostWebviewPanel {
     const fontPath: vscode.Uri = webview.asWebviewUri(
       vscode.Uri.file(path.join(extensionPath, "dist", `DroidSansMono_v1.ttf`))
     );
+    const lang = vscode.env.language;
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -283,7 +284,9 @@ export default class NocalhostWebviewPanel {
             window.process = {
               env: {
                 NODE_ENV: "production",
-              }
+                
+              },
+              lang: ${lang}
             }
           </script>
         </head>

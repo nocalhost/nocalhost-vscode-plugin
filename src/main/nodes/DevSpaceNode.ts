@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
+
 import * as nhctl from "../ctl/nhctl";
 import state from "../state";
-
+import { ClusterSource } from "../common/define";
 import { ID_SPLIT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
@@ -9,20 +10,22 @@ import { NetworkFolderNode } from "./networks/NetworkFolderNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
-import { DevspaceInfo, V2ApplicationInfo } from "../api";
+import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { AppNode } from "./AppNode";
-import * as _ from "lodash";
 import { RefreshData } from "./impl/updateData";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { NodeType } from "./interfact";
+import { resolveVSCodeUri } from "../utils/fileUtil";
+
+import arrayDiffer = require("array-differ");
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
   public type = NodeType.devSpace;
-  public info: DevspaceInfo;
+  public info: IDevSpaceInfo;
   public hasInit: boolean;
-  public isLocal: boolean;
-  public applications: Array<V2ApplicationInfo>;
+  public clusterSource: ClusterSource;
+  public applications: Array<IV2ApplicationInfo>;
   public parent: BaseNocalhostNode;
   public installedApps: {
     name: string;
@@ -32,22 +35,27 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   constructor(
     parent: BaseNocalhostNode,
     label: string,
-    info: DevspaceInfo,
-    applications: Array<V2ApplicationInfo>,
-    isLocal: boolean
+    info: IDevSpaceInfo,
+    applications: Array<IV2ApplicationInfo>,
+    clusterSource: ClusterSource
   ) {
     super();
     this.hasInit = false;
     this.parent = parent;
-    this.label = label || info.namespace;
     this.info = info;
     this.applications = applications;
     this.installedApps = [];
-    this.isLocal = isLocal;
+    this.clusterSource = clusterSource;
+
+    if (label && info.namespace !== label) {
+      label += `(${info.namespace})`;
+    }
+    this.label = label || info.namespace;
+
     state.setNode(this.getNodeStateId(), this);
   }
 
-  public buildAppNode(app: V2ApplicationInfo) {
+  public buildAppNode(app: IV2ApplicationInfo) {
     let context = app.context;
     let obj: {
       url?: string;
@@ -94,7 +102,8 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
   public getUninstallApps() {
     const installedAppNames = this.installedApps.map((app) => app.name);
-    installedAppNames.push("DEFAULT RESOURCE");
+    // installedAppNames.push("DEFAULT RESOURCE");
+    installedAppNames.push("default.application");
     const arr = this.applications.filter((a) => {
       const context = a.context;
       let jsonObj = JSON.parse(context);
@@ -129,13 +138,41 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
+    if (this.unInstalling()) {
+      return [];
+    }
+
     this.installedApps = await this.getInstalledApp(
       this.info.namespace,
       this.getKubeConfigPath()
     );
     this.hasInit = true;
+
+    await this.cleanDiffApp();
+
     state.setData(this.getNodeStateId(), this.installedApps, isInit);
     return this.installedApps;
+  }
+
+  private async cleanDiffApp() {
+    if (state.getData(this.getNodeStateId())) {
+      const children = await this.getChildren();
+
+      if (children.length) {
+        const diff: string[] = arrayDiffer(
+          children.map((item) => item.label),
+          ["default"],
+          this.installedApps.map((item) => item.name)
+        );
+
+        if (diff.length) {
+          diff.forEach((name) => {
+            const node = children.find((item) => item.label === name);
+            node && state.cleanAutoRefresh(node);
+          });
+        }
+      }
+    }
   }
 
   private async getInstalledApp(namespace: string, kubeconfigPath: string) {
@@ -155,7 +192,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
     return result;
   }
-
+  unInstalling(): boolean {
+    return !!state.getAppState(this.info.spaceName, "uninstalling");
+  }
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
     let data = state.getData(this.getNodeStateId()) as nhctl.InstalledAppInfo[];
 
@@ -181,7 +220,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     return result as AppNode[];
   }
 
-  buildApplicationInfo(appName: string) {
+  buildApplicationInfo(appName: string, context: object = {}) {
     const contextObj = {
       applicationName: appName,
       applicationUrl: "",
@@ -190,6 +229,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       source: "",
       resourceDir: "",
       installType: "",
+      ...context,
     };
 
     const app = {
@@ -209,8 +249,20 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       this.label,
       vscode.TreeItemCollapsibleState.Collapsed
     );
+    if (this.unInstalling()) {
+      treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
+      treeItem.iconPath = resolveVSCodeUri("loading.gif");
+    } else {
+      const iconName =
+        this.info.spaceOwnType === "Viewer"
+          ? "devspace_viewer.svg"
+          : "devspace.svg";
+      treeItem.iconPath = resolveVSCodeUri(iconName);
+    }
 
-    treeItem.contextValue = `devspace-${this.isLocal ? "local" : "server"}`;
+    treeItem.contextValue = `devspace-${
+      this.clusterSource === ClusterSource.local ? "local" : "server"
+    }`;
 
     return Promise.resolve(treeItem);
   }

@@ -27,7 +27,7 @@ export class DebugSession {
     }
     const isInstalled = await debugProvider.isDebuggerInstalled();
     if (!isInstalled) {
-      host.showInformationMessage("please install golang extension.");
+      host.showInformationMessage("Please install golang extension.");
       return;
     }
     // port-forward debug port
@@ -49,7 +49,7 @@ export class DebugSession {
     } else if (containers.length === 1) {
       container = containers[0];
     } else {
-      host.showInformationMessage("Missing container confiuration");
+      host.showInformationMessage("Missing container configuration.");
       return;
     }
     const valid = this.validateDebugConfig(container);
@@ -63,6 +63,7 @@ export class DebugSession {
     }
     const port =
       (container.dev.debug && container.dev.debug.remoteDebugPort) || 9229;
+    logger.info("[debug] getRunningPodNames");
     const podNames = await getRunningPodNames({
       name: node.name,
       kind: node.resourceType,
@@ -76,25 +77,30 @@ export class DebugSession {
     host.log("[debug] check required command", true);
     const notFoundCommands = debugProvider.checkRequiredCommand(
       podNames[0],
+      node.getNameSpace(),
       node.getKubeConfigPath()
     );
     if (notFoundCommands.length > 0) {
-      host.showErrorMessage(
-        "Not found command in container: " + notFoundCommands.join(" ")
-      );
-      return;
+      const msg =
+        "Not found command in container: " + notFoundCommands.join(" ");
+      host.showErrorMessage(msg);
+      throw new Error(msg);
     }
 
     const debugCommand =
       (container.dev.command && container.dev.command.debug) || [];
     const terminatedCallback = async () => {
+      if (!proc) {
+        throw new Error("Cannot access proc");
+      }
       if (!proc.killed) {
         proc.kill();
       }
       debugProvider.killContainerDebugProcess(
         podNames[0],
         node.getKubeConfigPath(),
-        debugCommand
+        debugCommand,
+        node.getNameSpace()
       );
       if (!containerProc.killed) {
         containerProc.kill();
@@ -105,7 +111,8 @@ export class DebugSession {
       podNames[0],
       node.getKubeConfigPath(),
       debugCommand,
-      terminatedCallback
+      terminatedCallback,
+      node.getNameSpace()
     );
 
     const cwd = workspaceFolder.uri.fsPath;
@@ -116,19 +123,27 @@ export class DebugSession {
 
     // wait launch success
     host.log("[debug] wait launch", true);
-    await this.waitLaunch(port, podNames[0], node.getKubeConfigPath()).catch(
-      (err) => {
-        terminatedCallback();
-        throw err;
-      }
-    );
+    await this.waitLaunch(
+      port,
+      podNames[0],
+      node.getKubeConfigPath(),
+      node.getNameSpace()
+    ).catch((err) => {
+      host.log("[debug] wait error");
+      terminatedCallback();
+      throw err;
+    });
 
     host.log("[debug] port forward", true);
-    const proc = await this.portForward(
-      `${port}:${port}`,
-      podNames[0],
-      node.getKubeConfigPath()
-    );
+    const proc = await this.portForward({
+      port: `${port}:${port}`,
+      appName: node.getAppName(),
+      podName: podNames[0],
+      kubeconfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+      workloadName: node.name,
+      resourceType: node.resourceType,
+    });
     if (!proc) {
       return;
     }
@@ -197,13 +212,16 @@ export class DebugSession {
     podName: string,
     kubeconfigPath: string,
     execCommand: string[],
-    terminatedCallback: Function
+    terminatedCallback: Function,
+    namespace: string
   ) {
-    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
     const args = command.split(" ");
     args.push("bash", "-c", `${execCommand.join(" ")}`);
 
-    host.log("debug: " + `${args.join(" ")}`, true);
+    const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
+    logger.info(`[debug] ${cmd}`);
+    host.log(`${cmd}`, true);
     const proc = spawn(NhctlCommand.nhctlPath, args);
 
     proc.stdout.on("data", function (data) {
@@ -214,20 +232,34 @@ export class DebugSession {
     });
 
     proc.on("close", async (code) => {
-      terminatedCallback();
+      await terminatedCallback();
       host.log("close debug container", true);
     });
 
     return proc;
   }
 
-  public async portForward(
-    port: string,
-    podName: string,
-    kubeconfigPath: string
-  ) {
-    const command = `port-forward start ${podName} ${port} --kubeconfig ${kubeconfigPath}`;
-    host.log(`port-forward: ${command}`, true);
+  public async portForward(props: {
+    port: string;
+    appName: string;
+    workloadName: string;
+    resourceType: string;
+    podName: string;
+    kubeconfigPath: string;
+    namespace: string;
+  }) {
+    const {
+      port,
+      workloadName,
+      appName,
+      podName,
+      kubeconfigPath,
+      namespace,
+    } = props;
+    const command = `port-forward start ${appName} -d ${workloadName} --pod ${podName} -p ${port} --kubeconfig ${kubeconfigPath} -n ${namespace} --follow`;
+    const cmd = `${NhctlCommand.nhctlPath} ${command}`;
+    host.log(`[debug] port-forward: ${cmd}`, true);
+    logger.info(`[debug] port-forward: ${cmd}`);
     const proc = spawn(NhctlCommand.nhctlPath, command.split(" "));
 
     return proc;
@@ -262,13 +294,17 @@ export class DebugSession {
   public async waitLaunch(
     port: number,
     podName: string,
-    kubeconfigPath: string
+    kubeconfigPath: string,
+    namespace: string
   ) {
     function check() {
-      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
+      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath}  -n ${namespace} --`;
       const args = command.split(" ");
 
       args.push("bash", "-c", `netstat -tunlp | grep ${port}`);
+      const cmd = args.join(" ");
+      host.log(`debug： ${NhctlCommand.nhctlPath} ${cmd}`, true);
+      logger.info(`[cmd]: ${cmd}`);
       const result = spawnSync(NhctlCommand.nhctlPath, args);
       if (`${result.stdout}`) {
         return true;

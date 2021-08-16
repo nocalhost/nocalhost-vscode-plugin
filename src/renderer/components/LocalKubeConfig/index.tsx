@@ -5,7 +5,7 @@ import { postMessage, vscode } from "../../utils/index";
 import KubeConfigPathSelect from "../kubeConfigPathSelect";
 import TabPanel from "../TabPanel";
 import KubeConfigAsText from "../KubeConfigAsText";
-
+import i18n from "../../i18n";
 interface ILocalKubeConfigProps {
   oldState: {
     [key: string]: any;
@@ -119,6 +119,10 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
       },
     });
   }
+
+  const loadLabel = <div>{`${i18n.t("loadKubeConfig")}`}</div>;
+  const pasteLabel = <div>{`${i18n.t("pasteAsText")}`}</div>;
+
   return (
     <div>
       <Tabs
@@ -133,12 +137,8 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
         variant="fullWidth"
         aria-label="full width tabs"
       >
-        <Tab
-          className="localkube_tab"
-          label={<div>Select Kubeconfig file</div>}
-          value="select"
-        />
-        <Tab label={<div>Paste as text</div>} value="paste" />
+        <Tab className="localkube_tab" label={loadLabel} value="select" />
+        <Tab label={pasteLabel} value="paste" />
       </Tabs>
       <TabPanel name="select" value={localTab}>
         <KubeConfigPathSelect

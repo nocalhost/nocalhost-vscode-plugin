@@ -15,12 +15,13 @@ import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
-import { ApplicationInfo, V2ApplicationInfo } from "../api";
+import { IApplicationInfo, IV2ApplicationInfo } from "../domain";
 import ConfigService, { NocalhostConfig } from "../service/configService";
 import host from "../host";
 import { SYNC_SERVICE } from "../commands/constants";
 import { NodeType } from "./interfact";
 import { DevSpaceNode } from "./DevSpaceNode";
+import { ClusterSource } from "../common/define";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -34,7 +35,7 @@ export class AppNode extends NocalhostFolderNode {
   public helmNHConfig: string;
   public kubeConfig: string;
   public resourceDir: Array<string>;
-  public info: V2ApplicationInfo | ApplicationInfo;
+  public info: IV2ApplicationInfo | IApplicationInfo;
   public parent: BaseNocalhostNode;
   // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
@@ -51,7 +52,7 @@ export class AppNode extends NocalhostFolderNode {
     status: number,
     installStatus: number,
     kubeConfig: string,
-    info: V2ApplicationInfo | ApplicationInfo // api info
+    info: IV2ApplicationInfo | IApplicationInfo // api info
   ) {
     super();
     this.installType = installType;
@@ -143,13 +144,13 @@ export class AppNode extends NocalhostFolderNode {
 
   private updateIcon(treeItem: vscode.TreeItem) {
     if (this.unInstalling() || this.installing() || this.upgradeing()) {
-      return (treeItem.iconPath = resolveVSCodeUri("loading.svg"));
+      return (treeItem.iconPath = resolveVSCodeUri("loading.gif"));
     }
     if (this.installed()) {
-      return (treeItem.iconPath = resolveVSCodeUri("app-connected.svg"));
+      return (treeItem.iconPath = resolveVSCodeUri("app_connected.svg"));
     }
     if (this.unInstalled()) {
-      return (treeItem.iconPath = resolveVSCodeUri("app-inactive.svg"));
+      return (treeItem.iconPath = resolveVSCodeUri("app_inactive.svg"));
     }
   }
 
@@ -168,6 +169,11 @@ export class AppNode extends NocalhostFolderNode {
     }
     if (["helmGit", "helmRepo", "helmLocal"].includes(this.installType)) {
       treeItem.contextValue = `${treeItem.contextValue}-helm`;
+    }
+
+    const devspace = this.getParent() as DevSpaceNode;
+    if (devspace.clusterSource === ClusterSource.server) {
+      treeItem.contextValue = `${treeItem.contextValue}-server`;
     }
     // if (this.developingNodes.length > 0) {
     //   treeItem.contextValue = `${treeItem.contextValue}-developing`;
@@ -188,16 +194,20 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   getChildren(parent?: BaseNocalhostNode): BaseNocalhostNode[] {
+    if (this.installing() || this.unInstalling()) {
+      return [];
+    }
+
     const children: string[] = this.getDefaultChildrenNodes();
     return children.map((type) => this.createChild(type));
   }
 
   async getTreeItem() {
-    let info = state.getData(this.getNodeStateId()) as AppInfo;
-    if (!info) {
-      info = await this.getApplicationInfo();
-      state.setData(this.getNodeStateId(), info, true);
-    }
+    // let info = state.getData(this.getNodeStateId()) as AppInfo;
+    // if (!info) {
+    //   info = await this.getApplicationInfo();
+    //   state.setData(this.getNodeStateId(), info, true);
+    // }
     this.installStatus = 1;
     // let collapseState: vscode.TreeItemCollapsibleState;
     // if (this.unInstalled()) {
@@ -208,10 +218,14 @@ export class AppNode extends NocalhostFolderNode {
     //     vscode.TreeItemCollapsibleState.Collapsed;
     // }
     // await this.getDevelopingNodes();
-    let treeItem = new vscode.TreeItem(
-      this.label,
-      vscode.TreeItemCollapsibleState.Collapsed
-    );
+
+    const collapsibleState =
+      this.installing() || this.unInstalling()
+        ? vscode.TreeItemCollapsibleState.None
+        : vscode.TreeItemCollapsibleState.Collapsed;
+
+    let treeItem = new vscode.TreeItem(this.label, collapsibleState);
+
     this.updateIcon(treeItem);
     this.updateContext(treeItem);
     this.updateSyncStatus();

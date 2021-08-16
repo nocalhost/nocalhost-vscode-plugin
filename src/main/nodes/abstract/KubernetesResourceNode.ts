@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import state from "../../state";
 import { AppNode } from "../AppNode";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { ID_SPLIT } from "../nodeContants";
+import { IK8sResource } from "./../../domain/IK8sResource";
 
 import { BaseNocalhostNode } from "../types/nodeType";
 
@@ -11,9 +11,8 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
   abstract type: string;
   abstract resourceType: string;
   abstract name: string;
-  abstract info?: any;
   abstract parent: BaseNocalhostNode;
-
+  resource?: IK8sResource;
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
     return `${parentStateId}${ID_SPLIT}${this.name}`;
@@ -33,11 +32,11 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
       vscode.TreeItemCollapsibleState.None
     );
     treeItem.label = this.label;
-    treeItem.command = {
-      command: "Nocalhost.loadResource",
-      title: "loadResource",
-      arguments: [this],
-    };
+    // treeItem.command = {
+    //   command: "Nocalhost.loadResource",
+    //   title: "loadResource",
+    //   arguments: [this],
+    // };
     return treeItem;
   }
 

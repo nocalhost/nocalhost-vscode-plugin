@@ -1,7 +1,11 @@
 import * as vscode from "vscode";
+import state from "../../../../state";
+import { DeploymentStatus } from "../../../types/nodeType";
 import { STATEFUL_SET } from "../../../nodeContants";
+import { IResourceStatus } from "../../../../domain";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import logger from "../../../../utils/logger";
+import { checkWorkloadConfig } from "../../../../utils/checkConfig";
 
 export class StatefulSet extends ControllerResourceNode {
   public type = STATEFUL_SET;
@@ -16,7 +20,7 @@ export class StatefulSet extends ControllerResourceNode {
       const [icon, label] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = await this.checkConfig();
+      const check = checkWorkloadConfig(this.nocalhostService);
       treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
       }-${status}`;
@@ -29,5 +33,32 @@ export class StatefulSet extends ControllerResourceNode {
     }
 
     return treeItem;
+  }
+
+  public async getStatus(refresh = false) {
+    const appNode = this.getAppNode();
+    let status = state.getAppState(
+      appNode.name,
+      `${this.getNodeStateId()}_status`
+    );
+    if (status) {
+      return Promise.resolve(status);
+    }
+    if (refresh) {
+      await this.refreshSvcProfile();
+    }
+    if (this.svcProfile && this.svcProfile.developing) {
+      return DeploymentStatus.developing;
+    }
+
+    const resource = this.resource;
+    const tmpStatus = resource.status as IResourceStatus;
+    if (tmpStatus.replicas === tmpStatus.readyReplicas) {
+      status = "running";
+    }
+    if (!status) {
+      status = "unknown";
+    }
+    return status;
   }
 }

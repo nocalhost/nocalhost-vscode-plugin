@@ -3,11 +3,12 @@ import * as os from "os";
 import { INhCtlGetResult, IDescribeConfig, IK8sResource } from "../domain";
 import ICommand from "./ICommand";
 import { NhctlCommand } from "./../ctl/nhctl";
-import { EXEC, START_DEV_MODE, SYNC_SERVICE } from "./constants";
+import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
-import { get as _get } from "lodash";
+import { get as _get, isEqual, omit } from "lodash";
 import { opendevSpaceExec } from "../ctl/shell";
 import {
+  DEV_ASSOCIATE_LOCAL_DIRECTORYS,
   TMP_APP,
   TMP_CONTAINER,
   TMP_DEVSPACE,
@@ -28,11 +29,12 @@ import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
 import * as nls from "../../../package.nls.json";
 import { replaceSpacePath } from "../utils/fileUtil";
-import { DeploymentStatus } from "../nodes/types/nodeType";
+import { BaseNocalhostNode, DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { appTreeView } from "../extension";
 import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
+import { existsSync } from "fs";
 
 export interface ControllerNodeApi {
   name: string;
@@ -43,6 +45,7 @@ export interface ControllerNodeApi {
   getContainer: () => Promise<string>;
   getKubeConfigPath: () => string;
   getAppName: () => string;
+  getParent: () => BaseNocalhostNode;
   getStorageClass: () => string | undefined;
   getDevStartAppendCommand: () => string | undefined;
   getSpaceName: () => string;
@@ -82,19 +85,24 @@ export default class StartDevModeCommand implements ICommand {
     }
     let containerName = containerNames[0];
     if (containers.length > 1) {
-      containerName = await vscode.window.showQuickPick(containerNames);
-      if (!containerName) {
-        return;
-      }
+      containerName = await host.showQuickPick(containerNames);
     }
     return containerName;
   }
 
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
+    await NhctlCommand.authCheck({
+      base: "dev",
+      args: ["start", node.getAppName(), "-t" + node.resourceType, node.name],
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+    }).exec();
+
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
@@ -110,7 +118,8 @@ export default class StartDevModeCommand implements ICommand {
 
     const description: IDescribeConfig =
       resource.description || Object.create(null);
-    const containerName = await this.getContainers(resource.info);
+    const containerName =
+      (await node.getContainer()) || (await this.getContainers(resource.info));
     if (!containerName) {
       return;
     }
@@ -119,7 +128,7 @@ export default class StartDevModeCommand implements ICommand {
 
     if (containerName === "nocalhost-dev") {
       let r = await host.showInformationMessage(
-        `This container is developing. If you continue to choose this container, some problems may occur. Are you sure to continue develop?`,
+        `This container is developing. You may have problem after enter DevMode at the same time. Do you want to continue?`,
         { modal: true },
         "confirm"
       );
@@ -134,6 +143,10 @@ export default class StartDevModeCommand implements ICommand {
       containerName,
       description.associate
     );
+    if (!destDir) {
+      return;
+    }
+
     // check image
     let image: string | undefined = await this.getImage(
       node.getKubeConfigPath(),
@@ -164,7 +177,7 @@ export default class StartDevModeCommand implements ICommand {
           "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/rust:latest",
           "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/php:latest",
         ];
-        image = await vscode.window.showQuickPick(images);
+        image = await host.showQuickPick(images);
       } else if (result === "Custom") {
         image = await host.showInputBox({
           placeHolder: "Please input your image address",
@@ -174,10 +187,7 @@ export default class StartDevModeCommand implements ICommand {
         }
       }
     }
-    if (!image) {
-      await host.showWarnMessage("Please choose image");
-      return;
-    }
+
     await this.saveConfig(
       node.getKubeConfigPath(),
       node.getNameSpace(),
@@ -203,6 +213,49 @@ export default class StartDevModeCommand implements ICommand {
         container: containerName,
       });
     }
+
+    if (destDir !== true) {
+      this.saveDevspace(
+        {
+          app: appName,
+          resourceType: node.resourceType,
+          service: node.name,
+          kubeConfigPath: node.getKubeConfigPath(),
+          namespace: node.getNameSpace(),
+        },
+        destDir
+      );
+    }
+  }
+
+  // TODO: Clean Devspace
+  private saveDevspace(
+    syncServiceData: {
+      app: string;
+      resourceType: string;
+      service: string;
+      kubeConfigPath: string;
+      namespace: string;
+    },
+    destDir: string
+  ) {
+    let devAssociateLocalDirectorys =
+      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) || {};
+    let deleteKey: string[] = [];
+
+    Object.entries(devAssociateLocalDirectorys).forEach(([key, value]) => {
+      if (isEqual(value, syncServiceData)) {
+        deleteKey.push(key);
+      }
+    });
+
+    devAssociateLocalDirectorys = omit(devAssociateLocalDirectorys, deleteKey);
+    devAssociateLocalDirectorys[destDir] = syncServiceData;
+
+    host.setGlobalState(
+      DEV_ASSOCIATE_LOCAL_DIRECTORYS,
+      devAssociateLocalDirectorys
+    );
   }
 
   private saveAndOpenFolder(
@@ -356,13 +409,7 @@ export default class StartDevModeCommand implements ICommand {
     let appConfig = host.getGlobalState(appName);
     let workloadConfig = appConfig[node.name];
 
-    const result = await host.showInformationMessage(
-      nls["tips.open"],
-      { modal: true },
-      nls["bt.open.other"],
-      nls["bt.open.dir"]
-    );
-    if (result === nls["bt.open.other"]) {
+    const getUrl = async () => {
       const uris = await host.showOpenDialog({
         canSelectFiles: false,
         canSelectFolders: true,
@@ -371,8 +418,32 @@ export default class StartDevModeCommand implements ICommand {
       if (uris && uris.length > 0) {
         destDir = uris[0].fsPath;
       }
+    };
+
+    const result = await host.showInformationMessage(
+      nls["tips.open"],
+      { modal: true },
+      nls["bt.open.other"],
+      nls["bt.open.dir"]
+    );
+    if (result === nls["bt.open.other"]) {
+      await getUrl();
     } else if (result === nls["bt.open.dir"]) {
       destDir = workloadConfig.directory;
+
+      if (!existsSync(destDir)) {
+        destDir = undefined;
+
+        const res = await host.showInformationMessage(
+          "The directory does not exist, do you want to associate the new source code directory.",
+          { modal: true },
+          "Associate"
+        );
+
+        if (res === "Associate") {
+          await getUrl();
+        }
+      }
     }
 
     return destDir;
@@ -385,11 +456,16 @@ export default class StartDevModeCommand implements ICommand {
     associateDir: string
   ) {
     let destDir: string | undefined | boolean = associateDir;
+
     let appConfig = host.getGlobalState(appName) || {};
     const currentUri = this.getCurrentRootPath();
+
     let workloadConfig = appConfig[node.name] || {};
     workloadConfig.directory = associateDir;
+
+    appConfig[node.name] = workloadConfig;
     host.setGlobalState(appName, appConfig);
+
     if (!workloadConfig.directory) {
       destDir = await this.firstOpen(appName, node, containerName);
     } else if (currentUri !== workloadConfig.directory) {
@@ -476,6 +552,12 @@ export default class StartDevModeCommand implements ICommand {
           host.log("sync file end", true);
           host.log("", true);
           node.setStatus("");
+          const parent = node.getParent();
+          if (parent && parent.updateData) {
+            await parent.updateData(true);
+          }
+          await vscode.commands.executeCommand("Nocalhost.refresh", parent);
+
           // await vscode.commands.executeCommand(EXEC, node);
           const terminal = await opendevSpaceExec(
             node.getAppName(),
@@ -631,10 +713,7 @@ export default class StartDevModeCommand implements ICommand {
         containerName = containerNameArr[0];
       } else {
         if (containerNameArr.length > 1) {
-          containerName = await vscode.window.showQuickPick(containerNameArr);
-          if (!containerName) {
-            return;
-          }
+          containerName = await host.showQuickPick(containerNameArr);
         }
       }
     }

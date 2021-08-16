@@ -39,7 +39,7 @@ async function portForWardListByApp(node: AppNode): Promise<IEndPortInfo> {
   });
   portForwardList = (portForwardList || []).filter(filter);
   if (!portForwardList || portForwardList.length === 0) {
-    host.showErrorMessage("not get service config");
+    host.showErrorMessage("Can not get service config");
     return;
   }
 
@@ -91,7 +91,7 @@ async function portForWardByResource(
     node.resourceType
   );
   if (!svcProfile) {
-    host.showErrorMessage("port forward list empty");
+    host.showErrorMessage("Port forward list is empty");
     return;
   }
   const portForwardList = svcProfile.devPortForwardList.filter(filter);
@@ -139,7 +139,7 @@ export default class PortForwardListCommand implements ICommand {
   }
   async execCommand(node: KubernetesResourceNode | AppNode) {
     if (!node) {
-      host.showWarnMessage("A task is running, please try again later");
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     let endPortInfo: IEndPortInfo = null;

@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
-import { Progress } from "vscode";
+import { CancellationToken, Progress, QuickPickOptions } from "vscode";
 import * as shell from "./ctl/shell";
-import { checkVersion } from "./ctl/nhctl";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
 import * as path from "path";
@@ -13,10 +12,6 @@ import logger from "./utils/logger";
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
-  );
-  public outSyncStatusBar = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Left,
-    101
   );
   public statusBar = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -58,54 +53,55 @@ export class Host implements vscode.Disposable {
 
   public stopAutoRefresh() {
     if (this.autoRefreshTimeId) {
-      clearInterval(this.autoRefreshTimeId);
+      clearTimeout(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
   }
 
-  public startAutoRefresh() {
-    if (this.autoRefreshTimeId) {
-      clearInterval(this.autoRefreshTimeId);
-      this.autoRefreshTimeId = null;
-    }
+  public async autoRefresh() {
+    try {
+      const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+      if (rootNode) {
+        await rootNode.updateData().catch(() => {});
+      }
+      for (const [id, expanded] of state.refreshFolderMap) {
+        if (expanded) {
+          const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
+          if (node) {
+            // filter parent is close
+            // function isClose(parentNode: BaseNocalhostNode): boolean {
+            //   const child = parentNode.getParent();
+            //   if (!child) {
+            //     return false;
+            //   }
+            //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
+            //     return true;
+            //   }
 
-    this.autoRefreshTimeId = setInterval(async () => {
-      try {
-        const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
-        if (rootNode) {
-          await rootNode.updateData().catch(() => {});
-        }
-        for (const [id, expanded] of state.refreshFolderMap) {
-          if (expanded) {
-            const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-            if (node) {
-              // filter parent is close
-              // function isClose(parentNode: BaseNocalhostNode): boolean {
-              //   const child = parentNode.getParent();
-              //   if (!child) {
-              //     return false;
-              //   }
-              //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
-              //     return true;
-              //   }
-
-              //   return isClose(child);
-              // }
-              // const close = isClose(node);
-              await node.updateData().catch(() => {});
-              // if (!close) {
-              //   await node.updateData();
-              // }
-            }
+            //   return isClose(child);
+            // }
+            // const close = isClose(node);
+            await node.updateData().catch(() => {});
+            // if (!close) {
+            //   await node.updateData();
+            // }
           }
         }
-        this.startAutoRefresh();
-      } catch (e) {
-        this.startAutoRefresh();
-        console.log(e);
-        logger.error(e);
       }
-    }, 5 * 1000);
+    } catch (e) {
+      this.startAutoRefresh();
+      logger.error(e);
+    }
+  }
+
+  public async startAutoRefresh() {
+    this.stopAutoRefresh();
+
+    await this.autoRefresh();
+
+    this.autoRefreshTimeId = setTimeout(async () => {
+      this.startAutoRefresh();
+    }, 10 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {
@@ -252,6 +248,21 @@ export class Host implements vscode.Disposable {
   public showInputBox(options: vscode.InputBoxOptions) {
     return vscode.window.showInputBox(options);
   }
+  public showInputBoxIgnoreFocus(options: vscode.InputBoxOptions) {
+    options.ignoreFocusOut = true;
+
+    return this.showInputBox(options);
+  }
+
+  public showProgressingToken<R>(
+    options: vscode.ProgressOptions,
+    task: (
+      progress: Progress<{ message?: string; increment?: number }>,
+      token: vscode.CancellationToken
+    ) => Thenable<R>
+  ) {
+    return vscode.window.withProgress(options, task);
+  }
 
   public showProgressing(
     title: string,
@@ -297,6 +308,26 @@ export class Host implements vscode.Disposable {
         );
       }
     });
+  }
+  /**
+   * Shows a selection list allowing multiple selections.
+   *
+   * @param items An array of strings, or a promise that resolves to an array of strings.
+   * @param options Configures the behavior of the selection list.
+   * @param token A token that can be used to signal cancellation.
+   * @return A promise that resolves to the selected items or `undefined`.
+   */
+  async showQuickPick(
+    items: readonly string[] | Thenable<readonly string[]>,
+    options?: QuickPickOptions,
+    token?: CancellationToken
+  ): Promise<string | null> {
+    const result = await vscode.window.showQuickPick(items, options, token);
+
+    if (!result) {
+      return Promise.reject("ignore");
+    }
+    return Promise.resolve(result);
   }
 
   showErrorMessage(msg: string) {
@@ -410,7 +441,9 @@ export class Host implements vscode.Disposable {
 
   async showWorkspaceFolderPick(): Promise<vscode.WorkspaceFolder | undefined> {
     if (!vscode.workspace.workspaceFolders) {
-      vscode.window.showErrorMessage("This command requires an open folder.");
+      vscode.window.showErrorMessage(
+        "You need to open a folder before execute this command."
+      );
       return undefined;
     } else if (vscode.workspace.workspaceFolders.length === 1) {
       return vscode.workspace.workspaceFolders[0];
@@ -426,24 +459,6 @@ export class Host implements vscode.Disposable {
     }
   }
 
-  async check() {
-    // const tools = ["kubectl"];
-    // for (let i = 0; i < tools.length; i++) {
-    //   const exist = shell.which(tools[i]);
-    //   if (!exist) {
-    //     switch (tools[i]) {
-    //       case "kubectl": {
-    //         vscode.window.showErrorMessage(
-    //           "kubectl not found, please install kubectl first."
-    //         );
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
-    await checkVersion();
-  }
-
   async installVscodeExtension(extensionId: string): Promise<boolean> {
     const vscodeCliPath = path.join(path.dirname(process.argv0), "bin", "code");
     const shellResult = await shell.execAsyncWithReturn(
@@ -452,7 +467,7 @@ export class Host implements vscode.Disposable {
     );
     if (shellResult && shellResult.code === 0) {
       const answer = await vscode.window.showInformationMessage(
-        `Extension '${extensionId}' was successfully installed. Reload to enable it.`,
+        `Extension '${extensionId}' was successfully installed. Please reload IDE to enable it.`,
         "Reload Now"
       );
       if (answer === "Reload Now") {

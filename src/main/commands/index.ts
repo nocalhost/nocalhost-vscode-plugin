@@ -40,10 +40,16 @@ import ClearLocalCluster from "./ClearLocalCluster";
 import ClearServerCluster from "./ClearServerCluster";
 import InstallAppSourceCommand from "./InstallAppSourceCommand";
 import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
+import RenameCommand from "./RenameCommand";
+import OpenProjectCommand from "./OpenProjectCommand";
+import EditManifestCommand from "./EditManifestCommand";
+import ResetPluginCommand from "./ResetPluginCommand";
+
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
 ) {
+  new RenameCommand(context);
   new ShowClusterInfoCommand(context);
   new ClearLocalCluster(context);
   new ClustersViewCommand(context);
@@ -63,6 +69,7 @@ export default function initCommands(
   new InstallCommand(context);
   new UninstallCommand(context);
   new LoadResourceCommand(context);
+  new EditManifestCommand(context);
   new LogCommand(context);
   new PortForwardCommand(context);
   new PortForwardListCommand(context);
@@ -87,9 +94,12 @@ export default function initCommands(
   // command
   new DebugCommand(context);
   new RunCommand(context);
+  new OpenProjectCommand(context);
 
   new DeleteKubeConfigCommand(context);
   new AddKubeconfig(context);
   new ClearServerCluster(context);
   new InstallAppSourceCommand(context);
+
+  new ResetPluginCommand(context);
 }

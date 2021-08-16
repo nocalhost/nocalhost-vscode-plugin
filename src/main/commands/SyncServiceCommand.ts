@@ -26,80 +26,91 @@ interface SyncMsg {
 export default class SyncServiceCommand implements ICommand {
   command: string = SYNC_SERVICE;
   _id: NodeJS.Timeout | null = null;
+  syncData: Sync;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(syncData: Sync) {
     if (this._id) {
-      clearInterval(this._id);
+      clearTimeout(this._id);
       this._id = null;
     }
     if (!syncData.app || !syncData.service) {
       logger.info("syncData.app is null", true);
       host.statusBar.hide();
-      host.outSyncStatusBar.hide();
       return;
     }
 
-    this._id = setInterval(async () => {
-      try {
-        const result = await nhctl.getSyncStatus(
-          syncData.resourceType,
-          syncData.kubeConfigPath,
-          syncData.namespace,
-          syncData.app,
-          syncData.service
-        );
-        if (!result) {
-          // hide status bar
-          if (this._id) {
-            // clearInterval(this._id);
-            logger.info("sync-status result empty");
-            // this._id = null;
-          }
-          // host.statusBar.hide();
-          // host.outSyncStatusBar.hide();
-        } else {
-          // update status bar
+    this.syncData = syncData;
 
-          let r: SyncMsg;
-          r = JSON.parse(result) as SyncMsg;
-          if (r.outOfSync) {
-            const overrideSyncCommand: vscode.Command = {
-              title: OVERRIDE_SYNC,
-              command: OVERRIDE_SYNC,
-              arguments: [syncData],
-            };
-            host.outSyncStatusBar.text = "$(bell-dot)";
-            host.outSyncStatusBar.command = overrideSyncCommand;
-            host.outSyncStatusBar.tooltip = r.outOfSync;
-            host.outSyncStatusBar.show();
-          } else {
-            // host.log(`r.outOfSync does not exist： ${r.outOfSync}`, true);
-            host.outSyncStatusBar.hide();
-          }
-          host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
-          host.statusBar.tooltip = r.tips;
-          if (r.status === "disconnected") {
-            const reconnectSyncCommand: vscode.Command = {
-              title: RECONNECT_SYNC,
-              command: RECONNECT_SYNC,
-              arguments: [syncData],
-            };
-            host.statusBar.command = reconnectSyncCommand;
-          }
-          host.statusBar.show();
+    this.getSyncStatus();
+  }
+
+  async getSyncStatus() {
+    clearTimeout(this._id);
+
+    const syncData = this.syncData;
+    try {
+      const result = await nhctl.getSyncStatus(
+        syncData.resourceType,
+        syncData.kubeConfigPath,
+        syncData.namespace,
+        syncData.app,
+        syncData.service
+      );
+      if (!result) {
+        // hide status bar
+        if (this._id) {
+          // clearInterval(this._id);
+          logger.info("sync-status result empty");
+          // this._id = null;
         }
-      } catch (e) {
-        logger.info("sync-status error");
-        console.log(e);
-        logger.error(e);
+        // host.statusBar.hide();
+        // host.outSyncStatusBar.hide();
+      } else {
+        // update status bar
+
+        let r: SyncMsg;
+        r = JSON.parse(result) as SyncMsg;
+
+        host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
+        host.statusBar.tooltip = r.tips;
+        host.statusBar.command = null;
+
+        if (r.status === "disconnected") {
+          const reconnectSyncCommand: vscode.Command = {
+            title: RECONNECT_SYNC,
+            command: RECONNECT_SYNC,
+            arguments: [syncData],
+          };
+          host.statusBar.command = reconnectSyncCommand;
+        } else if (r.outOfSync || r.status === "outOfSync") {
+          const overrideSyncCommand: vscode.Command = {
+            title: OVERRIDE_SYNC,
+            command: OVERRIDE_SYNC,
+            arguments: [syncData],
+          };
+
+          host.statusBar.command = overrideSyncCommand;
+          host.statusBar.tooltip = r.outOfSync;
+        }
+
+        host.statusBar.show();
       }
-    }, 500);
+    } catch (e) {
+      logger.info("sync-status error");
+      console.log(e);
+      logger.error(e);
+    } finally {
+      this._id = setTimeout(async () => {
+        await this.getSyncStatus();
+      }, 500);
+    }
   }
 
   getIcon(status: string) {
     let icon = "error";
+
     switch (status) {
       case "outOfSync":
         icon = "warning";
