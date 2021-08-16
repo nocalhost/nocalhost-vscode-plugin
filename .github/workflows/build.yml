@@ -31,7 +31,7 @@ jobs:
     - name: Build
       run: |
         yarn
-        yarn exec vsce package --yarn -o nocalhost.vsix
+        yarn run vsce package --yarn -o nocalhost.vsix
 
     - name: Push to Coding Artifacts
       if: ${{ github.ref != 'refs/heads/dev' }}
