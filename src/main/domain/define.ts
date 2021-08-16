@@ -1,4 +1,5 @@
 export enum AppType {
+  rawManifest = "rawManifest",
   rawManifestLocal = "rawManifestLocal",
   helmLocal = "helmLocal",
   kustomizeLocal = "kustomizeLocal",

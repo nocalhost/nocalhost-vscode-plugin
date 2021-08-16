@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
-import { Progress } from "vscode";
+import { CancellationToken, Progress, QuickPickOptions } from "vscode";
 import * as shell from "./ctl/shell";
-import { checkVersion } from "./ctl/nhctl";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
 import * as path from "path";
@@ -310,6 +309,26 @@ export class Host implements vscode.Disposable {
       }
     });
   }
+  /**
+   * Shows a selection list allowing multiple selections.
+   *
+   * @param items An array of strings, or a promise that resolves to an array of strings.
+   * @param options Configures the behavior of the selection list.
+   * @param token A token that can be used to signal cancellation.
+   * @return A promise that resolves to the selected items or `undefined`.
+   */
+  async showQuickPick(
+    items: readonly string[] | Thenable<readonly string[]>,
+    options?: QuickPickOptions,
+    token?: CancellationToken
+  ): Promise<string | null> {
+    const result = await vscode.window.showQuickPick(items, options, token);
+
+    if (!result) {
+      return Promise.reject("ignore");
+    }
+    return Promise.resolve(result);
+  }
 
   showErrorMessage(msg: string) {
     return vscode.window.showErrorMessage(msg);
@@ -438,24 +457,6 @@ export class Host implements vscode.Disposable {
     } else {
       return path.replace(/ /g, "\\ ");
     }
-  }
-
-  async check() {
-    // const tools = ["kubectl"];
-    // for (let i = 0; i < tools.length; i++) {
-    //   const exist = shell.which(tools[i]);
-    //   if (!exist) {
-    //     switch (tools[i]) {
-    //       case "kubectl": {
-    //         vscode.window.showErrorMessage(
-    //           "kubectl not found, please install kubectl first."
-    //         );
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
-    await checkVersion();
   }
 
   async installVscodeExtension(extensionId: string): Promise<boolean> {

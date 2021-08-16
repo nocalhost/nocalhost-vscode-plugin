@@ -11,7 +11,7 @@ import {
 } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
-import { get as _get } from "lodash";
+import { get as _get, orderBy } from "lodash";
 import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
 import { IS_LOCAL, NH_BIN } from "../constants";
@@ -20,8 +20,6 @@ import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 import { IDevSpaceInfo, IPortForWard } from "../domain";
 import {
-  ControllerResource,
-  List,
   PodResource,
   Resource,
   ResourceStatus,
@@ -86,7 +84,22 @@ export class NhctlCommand {
   static install(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("install", baseParams);
   }
+  static authCheck(
+    baseParams: IBaseCommand<
+      { args: string[]; base: string } & Required<
+        Pick<IBaseCommand, "namespace">
+      >
+    >
+  ) {
+    const { base, args, ...rest } = baseParams;
 
+    args.push("--auth-check");
+
+    const nhctlCommand = NhctlCommand.create(base, rest);
+    nhctlCommand.args = args;
+
+    return nhctlCommand;
+  }
   addArgument(arg: string, value?: string | number) {
     if (arg === "-o" && value) {
       if (["yaml", "json"].indexOf((value as string).toLowerCase()) !== -1) {
@@ -431,15 +444,7 @@ export async function getInstalledApp(
     .toYaml()
     .exec();
 
-  return obj.sort((a, b) => {
-    if (a.namespace < b.namespace) {
-      return -1;
-    }
-    if (a.namespace > b.namespace) {
-      return 1;
-    }
-    return 0;
-  });
+  return orderBy(obj, "namespace");
 }
 
 export async function install(props: {
@@ -1339,83 +1344,91 @@ export async function checkDownloadNhclVersion(
   return tempVersion === version;
 }
 
+function setUpgrade(isUpgrade: boolean) {
+  const KEY = "nhctl.upgrade";
+
+  if (isUpgrade) {
+    host.setGlobalState(KEY, true);
+    host.stopAutoRefresh();
+  } else {
+    host.removeGlobalState(KEY);
+    host.startAutoRefresh();
+  }
+
+  vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    !isUpgrade
+  );
+  vscode.commands.executeCommand("setContext", KEY, isUpgrade);
+}
+
 export async function checkVersion() {
   if (getConfiguration("nhctl.checkVersion") === false) {
     return;
   }
 
-  const isWindows = host.isWindow();
   const requiredVersion: string = packageJson.nhctl?.version;
-  const { sourcePath, destinationPath, binPath } = getNhctlPath(
-    requiredVersion
-  );
-  const currentVersion: string = await services.fetchNhctlVersion();
+
   if (!requiredVersion) {
     return;
   }
+
+  const { sourcePath, destinationPath, binPath } = getNhctlPath(
+    requiredVersion
+  );
+
+  const currentVersion: string = await services.fetchNhctlVersion();
+
+  // currentVersion < requiredVersion
+  const isUpdateNhctl =
+    currentVersion && semver.lt(currentVersion, requiredVersion);
+
+  if (currentVersion && !isUpdateNhctl) {
+    return;
+  }
+
+  let failedMessage = "Download failed, Please try again";
+  let completedMessage = "Download completed";
+  let progressingTitle = "Downloading nhctl...";
+
+  if (isUpdateNhctl) {
+    failedMessage = `Update failed, please delete ${binPath} file and try again`;
+    completedMessage = "Update completed";
+    progressingTitle = `Update nhctl to ${requiredVersion}...`;
+  }
+
   try {
-    if (currentVersion) {
-      // currentVersion < requiredVersion
-      const isUpdateNhctl: boolean = semver.lt(currentVersion, requiredVersion);
-      // currentVersion > requiredVersion
-      const isUpgradeExtension: boolean = semver.gt(
-        currentVersion,
-        requiredVersion
-      );
-      if (isUpdateNhctl) {
-        lock(async (err) => {
-          if (err) {
-            return console.error(err);
-          }
-          await host.showProgressing(
-            `Update nhctl to ${requiredVersion}...`,
-            async () => {
-              await downloadNhctl(sourcePath, destinationPath);
-              // windows A lot of Windows Defender firewall warnings #167
-              if (isWindows) {
-                if (fs.existsSync(TEMP_NHCTL_BIN)) {
-                  fs.unlinkSync(TEMP_NHCTL_BIN);
-                }
-                fs.renameSync(binPath, TEMP_NHCTL_BIN);
-              }
-              fs.renameSync(destinationPath, binPath);
-              if (!(await checkDownloadNhclVersion(requiredVersion))) {
-                vscode.window.showErrorMessage(
-                  `Update failed, please delete ${binPath} file and try again`
-                );
-              } else {
-                vscode.window.showInformationMessage("Update completed");
-              }
-              unlock(() => {});
-            }
-          );
-        });
+    await lock();
+    setUpgrade(true);
+
+    await host.showProgressing(progressingTitle, async (aciton) => {
+      await downloadNhctl(sourcePath, destinationPath, (increment) => {
+        aciton.report({ increment });
+      });
+
+      // windows A lot of Windows Defender firewall warnings #167
+      if (isUpdateNhctl && host.isWindow()) {
+        if (fs.existsSync(TEMP_NHCTL_BIN)) {
+          fs.unlinkSync(TEMP_NHCTL_BIN);
+        }
+        fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
-      // if (isUpgradeExtension) {
-      //   vscode.window.showInformationMessage(
-      //     `Please upgrade extension： Nocalhost`
-      //   );
-      // }
-    } else {
-      lock(async function (err) {
-        if (err) {
-          return console.error(err);
-        }
-        await host.showProgressing(`Downloading nhctl`, async () => {
-          await downloadNhctl(sourcePath, destinationPath);
-          fs.renameSync(destinationPath, binPath);
-          unlock(() => {});
-          if (!(await checkDownloadNhclVersion(requiredVersion))) {
-            vscode.window.showErrorMessage(`Download failed, Please try again`);
-          } else {
-            vscode.window.showInformationMessage("Download completed");
-          }
-        });
-      });
-    }
-  } catch (e) {
-    unlock(() => {});
+      fs.renameSync(destinationPath, binPath);
+
+      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+        vscode.window.showErrorMessage(failedMessage);
+      } else {
+        vscode.window.showInformationMessage(completedMessage);
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    vscode.window.showErrorMessage(failedMessage);
+  } finally {
+    setUpgrade(false);
+    unlock();
   }
 }
 

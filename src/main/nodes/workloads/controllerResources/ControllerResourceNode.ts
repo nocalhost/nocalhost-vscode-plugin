@@ -85,15 +85,15 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     switch (status) {
       case "complete":
       case "running":
-        iconPath = resolveVSCodeUri("status-running.svg");
+        iconPath = resolveVSCodeUri("status_running.svg");
         if (portForwardStatus) {
-          iconPath = resolveVSCodeUri("Normal_Port_Forwarding.svg");
+          iconPath = resolveVSCodeUri("normal_port_forwarding.svg");
         }
         break;
       case "developing":
         const possess = this.svcProfile.possess;
         iconPath = resolveVSCodeUri(
-          possess === false ? "dev_other.svg" : "dev-start.svg"
+          possess === false ? "dev_other.svg" : "dev_start.svg"
         );
         const container = await this.getContainer();
         if (container) {
@@ -103,18 +103,18 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
           iconPath = resolveVSCodeUri(
             possess === false
               ? "dev_port_forwarding_other.svg"
-              : "Dev_Port_Forwarding.svg"
+              : "dev_port_forwarding.svg"
           );
         }
         break;
       case "starting":
-        iconPath = resolveVSCodeUri("loading.svg");
+        iconPath = resolveVSCodeUri("loading.gif");
         break;
       case "unknown":
-        iconPath = resolveVSCodeUri("status-unknown.svg");
+        iconPath = resolveVSCodeUri("status_unknown.svg");
         break;
       case "failed":
-        iconPath = resolveVSCodeUri("status-failed.svg");
+        iconPath = resolveVSCodeUri("status_failed.svg");
         break;
     }
     return [iconPath, label];

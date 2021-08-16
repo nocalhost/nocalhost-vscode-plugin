@@ -134,14 +134,10 @@ export function isExist(filePath: string) {
 
 export function resolveVSCodeUri(iconName: string): vscode.Uri {
   const extensionPath: string = host.getGlobalState("extensionPath");
-  const colorTheme =
-    vscode.window.activeColorTheme.kind === ColorThemeKind.Dark
-      ? "dark"
-      : "light";
   const resolvePath: string = path.resolve(
     extensionPath,
     "images",
-    colorTheme,
+    "icon",
     iconName
   );
   return vscode.Uri.file(resolvePath);
