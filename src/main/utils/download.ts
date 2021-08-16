@@ -11,6 +11,7 @@ const processDir = path.resolve(lockDir, `${process.pid}`);
 
 export const lock = async function (): Promise<void> {
   return new Promise((res, rej) => {
+    fs.existsSync(lockDir) && fs.rmdirSync(lockDir);
     fs.mkdir(lockDir, function (error) {
       if (error) {
         rej(error);
