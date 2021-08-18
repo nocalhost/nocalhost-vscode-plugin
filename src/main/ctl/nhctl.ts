@@ -1407,8 +1407,11 @@ export async function checkVersion() {
 
       // windows A lot of Windows Defender firewall warnings #167
       if (isUpdateNhctl && host.isWindow()) {
+        if (fs.existsSync(TEMP_NHCTL_BIN)) {
+          fs.unlinkSync(TEMP_NHCTL_BIN);
+        }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
-        fs.unlinkSync(TEMP_NHCTL_BIN);
+       
       }
 
       fs.renameSync(destinationPath, binPath);

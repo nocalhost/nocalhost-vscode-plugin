@@ -25,7 +25,7 @@ export const DEFAULT_KUBE_CONFIG_FULLPATH = path.resolve(
   ".kube/config"
 );
 
-export const TEMP_NHCTL_BIN = path.resolve(NH_BIN, "nhctl.exe.temp");
+export const TEMP_NHCTL_BIN = path.resolve(tmpdir(), "temp-nhctl.exe");
 
 // LOCAL
 export const IS_LOCAL = "isLocal";
