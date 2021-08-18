@@ -1410,7 +1410,7 @@ export async function checkVersion() {
         if (fs.existsSync(TEMP_NHCTL_BIN)) {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
-        const command = 'taskkill /im nhctl.exe -f';
+        const command = "taskkill /im nhctl.exe -f";
         await execChildProcessAsync(host, command, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
