@@ -1373,32 +1373,31 @@ export async function checkVersion() {
   if (!requiredVersion) {
     return;
   }
-
-  const { sourcePath, destinationPath, binPath } = getNhctlPath(
-    requiredVersion
-  );
-
-  const currentVersion: string = await services.fetchNhctlVersion();
-
-  // currentVersion < requiredVersion
-  const isUpdateNhctl =
-    currentVersion && semver.lt(currentVersion, requiredVersion);
-
-  if (currentVersion && !isUpdateNhctl) {
-    return;
-  }
-
+   
   let failedMessage = "Download failed, Please try again";
   let completedMessage = "Download completed";
   let progressingTitle = "Downloading nhctl...";
-
-  if (isUpdateNhctl) {
-    failedMessage = `Update failed, please delete ${binPath} file and try again`;
-    completedMessage = "Update completed";
-    progressingTitle = `Update nhctl to ${requiredVersion}...`;
-  }
-
   try {
+    const { sourcePath, destinationPath, binPath } = getNhctlPath(
+      requiredVersion
+    );
+  
+    const currentVersion: string = await services.fetchNhctlVersion();
+  
+    // currentVersion < requiredVersion
+    const isUpdateNhctl =
+      currentVersion && semver.lt(currentVersion, requiredVersion);
+  
+    if (currentVersion && !isUpdateNhctl) {
+      return;
+    }
+ 
+  
+    if (isUpdateNhctl) {
+      failedMessage = `Update failed, please delete ${binPath} file and try again`;
+      completedMessage = "Update completed";
+      progressingTitle = `Update nhctl to ${requiredVersion}...`;
+    }
     await lock();
     setUpgrade(true);
 
@@ -1409,9 +1408,9 @@ export async function checkVersion() {
 
       // windows A lot of Windows Defender firewall warnings #167
       if (isUpdateNhctl && host.isWindow()) {
-        if (fs.existsSync(TEMP_NHCTL_BIN)) {
-          fs.unlinkSync(TEMP_NHCTL_BIN);
-        }
+        // if (fs.existsSync(TEMP_NHCTL_BIN)) {
+        //   fs.unlinkSync(TEMP_NHCTL_BIN);
+        // }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
@@ -1424,6 +1423,7 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
+    host.log(err + 'chuckie', );
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {
