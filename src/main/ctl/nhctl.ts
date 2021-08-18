@@ -1373,7 +1373,7 @@ export async function checkVersion() {
   if (!requiredVersion) {
     return;
   }
-   
+
   let failedMessage = "Download failed, Please try again";
   let completedMessage = "Download completed";
   let progressingTitle = "Downloading nhctl...";
@@ -1381,18 +1381,17 @@ export async function checkVersion() {
     const { sourcePath, destinationPath, binPath } = getNhctlPath(
       requiredVersion
     );
-  
+
     const currentVersion: string = await services.fetchNhctlVersion();
-  
+
     // currentVersion < requiredVersion
     const isUpdateNhctl =
       currentVersion && semver.lt(currentVersion, requiredVersion);
-  
+
     if (currentVersion && !isUpdateNhctl) {
       return;
     }
- 
-  
+
     if (isUpdateNhctl) {
       failedMessage = `Update failed, please delete ${binPath} file and try again`;
       completedMessage = "Update completed";
@@ -1423,7 +1422,7 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
-    host.log(err + 'chuckie', );
+    host.log(err + "chuckie");
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {
