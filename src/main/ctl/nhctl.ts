@@ -1411,7 +1411,6 @@ export async function checkVersion() {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
-       
       }
 
       fs.renameSync(destinationPath, binPath);
