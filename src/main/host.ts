@@ -64,27 +64,13 @@ export class Host implements vscode.Disposable {
       if (rootNode) {
         await rootNode.updateData().catch(() => {});
       }
+
       for (const [id, expanded] of state.refreshFolderMap) {
         if (expanded) {
           const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-          if (node) {
-            // filter parent is close
-            // function isClose(parentNode: BaseNocalhostNode): boolean {
-            //   const child = parentNode.getParent();
-            //   if (!child) {
-            //     return false;
-            //   }
-            //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
-            //     return true;
-            //   }
 
-            //   return isClose(child);
-            // }
-            // const close = isClose(node);
+          if (node) {
             await node.updateData().catch(() => {});
-            // if (!close) {
-            //   await node.updateData();
-            // }
           }
         }
       }
@@ -100,7 +86,7 @@ export class Host implements vscode.Disposable {
     await this.autoRefresh();
 
     this.autoRefreshTimeId = setTimeout(async () => {
-      this.startAutoRefresh();
+      await this.startAutoRefresh();
     }, 10 * 1000);
   }
 

@@ -28,7 +28,7 @@ import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 import { getConfiguration } from "../utils/conifg";
-import { KubeConfigState } from "../nodes/KubeConfigNode";
+import { ClustersState } from "../clusters";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1480,7 +1480,7 @@ export function nhctlCommand(
 
 export async function checkCluster(
   kubeConfigPath: string
-): Promise<KubeConfigState> {
+): Promise<ClustersState> {
   const result = await NhctlCommand.create("check cluster", {
     kubeConfigPath: kubeConfigPath,
   })
