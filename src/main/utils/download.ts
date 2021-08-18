@@ -39,7 +39,9 @@ export const unlock = async function (callback?: (err?: any) => void) {
     }
   } catch (e) {
     logger.error(e);
-    callback(e);
+    if (callback) {
+      callback();
+    }
   }
 };
 
