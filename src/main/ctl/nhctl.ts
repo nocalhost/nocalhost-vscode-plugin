@@ -1374,10 +1374,6 @@ export async function checkVersion() {
     return;
   }
 
-  let failedMessage = "Download failed, Please try again";
-  let completedMessage = "Download completed";
-  let progressingTitle = "Downloading nhctl...";
-  try {
     const { sourcePath, destinationPath, binPath } = getNhctlPath(
       requiredVersion
     );
@@ -1392,11 +1388,17 @@ export async function checkVersion() {
       return;
     }
 
+    let failedMessage = "Download failed, Please try again";
+    let completedMessage = "Download completed";
+    let progressingTitle = "Downloading nhctl...";
+
     if (isUpdateNhctl) {
       failedMessage = `Update failed, please delete ${binPath} file and try again`;
       completedMessage = "Update completed";
       progressingTitle = `Update nhctl to ${requiredVersion}...`;
     }
+    try {
+
     await lock();
     setUpgrade(true);
 
@@ -1411,7 +1413,7 @@ export async function checkVersion() {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
         const command = "taskkill /im nhctl.exe -f";
-        await execChildProcessAsync(host, command, []);
+        await execAsyncWithReturn(command, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
@@ -1424,7 +1426,6 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
-    host.log(err + "chuckie");
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {
