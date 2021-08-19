@@ -35,7 +35,6 @@ export const unlock = async function (callback?: (err?: any) => void) {
       }
       fs.rmdirSync(lockDir);
     }
- 
 
     if (callback) {
       callback(true);
