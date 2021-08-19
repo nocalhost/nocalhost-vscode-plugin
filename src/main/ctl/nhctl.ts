@@ -1374,31 +1374,30 @@ export async function checkVersion() {
     return;
   }
 
-    const { sourcePath, destinationPath, binPath } = getNhctlPath(
-      requiredVersion
-    );
+  const { sourcePath, destinationPath, binPath } = getNhctlPath(
+    requiredVersion
+  );
 
-    const currentVersion: string = await services.fetchNhctlVersion();
+  const currentVersion: string = await services.fetchNhctlVersion();
 
-    // currentVersion < requiredVersion
-    const isUpdateNhctl =
-      currentVersion && semver.lt(currentVersion, requiredVersion);
+  // currentVersion < requiredVersion
+  const isUpdateNhctl =
+    currentVersion && semver.lt(currentVersion, requiredVersion);
 
-    if (currentVersion && !isUpdateNhctl) {
-      return;
-    }
+  if (currentVersion && !isUpdateNhctl) {
+    return;
+  }
 
-    let failedMessage = "Download failed, Please try again";
-    let completedMessage = "Download completed";
-    let progressingTitle = "Downloading nhctl...";
+  let failedMessage = "Download failed, Please try again";
+  let completedMessage = "Download completed";
+  let progressingTitle = "Downloading nhctl...";
 
-    if (isUpdateNhctl) {
-      failedMessage = `Update failed, please delete ${binPath} file and try again`;
-      completedMessage = "Update completed";
-      progressingTitle = `Update nhctl to ${requiredVersion}...`;
-    }
-    try {
-
+  if (isUpdateNhctl) {
+    failedMessage = `Update failed, please delete ${binPath} file and try again`;
+    completedMessage = "Update completed";
+    progressingTitle = `Update nhctl to ${requiredVersion}...`;
+  }
+  try {
     await lock();
     setUpgrade(true);
 
