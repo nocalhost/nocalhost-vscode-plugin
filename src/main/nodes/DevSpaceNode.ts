@@ -138,19 +138,22 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
-    if (this.unInstalling()) {
-      return [];
+    let data = [];
+
+    if (!this.resetting()) {
+      data = await this.getInstalledApp(
+        this.info.namespace,
+        this.getKubeConfigPath()
+      );
+
+      this.hasInit = true;
+      this.installedApps = data;
+
+      await this.cleanDiffApp();
     }
 
-    this.installedApps = await this.getInstalledApp(
-      this.info.namespace,
-      this.getKubeConfigPath()
-    );
-    this.hasInit = true;
-
-    await this.cleanDiffApp();
-
     state.setData(this.getNodeStateId(), this.installedApps, isInit);
+
     return this.installedApps;
   }
 
@@ -192,8 +195,8 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
     return result;
   }
-  unInstalling(): boolean {
-    return !!state.getAppState(this.info.spaceName, "uninstalling");
+  resetting(): boolean {
+    return !!state.getAppState(this.getNodeStateId(), "resetting");
   }
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
     let data = state.getData(this.getNodeStateId()) as nhctl.InstalledAppInfo[];
@@ -249,7 +252,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       this.label,
       vscode.TreeItemCollapsibleState.Collapsed
     );
-    if (this.unInstalling()) {
+    if (this.resetting()) {
       treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
       treeItem.iconPath = resolveVSCodeUri("loading.gif");
     } else {

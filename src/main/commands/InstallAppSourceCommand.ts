@@ -18,337 +18,24 @@ import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
 import state from "../state";
 import * as nls from "vscode-nls";
+import { ID_SPLIT } from "../nodes/nodeContants";
 
 const localize = nls.loadMessageBundle();
-
-async function getKustomizeYamlPath(): Promise<string> {
-  const res = await host.showInformationMessage(
-    " Do you want to specify a Kustomize file path ?",
-    { modal: true },
-    "Use Default",
-    "Specify One"
-  );
-  if (!res) {
-    return;
-  }
-  let kustomizeYamlPath = null;
-  if (res === "Specify One") {
-    kustomizeYamlPath = await host.showInputBoxIgnoreFocus({
-      placeHolder: "Please input your kustomize file path",
-    });
-  }
-  return kustomizeYamlPath;
-}
-async function getHelmValues(): Promise<[string?, string?]> {
-  const res = await host.showInformationMessage(
-    "Do you want to specify values?",
-    { modal: true },
-    "Use Default values",
-    "Specify One values.yaml",
-    "Specify values"
-  );
-  if (!res) {
-    return [];
-  }
-  let values = null,
-    valuesStr = null;
-  if (res === "Specify One values.yaml") {
-    const valuesUri = await host.showOpenDialog({
-      canSelectFiles: true,
-      canSelectFolders: false,
-      canSelectMany: false,
-      title: "Select the value file path",
-    });
-    if (!valuesUri || valuesUri.length === 0) {
-      return [];
-    }
-    values = valuesUri[0].fsPath;
-  } else if (res === "Specify values") {
-    valuesStr = await host.showInputBoxIgnoreFocus({
-      placeHolder: "eg: key1=val1,key2=val2",
-    });
-
-    if (!valuesStr) {
-      return [];
-    }
-  }
-  return [values, valuesStr];
-}
-
-async function installRawManifastLocal(props: {
-  appName: string;
-  installType: string;
-  kubeConfigPath: string;
-  resourcePath: string[];
-  gitRef?: string;
-  gitUrl?: string;
-  localPath?: string;
-  namespace: string;
-  configPath: string;
-}) {
-  const {
-    appName,
-    gitRef,
-    gitUrl,
-    kubeConfigPath,
-    localPath,
-    installType,
-    configPath,
-    resourcePath,
-    namespace,
-  } = props;
-  state.setAppState(appName, "installing", true);
-  host.log(`Installing application: ${appName}`, true);
-  const installCommand = await NhctlCommand.install({
-    kubeConfigPath,
-    namespace,
-  })
-    .addArgument(appName)
-    .addArgumentStrict("-t", installType)
-    .addArgumentStrict("--resource-path", resourcePath)
-    .addArgumentStrict("--git-ref", gitRef)
-    .addArgumentStrict("--git-url", gitUrl)
-    .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(
-      `--config`,
-      configPath ? path.basename(configPath) : null
-    )
-    .getCommand();
-  await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: `Installing application: ${appName}`,
-      cancellable: false,
-    },
-    () => {
-      return execChildProcessAsync(host, installCommand, [], {
-        dialog: `Install application (${appName}) fail`,
-      }).finally(() => {
-        state.deleteAppState(appName, "installing");
-      });
-    }
-  );
-}
-
-async function installHelmRep(props: {
-  appName: string;
-  kubeConfigPath: string;
-  namespace: string;
-  helmRepoUrl?: string;
-  chartName?: string;
-  helmRepoVersion: string;
-  resourcePath?: string[];
-  installType: string;
-}) {
-  const [values, valuesStr] = await getHelmValues();
-  await installApp({
-    ...props,
-    values,
-    valuesStr,
-  });
-}
-
-async function installApp(props: {
-  appName: string;
-  kubeConfigPath: string;
-  namespace: string;
-  localPath?: string;
-  gitUrl?: string;
-  chartName?: string;
-  gitRef?: string;
-  values?: string;
-  helmRepoVersion?: string;
-  helmRepoUrl?: string;
-  valuesStr?: string;
-  resourcePath?: string[];
-  installType: string;
-  configPath?: string;
-}) {
-  const {
-    appName,
-    localPath,
-    gitUrl,
-    helmRepoUrl,
-    gitRef,
-    installType,
-    values,
-    helmRepoVersion,
-    chartName,
-    resourcePath,
-    valuesStr,
-    configPath,
-    kubeConfigPath,
-    namespace,
-  } = props;
-  state.setAppState(appName, "installing", true);
-  host.log(`Installing application: ${appName}`, true);
-
-  const installCommand = NhctlCommand.install({
-    kubeConfigPath,
-    namespace,
-  })
-    .addArgument(appName)
-    .addArgumentStrict("-t", installType)
-    .addArgumentStrict("-f", values)
-    .addArgumentStrict("--helm-chart-name", chartName)
-    .addArgumentStrict(" --helm-repo-url ", helmRepoUrl)
-    .addArgumentStrict("--resource-path", resourcePath)
-    .addArgumentStrict("--set", valuesStr)
-    .addArgumentStrict("--helm-repo-version", helmRepoVersion)
-    .addArgumentStrict("--git-ref", gitRef)
-    .addArgumentStrict("--git-url", gitUrl)
-    .addArgumentStrict("--local-path", localPath)
-    .addArgumentStrict(
-      `--config`,
-      configPath ? path.basename(configPath) : null
-    )
-    .getCommand();
-  await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: `Installing application: ${appName}`,
-      cancellable: false,
-    },
-    () => {
-      return execChildProcessAsync(host, installCommand, [], {
-        dialog: `Install application (${appName}) fail`,
-      }).finally(() => {
-        state.deleteAppState(appName, "installing");
-      });
-    }
-  );
-}
-async function installHelmApp(props: {
-  appName: string;
-  kubeConfigPath: string;
-  namespace: string;
-  localPath?: string;
-  gitUrl?: string;
-  gitRef?: string;
-  resourcePath?: string[];
-  installType: string;
-  configPath: string;
-}) {
-  const [values, valuesStr] = await getHelmValues();
-  await installApp({ ...props, values, valuesStr });
-}
-
-async function installKustomizeApp(props: {
-  appName: string;
-  kubeConfigPath: string;
-  namespace: string;
-  gitUrl?: string;
-  localPath?: string;
-  installType: string;
-  gitRef?: string;
-  resourcePath?: string[];
-}) {
-  const configPath = await getKustomizeYamlPath();
-  await installApp({
-    ...props,
-    configPath,
-  });
-}
-
-async function getNocalhostConfig(dir: string) {
-  const dirPath = path.resolve(dir, ".nocalhost");
-  let fileNames = getFilesByDir(dirPath);
-  fileNames = (fileNames || []).filter((fileName) => {
-    const extname = path.extname(fileName);
-    return [".yaml", ".yml"].includes(extname);
-  });
-
-  fileNames = (
-    await Promise.all(
-      fileNames.map((fileName) =>
-        readYamlSync(path.resolve(dirPath, fileName)).then((config) => {
-          return config && fileName;
-        })
-      )
-    )
-  ).filter(Boolean);
-
-  if (fileNames.length === 0) {
-    vscode.window.showWarningMessage(
-      "No config.yaml available in this directory"
-    );
-    return;
-  }
-  let configFileName = fileNames[0];
-  if (fileNames.length > 1) {
-    const selectedFileName = await vscode.window.showQuickPick(fileNames, {
-      ignoreFocusOut: true,
-    });
-    if (!selectedFileName) {
-      return;
-    }
-    configFileName = selectedFileName;
-  }
-  return configFileName;
-}
-async function readYamlSync(path: string) {
-  let config: INocalhostConfig | null = null;
-  try {
-    const str = await new NhctlCommand("render").addArgument(path).exec();
-    if (str) {
-      config = yaml.parse(str);
-    }
-    const { manifestType } = config?.application;
-
-    if (
-      !manifestType ||
-      ![
-        AppType.helmLocal,
-        AppType.kustomizeLocal,
-        AppType.rawManifestLocal,
-        AppType.helmGit,
-        AppType.kustomizeGit,
-        AppType.rawManifestGit,
-        AppType.rawManifest,
-      ].includes(manifestType)
-    ) {
-      return null;
-    }
-  } catch (e) {
-    config = null;
-  }
-  return config;
-}
-async function parseNocalhostConfig(
-  configPath: string
-): Promise<INocalhostConfig | null> {
-  if (!configPath) {
-    return;
-  }
-  const config: INocalhostConfig = await readYamlSync(configPath);
-  if (!config) {
-    vscode.window.showErrorMessage(`Unresolved: ${configPath}`);
-    return;
-  }
-  const appName = config?.application?.name;
-  if (!config?.application?.manifestType) {
-    vscode.window.showErrorMessage(
-      `Missing application.manifestType parameter`
-    );
-    return;
-  }
-  if (!appName) {
-    vscode.window.showErrorMessage(`Missing application.name parameter`);
-    return;
-  }
-  return config;
-}
 
 export default class InstallAppSourceCommand implements ICommand {
   command: string = INSTALL_APP_SOURCE;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
+  appNode: DevSpaceNode;
+
   async execCommand(appNode: DevSpaceNode) {
     if (!appNode) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
+    this.appNode = appNode;
 
     await NhctlCommand.authCheck({
       base: "install",
@@ -385,12 +72,12 @@ export default class InstallAppSourceCommand implements ICommand {
       }
       const dir = uris[0].fsPath;
       const dirPath = path.resolve(dir, ".nocalhost");
-      const configFileName = await getNocalhostConfig(dir);
+      const configFileName = await this.getNocalhostConfig(dir);
       if (!configFileName) {
         return;
       }
       const configPath = path.resolve(dirPath, configFileName);
-      const nocalhostConfig = await parseNocalhostConfig(configPath);
+      const nocalhostConfig = await this.parseNocalhostConfig(configPath);
       if (!nocalhostConfig) {
         return;
       }
@@ -410,7 +97,7 @@ export default class InstallAppSourceCommand implements ICommand {
       }
 
       if (manifestType === AppType.helmLocal) {
-        await installHelmApp({
+        await this.installHelmApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
           localPath: dir,
@@ -421,7 +108,7 @@ export default class InstallAppSourceCommand implements ICommand {
         });
       }
       if (manifestType === AppType.kustomizeLocal) {
-        await installKustomizeApp({
+        await this.installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
           localPath: dir,
@@ -432,7 +119,7 @@ export default class InstallAppSourceCommand implements ICommand {
       }
 
       if (manifestType === AppType.rawManifestLocal) {
-        await installRawManifastLocal({
+        await this.installApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
           localPath: dir,
@@ -475,7 +162,7 @@ export default class InstallAppSourceCommand implements ICommand {
 
       applicationUrl = helmRepoUrl;
 
-      await installHelmRep({
+      await this.installHelmRep({
         kubeConfigPath: appNode.getKubeConfigPath(),
         namespace: appNode?.info?.namespace,
         helmRepoUrl,
@@ -523,13 +210,13 @@ export default class InstallAppSourceCommand implements ICommand {
       await git.clone(host, gitUrl as string, args);
       host.log("git clone finish", true);
 
-      const configFileName = await getNocalhostConfig(savePath);
+      const configFileName = await this.getNocalhostConfig(savePath);
       if (!configFileName) {
         return;
       }
       const dirPath = path.resolve(savePath, ".nocalhost");
       const configPath = path.resolve(dirPath, configFileName);
-      const nocalhostConfig = await parseNocalhostConfig(configPath);
+      const nocalhostConfig = await this.parseNocalhostConfig(configPath);
       if (!nocalhostConfig) {
         return;
       }
@@ -552,7 +239,7 @@ export default class InstallAppSourceCommand implements ICommand {
       applicationUrl = gitUrl;
 
       if (manifestType === AppType.helmGit) {
-        await installHelmApp({
+        await this.installHelmApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
@@ -568,7 +255,7 @@ export default class InstallAppSourceCommand implements ICommand {
         manifestType === AppType.rawManifestGit ||
         manifestType === AppType.rawManifest
       ) {
-        await installRawManifastLocal({
+        await this.installApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
@@ -580,7 +267,7 @@ export default class InstallAppSourceCommand implements ICommand {
         });
       }
       if (manifestType === AppType.kustomizeGit) {
-        await installKustomizeApp({
+        await this.installKustomizeApp({
           kubeConfigPath: appNode.getKubeConfigPath(),
           namespace: appNode?.info?.namespace,
           gitUrl: gitUrl,
@@ -603,7 +290,7 @@ export default class InstallAppSourceCommand implements ICommand {
       const configFileName = "config.yaml";
       const dirPath = path.resolve(savePath, ".nocalhost");
       const configPath = path.resolve(dirPath, configFileName);
-      const nocalhostConfig = await parseNocalhostConfig(configPath);
+      const nocalhostConfig = await this.parseNocalhostConfig(configPath);
 
       if (!nocalhostConfig) {
         return;
@@ -614,7 +301,7 @@ export default class InstallAppSourceCommand implements ICommand {
       appName = nocalhostConfig?.application?.name;
       applicationUrl = bookInfoGitUrl;
 
-      await installRawManifastLocal({
+      await this.installApp({
         kubeConfigPath: appNode.getKubeConfigPath(),
         namespace: appNode?.info?.namespace,
         gitUrl: bookInfoGitUrl,
@@ -633,5 +320,329 @@ export default class InstallAppSourceCommand implements ICommand {
     });
     const app = appNode.buildAppNode(applicationInfo);
     Bookinfo.checkInstall(app);
+  }
+
+  async getKustomizeYamlPath(): Promise<string> {
+    const res = await host.showInformationMessage(
+      " Do you want to specify a Kustomize file path ?",
+      { modal: true },
+      "Use Default",
+      "Specify One"
+    );
+    if (!res) {
+      return;
+    }
+    let kustomizeYamlPath = null;
+    if (res === "Specify One") {
+      kustomizeYamlPath = await host.showInputBoxIgnoreFocus({
+        placeHolder: "Please input your kustomize file path",
+      });
+    }
+    return kustomizeYamlPath;
+  }
+  async getHelmValues(): Promise<[string?, string?]> {
+    const res = await host.showInformationMessage(
+      "Do you want to specify values?",
+      { modal: true },
+      "Use Default values",
+      "Specify One values.yaml",
+      "Specify values"
+    );
+    if (!res) {
+      return [];
+    }
+    let values = null,
+      valuesStr = null;
+    if (res === "Specify One values.yaml") {
+      const valuesUri = await host.showOpenDialog({
+        canSelectFiles: true,
+        canSelectFolders: false,
+        canSelectMany: false,
+        title: "Select the value file path",
+      });
+      if (!valuesUri || valuesUri.length === 0) {
+        return [];
+      }
+      values = valuesUri[0].fsPath;
+    } else if (res === "Specify values") {
+      valuesStr = await host.showInputBoxIgnoreFocus({
+        placeHolder: "eg: key1=val1,key2=val2",
+      });
+
+      if (!valuesStr) {
+        return [];
+      }
+    }
+    return [values, valuesStr];
+  }
+
+  // async installRawManifastLocal(props: {
+  //   appName: string;
+  //   installType: string;
+  //   kubeConfigPath: string;
+  //   resourcePath: string[];
+  //   gitRef?: string;
+  //   gitUrl?: string;
+  //   localPath?: string;
+  //   namespace: string;
+  //   configPath: string;
+  // }) {
+  //   const {
+  //     appName,
+  //     gitRef,
+  //     gitUrl,
+  //     kubeConfigPath,
+  //     localPath,
+  //     installType,
+  //     configPath,
+  //     resourcePath,
+  //     namespace,
+  //   } = props;
+
+  //   state.setAppState(this.getNodeStateId(appName), "installing", true);
+
+  //   host.log(`Installing application: ${appName}`, true);
+
+  //   const installCommand = await NhctlCommand.install({
+  //     kubeConfigPath,
+  //     namespace,
+  //   })
+  //     .addArgument(appName)
+  //     .addArgumentStrict("-t", installType)
+  //     .addArgumentStrict("--resource-path", resourcePath)
+  //     .addArgumentStrict("--git-ref", gitRef)
+  //     .addArgumentStrict("--git-url", gitUrl)
+  //     .addArgumentStrict("--local-path", localPath)
+  //     .addArgumentStrict(
+  //       `--config`,
+  //       configPath ? path.basename(configPath) : null
+  //     )
+  //     .getCommand();
+  //   await vscode.window.withProgress(
+  //     {
+  //       location: vscode.ProgressLocation.Notification,
+  //       title: `Installing application: ${appName}`,
+  //       cancellable: false,
+  //     },
+  //     () => {
+  //       return execChildProcessAsync(host, installCommand, [], {
+  //         dialog: `Install application (${appName}) fail`,
+  //       }).finally(() => {
+  //         state.deleteAppState(this.getNodeStateId(appName), "installing");
+  //       });
+  //     }
+  //   );
+  // }
+
+  async installHelmRep(props: {
+    appName: string;
+    kubeConfigPath: string;
+    namespace: string;
+    helmRepoUrl?: string;
+    chartName?: string;
+    helmRepoVersion: string;
+    resourcePath?: string[];
+    installType: string;
+  }) {
+    const [values, valuesStr] = await this.getHelmValues();
+    await this.installApp({
+      ...props,
+      values,
+      valuesStr,
+    });
+  }
+  getNodeStateId(appName: string) {
+    return `${this.appNode.getNodeStateId()}${ID_SPLIT}${appName}`;
+  }
+
+  async installApp(props: {
+    appName: string;
+    kubeConfigPath: string;
+    namespace: string;
+    localPath?: string;
+    gitUrl?: string;
+    chartName?: string;
+    gitRef?: string;
+    values?: string;
+    helmRepoVersion?: string;
+    helmRepoUrl?: string;
+    valuesStr?: string;
+    resourcePath?: string[];
+    installType: string;
+    configPath?: string;
+  }) {
+    const {
+      appName,
+      localPath,
+      gitUrl,
+      helmRepoUrl,
+      gitRef,
+      installType,
+      values,
+      helmRepoVersion,
+      chartName,
+      resourcePath,
+      valuesStr,
+      configPath,
+      kubeConfigPath,
+      namespace,
+    } = props;
+    state.setAppState(this.getNodeStateId(appName), "installing", true);
+    host.log(`Installing application: ${appName}`, true);
+
+    const installCommand = NhctlCommand.install({
+      kubeConfigPath,
+      namespace,
+    })
+      .addArgument(appName)
+      .addArgumentStrict("-t", installType)
+      .addArgumentStrict("-f", values)
+      .addArgumentStrict("--helm-chart-name", chartName)
+      .addArgumentStrict(" --helm-repo-url ", helmRepoUrl)
+      .addArgumentStrict("--resource-path", resourcePath)
+      .addArgumentStrict("--set", valuesStr)
+      .addArgumentStrict("--helm-repo-version", helmRepoVersion)
+      .addArgumentStrict("--git-ref", gitRef)
+      .addArgumentStrict("--git-url", gitUrl)
+      .addArgumentStrict("--local-path", localPath)
+      .addArgumentStrict(
+        `--config`,
+        configPath ? path.basename(configPath) : null
+      )
+      .getCommand();
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: `Installing application: ${appName}`,
+        cancellable: false,
+      },
+      () => {
+        return execChildProcessAsync(host, installCommand, [], {
+          dialog: `Install application (${appName}) fail`,
+        }).finally(() => {
+          state.deleteAppState(this.getNodeStateId(appName), "installing");
+        });
+      }
+    );
+  }
+  async installHelmApp(props: {
+    appName: string;
+    kubeConfigPath: string;
+    namespace: string;
+    localPath?: string;
+    gitUrl?: string;
+    gitRef?: string;
+    resourcePath?: string[];
+    installType: string;
+    configPath: string;
+  }) {
+    const [values, valuesStr] = await this.getHelmValues();
+    await this.installApp({ ...props, values, valuesStr });
+  }
+
+  async installKustomizeApp(props: {
+    appName: string;
+    kubeConfigPath: string;
+    namespace: string;
+    gitUrl?: string;
+    localPath?: string;
+    installType: string;
+    gitRef?: string;
+    resourcePath?: string[];
+  }) {
+    const configPath = await this.getKustomizeYamlPath();
+    await this.installApp({
+      ...props,
+      configPath,
+    });
+  }
+
+  async getNocalhostConfig(dir: string) {
+    const dirPath = path.resolve(dir, ".nocalhost");
+    let fileNames = getFilesByDir(dirPath);
+    fileNames = (fileNames || []).filter((fileName) => {
+      const extname = path.extname(fileName);
+      return [".yaml", ".yml"].includes(extname);
+    });
+
+    fileNames = (
+      await Promise.all(
+        fileNames.map((fileName) =>
+          this.readYamlSync(path.resolve(dirPath, fileName)).then((config) => {
+            return config && fileName;
+          })
+        )
+      )
+    ).filter(Boolean);
+
+    if (fileNames.length === 0) {
+      vscode.window.showWarningMessage(
+        "No config.yaml available in this directory"
+      );
+      return;
+    }
+    let configFileName = fileNames[0];
+    if (fileNames.length > 1) {
+      const selectedFileName = await vscode.window.showQuickPick(fileNames, {
+        ignoreFocusOut: true,
+      });
+      if (!selectedFileName) {
+        return;
+      }
+      configFileName = selectedFileName;
+    }
+    return configFileName;
+  }
+  async readYamlSync(path: string) {
+    let config: INocalhostConfig | null = null;
+    try {
+      const str = await new NhctlCommand("render").addArgument(path).exec();
+      if (str) {
+        config = yaml.parse(str);
+      }
+      const { manifestType } = config?.application;
+
+      if (
+        !manifestType ||
+        ![
+          AppType.helmLocal,
+          AppType.kustomizeLocal,
+          AppType.rawManifestLocal,
+          AppType.helmGit,
+          AppType.kustomizeGit,
+          AppType.rawManifestGit,
+          AppType.rawManifest,
+        ].includes(manifestType)
+      ) {
+        return null;
+      }
+    } catch (e) {
+      config = null;
+    }
+    return config;
+  }
+  async parseNocalhostConfig(
+    configPath: string
+  ): Promise<INocalhostConfig | null> {
+    if (!configPath) {
+      return;
+    }
+    const config: INocalhostConfig = await this.readYamlSync(configPath);
+    if (!config) {
+      vscode.window.showErrorMessage(`Unresolved: ${configPath}`);
+      return;
+    }
+    const appName = config?.application?.name;
+    if (!config?.application?.manifestType) {
+      vscode.window.showErrorMessage(
+        `Missing application.manifestType parameter`
+      );
+      return;
+    }
+    if (!appName) {
+      vscode.window.showErrorMessage(`Missing application.name parameter`);
+      return;
+    }
+    return config;
   }
 }

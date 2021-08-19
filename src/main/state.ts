@@ -32,10 +32,8 @@ class State {
 
   public setData(id: string, data: object, isInit?: boolean) {
     const currentData = this.dataMap.get(id);
-    const startTime = Date.now();
     const isSame = _.isEqual(currentData, data);
 
-    const endTime = Date.now();
     this.dataMap.set(id, data);
     if (!isSame && !isInit) {
       this.renderMessage.set(id, new Date().getTime());
@@ -68,17 +66,6 @@ class State {
   public isRunning() {
     return this.running;
   }
-
-  // async setLogin(state: boolean) {
-  //   await vscode.commands.executeCommand("setContext", "visibleTree", state);
-  //   await vscode.commands.executeCommand("Nocalhost.refresh");
-  //   this.login = state;
-  //   if (this.login) {
-  //     host.startAutoRefresh();
-  //   } else {
-  //     host.stopAutoRefresh();
-  //   }
-  // }
 
   async refreshTree() {
     const isExist = isExistCluster();
@@ -124,8 +111,8 @@ class State {
     }
   }
 
-  getAllAppState(appName: string) {
-    let appMap: Map<string, any> = this.get(appName);
+  private getAllAppState(appId: string) {
+    let appMap: Map<string, any> = this.get(appId);
     if (!appMap) {
       appMap = new Map<string, any>();
     }
@@ -134,12 +121,12 @@ class State {
   }
 
   async setAppState(
-    appName: string,
+    appId: string,
     key: string,
     value: any,
     args?: { refresh: boolean; nodeStateId?: string }
   ) {
-    const appMap = this.getAllAppState(appName);
+    const appMap = this.getAllAppState(appId);
     appMap.set(key, value);
     if (args && args.refresh) {
       await vscode.commands.executeCommand(
@@ -147,20 +134,20 @@ class State {
         this.getNode(args.nodeStateId)
       );
     }
-    this.set(appName, appMap);
+    this.set(appId, appMap);
   }
 
-  getAppState(appName: string, key: string) {
-    const appMap = this.getAllAppState(appName);
+  getAppState(appId: string, key: string) {
+    const appMap = this.getAllAppState(appId);
     return appMap.get(key);
   }
 
   async deleteAppState(
-    appName: string,
+    appId: string,
     key: string,
     args?: { refresh: boolean; nodeStateId?: string }
   ) {
-    const appMap = this.getAllAppState(appName);
+    const appMap = this.getAllAppState(appId);
     appMap.delete(key);
     if (args && args.refresh) {
       await vscode.commands.executeCommand(
@@ -168,7 +155,7 @@ class State {
         this.getNode(args.nodeStateId)
       );
     }
-    this.set(appName, appMap);
+    this.set(appId, appMap);
   }
   async cleanAutoRefresh(node: BaseNocalhostNode) {
     for (let key of this.refreshFolderMap.keys()) {
