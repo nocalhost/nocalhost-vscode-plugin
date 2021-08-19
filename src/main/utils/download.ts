@@ -27,12 +27,15 @@ export const lock = async function (): Promise<void> {
 
 export const unlock = async function (callback?: (err?: any) => void) {
   try {
-    const files = fs.readdirSync(lockDir);
-    for (let i = 0; i < (files || []).length; i++) {
-      const file = path.resolve(lockDir, files[i]);
-      fs.unlinkSync(file);
+    if (fs.existsSync(lockDir)) {
+      const files = fs.readdirSync(lockDir);
+      for (let i = 0; i < (files || []).length; i++) {
+        const file = path.resolve(lockDir, files[i]);
+        fs.unlinkSync(file);
+      }
+      fs.rmdirSync(lockDir);
     }
-    fs.rmdirSync(lockDir);
+ 
 
     if (callback) {
       callback(true);
