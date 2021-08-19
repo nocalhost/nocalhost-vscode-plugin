@@ -29,7 +29,7 @@ export default class ResetDevspaceCommand implements ICommand {
       return;
     }
 
-    await state.cleanAutoRefresh(node);
+    await state.disposeNode(node);
 
     await Bookinfo.cleanCheck(node);
 

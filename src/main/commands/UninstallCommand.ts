@@ -30,7 +30,7 @@ export default class UninstallCommand implements ICommand {
       return;
     }
 
-    await state.cleanAutoRefresh(appNode);
+    await state.disposeNode(appNode);
 
     state.setAppState(appNode.getNodeStateId(), "uninstalling", true);
 

@@ -157,9 +157,19 @@ class State {
     }
     this.set(appId, appMap);
   }
-  async cleanAutoRefresh(node: BaseNocalhostNode) {
+
+  async disposeNode(node: BaseNocalhostNode) {
+    const stateId = node.getNodeStateId();
+
+    for (let key of this.stateMap.keys()) {
+      if (key.startsWith(stateId)) {
+        logger.debug("stateMap", key);
+        this.stateMap.delete(key);
+      }
+    }
+
     for (let key of this.refreshFolderMap.keys()) {
-      if ((key as string).startsWith(node.getNodeStateId())) {
+      if (key.startsWith(stateId)) {
         logger.debug("cleanAutoRefresh", key);
         this.refreshFolderMap.delete(key);
       }

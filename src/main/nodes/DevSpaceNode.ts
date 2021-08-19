@@ -171,7 +171,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
         if (diff.length) {
           diff.forEach((name) => {
             const node = children.find((item) => item.label === name);
-            node && state.cleanAutoRefresh(node);
+            node && state.disposeNode(node);
           });
         }
       }
