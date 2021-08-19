@@ -44,13 +44,9 @@ async function getClusterName(res: IRootNode) {
 
   const clusterName = get(targetContext, "context.cluster", "devpool");
 
-  return clusterName || "unknown";
+  return clusterName;
 }
 export class NocalhostRootNode implements BaseNocalhostNode {
-  private static childNodes: Array<BaseNocalhostNode> = [];
-  public static getChildNodes(): Array<BaseNocalhostNode> {
-    return NocalhostRootNode.childNodes;
-  }
   public async getLocalData(): Promise<IRootNode[]> {
     const localClusterNodes =
       (host.getGlobalState(LOCAL_PATH) as LocalClusterNode[]) || [];
@@ -252,7 +248,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         return new KubeConfigNode({
           id: res.id,
-          label: res.clusterName,
+          label: res.clusterName || "unknown",
           parent: this,
           kubeConfigPath: res.kubeConfigPath,
           devSpaceInfos: res.devSpaces,
