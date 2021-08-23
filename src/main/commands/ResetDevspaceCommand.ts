@@ -8,6 +8,7 @@ import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import Bookinfo from "../common/bookinfo";
 
 export default class ResetDevspaceCommand implements ICommand {
   command: string = RESET_DEVSPACE;
@@ -30,6 +31,7 @@ export default class ResetDevspaceCommand implements ICommand {
 
     host.stopAutoRefresh();
     await state.cleanAutoRefresh(node);
+    await Bookinfo.cleanCheck(node);
 
     state.setAppState(node.info.spaceName, "uninstalling", true);
     await vscode.commands.executeCommand("Nocalhost.refresh");

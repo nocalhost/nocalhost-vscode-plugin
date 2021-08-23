@@ -17,6 +17,7 @@ import host from "../host";
 import { IUserInfo } from "../domain";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import * as fs from "fs";
+import Bookinfo from "../common/bookinfo";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -43,6 +44,8 @@ export default class SignOutCommand implements ICommand {
     host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
     await state.cleanAutoRefresh(node);
+
+    Bookinfo.cleanCheck(node);
 
     await state.refreshTree();
     // remove local

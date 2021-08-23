@@ -27,7 +27,8 @@
   ],
   "main": "./dist/extension.js",
   "nhctl": {
-    "version": "0.4.17"
+    "serverVersion": "0.4.7",
+    "version": "0.4.21"
   },
   "contributes": {
     "configuration": [
@@ -38,12 +39,6 @@
             "type": "boolean",
             "default": true,
             "description": "%nocalhost.nhctl.checkVersion%",
-            "deprecationMessage": "Debug config"
-          },
-          "nocalhost.apiServer.checkVersion": {
-            "type": "boolean",
-            "default": true,
-            "description": "%nocalhost.apiServer.checkVersion%",
             "deprecationMessage": "Debug config"
           }
         }
@@ -58,7 +53,7 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "icon": "images/dark/logo-light.svg",
+          "icon": "images/logo.svg",
           "id": "NocalhostView",
           "title": "Nocalhost"
         }
@@ -70,7 +65,7 @@
           "id": "Nocalhost",
           "name": "Nocalhost",
           "type": "tree",
-          "when": "extensionActivated && Nocalhost.visibleTree"
+          "when": "nhctl.upgrade || extensionActivated && Nocalhost.visibleTree"
         },
         {
           "id": "Nocalhost.Home",
@@ -84,12 +79,17 @@
       {
         "view": "Nocalhost",
         "contents": "%noReady.description%",
-        "when": "!extensionActivated"
+        "when": "!nhctl.upgrade && !extensionActivated"
       },
       {
         "view": "Nocalhost",
         "contents": "%noApps.description%",
         "when": "extensionActivated && emptyCluster"
+      },
+      {
+        "view": "Nocalhost",
+        "contents": "%tips.nhctl.updating%",
+        "when": "nhctl.upgrade"
       }
     ],
     "menus": {
@@ -281,6 +281,10 @@
     ],
     "commands": [
       {
+        "command": "Nocalhost.resetPlugin",
+        "title": "Nocalhost: Reset Plugin"
+      },
+      {
         "command": "Nocalhost.debug",
         "title": "Debug"
       },
@@ -383,19 +387,13 @@
       {
         "command": "Nocalhost.startDevMode",
         "title": "%Start.Develop%",
-        "icon": {
-          "dark": "images/dark/dev-start.svg",
-          "light": "images/light/dev-start.svg"
-        },
+        "icon": "images/icon/dev_start.svg",
         "category": "devSpace"
       },
       {
         "command": "Nocalhost.endDevMode",
         "title": "%End.Develop%",
-        "icon": {
-          "dark": "images/dark/dev-end.svg",
-          "light": "images/light/dev-end.svg"
-        },
+        "icon": "images/icon/dev_end.svg",
         "category": "devSpace"
       },
       {
@@ -441,26 +439,17 @@
       {
         "command": "Nocalhost.editServiceConfig",
         "title": "%viewDevConfig%",
-        "icon": {
-          "dark": "images/dark/setting-normal.svg",
-          "light": "images/light/setting-normal.svg"
-        }
+        "icon": "images/icon/setting_normal.svg"
       },
       {
         "command": "Nocalhost.writeServiceConfig",
         "title": "%Config%",
-        "icon": {
-          "dark": "images/dark/setting-warning.svg",
-          "light": "images/light/setting-warning.svg"
-        }
+        "icon": "images/icon/setting_warning.svg"
       },
       {
         "command": "Nocalhost.EditAppConfig",
         "title": "%developConfig%",
-        "icon": {
-          "dark": "images/dark/setting-normal.svg",
-          "light": "images/light/setting-normal.svg"
-        }
+        "icon": "images/icon/setting_normal.svg"
       },
       {
         "command": "Nocalhost.editHelmValues",
@@ -526,7 +515,6 @@
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
     "@types/react-router-dom": "^5.1.6",
-    "@types/request": "^2.48.5",
     "@types/semver": "^7.3.4",
     "@types/shelljs": "^0.8.8",
     "@types/sinon": "^9.0.10",
@@ -575,6 +563,7 @@
     "@types/json-schema": "^7.0.7",
     "@types/proper-lockfile": "^4.1.1",
     "ajv": "^6.12.6",
+    "array-differ": "^3.0.0",
     "axios": "^0.21.0",
     "camelcase": "^6.2.0",
     "classnames": "^2.3.1",
@@ -586,7 +575,7 @@
     "log4js": "^6.3.0",
     "proper-lockfile": "^4.1.2",
     "qs": "^6.9.4",
-    "request": "^2.88.2",
+    "rimraf": "^3.0.2",
     "semver": "^7.3.4",
     "shelljs": "^0.8.4",
     "shortid": "^2.2.16",

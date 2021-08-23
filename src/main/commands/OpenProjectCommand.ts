@@ -1,3 +1,4 @@
+import { existsSync } from "fs";
 import * as vscode from "vscode";
 import host from "../host";
 import { OPEN_PROJECT } from "./constants";
@@ -28,6 +29,12 @@ export default class OpenProjectCommand implements ICommand {
     let workloadConfig: { directory: string } = appConfig[node.name] || {};
 
     if (workloadConfig.directory) {
+      if (!existsSync(workloadConfig.directory)) {
+        host.showInformationMessage(
+          "The directory does not exist,you are not associated with source directory"
+        );
+        return;
+      }
       const currentUri = host.getCurrentRootPath();
 
       const uri = vscode.Uri.file(workloadConfig.directory);

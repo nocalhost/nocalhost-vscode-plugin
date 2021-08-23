@@ -173,6 +173,7 @@ class State {
   async cleanAutoRefresh(node: BaseNocalhostNode) {
     for (let key of this.refreshFolderMap.keys()) {
       if ((key as string).startsWith(node.getNodeStateId())) {
+        logger.debug("cleanAutoRefresh", key);
         this.refreshFolderMap.delete(key);
       }
     }

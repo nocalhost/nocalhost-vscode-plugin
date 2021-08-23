@@ -2,23 +2,18 @@ import { DEV_ASSOCIATE_LOCAL_DIRECTORYS, PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import * as fs from "fs";
-import { execAsyncWithReturn } from "./ctl/shell";
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
   HELM_VALUES_DIR,
-  JWT,
   KUBE_CONFIG_DIR,
   HELM_NH_CONFIG_DIR,
   NH_CONFIG_DIR,
   PLUGIN_CONFIG_DIR,
   TMP_APP,
-  LOCAL_PATH,
   TMP_KUBECONFIG_PATH,
   TMP_RESOURCE_TYPE,
   TMP_STATUS,
-  SERVER_CLUSTER_LIST,
   TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
   WELCOME_DID_SHOW,
@@ -28,12 +23,10 @@ import {
   TMP_CONTAINER,
   TMP_DEVSPACE,
   TMP_NAMESPACE,
-  IS_LOCAL,
   NH_BIN,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
-import * as shell from "shelljs";
 import state from "./state";
 import { START_DEV_MODE, SYNC_SERVICE } from "./commands/constants";
 import initCommands from "./commands";
@@ -274,14 +267,6 @@ export async function deactivate() {
   host.dispose();
 }
 
-export function checkCtl(name: string) {
-  const res = shell.which(name);
-  if (res && res.code === 0) {
-    return true;
-  }
-  throw new Error(`not found ${name}`);
-}
-
 export async function updateServerConfigStatus() {
   await vscode.commands.executeCommand(
     "setContext",
@@ -337,6 +322,10 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (error: any) => {
+  if (error === "ignore") {
+    return;
+  }
+
   logger.error(
     `[unhandledRejection] ${(error && error.message) || error} ${
       error && error.stack

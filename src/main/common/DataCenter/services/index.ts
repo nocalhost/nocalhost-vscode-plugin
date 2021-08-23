@@ -4,6 +4,7 @@ import { NH_BIN } from "../../../constants";
 import host from "../../../host";
 import { nhctlCommand, NhctlCommand } from "../../../ctl/nhctl";
 import DataCenter, { IExecCommandResult } from "../index";
+import { which } from "../../../ctl/shell";
 
 export type ServiceResult = IExecCommandResult;
 
@@ -44,16 +45,19 @@ async function fetchApplicationConfig(
 
 async function fetchNhctlVersion(dir: string = NH_BIN): Promise<string> {
   const nhctlPath = path.resolve(dir, host.isWindow() ? "nhctl.exe" : "nhctl");
-  const command: string = `${nhctlPath} version`;
-  const result = await DataCenter.execCommand(command);
-  if (result.success) {
-    const matched: string[] | null = result.value.match(
-      /Version:\s*v(\d+(\.+\d+){2})/
-    );
-    if (!matched) {
-      return;
+
+  if (which(nhctlPath)) {
+    const command: string = `${nhctlPath} version`;
+    const result = await DataCenter.execCommand(command);
+    if (result.success) {
+      const matched: string[] | null = result.value.match(
+        /Version:\s*v(\d+(\.+\d+){2})/
+      );
+      if (!matched) {
+        return;
+      }
+      return matched[1];
     }
-    return matched[1];
   }
   return null;
 }
