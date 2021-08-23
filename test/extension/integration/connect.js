@@ -1,7 +1,6 @@
 const puppeteer = require("puppeteer-core");
 const assert = require("assert");
 const ncp = require("copy-paste");
-const fs = require("fs");
 
 const { waitForMessage, initialize } = require("./index");
 /**

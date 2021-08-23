@@ -2,7 +2,6 @@ const cp = require("child_process");
 const rimraf = require("rimraf");
 const os = require("os");
 const path = require("path");
-const assert = require("assert");
 
 const {
   installHelmGit,

@@ -124,7 +124,7 @@ async function isInstallSucceed(page, name) {
             const icon = node.querySelector(".custom-view-tree-node-item-icon");
 
             if (icon) {
-              return icon.getAttribute("style").includes("app-connected.svg");
+              return icon.getAttribute("style").includes("app_connected.svg");
             }
           }
           return false;
