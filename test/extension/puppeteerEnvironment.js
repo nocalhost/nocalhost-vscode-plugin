@@ -13,7 +13,6 @@ class PuppeteerEnvironment extends NodeEnvironment {
     const page = await retry(() => getPage(__BROWSER__), {
       maxRetryTime: 10 * 1000,
     });
-    page.setDefaultTimeout(20 * 1000);
 
     await openNocalhost(page);
 

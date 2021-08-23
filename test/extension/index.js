@@ -3,12 +3,15 @@ const cp = require("child_process");
 const path = require("path");
 const fse = require("fs-extra");
 const assert = require("assert");
+const isWindows = require("is-windows");
+const os = require("os");
 
 const {
   downloadAndUnzipVSCode,
   resolveCliPathFromVSCodeExecutablePath,
 } = require("vscode-test");
 const getPort = require("get-port");
+const axios = require("axios");
 
 /**
  *
@@ -51,14 +54,18 @@ const start = async (options = {}) => {
 
   console.warn("port", port);
 
+  console.warn("useDataDir", userDataDir);
+
   let args = [
     // https://github.com/microsoft/vscode/issues/84238
     "--no-sandbox",
     "--disable-workspace-trust",
+    "--disable-dev-shm-usage",
 
     "--disable-web-security",
     "--disable-features=IsolateOrigins",
     "--disable-site-isolation-trials",
+    // "--disable-extensions",
     `--user-data-dir=${userDataDir}`,
     `--remote-debugging-port=${port}`,
   ];
@@ -72,7 +79,15 @@ const start = async (options = {}) => {
 };
 
 const getUserDataDir = () => {
-  const userDataDir = path.join(__dirname, "../../.vscode-test/user-data");
+  let userDataDir = path.join(__dirname, "../../.vscode-test/user-data");
+
+  if (isWindows()) {
+    userDataDir = path.join(
+      os.tmpdir(),
+      process.pid.toString(),
+      ".vscode-test/user-data"
+    );
+  }
 
   if (fse.existsSync(userDataDir)) {
     fse.removeSync(userDataDir);
@@ -128,9 +143,9 @@ const run = async (executable, args, testsEnv) => {
     console.log(`Exit code:   ${code ?? signal}`);
 
     if (code === null) {
-      reject(signal);
+      console.log(signal);
     } else if (code !== 0) {
-      reject("Failed");
+      console.error("Failed");
     }
 
     console.log("Done\n");
@@ -147,28 +162,13 @@ const run = async (executable, args, testsEnv) => {
   return pid;
 };
 
-const getWebSocketDebuggerUrl = async (port) =>
-  new Promise((resolve, reject) => {
-    let json = "";
-    const request = http.request(
-      {
-        host: "127.0.0.1",
-        path: "/json/version",
-        port,
-      },
-      (response) => {
-        response.on("error", reject);
-        response.on("data", (chunk) => {
-          json += chunk.toString();
-        });
-        response.on("end", () =>
-          resolve(JSON.parse(json).webSocketDebuggerUrl)
-        );
-      }
-    );
-    request.on("error", reject);
-    request.end();
-  });
+const getWebSocketDebuggerUrl = async (port) => {
+  return axios.default
+    .get(`http://127.0.0.1:${port}/json/version`)
+    .then((json) => {
+      return json.data.webSocketDebuggerUrl;
+    });
+};
 
 module.exports = {
   start,

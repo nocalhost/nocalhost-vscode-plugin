@@ -1,8 +1,8 @@
 const { pasteAsText } = require("./connect");
 
 const connectTests = () => {
-  describe("Connect to Cluster ", () => {
-    it("Paste as Text", async () => {
+  describe("connect to Cluster ", () => {
+    it("paste as Text", async () => {
       await pasteAsText(page);
     });
   });

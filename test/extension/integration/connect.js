@@ -1,8 +1,9 @@
 const puppeteer = require("puppeteer-core");
 const assert = require("assert");
 const ncp = require("copy-paste");
-const { waitForMessage, initialize } = require("./index");
+const fs = require("fs");
 
+const { waitForMessage, initialize } = require("./index");
 /**
  *
  * @param {puppeteer.Page} page
@@ -58,6 +59,13 @@ async function getIframe(page) {
 
   return iframe;
 }
+
+async function copyKubeConfig() {
+  let config = process.env.NOCALHOST_KUBECONFIG;
+
+  await new Promise((res) => ncp.copy(config, res));
+}
+
 /**
  *
  * @param {puppeteer.Page} page
@@ -74,7 +82,7 @@ async function pasteAsText(page) {
 
   await iframe.focus('[placeholder="KubeConfig"]');
 
-  await new Promise((res) => ncp.copy(process.env.NOCALHOST_KUBECONFIG, res));
+  await copyKubeConfig();
 
   await iframe.evaluateHandle(() => {
     return new Promise(async (res) => {
@@ -92,9 +100,11 @@ async function pasteAsText(page) {
   return await waitForMessage(page, "Success");
 }
 
-// (async () => {
-//   const page = await initialize();
-//   await pasteAsText(page);
-// })();
+(async () => {
+  if (require.main === module) {
+    const page = await initialize();
+    await pasteAsText(page);
+  }
+})();
 
 module.exports = { pasteAsText };

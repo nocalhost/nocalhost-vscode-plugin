@@ -1,0 +1,41 @@
+name: UI Tests
+on:
+  push:
+    branches: [ test/vscode-puppeteer ]
+  pull_request:
+    branches: [ dev ]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [macos-latest]
+          # os: [ubuntu-latest]
+    name: Run UI Tests
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ^14
+          
+      - run: yarn
+
+      - name: Run tests
+        uses: GabrielBB/xvfb-action@v1.0
+        env:
+          NOCALHOST_KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        with:
+          run: yarn run test:ext
+          
+      - run: mv .screenshot ~/.nh/screenshot
+      
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: artifact-${{ github.run_id }}
+          path: |
+            ~/.nh/screenshot
+            ~/.nh/nhctl/logs/
+            ~/.nh/vscode-plugin/vsc_log

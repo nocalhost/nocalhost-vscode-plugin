@@ -24,15 +24,6 @@ async function openNocalhost(page) {
 /**
  *
  * @param {puppeteer.Page} page
- * @return {puppeteer.ElementHandle<Element>[]}
- */
-async function getButtons(page) {
-  return await (await page.waitForSelector(".dialog-buttons")).$$(":scope > *");
-}
-
-/**
- *
- * @param {puppeteer.Page} page
  * @param {String} text
  * @return {puppeteer.ElementHandle<Element>[]}
  */
@@ -66,12 +57,15 @@ async function quickPick(page, text) {
 /**
  *
  * @param {puppeteer.Page} page
+ * @param {string} message
+ * @param {number} timeout
  */
-async function waitForMessage(page, message) {
+async function waitForMessage(page, message, timeout) {
   await page.waitForSelector(".notifications-toasts");
 
   return await page.waitForFunction(
-    `document.querySelector(".notifications-toasts").innerText.includes("${message}")`
+    `document.querySelector(".notifications-toasts").innerText.includes("${message}")`,
+    { timeout }
   );
 }
 /**
@@ -106,7 +100,8 @@ async function unInstall(page, node, name) {
   await setInputBox(page, "OK");
 
   await page.waitForFunction(
-    `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`
+    `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`,
+    { timeout: 1 * 60 * 1000 }
   );
 }
 
@@ -138,7 +133,7 @@ async function isInstallSucceed(page, name) {
 
       return false;
     },
-    {},
+    { timeout: 5 * 60 * 1000 },
     name
   );
 
@@ -232,7 +227,6 @@ module.exports = {
   getTreeView,
   getInstallApp,
   unInstall,
-  getButtons,
   isInstallSucceed,
   initialize,
   setInputBox,

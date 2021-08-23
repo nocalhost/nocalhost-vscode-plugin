@@ -14,9 +14,9 @@ const {
 } = require("./install");
 
 const installTests = () => {
-  describe("Deploy From Local Directory", () => {
+  describe("deploy From Local Directory", () => {
     let bookInfoPath;
-    beforeAll(async () => {
+    beforeAll(async (done) => {
       bookInfoPath = path.join(os.tmpdir(), process.pid.toString(), "bookInfo");
 
       rimraf.sync(bookInfoPath);
@@ -36,7 +36,10 @@ const installTests = () => {
         }
       );
 
-      assert.strictEqual(0, syncReturns.status, syncReturns.stderr);
+      if (syncReturns.status !== 0) {
+        done.fail(syncReturns.stderr);
+      }
+      done();
     });
 
     afterAll(async () => {
@@ -54,8 +57,8 @@ const installTests = () => {
     });
   });
 
-  describe("Deploy From Git Repo", () => {
-    it("kustomize", async () => {
+  describe("deploy From Git Repo", () => {
+    it("kstomize", async () => {
       await installKustomizeGit(page);
     });
     it("helm", async () => {

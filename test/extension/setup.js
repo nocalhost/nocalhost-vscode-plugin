@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer-core");
-const { writeFile } = require("fs").promises;
+const { writeFileSync, existsSync, mkdirSync } = require("fs");
 const os = require("os");
 const path = require("path");
 const mkdirp = require("mkdirp");
@@ -13,7 +13,13 @@ const DIR = path.join(
   "jest_puppeteer_global_setup"
 );
 
+const screenshotPath = path.join(__dirname, "../../.screenshot");
+
 async function setup() {
+  if (!existsSync(screenshotPath)) {
+    mkdirSync(screenshotPath);
+  }
+
   const { port, pid } = await start({
     testsEnv: {
       puppeteer: true,
@@ -28,9 +34,9 @@ async function setup() {
     browserWSEndpoint,
     defaultViewport: null,
   });
-
   mkdirp.sync(DIR);
-  await writeFile(path.join(DIR, "pid"), String(pid));
+
+  writeFileSync(path.join(DIR, "pid"), String(pid));
 
   global.__BROWSER__ = browser;
 }
