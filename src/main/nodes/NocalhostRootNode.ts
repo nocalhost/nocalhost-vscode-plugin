@@ -25,6 +25,10 @@ import path = require("path");
 import { asyncLimt } from "../utils";
 
 async function getClusterName(res: IRootNode) {
+  if (!res.kubeConfigPath) {
+    return "unknown";
+  }
+
   if (res.clusterSource === ClusterSource.local) {
     const localClusterNode = LocalCusterService.getClusterNodeByKubeConfigPath(
       res.kubeConfigPath
@@ -119,8 +123,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
           logger.error("get serverCluster error", result.reason, account);
 
-          const kubeConfigPath = path.resolve(KUBE_CONFIG_DIR, account.id);
-
           const rootNode: IRootNode = {
             devSpaces: [],
             applications: [],
@@ -129,7 +131,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
             accountClusterService: new AccountClusterService(account.loginInfo),
             id: account.id,
             createTime: account.createTime,
-            kubeConfigPath: kubeConfigPath,
+            kubeConfigPath: null,
             state: {
               code: 201,
               info: result.reason,
@@ -246,9 +248,16 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         const res = resources[index];
 
+        let info = result.reason;
+
+        if (result.reason instanceof Error) {
+          info = result.reason.message;
+          logger.error("get serverCluster error", result.reason, res.userInfo);
+        }
+
         return new KubeConfigNode({
           id: res.id,
-          label: res.clusterName || "unknown",
+          label: res.clusterName,
           parent: this,
           kubeConfigPath: res.kubeConfigPath,
           devSpaceInfos: res.devSpaces,
@@ -258,7 +267,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           accountClusterService: res.accountClusterService,
           state: {
             code: 201,
-            info: result.reason,
+            info,
           },
         });
       });
