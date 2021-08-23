@@ -9,6 +9,8 @@ jobs:
   release-plugin:
     name: Release nocalhost-vscode-plugin
     runs-on: ubuntu-latest
+    environment:
+      name: release
     steps:
     - name: Set up Node 1.x
       uses: actions/setup-node@v2.1.3
