@@ -12,12 +12,8 @@ async function dowload(page) {
     return;
   }
 
-  page.setDefaultTimeout(60 * 1000);
-
   await waitForMessage(page, "Downloading nhctl");
 
   await waitForMessage(page, "Download completed");
-
-  page.setDefaultTimeout(20 * 1000);
 }
 module.exports = { dowload };
