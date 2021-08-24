@@ -22,7 +22,7 @@ Nocalhost provides the same debugging experience you've used in the IDE even whe
 
 # Resources
 
-- [Quick start:](https://nocalhost.dev/eng/getting-started/) Follow our quick start to enjoy the faster and easier cloud-native application development. 
+- [Quick start:](https://nocalhost.dev/docs/quick-start/) Follow our quick start to enjoy the faster and easier cloud-native application development. 
 - [Documentation:](https://nocalhost.dev/) We have a lot of features to explore. Head over our documentation to discover more.
 - [Talk to us:](https://nocalhost.slack.com/) Connect to the Nocalhost development team by joining our Slack channel. 
 - [File a issue:](https://github.com/nocalhost/nocalhost/issues) If you discover any issue, file a bug and will fix it as soon as possible.
