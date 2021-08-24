@@ -134,6 +134,7 @@ export default class AccountClusterService {
         (applications || []).length
       }`
     );
+
     for (const sa of serviceAccounts) {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
       const id = getStringHash(
