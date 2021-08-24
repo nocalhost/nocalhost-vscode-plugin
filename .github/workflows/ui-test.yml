@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest]
-          # os: [ubuntu-latest]
+        # os: [ubuntu-latest]
     name: Run UI Tests
     runs-on: ${{ matrix.os }}
     steps:
@@ -29,8 +29,10 @@ jobs:
         with:
           run: yarn run test:ext
           
-      - run: mv .screenshot ~/.nh/screenshot
-      
+      - name: Mv screenshot
+        if: ${{ always() }}
+        run: mv .screenshot ~/.nh/screenshot
+          
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
         with:
