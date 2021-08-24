@@ -150,7 +150,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = "Nocalhost";
   public type = ROOT;
   constructor(public parent: BaseNocalhostNode | null) {
-    console.log(AppNode);
     state.setNode(this.getNodeStateId(), this);
   }
 
