@@ -60,10 +60,10 @@ export class Host implements vscode.Disposable {
 
   public async autoRefresh() {
     try {
-      const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
-      if (rootNode) {
-        await rootNode.updateData().catch(() => {});
-      }
+      // const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+      // if (rootNode) {
+      //   await rootNode.updateData().catch(() => {});
+      // }
       for (const [id, expanded] of state.refreshFolderMap) {
         if (expanded) {
           const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
