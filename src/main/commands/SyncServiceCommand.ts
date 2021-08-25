@@ -26,22 +26,60 @@ interface SyncMsg {
 export default class SyncServiceCommand implements ICommand {
   command: string = SYNC_SERVICE;
   _id: NodeJS.Timeout | null = null;
-  syncData: Sync;
+  syncData: Partial<Sync>;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
+  }
+  static async checkSync() {
+    let result: {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      kubeconfig_path: string;
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      svc_pack: {
+        ns: string;
+        app: string;
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        svc_type: string;
+        svc: string;
+        container: string;
+      };
+    };
+
+    try {
+      result = await nhctl.NhctlCommand.create(
+        `dev associate-queryer -s ${host.getCurrentRootPath()} --current --json`
+      )
+        .toJson()
+        .exec();
+
+      if (result) {
+        const {
+          app,
+          svc_type: resourceType,
+          svc: service,
+          ns: namespace,
+        } = result.svc_pack;
+
+        vscode.commands.executeCommand(SYNC_SERVICE, {
+          app,
+          resourceType,
+          service,
+          kubeConfigPath: result.kubeconfig_path,
+          namespace,
+        });
+      }
+    } catch (err) {
+      logger.error("checkSync error:", err);
+      vscode.commands.executeCommand(SYNC_SERVICE);
+    }
   }
   async execCommand(syncData: Sync) {
     if (this._id) {
       clearTimeout(this._id);
       this._id = null;
     }
-    if (!syncData.app || !syncData.service) {
-      logger.info("syncData.app is null", true);
-      host.statusBar.hide();
-      return;
-    }
 
-    this.syncData = syncData;
+    this.syncData = syncData || {};
 
     this.getSyncStatus();
   }
