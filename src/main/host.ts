@@ -285,7 +285,6 @@ export class Host implements vscode.Disposable {
     options?: vscode.MessageOptions,
     ...items: string[]
   ): Thenable<string | undefined> {
-    this.log(msg, true);
     if (options && options.modal) {
       return vscode.window.showInformationMessage(msg, options, ...items);
     }
