@@ -5,7 +5,7 @@ const nhctlTests = () => {
     page.setDefaultTimeout(60 * 1000);
   });
   afterAll(() => {
-    page.setDefaultTimeout(20 * 1000);
+    page.setDefaultTimeout(30 * 1000);
   });
   test("dowload", async () => {
     await dowload(page);

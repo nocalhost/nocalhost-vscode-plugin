@@ -36,7 +36,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
         with:
-          name: artifact-${{ github.run_id }}
+          name: artifact-${{ matrix.os }}-${{ github.run_id }}
           path: |
             ~/.nh/screenshot
             ~/.nh/nhctl/logs/
