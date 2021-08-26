@@ -31,14 +31,17 @@ export default class SyncServiceCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   static async checkSync() {
+    const currentRootPath = host.getCurrentRootPath();
+
+    if (!currentRootPath) {
+      return;
+    }
+
     let result: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       kubeconfig_path: string;
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       svc_pack: {
         ns: string;
         app: string;
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         svc_type: string;
         svc: string;
         container: string;
@@ -47,7 +50,7 @@ export default class SyncServiceCommand implements ICommand {
 
     try {
       result = await nhctl.NhctlCommand.create(
-        `dev associate-queryer -s ${host.getCurrentRootPath()} --current --json`
+        `dev associate-queryer -s ${currentRootPath} --current --json`
       )
         .toJson()
         .exec();
