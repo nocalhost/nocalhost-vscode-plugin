@@ -21,7 +21,6 @@ import { ClusterSource } from "../common/define";
 import { DevSpaceNode } from "./DevSpaceNode";
 
 import arrayDiffer = require("array-differ");
-import path = require("path");
 import { asyncLimt } from "../utils";
 
 async function getClusterName(res: IRootNode) {
