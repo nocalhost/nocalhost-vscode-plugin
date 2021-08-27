@@ -8,7 +8,7 @@ import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
 import { sortResources } from "../clusters";
 import logger from "../utils/logger";
 
-import { KUBE_CONFIG_DIR, LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
+import { LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
 import { AppNode } from "./AppNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
