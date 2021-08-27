@@ -121,8 +121,8 @@ class State {
     }
   }
 
-  getAllAppState(appName: string) {
-    let appMap: Map<string, any> = this.get(appName);
+  private getAllAppState(appId: string) {
+    let appMap: Map<string, any> = this.get(appId);
     if (!appMap) {
       appMap = new Map<string, any>();
     }
@@ -131,12 +131,12 @@ class State {
   }
 
   async setAppState(
-    appName: string,
+    appId: string,
     key: string,
     value: any,
     args?: { refresh: boolean; nodeStateId?: string }
   ) {
-    const appMap = this.getAllAppState(appName);
+    const appMap = this.getAllAppState(appId);
     appMap.set(key, value);
     if (args && args.refresh) {
       await vscode.commands.executeCommand(
@@ -144,20 +144,20 @@ class State {
         this.getNode(args.nodeStateId)
       );
     }
-    this.set(appName, appMap);
+    this.set(appId, appMap);
   }
 
-  getAppState(appName: string, key: string) {
-    const appMap = this.getAllAppState(appName);
+  getAppState(appId: string, key: string) {
+    const appMap = this.getAllAppState(appId);
     return appMap.get(key);
   }
 
   async deleteAppState(
-    appName: string,
+    appId: string,
     key: string,
     args?: { refresh: boolean; nodeStateId?: string }
   ) {
-    const appMap = this.getAllAppState(appName);
+    const appMap = this.getAllAppState(appId);
     appMap.delete(key);
     if (args && args.refresh) {
       await vscode.commands.executeCommand(
@@ -165,11 +165,21 @@ class State {
         this.getNode(args.nodeStateId)
       );
     }
-    this.set(appName, appMap);
+    this.set(appId, appMap);
   }
-  async cleanAutoRefresh(node: BaseNocalhostNode) {
+
+  async disposeNode(node: BaseNocalhostNode) {
+    const stateId = node.getNodeStateId();
+
+    for (let key of this.stateMap.keys()) {
+      if (key.startsWith(stateId)) {
+        logger.debug("stateMap", key);
+        this.stateMap.delete(key);
+      }
+    }
+
     for (let key of this.refreshFolderMap.keys()) {
-      if ((key as string).startsWith(node.getNodeStateId())) {
+      if (key.startsWith(stateId)) {
         logger.debug("cleanAutoRefresh", key);
         this.refreshFolderMap.delete(key);
       }

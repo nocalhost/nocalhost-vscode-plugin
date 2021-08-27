@@ -156,7 +156,7 @@ class Bookinfo {
     const devSpaceNode = this.app.parent as DevSpaceNode;
 
     if (
-      state.getAppState(devSpaceNode.info.spaceName, "uninstalling") === true
+      state.getAppState(devSpaceNode.getNodeStateId(), "uninstalling") === true
     ) {
       this.callBack.cancell();
       return;
