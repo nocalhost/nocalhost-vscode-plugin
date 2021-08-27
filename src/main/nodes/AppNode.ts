@@ -1,24 +1,21 @@
 import * as vscode from "vscode";
-import { KUBE_CONFIG_DIR, HELM_NH_CONFIG_DIR } from "../constants";
+import { HELM_NH_CONFIG_DIR } from "../constants";
 import * as nhctl from "../ctl/nhctl";
 import * as yaml from "yaml";
 import state from "../state";
 
-import { APP_FOLDER, ID_SPLIT } from "./nodeContants";
+import { ID_SPLIT } from "./nodeContants";
 import { resolveVSCodeUri } from "../utils/fileUtil";
 import * as path from "path";
 import { BaseNocalhostNode, AppInfo } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NetworkFolderNode } from "./networks/NetworkFolderNode";
-import { NocalhostRootNode } from "./NocalhostRootNode";
 import { NocalhostAccountNode } from "./NocalhostAccountNode";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
 import { StorageFolder } from "./storage/StorageFolder";
 import { IApplicationInfo, IV2ApplicationInfo } from "../domain";
 import ConfigService, { NocalhostConfig } from "../service/configService";
-import host from "../host";
-import { SYNC_SERVICE } from "../commands/constants";
 import { NodeType } from "./interfact";
 import { DevSpaceNode } from "./DevSpaceNode";
 import { ClusterSource } from "../common/define";
@@ -236,24 +233,6 @@ export class AppNode extends NocalhostFolderNode {
     if (!this.installed()) {
       return;
     }
-    // const svcProfiles =
-    //   (this.nhctlAppInfo && this.nhctlAppInfo.svcProfile) || [];
-    // for (const service of svcProfiles) {
-    //   if (
-    //     service.developing &&
-    //     service.localAbsoluteSyncDirFromDevStartPlugin.length > 0 &&
-    //     service.localAbsoluteSyncDirFromDevStartPlugin[0] ===
-    //       host.getCurrentRootPath()
-    //   ) {
-    //     vscode.commands.executeCommand(SYNC_SERVICE, {
-    //       app: this.name,
-    //       service: service.actualName,
-    //       kubeConfigPath: this.getKubeConfigPath(),
-    //       namespace: this.namespace,
-    //     });
-    //     break;
-    //   }
-    // }
   }
 
   installed(): boolean {
@@ -285,10 +264,6 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   async siblings(): Promise<(AppNode | NocalhostAccountNode)[]> {
-    // return (await this.parent.getChildren()).filter((item) => {
-    //   return item instanceof AppNode && item.id !== this.id;
-    // });
-
     return [];
   }
 
