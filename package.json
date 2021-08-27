@@ -28,7 +28,7 @@
   "main": "./dist/extension.js",
   "nhctl": {
     "serverVersion": "0.4.7",
-    "version": "0.4.21"
+    "version": "0.5.1"
   },
   "contributes": {
     "configuration": [
