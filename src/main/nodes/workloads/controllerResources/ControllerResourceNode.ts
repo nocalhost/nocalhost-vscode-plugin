@@ -3,9 +3,7 @@ import * as nhctl from "../../../ctl/nhctl";
 import { get as _get } from "lodash";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
-import ConfigService, {
-  NocalhostServiceConfig,
-} from "../../../service/configService";
+import { NocalhostServiceConfig } from "../../../service/configService";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import {
   BaseNocalhostNode,
@@ -17,7 +15,6 @@ import {
   IStatus,
   IResourceStatus,
 } from "./../../../domain/IK8sResource";
-import { Status, Resource, ResourceStatus } from "../../types/resourceType";
 
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
   public label: string;
@@ -129,7 +126,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     const appNode = this.getAppNode();
     if (status) {
       await state.setAppState(
-        appNode.name,
+        appNode.getNodeStateId(),
         `${this.getNodeStateId()}_status`,
         status,
         {
@@ -139,7 +136,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
       );
     } else {
       await state.deleteAppState(
-        appNode.name,
+        appNode.getNodeStateId(),
         `${this.getNodeStateId()}_status`,
         {
           refresh: true,
@@ -162,7 +159,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     const appNode = this.getAppNode();
     if (container) {
       await state.setAppState(
-        appNode.name,
+        appNode.getNodeStateId(),
         `${this.getNodeStateId()}_container`,
         container,
         {
@@ -172,7 +169,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
       );
     } else {
       await state.deleteAppState(
-        appNode.name,
+        appNode.getNodeStateId(),
         `${this.getNodeStateId()}_container`,
         {
           refresh: true,
@@ -189,7 +186,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   public async getStatus(refresh = false) {
     const appNode = this.getAppNode();
     let status = state.getAppState(
-      appNode.name,
+      appNode.getNodeStateId(),
       `${this.getNodeStateId()}_status`
     );
     if (status) {

@@ -1,18 +1,14 @@
 import * as vscode from "vscode";
-import * as path from "path";
 
 import ICommand from "./ICommand";
-import { REFRESH, UNINSTALL_APP } from "./constants";
+import { UNINSTALL_APP } from "./constants";
 import registerCommand from "./register";
 import state from "../state";
 import host, { Host } from "../host";
-import { KUBE_CONFIG_DIR } from "../constants";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import messageBus from "../utils/messageBus";
-import { NocalhostFolderNode } from "../nodes/abstract/NocalhostFolderNode";
-import { BaseNocalhostNode } from "../nodes/types/nodeType";
 import Bookinfo from "../common/bookinfo";
 
 export default class UninstallCommand implements ICommand {
@@ -34,22 +30,20 @@ export default class UninstallCommand implements ICommand {
       return;
     }
 
-    host.stopAutoRefresh();
+    await state.disposeNode(appNode);
 
-    await state.cleanAutoRefresh(appNode);
+    state.setAppState(appNode.getNodeStateId(), "uninstalling", true);
 
-    state.setAppState(appNode.name, "uninstalling", true);
-
-    await vscode.commands.executeCommand("Nocalhost.refresh");
+    await vscode.commands.executeCommand("Nocalhost.refresh", appNode);
 
     const devspace = appNode.getParent() as DevSpaceNode;
+
     messageBus.emit("uninstall", {
       devspaceName: devspace.info.spaceName,
       appName: appNode.name,
     });
-    host.disposeApp(devspace.info.spaceName, appNode.name);
 
-    host.startAutoRefresh();
+    host.disposeApp(devspace.info.spaceName, appNode.name);
 
     Bookinfo.cleanCheck(appNode);
 
@@ -58,9 +52,12 @@ export default class UninstallCommand implements ICommand {
       appNode.getKubeConfigPath(),
       appNode.namespace,
       appNode.name
-    ).finally(() => {
-      state.deleteAppState(appNode.name, "uninstalling");
-      devspace.updateData();
+    ).finally(async () => {
+      state.delete(appNode.getNodeStateId());
+
+      await devspace.updateData();
+
+      await vscode.commands.executeCommand("Nocalhost.refresh", devspace);
     });
   }
   private async uninstall(
@@ -74,10 +71,5 @@ export default class UninstallCommand implements ICommand {
     await nhctl.uninstall(host, kubeconfigPath, namespace, appName, true);
     host.removeGlobalState(appName);
     state.delete(appName);
-  }
-
-  private getKubeConfigPath(appNode: AppNode): string {
-    const { id, devSpaceId } = appNode;
-    return path.resolve(KUBE_CONFIG_DIR, `${id}_${devSpaceId}_config`);
   }
 }

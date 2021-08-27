@@ -17,11 +17,15 @@ export default class InstallCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
+  appNode: AppNode;
   async execCommand(appNode: AppNode) {
     if (!appNode) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
+    this.appNode = appNode;
+
     let refOrVersion: string | undefined;
     let values: string | undefined;
     let valuesStr: string | undefined;
@@ -215,7 +219,7 @@ export default class InstallCommand implements ICommand {
         }
       | undefined
   ) {
-    state.setAppState(appName, "installing", true);
+    state.setAppState(this.appNode.getNodeStateId(), "installing", true);
     host.log(`Installing application: ${appName}`, true);
     await nhctl
       .install({
@@ -234,8 +238,7 @@ export default class InstallCommand implements ICommand {
         refOrVersion,
       })
       .finally(() => {
-        state.deleteAppState(appName, "installing");
-        host.setGlobalState(appName, {});
+        state.deleteAppState(this.appNode.getNodeStateId(), "installing");
       });
   }
 
