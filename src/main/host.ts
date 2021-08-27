@@ -77,7 +77,7 @@ export class Host implements vscode.Disposable {
 
           return Promise.resolve();
         },
-        3 * 1000
+        10 * 1000
       );
     } catch (e) {
       this.startAutoRefresh();

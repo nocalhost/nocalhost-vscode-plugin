@@ -1479,11 +1479,15 @@ export function nhctlCommand(
 }
 
 export async function checkCluster(
-  kubeConfigPath: string
+  kubeConfigPath: string,
+  timeout = 10
 ): Promise<ClustersState> {
-  const result = await NhctlCommand.create("check cluster", {
-    kubeConfigPath: kubeConfigPath,
-  })
+  const result = await NhctlCommand.create(
+    `check cluster --timeout ${timeout}`,
+    {
+      kubeConfigPath: kubeConfigPath,
+    }
+  )
     .toJson()
     .exec();
 

@@ -64,7 +64,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         return LocalCusterService.getLocalClusterRootNode(localCluster);
       },
-      5 * 1000
+      10 * 1000
     ).then((results) => {
       return results.map((result, index) => {
         if (result.status === "fulfilled") {
@@ -111,7 +111,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     let nodes = await asyncLimt(
       globalClusterRootNodes,
       (account) => AccountClusterService.getServerClusterRootNodes(account),
-      5 * 1000
+      10 * 1000
     ).then((results) => {
       return results
         .map((result, index) => {
