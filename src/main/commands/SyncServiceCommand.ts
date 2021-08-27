@@ -46,20 +46,24 @@ export default class SyncServiceCommand implements ICommand {
     if (current) {
       const { app, resourceType, service, kubeConfigPath, namespace } = current;
 
-      await nhctl.associate(
-        kubeConfigPath,
-        namespace,
-        app,
-        currentRootPath,
-        resourceType,
-        service,
-        "--migrate"
-      );
-
-      host.setGlobalState(
-        DEV_ASSOCIATE_LOCAL_DIRECTORYS,
-        omit(devAssociateLocalDirectorys, currentRootPath)
-      );
+      try {
+        await nhctl.associate(
+          kubeConfigPath,
+          namespace,
+          app,
+          currentRootPath,
+          resourceType,
+          service,
+          "--migrate"
+        );
+      } catch (err) {
+        logger.error("associate migrate:", err);
+      } finally {
+        host.setGlobalState(
+          DEV_ASSOCIATE_LOCAL_DIRECTORYS,
+          omit(devAssociateLocalDirectorys, currentRootPath)
+        );
+      }
     }
 
     let result: {
