@@ -707,17 +707,7 @@ export async function devStart(
     }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
-  // const isLocal = host.getGlobalState(IS_LOCAL);
-  // if (isLocal) {
-  //   const res = await ga.send({
-  //     category: "command",
-  //     action: "startDevMode",
-  //     label: devStartCommand,
-  //     value: 1,
-  //     clientID: getUUID(),
-  //   });
-  //   console.log("ga: ", res);
-  // }
+
   await execChildProcessAsync(
     host,
     devStartCommand,
@@ -1252,16 +1242,18 @@ export async function getSyncStatus(
   appName: string,
   workloadName: string
 ) {
-  const syncCommand = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `sync-status ${appName} -d ${workloadName} -t ${resourceType}`
-  );
+  let baseCommand = "sync-status ";
+  if (appName) {
+    baseCommand += `${appName} -d ${workloadName} -t ${resourceType}`;
+  }
+
+  const syncCommand = nhctlCommand(kubeConfigPath, namespace, baseCommand);
   let result: ShellResult = {
     stdout: "",
     stderr: "",
     code: 0,
   };
+
   const r = (await execAsyncWithReturn(syncCommand, []).catch((e) => {
     logger.info("Nocalhost.syncService syncCommand");
     logger.error(e);
