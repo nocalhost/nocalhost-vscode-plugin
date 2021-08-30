@@ -167,7 +167,6 @@ export async function activate(context: vscode.ExtensionContext) {
       const data = value.value as {
         status: string;
       };
-      host.log(`${data.status}, message+++++`, true);
       data.status === "loading"
         ? host.stopAutoRefresh()
         : host.startAutoRefresh();
