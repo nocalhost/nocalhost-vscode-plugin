@@ -28,7 +28,8 @@ import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 import { getConfiguration } from "../utils/conifg";
-import { KubeConfigState } from "../nodes/KubeConfigNode";
+import messageBus from "../utils/messageBus";
+import { ClustersState } from "../clusters";
 
 export interface InstalledAppInfo {
   name: string;
@@ -633,13 +634,14 @@ export async function associate(
   appName: string,
   dir: string,
   type: string,
-  workLoadName: string
+  workLoadName: string,
+  params = ""
 ) {
   const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName}`
+    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName} ${params}`
   );
   const result = await execAsyncWithReturn(command, []);
   return result.stdout;
@@ -707,17 +709,7 @@ export async function devStart(
     }`
   );
   host.log(`[cmd] ${devStartCommand}`, true);
-  // const isLocal = host.getGlobalState(IS_LOCAL);
-  // if (isLocal) {
-  //   const res = await ga.send({
-  //     category: "command",
-  //     action: "startDevMode",
-  //     label: devStartCommand,
-  //     value: 1,
-  //     clientID: getUUID(),
-  //   });
-  //   console.log("ga: ", res);
-  // }
+
   await execChildProcessAsync(
     host,
     devStartCommand,
@@ -1252,16 +1244,18 @@ export async function getSyncStatus(
   appName: string,
   workloadName: string
 ) {
-  const syncCommand = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `sync-status ${appName} -d ${workloadName} -t ${resourceType}`
-  );
+  let baseCommand = "sync-status ";
+  if (appName) {
+    baseCommand += `${appName} -d ${workloadName} -t ${resourceType}`;
+  }
+
+  const syncCommand = nhctlCommand(kubeConfigPath, namespace, baseCommand);
   let result: ShellResult = {
     stdout: "",
     stderr: "",
     code: 0,
   };
+
   const r = (await execAsyncWithReturn(syncCommand, []).catch((e) => {
     logger.info("Nocalhost.syncService syncCommand");
     logger.error(e);
@@ -1309,28 +1303,25 @@ export async function reconnectSync(
 }
 
 function getNhctlPath(version: string) {
-  const isLinux = host.isLinux();
-  const isMac = host.isMac();
-  const isWindows = host.isWindow();
-  let sourcePath = "";
-  let destinationPath = "";
-  let binPath = "";
-  if (isLinux) {
-    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-linux-amd64?version=v${version}`;
-    destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
-    binPath = path.resolve(NH_BIN, "nhctl");
-  } else if (isMac) {
-    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-darwin-amd64?version=v${version}`;
-    destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
-    binPath = path.resolve(NH_BIN, "nhctl");
-  } else if (isWindows) {
-    sourcePath = `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/nhctl-windows-amd64.exe?version=v${version}`;
+  let name = "";
+  let destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
+  let binPath = path.resolve(NH_BIN, "nhctl");
+
+  if (host.isLinux()) {
+    name = `nhctl-linux-amd64`;
+  } else if (host.isMac()) {
+    name = `nhctl-darwin-amd64`;
+  } else if (host.isWindow()) {
+    name = `nhctl-windows-amd64.exe`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
     binPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
   return {
-    sourcePath,
+    sourcePath: [
+      `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
+      `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
+    ],
     binPath,
     destinationPath,
   };
@@ -1397,7 +1388,6 @@ export async function checkVersion() {
     completedMessage = "Update completed";
     progressingTitle = `Update nhctl to ${requiredVersion}...`;
   }
-
   try {
     await lock();
     setUpgrade(true);
@@ -1412,6 +1402,16 @@ export async function checkVersion() {
         if (fs.existsSync(TEMP_NHCTL_BIN)) {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
+        messageBus.emit("install", {
+          status: "loading",
+        });
+        const command = "taskkill /im nhctl.exe -f";
+        await execAsyncWithReturn(command, []).catch((e) => {
+          logger.error(e);
+        });
+        const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
+        const stopDamonCommand = `${nhctlPath} daemon stop`;
+        await execAsyncWithReturn(stopDamonCommand, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
@@ -1424,9 +1424,13 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
+    // host.log(`[err] ${err}`, true);
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {
+    messageBus.emit("install", {
+      status: "end",
+    });
     setUpgrade(false);
     unlock();
   }
@@ -1473,17 +1477,21 @@ export function nhctlCommand(
   );
   const command = `${nhctlPath} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
-  } --kubeconfig ${kubeconfigPath}`;
+  } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
   console.log(command);
   return command;
 }
 
 export async function checkCluster(
-  kubeConfigPath: string
-): Promise<KubeConfigState> {
-  const result = await NhctlCommand.create("check cluster", {
-    kubeConfigPath: kubeConfigPath,
-  })
+  kubeConfigPath: string,
+  timeout = 10
+): Promise<ClustersState> {
+  const result = await NhctlCommand.create(
+    `check cluster --timeout ${timeout}`,
+    {
+      kubeConfigPath: kubeConfigPath,
+    }
+  )
     .toJson()
     .exec();
 

@@ -1,17 +1,13 @@
 import { IRootNode } from "./../domain/IRootNode";
 import * as vscode from "vscode";
-import { uniqBy } from "lodash";
 import ICommand from "./ICommand";
 import NocalhostAppProvider from "../appProvider";
 import { SIGN_IN } from "./constants";
 import registerCommand from "./register";
-import state from "../state";
 import host from "../host";
-import {
-  AccountCluster as AccountClusterService,
-  updateStateRootNodes,
-} from "../clusters";
+import { AccountCluster as AccountClusterService } from "../clusters";
 import logger from "../utils/logger";
+import state from "../state";
 
 interface LoginInfo {
   username: string;
@@ -38,6 +34,7 @@ export default class SignInCommand implements ICommand {
         const newServerNode = await AccountClusterService.appendClusterByLoginInfo(
           info
         );
+
         if (newServerNode) {
           const newNodes: IRootNode[] = await AccountClusterService.getServerClusterRootNodes(
             newServerNode
@@ -48,22 +45,9 @@ export default class SignInCommand implements ICommand {
             );
             return;
           }
-          newNodes.forEach((i) => {
-            updateStateRootNodes(i);
-          });
         }
 
-        await vscode.commands.executeCommand(
-          "setContext",
-          "emptyCluster",
-          false
-        );
-        await vscode.commands.executeCommand(
-          "setContext",
-          "Nocalhost.visibleTree",
-          true
-        );
-        this.provider.refresh();
+        await state.refreshTree();
 
         vscode.window.showInformationMessage("Login successful");
       } catch (e) {

@@ -1,6 +1,5 @@
 import { homedir, tmpdir } from "os";
 import * as path from "path";
-export const ROOT_NODE_KEY = "Nocalhost";
 export const HOME_DIR = homedir();
 export const NH_CONFIG_DIR = path.resolve(HOME_DIR, ".nh");
 export const PLUGIN_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "vscode-plugin");
@@ -42,6 +41,8 @@ export const SERVER_CLUSTER_LIST = "userinfoList_v2";
 
 export const WELCOME_DID_SHOW = "welcomeDidShow";
 
+export const DEV_ASSOCIATE_LOCAL_DIRECTORYS = "devAssociateLocalDirectorys";
+
 // tmp start record
 export const TMP_STATUS = "tmpStatus";
 export const TMP_ID = "tmpId";
@@ -56,9 +57,4 @@ export const TMP_STORAGE_CLASS = "tmpStorageClass";
 export const TMP_CONTAINER = "tmpContainer";
 export const TMP_DEVSTART_APPEND_COMMAND = "tmpDevstartAppendCommand";
 
-export const DEV_ASSOCIATE_LOCAL_DIRECTORYS = "devAssociateLocalDirectorys";
-
 export const DATA_CENTER_INTERVAL_MS = 5000;
-
-export const NOCALHOST_INSTALLATION_LINK =
-  "https://nocalhost.dev/installation/";

@@ -1,3 +1,3 @@
 export interface RefreshData {
-  updateData(): any;
+  updateData(): Promise<any>;
 }
