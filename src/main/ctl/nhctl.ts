@@ -1417,9 +1417,6 @@ export async function checkVersion() {
         const command = "taskkill /im nhctl.exe -f";
         await execAsyncWithReturn(command, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
-        messageBus.emit("install", {
-          status: "end",
-        });
       }
 
       fs.renameSync(destinationPath, binPath);

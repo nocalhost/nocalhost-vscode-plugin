@@ -168,7 +168,7 @@ export async function activate(context: vscode.ExtensionContext) {
         status: string;
       };
       data.status === "loading"
-        ? host.stopAutoRefresh("messageBus")
+        ? host.stopAutoRefresh()
         : host.startAutoRefresh();
     } catch (error) {
       host.log(`${error}, +++++`, true);
