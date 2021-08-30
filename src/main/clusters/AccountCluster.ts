@@ -20,6 +20,7 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
 import * as semver from "semver";
+import { ClustersState } from ".";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -28,6 +29,7 @@ export class AccountClusterNode {
   id: string | null;
   loginInfo: LoginInfo;
   refreshToken: string | null;
+  state: ClustersState;
 }
 export default class AccountClusterService {
   instance: AxiosInstance;
@@ -110,8 +112,11 @@ export default class AccountClusterService {
     accountClusterService.accountClusterNode = newAccountCluser;
     accountClusterService.jwt = newAccountCluser.jwt;
     accountClusterService.refreshToken = newAccountCluser.refreshToken;
+
     const newRootNodes: IRootNode[] = [];
+
     let serviceAccounts = await accountClusterService.getServiceAccount();
+
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
       logger.error(
         `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
@@ -129,6 +134,7 @@ export default class AccountClusterService {
         (applications || []).length
       }`
     );
+
     for (const sa of serviceAccounts) {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
       const id = getStringHash(
@@ -192,6 +198,7 @@ export default class AccountClusterService {
         id: newAccountCluser.id,
         createTime: newAccountCluser.createTime,
         kubeConfigPath,
+        state: { code: 200 },
       };
       newRootNodes.push(obj);
     }
@@ -207,23 +214,28 @@ export default class AccountClusterService {
     if (!Array.isArray(globalAccountClusterList)) {
       globalAccountClusterList = [];
     }
+
     globalAccountClusterList = globalAccountClusterList.filter(
       (it: AccountClusterNode) => it.id
     );
+
     const oldAccountIndex = globalAccountClusterList.findIndex(
       (it: AccountClusterNode) => it.id === newAccountCluser.id
     );
+
     if (oldAccountIndex !== -1) {
       globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluser);
     } else {
       globalAccountClusterList.push(newAccountCluser);
     }
+
     globalAccountClusterList = uniqBy(globalAccountClusterList, "id");
     host.setGlobalState(SERVER_CLUSTER_LIST, globalAccountClusterList);
+
     return newAccountCluser;
   };
 
-  buildAccountClusterNode = async () => {
+  buildAccountClusterNode = async (): Promise<AccountClusterNode> => {
     await this.login(this.loginInfo);
     const userInfo = await this.getUserInfo();
     return {
@@ -233,6 +245,9 @@ export default class AccountClusterService {
       createTime: Date.now(),
       loginInfo: this.loginInfo,
       id: `${userInfo.id}${this.loginInfo.baseUrl}`,
+      state: {
+        code: 200,
+      },
     };
   };
   resetDevspace = async (devSpaceId: number) => {
@@ -265,12 +280,14 @@ export default class AccountClusterService {
       {},
       {
         headers: {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           Reraeb: this.refreshToken || "",
         },
       }
     );
     if (response.status === 200 && response.data) {
       const {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         data: { token, refresh_token },
         code,
       } = response.data;

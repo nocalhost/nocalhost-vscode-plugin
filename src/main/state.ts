@@ -4,6 +4,7 @@ import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import host from "./host";
 import logger from "./utils/logger";
+import { asyncLimt } from "./utils";
 
 class State {
   private login = false;
@@ -13,21 +14,27 @@ class State {
   private dataMap = new Map<string, object>();
   public refreshFolderMap = new Map<string, boolean>();
 
-  private renderMessage = new Map<string, number>();
+  private renderTime: NodeJS.Timeout;
+  private queueRender: string[] = [];
 
   private running = false;
 
-  constructor() {
-    setInterval(() => {
-      this.consume();
-    }, 500);
+  private async render() {
+    await asyncLimt(this.queueRender.splice(0), (key) => {
+      return new Promise((res) => {
+        vscode.commands
+          .executeCommand("Nocalhost.refresh", this.getNode(key))
+          .then(res);
+      });
+    });
   }
 
-  private consume() {
-    this.renderMessage.forEach((item, key) => {
-      vscode.commands.executeCommand("Nocalhost.refresh", this.getNode(key));
-      this.renderMessage.delete(key);
-    });
+  private startRender() {
+    clearTimeout(this.renderTime);
+
+    this.renderTime = setTimeout(async () => {
+      await this.render();
+    }, 500);
   }
 
   public setData(id: string, data: object, isInit?: boolean) {
@@ -36,7 +43,10 @@ class State {
 
     this.dataMap.set(id, data);
     if (!isSame && !isInit) {
-      this.renderMessage.set(id, new Date().getTime());
+      this.queueRender.push(id);
+
+      this.startRender();
+
       logger.info("render node id: " + id);
     }
   }

@@ -160,7 +160,7 @@ export default class StartDevModeCommand implements ICommand {
     );
     if (!image) {
       const result = await host.showInformationMessage(
-        "Please specify develop image",
+        "Please specify development image",
         { modal: true },
         "Select",
         "Custom"

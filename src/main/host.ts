@@ -7,6 +7,7 @@ import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
+import { asyncLimt } from "./utils";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -64,30 +65,20 @@ export class Host implements vscode.Disposable {
       if (rootNode) {
         await rootNode.updateData().catch(() => {});
       }
-      for (const [id, expanded] of state.refreshFolderMap) {
-        if (expanded) {
-          const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-          if (node) {
-            // filter parent is close
-            // function isClose(parentNode: BaseNocalhostNode): boolean {
-            //   const child = parentNode.getParent();
-            //   if (!child) {
-            //     return false;
-            //   }
-            //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
-            //     return true;
-            //   }
 
-            //   return isClose(child);
-            // }
-            // const close = isClose(node);
-            await node.updateData().catch(() => {});
-            // if (!close) {
-            //   await node.updateData();
-            // }
+      await asyncLimt(
+        Array.from(state.refreshFolderMap.entries()),
+        ([id, expanded]) => {
+          if (expanded) {
+            const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
+
+            return node.updateData();
           }
-        }
-      }
+
+          return Promise.resolve();
+        },
+        10 * 1000
+      );
     } catch (e) {
       this.startAutoRefresh();
       logger.error(e);
@@ -100,7 +91,7 @@ export class Host implements vscode.Disposable {
     await this.autoRefresh();
 
     this.autoRefreshTimeId = setTimeout(async () => {
-      this.startAutoRefresh();
+      await this.startAutoRefresh();
     }, 10 * 1000);
   }
 
