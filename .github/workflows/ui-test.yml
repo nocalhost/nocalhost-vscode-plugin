@@ -29,7 +29,7 @@ jobs:
           ~/cluster create
           
       - name: Set Env
-        run: echo "NOCALHOST_KUBECONFIG=$(cat ~/.kube/config)" >> $GITHUB_ENV
+        run: echo "NOCALHOST_KUBECONFIG=$(cat ~/config)" >> $GITHUB_ENV
       
       - name: Destroy cluster
         if: ${{ always() }}
