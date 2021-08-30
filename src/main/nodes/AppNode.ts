@@ -34,7 +34,6 @@ export class AppNode extends NocalhostFolderNode {
   public resourceDir: Array<string>;
   public info: IV2ApplicationInfo | IApplicationInfo;
   public parent: BaseNocalhostNode;
-  // public developingNodes: any[] = [];
   private nhctlAppInfo: AppInfo | undefined;
   private nocalhostConfig: NocalhostConfig | undefined;
   constructor(
@@ -126,19 +125,6 @@ export class AppNode extends NocalhostFolderNode {
     return this.nocalhostConfig;
   }
 
-  // public async getDevelopingNodes(): Promise<Array<any>> {
-  //   const result: ServiceResult = await services.fetchNHResource(this.name);
-  //   if (result.success && result.value) {
-  //     try {
-  //       const obj = yaml.parse(result.value);
-  //       this.developingNodes = obj.svcProfile.filter((n: any) => n.developing);
-  //     } catch (e) {
-  //       console.error(e);
-  //     }
-  //   }
-  //   return this.developingNodes;
-  // }
-
   private updateIcon(treeItem: vscode.TreeItem) {
     if (this.unInstalling() || this.installing() || this.upgradeing()) {
       return (treeItem.iconPath = resolveVSCodeUri("loading.gif"));
@@ -172,9 +158,6 @@ export class AppNode extends NocalhostFolderNode {
     if (devspace.clusterSource === ClusterSource.server) {
       treeItem.contextValue = `${treeItem.contextValue}-server`;
     }
-    // if (this.developingNodes.length > 0) {
-    //   treeItem.contextValue = `${treeItem.contextValue}-developing`;
-    // }
   }
 
   public getKubeConfigPath() {
@@ -200,21 +183,7 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   async getTreeItem() {
-    // let info = state.getData(this.getNodeStateId()) as AppInfo;
-    // if (!info) {
-    //   info = await this.getApplicationInfo();
-    //   state.setData(this.getNodeStateId(), info, true);
-    // }
     this.installStatus = 1;
-    // let collapseState: vscode.TreeItemCollapsibleState;
-    // if (this.unInstalled()) {
-    //   collapseState = vscode.TreeItemCollapsibleState.None;
-    // } else {
-    //   collapseState =
-    //     state.get(this.getNodeStateId()) ||
-    //     vscode.TreeItemCollapsibleState.Collapsed;
-    // }
-    // await this.getDevelopingNodes();
 
     const collapsibleState =
       this.installing() || this.unInstalling()
@@ -225,7 +194,6 @@ export class AppNode extends NocalhostFolderNode {
 
     this.updateIcon(treeItem);
     this.updateContext(treeItem);
-    this.updateSyncStatus();
     return treeItem;
   }
 
@@ -244,15 +212,15 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   installing(): boolean {
-    return !!state.getAppState(this.name, "installing");
+    return !!state.getAppState(this.getNodeStateId(), "installing");
   }
 
   unInstalling(): boolean {
-    return !!state.getAppState(this.name, "uninstalling");
+    return !!state.getAppState(this.getNodeStateId(), "uninstalling");
   }
 
   upgradeing(): boolean {
-    return !!state.getAppState(this.name, "upgrading");
+    return !!state.getAppState(this.getNodeStateId(), "upgrading");
   }
 
   getNodeStateId(): string {

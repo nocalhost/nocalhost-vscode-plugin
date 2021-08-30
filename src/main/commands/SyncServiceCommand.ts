@@ -31,7 +31,6 @@ export default class SyncServiceCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-
   static async checkSync() {
     const currentRootPath = host.getCurrentRootPath();
 

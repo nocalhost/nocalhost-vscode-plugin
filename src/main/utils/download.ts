@@ -47,19 +47,20 @@ export const unlock = async function (callback?: (err?: any) => void) {
   }
 };
 
-export const downloadNhctl = async (
-  downloadUrl: string,
+async function download(
+  url: string,
   destinationPath: string,
   onDownloadProgress: (progress: number) => void
-) => {
+) {
   return new Promise((res, rej) => {
-    Axios.get(downloadUrl, {
+    Axios.get(url, {
       responseType: "stream",
     })
       .then((response: AxiosResponse<Readable>) => {
         const { data, headers } = response;
 
         const totalLength = headers["content-length"];
+
         data
           .on("data", (chunk: Buffer) => {
             onDownloadProgress((chunk.length / totalLength) * 100);
@@ -73,4 +74,19 @@ export const downloadNhctl = async (
       })
       .catch(rej);
   });
+}
+
+export const downloadNhctl = async (
+  pkgs: string[],
+  destinationPath: string,
+  onDownloadProgress: (progress: number) => void
+) => {
+  for (const pkg of pkgs) {
+    try {
+      await download(pkg, destinationPath, onDownloadProgress);
+      break;
+    } catch (error) {
+      logger.error("downloadNhctl", pkg, destinationPath, error);
+    }
+  }
 };
