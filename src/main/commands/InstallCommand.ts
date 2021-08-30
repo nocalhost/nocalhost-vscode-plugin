@@ -8,30 +8,24 @@ import registerCommand from "./register";
 import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { AppNode } from "../nodes/AppNode";
-import { List, ResourceStatus } from "../nodes/types/resourceType";
-import logger from "../utils/logger";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import state from "../state";
+import Bookinfo from "../common/bookinfo";
 
 export default class InstallCommand implements ICommand {
   command: string = INSTALL_APP;
-  productPagePort = "";
-  startTime = new Date().getTime();
-  bookInfoUrls = [
-    "https://github.com/nocalhost/bookinfo.git",
-    "git@github.com:nocalhost/bookinfo.git",
-    "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
-    "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
-  ];
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
+  appNode: AppNode;
   async execCommand(appNode: AppNode) {
     if (!appNode) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    let productPagePort = (this.productPagePort = "");
+
+    this.appNode = appNode;
+
     let refOrVersion: string | undefined;
     let values: string | undefined;
     let valuesStr: string | undefined;
@@ -198,13 +192,9 @@ export default class InstallCommand implements ICommand {
       local,
       resourceDir
     );
-    productPagePort = this.productPagePort;
     const devspaceNode = appNode.getParent() as DevSpaceNode;
     devspaceNode.updateData();
-    if (this.isBookInfo(appNode) && productPagePort) {
-      this.startTime = new Date().getTime();
-      this.checkStatus(appNode, productPagePort);
-    }
+    Bookinfo.checkInstall(appNode);
   }
 
   private async install(
@@ -229,7 +219,7 @@ export default class InstallCommand implements ICommand {
         }
       | undefined
   ) {
-    state.setAppState(appName, "installing", true);
+    state.setAppState(this.appNode.getNodeStateId(), "installing", true);
     host.log(`Installing application: ${appName}`, true);
     await nhctl
       .install({
@@ -248,57 +238,8 @@ export default class InstallCommand implements ICommand {
         refOrVersion,
       })
       .finally(() => {
-        state.deleteAppState(appName, "installing");
-        host.setGlobalState(appName, {});
+        state.deleteAppState(this.appNode.getNodeStateId(), "installing");
       });
-  }
-
-  private async checkStatus(appNode: AppNode, productPagePort: string) {
-    if (host.bookinfoTimeoutId) {
-      clearTimeout(host.bookinfoTimeoutId);
-    }
-
-    const devSpaceNode = appNode.parent as DevSpaceNode;
-
-    if (
-      state.getAppState(devSpaceNode.info.spaceName, "uninstalling") === true
-    ) {
-      return;
-    }
-
-    if (new Date().getTime() - this.startTime > 5 * 60 * 1000) {
-      logger.info("time out to open productpage");
-      return;
-    }
-    const check = await this.checkBookInfoStatus(appNode).catch(() => {});
-    if (check) {
-      const res = await host.showInformationMessage(
-        `productpage url: http://127.0.0.1:${productPagePort}/productpage`,
-        { modal: true },
-        "go"
-      );
-      if (res === "go") {
-        const uri = vscode.Uri.parse(
-          `http://127.0.0.1:${productPagePort}/productpage`
-        );
-        vscode.env.openExternal(uri);
-      }
-      return;
-    }
-    host.bookinfoTimeoutId = setTimeout(() => {
-      this.checkStatus(appNode, productPagePort);
-    }, 2000);
-  }
-
-  private isBookInfo(appNode: AppNode) {
-    if (
-      this.bookInfoUrls.includes(appNode.url) &&
-      appNode.name === "bookinfo"
-    ) {
-      return true;
-    }
-
-    return false;
   }
 
   private async startInstall(
@@ -328,34 +269,6 @@ export default class InstallCommand implements ICommand {
     );
     await vscode.commands.executeCommand("Nocalhost.refresh");
     await host.delay(1000);
-    const nocalhostConfig = await appNode.getNocalhostConfig();
-    if (
-      nocalhostConfig &&
-      nocalhostConfig.services &&
-      nocalhostConfig.services.length > 0
-    ) {
-      const services = nocalhostConfig.services;
-      for (let i = 0; i < services.length; i++) {
-        const service = services[i];
-        const containers = service.containers;
-        let ports: Array<string> = [];
-        for (let j = 0; j < containers.length; j++) {
-          const container = containers[j];
-          if (container.install && container.install.portForward) {
-            ports = ports.concat(container.install.portForward);
-          }
-        }
-        if (ports.length <= 0) {
-          logger.info(`${service.name} port is null`);
-          continue;
-        }
-        if (service.name === "productpage") {
-          this.productPagePort = ports[0].split(":")[0];
-        }
-      }
-    } else {
-      logger.info("appname: " + appNode.name + "not service config");
-    }
   }
 
   public async getPodNames(
@@ -384,39 +297,6 @@ export default class InstallCommand implements ICommand {
     }
 
     return podNameArr;
-  }
-
-  private async checkBookInfoStatus(appNode: AppNode) {
-    const res = await nhctl.getResourceList({
-      kubeConfigPath: appNode.getKubeConfigPath(),
-      kind: "Deployments",
-      namespace: appNode.namespace,
-    });
-    const list = JSON.parse(res as string) as List;
-    let check = true;
-    list.items.map((item) => {
-      const conditionStatus = item.status as ResourceStatus;
-      if (conditionStatus && conditionStatus.conditions) {
-        const conditions = conditionStatus.conditions;
-        let isAvaiable = false;
-        for (let i = 0; i < conditions.length; i++) {
-          if (
-            conditions[i].type === "Available" &&
-            conditions[i].status === "True"
-          ) {
-            isAvaiable = true;
-            break;
-          }
-        }
-        if (!isAvaiable) {
-          check = false;
-        }
-      } else {
-        check = false;
-      }
-    });
-
-    return check;
   }
 
   private getAllConfig(localPath: string) {

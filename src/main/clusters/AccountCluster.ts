@@ -20,7 +20,7 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
 import * as semver from "semver";
-import { getConfiguration } from "../utils/conifg";
+import { ClustersState } from ".";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -29,6 +29,7 @@ export class AccountClusterNode {
   id: string | null;
   loginInfo: LoginInfo;
   refreshToken: string | null;
+  state: ClustersState;
 }
 export default class AccountClusterService {
   instance: AxiosInstance;
@@ -60,7 +61,7 @@ export default class AccountClusterService {
       async (response: AxiosResponse<IResponseData>) => {
         const config = response.config;
         const res = response.data;
-        if ([20103, 20111].includes(res.code)) {
+        if (res.code === 20103) {
           // refresh token
           if (config.url === "/v1/token/refresh") {
             host.log(
@@ -74,26 +75,18 @@ export default class AccountClusterService {
                 this.loginInfo.username || ""
               }`
             );
-            if (this.accountClusterNode) {
-              let globalClusterRootNodes: AccountClusterNode[] =
-                host.getGlobalState(SERVER_CLUSTER_LIST) || [];
-              const index = globalClusterRootNodes.findIndex(
-                ({ id }) => id === this.accountClusterNode.id
-              );
-              if (index !== -1) {
-                globalClusterRootNodes.splice(index, 1);
-                host.setGlobalState(
-                  SERVER_CLUSTER_LIST,
-                  globalClusterRootNodes
-                );
-              }
-            }
+            this.deleteAccountNode();
           } else if (this.isRefreshing) {
             this.isRefreshing = false;
             await this.getRefreshToken();
             this.isRefreshing = true;
           }
         }
+
+        if (res.code === 20111) {
+          this.deleteAccountNode();
+        }
+
         if (res.code !== 0) {
           // vscode.window.showErrorMessage(res.message || "");
           return Promise.reject({ source: "api", error: res });
@@ -119,8 +112,11 @@ export default class AccountClusterService {
     accountClusterService.accountClusterNode = newAccountCluser;
     accountClusterService.jwt = newAccountCluser.jwt;
     accountClusterService.refreshToken = newAccountCluser.refreshToken;
+
     const newRootNodes: IRootNode[] = [];
+
     let serviceAccounts = await accountClusterService.getServiceAccount();
+
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
       logger.error(
         `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
@@ -138,6 +134,7 @@ export default class AccountClusterService {
         (applications || []).length
       }`
     );
+
     for (const sa of serviceAccounts) {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
       const id = getStringHash(
@@ -150,6 +147,7 @@ export default class AccountClusterService {
           kubeConfigPath: kubeConfigPath,
           namespace: "default",
         });
+
         for (const dev of devs) {
           dev.storageClass = sa.storageClass;
           dev.devStartAppendCommand = [
@@ -157,6 +155,19 @@ export default class AccountClusterService {
             "nocalhost-container-critical",
           ];
           dev.kubeconfig = sa.kubeconfig;
+
+          const ns = sa.namespacePacks?.find(
+            (ns) => ns.namespace === dev.namespace
+          );
+
+          dev.spaceId = ns?.spaceId;
+          dev.spaceName = ns?.spacename;
+
+          if (sa.privilegeType === "CLUSTER_ADMIN") {
+            dev.spaceOwnType = "Owner";
+          } else if (sa.privilegeType === "CLUSTER_VIEWER") {
+            dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
+          }
         }
         devSpaces.push(...devs);
       } else {
@@ -169,6 +180,7 @@ export default class AccountClusterService {
             accountClusterService,
             clusterId: sa.clusterId,
             storageClass: sa.storageClass,
+            spaceOwnType: ns.spaceOwnType,
             devStartAppendCommand: [
               "--priority-class",
               "nocalhost-container-critical",
@@ -186,6 +198,7 @@ export default class AccountClusterService {
         id: newAccountCluser.id,
         createTime: newAccountCluser.createTime,
         kubeConfigPath,
+        state: { code: 200 },
       };
       newRootNodes.push(obj);
     }
@@ -201,23 +214,28 @@ export default class AccountClusterService {
     if (!Array.isArray(globalAccountClusterList)) {
       globalAccountClusterList = [];
     }
+
     globalAccountClusterList = globalAccountClusterList.filter(
       (it: AccountClusterNode) => it.id
     );
+
     const oldAccountIndex = globalAccountClusterList.findIndex(
       (it: AccountClusterNode) => it.id === newAccountCluser.id
     );
+
     if (oldAccountIndex !== -1) {
       globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluser);
     } else {
       globalAccountClusterList.push(newAccountCluser);
     }
+
     globalAccountClusterList = uniqBy(globalAccountClusterList, "id");
     host.setGlobalState(SERVER_CLUSTER_LIST, globalAccountClusterList);
+
     return newAccountCluser;
   };
 
-  buildAccountClusterNode = async () => {
+  buildAccountClusterNode = async (): Promise<AccountClusterNode> => {
     await this.login(this.loginInfo);
     const userInfo = await this.getUserInfo();
     return {
@@ -227,6 +245,9 @@ export default class AccountClusterService {
       createTime: Date.now(),
       loginInfo: this.loginInfo,
       id: `${userInfo.id}${this.loginInfo.baseUrl}`,
+      state: {
+        code: 200,
+      },
     };
   };
   resetDevspace = async (devSpaceId: number) => {
@@ -259,12 +280,14 @@ export default class AccountClusterService {
       {},
       {
         headers: {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           Reraeb: this.refreshToken || "",
         },
       }
     );
     if (response.status === 200 && response.data) {
       const {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         data: { token, refresh_token },
         code,
       } = response.data;
@@ -272,6 +295,20 @@ export default class AccountClusterService {
         this.jwt = `Bearer ${token}`;
         this.refreshToken = refresh_token;
         this.updateLoginInfo();
+      }
+    }
+  }
+
+  deleteAccountNode() {
+    if (this.accountClusterNode) {
+      let globalClusterRootNodes: AccountClusterNode[] =
+        host.getGlobalState(SERVER_CLUSTER_LIST) || [];
+      const index = globalClusterRootNodes.findIndex(
+        ({ id }) => id === this.accountClusterNode.id
+      );
+      if (index !== -1) {
+        globalClusterRootNodes.splice(index, 1);
+        host.setGlobalState(SERVER_CLUSTER_LIST, globalClusterRootNodes);
       }
     }
   }
@@ -342,21 +379,17 @@ export default class AccountClusterService {
     }
   }
 
-  async checkVersion(): Promise<void> {
-    if (getConfiguration("apiServer.checkVersion") === false) {
-      return;
-    }
-
+  async checkServerVersion(): Promise<void> {
     const res = await this.getVersion();
 
-    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.version}`;
+    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.nhctl.serverVersion}`;
     logger.info(log);
 
     if (res.data?.version) {
       const { version } = res.data;
-      if (semver.gt(packageJson.version, version)) {
-        throw new Error(
-          `please upgrade api server version.(${packageJson.version} or higher)`
+      if (semver.gt(packageJson.nhctl.serverVersion, version)) {
+        host.showWarnMessage(
+          `please upgrade api server version.(${packageJson.nhctl.serverVersion} or higher)`
         );
       }
     }

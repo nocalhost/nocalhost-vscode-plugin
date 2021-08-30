@@ -1,4 +1,6 @@
+import { existsSync } from "fs";
 import * as vscode from "vscode";
+import { getServiceConfig } from "../ctl/nhctl";
 import host from "../host";
 import { OPEN_PROJECT } from "./constants";
 import ICommand from "./ICommand";
@@ -22,15 +24,24 @@ export default class OpenProjectCommand implements ICommand {
     if (status !== "developing") {
       return;
     }
+    const profile = await getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
 
-    const appName = node.getAppName();
-    let appConfig = host.getGlobalState(appName) || {};
-    let workloadConfig: { directory: string } = appConfig[node.name] || {};
-
-    if (workloadConfig.directory) {
+    if (profile.associate) {
+      if (!existsSync(profile.associate)) {
+        host.showInformationMessage(
+          "The directory does not exist,you are not associated with source directory"
+        );
+        return;
+      }
       const currentUri = host.getCurrentRootPath();
 
-      const uri = vscode.Uri.file(workloadConfig.directory);
+      const uri = vscode.Uri.file(profile.associate);
 
       if (currentUri !== uri.fsPath) {
         vscode.commands.executeCommand("vscode.openFolder", uri, true);

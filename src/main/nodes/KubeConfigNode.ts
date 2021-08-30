@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
 import { orderBy } from "lodash";
 import { HELM_NH_CONFIG_DIR } from "../constants";
 import state from "../state";
@@ -11,12 +10,9 @@ import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
 import { resolveVSCodeUri, writeFileLock } from "../utils/fileUtil";
-import * as _ from "lodash";
 import { DevSpaceNode } from "./DevSpaceNode";
 import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
-import { type } from "os";
-
-export type KubeConfigState = { code: 200 | 201; info: string };
+import { ClustersState } from "../clusters";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
@@ -34,7 +30,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   public kubeConfigPath: string;
   public accountClusterService: AccountClusterService;
 
-  private state: KubeConfigState;
+  private state: ClustersState;
   constructor(props: {
     id: string;
     parent: NocalhostRootNode;
@@ -45,7 +41,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     kubeConfigPath: string;
     userInfo: IUserInfo;
     accountClusterService?: AccountClusterService;
-    state: KubeConfigState;
+    state: ClustersState;
   }) {
     super();
     const {
@@ -87,7 +83,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       devSpaces: this.devSpaceInfos,
       applications: this.applications,
     };
-    const devs: DevSpaceNode[] = [];
+    const devs: (DevSpaceNode & { order?: boolean; isSpace?: boolean })[] = [];
 
     res.applications.forEach(async (app) => {
       let context = app.context;
@@ -110,10 +106,19 @@ export class KubeConfigNode extends NocalhostFolderNode {
         res.applications,
         this.clusterSource
       );
-      devs.push(node);
+      devs.push(
+        Object.assign(node, {
+          order: d.spaceOwnType !== "Viewer",
+          isSpace: d.spaceId > 0,
+        })
+      );
     }
 
-    return orderBy(devs, ["label"]);
+    return orderBy(
+      devs,
+      ["order", "isSpace", "label"],
+      ["desc", "desc", "asc"]
+    );
   }
 
   async getTreeItem() {
@@ -135,11 +140,11 @@ export class KubeConfigNode extends NocalhostFolderNode {
     }
 
     treeItem.description = "Active";
-    treeItem.iconPath = resolveVSCodeUri("cluster-active.svg");
+    treeItem.iconPath = resolveVSCodeUri("cluster_active.svg");
 
     if (this.state.code !== 200) {
       treeItem.tooltip = this.state.info;
-      treeItem.iconPath = resolveVSCodeUri("cluster-warning.svg");
+      treeItem.iconPath = resolveVSCodeUri("cluster_warning.svg");
       treeItem.description = "Unable to Connect";
     }
 

@@ -3,20 +3,14 @@ import * as vscode from "vscode";
 import ICommand from "./ICommand";
 import { SIGN_OUT } from "./constants";
 import registerCommand from "./register";
-import { isExistCluster } from "../clusters/utils";
 
 import state from "../state";
-import {
-  JWT,
-  EMAIL,
-  KUBE_CONFIG_DIR,
-  IS_LOCAL,
-  SERVER_CLUSTER_LIST,
-} from "../constants";
+import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import host from "../host";
 import { IUserInfo } from "../domain";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import * as fs from "fs";
+import Bookinfo from "../common/bookinfo";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -42,12 +36,11 @@ export default class SignOutCommand implements ICommand {
     });
     host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
-    await state.cleanAutoRefresh(node);
+    await state.disposeNode(node);
+
+    Bookinfo.cleanCheck(node);
 
     await state.refreshTree();
-    // remove local
-    // host.removeGlobalState(IS_LOCAL);
-    // host.removeGlobalState(LOCAL_PATH);
   }
 
   async removeAllKubeconfig() {

@@ -7,6 +7,7 @@ import host from "../host";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import AccountClusterService from "../clusters/AccountCluster";
 import { ClusterSource } from "../common/define";
+import { NhctlCommand } from "../ctl/nhctl";
 
 export default class ShowApplicationsCommand implements ICommand {
   command: string = SHOW_APP;
@@ -21,15 +22,18 @@ export default class ShowApplicationsCommand implements ICommand {
       return;
     }
 
+    await NhctlCommand.authCheck({
+      base: "install",
+      args: ["checkApp"],
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.info.namespace,
+    }).exec();
+
     if (node.clusterSource === ClusterSource.server) {
       const accountClusterService: AccountClusterService =
         node.parent.accountClusterService;
-      try {
-        await accountClusterService.checkVersion();
-      } catch (error) {
-        host.showErrorMessage(error.message);
-        return;
-      }
+
+      accountClusterService.checkServerVersion();
     }
 
     const apps = node.getUninstallApps();

@@ -1,62 +1,92 @@
 import * as fs from "fs";
 import * as path from "path";
 import { PLUGIN_TEMP_DIR } from "../constants";
-import * as request from "request";
-import { isExist } from "./fileUtil";
 import host from "../host";
 import logger from "./logger";
+import Axios, { AxiosResponse } from "axios";
+import { Readable } from "stream";
 
 const lockDir = path.resolve(PLUGIN_TEMP_DIR, "config_vsc.lock");
 const processDir = path.resolve(lockDir, `${process.pid}`);
-export const lock = function (cb?: (err?: any) => void) {
-  fs.mkdir(lockDir, function (error) {
-    if (error) {
-      return cb(error);
-    }
-    fs.writeFile(processDir, "true", function (err) {
-      if (err) {
-        console.error(err);
+
+export const lock = async function (): Promise<void> {
+  return new Promise((res, rej) => {
+    fs.mkdir(lockDir, function (error) {
+      if (error) {
+        rej(error);
       }
-      return cb();
+      fs.writeFile(processDir, "true", function (err) {
+        if (err) {
+          rej(err);
+        }
+        res();
+      });
     });
   });
 };
 
 export const unlock = async function (callback?: (err?: any) => void) {
   try {
-    const files = fs.readdirSync(lockDir);
-    for (let i = 0; i < (files || []).length; i++) {
-      const file = path.resolve(lockDir, files[i]);
-      fs.unlinkSync(file);
+    if (fs.existsSync(lockDir)) {
+      const files = fs.readdirSync(lockDir);
+      for (let i = 0; i < (files || []).length; i++) {
+        const file = path.resolve(lockDir, files[i]);
+        fs.unlinkSync(file);
+      }
+      fs.rmdirSync(lockDir);
     }
-    fs.rmdirSync(lockDir);
 
     if (callback) {
       callback(true);
     }
   } catch (e) {
     logger.error(e);
-    callback(e);
+    if (callback) {
+      callback();
+    }
   }
 };
 
-export const downloadNhctl = async (
-  downloadUrl: string,
-  destinationPath: string
-) => {
+async function download(
+  url: string,
+  destinationPath: string,
+  onDownloadProgress: (progress: number) => void
+) {
   return new Promise((res, rej) => {
-    request(downloadUrl)
-      .pipe(
-        fs.createWriteStream(destinationPath as fs.PathLike, {
-          mode: 0o755,
-        })
-      )
-      .on("close", () => {
-        res(true);
+    Axios.get(url, {
+      responseType: "stream",
+    })
+      .then((response: AxiosResponse<Readable>) => {
+        const { data, headers } = response;
+
+        const totalLength = headers["content-length"];
+
+        data
+          .on("data", (chunk: Buffer) => {
+            onDownloadProgress((chunk.length / totalLength) * 100);
+          })
+          .on("close", res)
+          .on("error", (error: Error) => {
+            host.log(error.message + "\n" + error.stack, true);
+            rej(error);
+          })
+          .pipe(fs.createWriteStream(destinationPath, { mode: 0o755 }));
       })
-      .on("error", (error: Error) => {
-        host.log(error.message + "\n" + error.stack, true);
-        rej(error);
-      });
+      .catch(rej);
   });
+}
+
+export const downloadNhctl = async (
+  pkgs: string[],
+  destinationPath: string,
+  onDownloadProgress: (progress: number) => void
+) => {
+  for (const pkg of pkgs) {
+    try {
+      await download(pkg, destinationPath, onDownloadProgress);
+      break;
+    } catch (error) {
+      logger.error("downloadNhctl", pkg, destinationPath, error);
+    }
+  }
 };

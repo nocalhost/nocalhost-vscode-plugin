@@ -31,12 +31,7 @@ export default class UpgradeCommand implements ICommand {
       const accountClusterService: AccountClusterService =
         devSpaceNode.parent.accountClusterService;
 
-      try {
-        await accountClusterService.checkVersion();
-      } catch (error) {
-        host.showErrorMessage(error.message);
-        return;
-      }
+      accountClusterService.checkServerVersion();
     }
 
     let refOrVersion: string | undefined;
@@ -143,7 +138,7 @@ export default class UpgradeCommand implements ICommand {
         resourceDir = [resPath];
       }
     }
-    state.setAppState(appNode.name, "upgrading", true, {
+    state.setAppState(appNode.getNodeStateId(), "upgrading", true, {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
     });

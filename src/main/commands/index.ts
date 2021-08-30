@@ -5,7 +5,7 @@ import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
 import ExecCommand from "./ExecCommand";
-import RefreshCommand from "./FreshCommand";
+import RefreshCommand from "./RefreshCommand";
 import InstallCommand from "./InstallCommand";
 import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
@@ -43,6 +43,8 @@ import ShowClusterInfoCommand from "./ShowClusterInfoCommand";
 import RenameCommand from "./RenameCommand";
 import OpenProjectCommand from "./OpenProjectCommand";
 import EditManifestCommand from "./EditManifestCommand";
+import ResetPluginCommand from "./ResetPluginCommand";
+
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
@@ -98,4 +100,6 @@ export default function initCommands(
   new AddKubeconfig(context);
   new ClearServerCluster(context);
   new InstallAppSourceCommand(context);
+
+  new ResetPluginCommand(context);
 }

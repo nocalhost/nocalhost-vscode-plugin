@@ -8,6 +8,7 @@ import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import Bookinfo from "../common/bookinfo";
 
 export default class ResetDevspaceCommand implements ICommand {
   command: string = RESET_DEVSPACE;
@@ -28,11 +29,13 @@ export default class ResetDevspaceCommand implements ICommand {
       return;
     }
 
-    host.stopAutoRefresh();
-    await state.cleanAutoRefresh(node);
+    await state.disposeNode(node);
 
-    state.setAppState(node.info.spaceName, "uninstalling", true);
-    await vscode.commands.executeCommand("Nocalhost.refresh");
+    await Bookinfo.cleanCheck(node);
+
+    state.setAppState(node.getNodeStateId(), "resetting", true);
+
+    await vscode.commands.executeCommand("Nocalhost.refresh", node);
 
     host.disposeDevspace(node.info.spaceName);
     await this.reset(
@@ -47,9 +50,8 @@ export default class ResetDevspaceCommand implements ICommand {
 
       await nocalhostRootNode.updateData();
 
-      vscode.commands.executeCommand("Nocalhost.refresh");
+      vscode.commands.executeCommand("Nocalhost.refresh", nocalhostRootNode);
 
-      host.startAutoRefresh();
       host.showInformationMessage(`reset ${node.info.spaceName}`);
 
       state.delete(node.info.spaceName);

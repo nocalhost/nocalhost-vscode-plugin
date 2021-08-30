@@ -4,10 +4,9 @@ import * as os from "os";
 import ICommand from "./ICommand";
 import { ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
 import registerCommand from "./register";
-import { IWorkloadConfig } from "../domain/IWorkloadConfig";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
-import { associate, getServiceConfig, getPodNames } from "../ctl/nhctl";
+import { associate, getServiceConfig } from "../ctl/nhctl";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
   command: string = ASSOCIATE_LOCAL_DIRECTORY;
@@ -32,10 +31,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       );
       return;
     }
-    // const result = await this.getPodAndContainer(node);
-    // if (!result) {
-    //   return;
-    // }
+
     const profile = await getServiceConfig(
       node.getKubeConfigPath(),
       node.getNameSpace(),
@@ -44,37 +40,22 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       node.resourceType
     );
 
-    let appConfig = host.getGlobalState(appName) || {};
-    let workloadConfig: IWorkloadConfig = appConfig[node.name] || {};
-    workloadConfig.directory = profile.associate;
+    const currentUri = host.getCurrentRootPath();
 
-    const currentUri = this.getCurrentRootPath();
-    let destDir = workloadConfig.directory;
     const selectUri = await host.showSelectFolderDialog(
       "Associate local directory",
-      vscode.Uri.file(destDir || currentUri || os.homedir())
+      vscode.Uri.file(profile.associate || currentUri || os.homedir())
     );
     if (selectUri && selectUri.length > 0) {
-      workloadConfig.directory = selectUri[0].fsPath;
-      appConfig[node.name] = workloadConfig;
       await associate(
         kubeConfigPath,
         namespace,
         appName,
-        workloadConfig.directory,
+        selectUri[0].fsPath,
         node.resourceType,
         workloadName
       );
-      host.setGlobalState(appName, appConfig);
       host.showInformationMessage("Directory successfully linked");
     }
-  }
-
-  private getCurrentRootPath() {
-    return (
-      vscode.workspace.workspaceFolders &&
-      vscode.workspace.workspaceFolders.length > 0 &&
-      vscode.workspace.workspaceFolders[0].uri.fsPath
-    );
   }
 }
