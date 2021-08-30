@@ -16,9 +16,7 @@
 - Fixed the error notification "Failed to get node configs, please try again"
 - Fixed the use of `appName` issue
 
-
 ## Version 0.5.0 (2021-08-06)
-
 #### New Features
 
 - Add cluster status
