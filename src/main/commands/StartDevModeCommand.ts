@@ -8,7 +8,6 @@ import registerCommand from "./register";
 import { get as _get, isEqual, omit } from "lodash";
 import { opendevSpaceExec } from "../ctl/shell";
 import {
-  DEV_ASSOCIATE_LOCAL_DIRECTORYS,
   TMP_APP,
   TMP_CONTAINER,
   TMP_DEVSPACE,
@@ -90,11 +89,14 @@ export default class StartDevModeCommand implements ICommand {
     return containerName;
   }
 
+  private node: ControllerNodeApi;
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
+    this.node = node;
 
     await NhctlCommand.authCheck({
       base: "dev",
@@ -200,12 +202,10 @@ export default class StartDevModeCommand implements ICommand {
     );
     if (
       destDir === true ||
-      (destDir && destDir === this.getCurrentRootPath())
+      (destDir && destDir === host.getCurrentRootPath())
     ) {
-      host.disposeBookInfo();
       await this.startDevMode(host, appName, node, containerName);
     } else if (destDir) {
-      host.disposeBookInfo();
       this.saveAndOpenFolder(appName, node, destDir, containerName);
       messageBus.emit("devstart", {
         name: appName,
@@ -213,49 +213,6 @@ export default class StartDevModeCommand implements ICommand {
         container: containerName,
       });
     }
-
-    if (destDir !== true) {
-      this.saveDevspace(
-        {
-          app: appName,
-          resourceType: node.resourceType,
-          service: node.name,
-          kubeConfigPath: node.getKubeConfigPath(),
-          namespace: node.getNameSpace(),
-        },
-        destDir
-      );
-    }
-  }
-
-  // TODO: Clean Devspace
-  private saveDevspace(
-    syncServiceData: {
-      app: string;
-      resourceType: string;
-      service: string;
-      kubeConfigPath: string;
-      namespace: string;
-    },
-    destDir: string
-  ) {
-    let devAssociateLocalDirectorys =
-      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) || {};
-    let deleteKey: string[] = [];
-
-    Object.entries(devAssociateLocalDirectorys).forEach(([key, value]) => {
-      if (isEqual(value, syncServiceData)) {
-        deleteKey.push(key);
-      }
-    });
-
-    devAssociateLocalDirectorys = omit(devAssociateLocalDirectorys, deleteKey);
-    devAssociateLocalDirectorys[destDir] = syncServiceData;
-
-    host.setGlobalState(
-      DEV_ASSOCIATE_LOCAL_DIRECTORYS,
-      devAssociateLocalDirectorys
-    );
   }
 
   private saveAndOpenFolder(
@@ -264,14 +221,8 @@ export default class StartDevModeCommand implements ICommand {
     destDir: string,
     containerName: string
   ) {
-    let appConfig = host.getGlobalState(appName) || {};
-    let workloadConfig = appConfig[node.name] || {};
-    // let containerConfig = workloadConfig[containerName] || {};
-    const currentUri = this.getCurrentRootPath();
-    workloadConfig.directory = destDir;
-    // workloadConfig[containerName] = containerConfig;
-    appConfig[node.name] = workloadConfig;
-    host.setGlobalState(appName, appConfig);
+    const currentUri = host.getCurrentRootPath();
+
     const uri = vscode.Uri.file(destDir);
     if (currentUri !== uri.fsPath) {
       vscode.commands.executeCommand("vscode.openFolder", uri, true);
@@ -400,14 +351,8 @@ export default class StartDevModeCommand implements ICommand {
     return destDir;
   }
 
-  private async getTargetDirectory(
-    appName: string,
-    node: ControllerNodeApi,
-    containerName: string
-  ) {
+  private async getTargetDirectory() {
     let destDir: string | undefined;
-    let appConfig = host.getGlobalState(appName);
-    let workloadConfig = appConfig[node.name];
 
     const getUrl = async () => {
       const uris = await host.showOpenDialog({
@@ -429,7 +374,7 @@ export default class StartDevModeCommand implements ICommand {
     if (result === nls["bt.open.other"]) {
       await getUrl();
     } else if (result === nls["bt.open.dir"]) {
-      destDir = workloadConfig.directory;
+      destDir = await this.getAssociateDirectory();
 
       if (!existsSync(destDir)) {
         destDir = undefined;
@@ -449,6 +394,19 @@ export default class StartDevModeCommand implements ICommand {
     return destDir;
   }
 
+  private async getAssociateDirectory(): Promise<string> {
+    const node = this.node;
+    const profile = await nhctl.getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+
+    return profile.associate;
+  }
+
   private async cloneOrGetFolderDir(
     appName: string,
     node: ControllerNodeApi,
@@ -457,27 +415,17 @@ export default class StartDevModeCommand implements ICommand {
   ) {
     let destDir: string | undefined | boolean = associateDir;
 
-    let appConfig = host.getGlobalState(appName) || {};
-    const currentUri = this.getCurrentRootPath();
+    const currentUri = host.getCurrentRootPath();
 
-    let workloadConfig = appConfig[node.name] || {};
-    workloadConfig.directory = associateDir;
-
-    appConfig[node.name] = workloadConfig;
-    host.setGlobalState(appName, appConfig);
-
-    if (!workloadConfig.directory) {
+    if (!(await this.getAssociateDirectory())) {
       destDir = await this.firstOpen(appName, node, containerName);
-    } else if (currentUri !== workloadConfig.directory) {
-      destDir = await this.getTargetDirectory(appName, node, containerName);
+    } else if (currentUri !== (await this.getAssociateDirectory())) {
+      destDir = await this.getTargetDirectory();
     } else {
       destDir = true;
     }
 
     if (destDir && destDir !== true) {
-      workloadConfig.directory = destDir;
-      appConfig[node.name] = workloadConfig;
-      host.setGlobalState(appName, appConfig);
       await nhctl.associate(
         node.getKubeConfigPath(),
         node.getNameSpace(),
@@ -497,7 +445,7 @@ export default class StartDevModeCommand implements ICommand {
     node: ControllerNodeApi,
     containerName: string
   ) {
-    const currentUri = this.getCurrentRootPath() || os.homedir();
+    const currentUri = host.getCurrentRootPath() || os.homedir();
 
     await vscode.window.withProgress(
       {
@@ -590,14 +538,6 @@ export default class StartDevModeCommand implements ICommand {
     });
   }
 
-  private getCurrentRootPath() {
-    return (
-      vscode.workspace.workspaceFolders &&
-      vscode.workspace.workspaceFolders.length > 0 &&
-      vscode.workspace.workspaceFolders[0].uri.fsPath
-    );
-  }
-
   private setTmpStartRecord(
     appName: string,
     workloadPath: string,
@@ -624,22 +564,6 @@ export default class StartDevModeCommand implements ICommand {
     if (devStartAppendCommand) {
       host.setGlobalState(TMP_DEVSTART_APPEND_COMMAND, devStartAppendCommand);
     }
-  }
-
-  private async getSvcConfig(
-    kubeConfigPath: string,
-    namespace: string,
-    appName: string,
-    workloadName: string
-  ) {
-    let workloadConfig = await ConfigService.getWorkloadConfig(
-      kubeConfigPath,
-      namespace,
-      appName,
-      workloadName
-    );
-
-    return workloadConfig;
   }
 
   private async getGitUrl(

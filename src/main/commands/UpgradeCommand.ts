@@ -138,7 +138,7 @@ export default class UpgradeCommand implements ICommand {
         resourceDir = [resPath];
       }
     }
-    state.setAppState(appNode.name, "upgrading", true, {
+    state.setAppState(appNode.getNodeStateId(), "upgrading", true, {
       refresh: true,
       nodeStateId: appNode.getNodeStateId(),
     });

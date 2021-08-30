@@ -140,7 +140,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
           diff.forEach((name) => {
             const node = devSpaceNodes.find((item) => item.label === name);
-            node && state.cleanAutoRefresh(node);
+
+            node && state.disposeNode(node);
           });
         }
       }
