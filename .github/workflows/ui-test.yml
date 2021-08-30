@@ -28,7 +28,14 @@ jobs:
           chmod +x ~/cluster
           ~/cluster create
           echo "NOCALHOST_KUBECONFIG=$(cat ~/.kube/config)" >> $GITHUB_ENV
-
+      
+      - name: destroy
+        if: ${{ always() }}
+        env:
+          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
+          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
+        run: ~/cluster destroy
+        
       - name: destroy
         if: ${{ always() }}
         run: ~/cluster destroy
