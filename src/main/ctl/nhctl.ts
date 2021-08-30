@@ -1416,6 +1416,12 @@ export async function checkVersion() {
         });
         const command = "taskkill /im nhctl.exe -f";
         await execAsyncWithReturn(command, []);
+        const nhctlPath = path.resolve(
+          NH_BIN,
+          host.isWindow() ? "nhctl.exe" : "nhctl"
+        );
+        const stopDamonCommand = `${nhctlPath} daemon stop`;
+        await execAsyncWithReturn(stopDamonCommand, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
