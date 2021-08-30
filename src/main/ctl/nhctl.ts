@@ -1411,8 +1411,9 @@ export async function checkVersion() {
         if (fs.existsSync(TEMP_NHCTL_BIN)) {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
-        // const command = "taskkill /im nhctl.exe -f";
-        // await execAsyncWithReturn(command, []);
+        const command = "taskkill /im nhctl.exe -f";
+        host.log(`[cmd] ${command}`, true);
+        await execAsyncWithReturn(command, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
@@ -1425,6 +1426,7 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
+    host.log(`[err] ${err}`, true);
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {
