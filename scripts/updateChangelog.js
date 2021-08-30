@@ -10,7 +10,7 @@ if (!matched || matched.length !== 1) {
   return;
 }
 
-let updateURL = `https://raw.githubusercontent.com/nocalhost/nocalhost.github.io/main/docs/changelogs/${version.replace(
+let updateURL = `https://raw.githubusercontent.com/nocalhost/nocalhost.github.io/release/docs/changelogs/${version.replace(
   /(\d\.\d\.)(\d)/,
   "$1x"
 )}.md`;
@@ -38,9 +38,8 @@ function readUpdateFile() {
         .toString()
         .replace(/# Change Log/, "");
 
-      console.log(file);
-
       if (file.indexOf(header2) === -1) {
+        console.log(`${header}\n${header2}${result}${file}`);
         const buf = Buffer.from(`${header}\n${header2}${result}${file}`);
         fs.writeFileSync(CHANGELOG_PATH, buf);
       }
