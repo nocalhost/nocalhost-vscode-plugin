@@ -52,8 +52,9 @@ export class Host implements vscode.Disposable {
   private autoRefreshTimeId: NodeJS.Timeout | null = null;
 
   public stopAutoRefresh(a = "not") {
+    this.log(`stopAutoRefresh init ++, ${a}`, true);
     if (this.autoRefreshTimeId) {
-      this.log(`stopAutoRefresh, ${a}`, true);
+      this.log(`stopAutoRefresh stop ++, ${a}`, true);
       clearTimeout(this.autoRefreshTimeId);
       this.autoRefreshTimeId = null;
     }
