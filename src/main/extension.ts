@@ -167,7 +167,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const data = value.value as {
         status: string;
       };
-      host.log('isntail messagebus start, +++++', true);
+      host.log("isntail messagebus start, +++++", true);
       data.status === "loading"
         ? host.stopAutoRefresh("messageBus")
         : host.startAutoRefresh();
