@@ -29,7 +29,7 @@ import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 import { getConfiguration } from "../utils/conifg";
 import { KubeConfigState } from "../nodes/KubeConfigNode";
-
+import messageBus from "../utils/messageBus";
 export interface InstalledAppInfo {
   name: string;
   type: string;
@@ -1411,10 +1411,16 @@ export async function checkVersion() {
         if (fs.existsSync(TEMP_NHCTL_BIN)) {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
+        messageBus.emit("install", {
+          status: 'loading'
+        });
         const command = "taskkill /im nhctl.exe -f";
         host.log(`[cmd] ${command}`, true);
         await execAsyncWithReturn(command, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
+        messageBus.emit("install", {
+          status: 'end'
+        });
       }
 
       fs.renameSync(destinationPath, binPath);
