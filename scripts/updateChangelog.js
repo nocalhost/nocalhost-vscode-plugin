@@ -2,8 +2,13 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 
-let version = process.env.VERSION || "0.5.1";
+let version = process.env.VERSION;
 console.log("> update changelog version to: ", version);
+
+const matched = version.match(/\d+\.\d+\.\d+/);
+if (!matched || matched.length !== 1) {
+  return;
+}
 
 let updateURL = `https://raw.githubusercontent.com/nocalhost/nocalhost.github.io/main/docs/changelogs/${version.replace(
   /(\d\.\d\.)(\d)/,
