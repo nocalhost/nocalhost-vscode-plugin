@@ -163,6 +163,18 @@ export async function activate(context: vscode.ExtensionContext) {
       host.disposeApp(data.devspaceName, data.appName);
     }
   });
+  messageBus.on("install", (value) => {
+    try {
+      const data = value.value as {
+        status: string;
+      };
+      data.status === "loading"
+        ? host.stopAutoRefresh()
+        : host.startAutoRefresh();
+    } catch (error) {
+      host.log(`${error}, +++++`, true);
+    }
+  });
   await vscode.commands.executeCommand(
     "setContext",
     "extensionActivated",

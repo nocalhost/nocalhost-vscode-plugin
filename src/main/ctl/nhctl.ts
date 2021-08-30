@@ -28,6 +28,7 @@ import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 import { getConfiguration } from "../utils/conifg";
+import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
 
 export interface InstalledAppInfo {
@@ -1401,8 +1402,16 @@ export async function checkVersion() {
         if (fs.existsSync(TEMP_NHCTL_BIN)) {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
-        // const command = "taskkill /im nhctl.exe -f";
-        // await execAsyncWithReturn(command, []);
+        messageBus.emit("install", {
+          status: "loading",
+        });
+        const command = "taskkill /im nhctl.exe -f";
+        await execAsyncWithReturn(command, []).catch((e) => {
+          logger.error(e);
+        });
+        const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
+        const stopDamonCommand = `${nhctlPath} daemon stop`;
+        await execAsyncWithReturn(stopDamonCommand, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
@@ -1415,9 +1424,13 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
+    // host.log(`[err] ${err}`, true);
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {
+    messageBus.emit("install", {
+      status: "end",
+    });
     setUpgrade(false);
     unlock();
   }
