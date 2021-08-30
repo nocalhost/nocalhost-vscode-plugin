@@ -10,34 +10,65 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest]
-        # os: [ubuntu-latest]
+        # [ubuntu-latest]
+        # [windows-latest]
+        # [windows-latest,ubuntu-latest]
+        # [windows-latest,ubuntu-latest,macos-latest]
+        
     name: Run UI Tests
     runs-on: ${{ matrix.os }}
     steps:
+
+      - name: Create cluster
+        env:
+          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
+          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
+        run: |
+          curl -fL "https://codingcorp-generic.pkg.coding.net/nocalhsot-test/cluster/cluster?version=latest" -o ~/cluster
+          chmod +x ~/cluster
+          ~/cluster create
+          echo "NOCALHOST_KUBECONFIG=$(cat ~/.kube/config)" >> $GITHUB_ENV
+
       - uses: actions/checkout@v2
       
       - uses: actions/setup-node@v2
         with:
           node-version: ^14
-          
-      - run: yarn
+
+      - uses: GabrielBB/xvfb-action@v1.0
+
+      - uses: actions/cache@v2
+        id: yarn-cache 
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install project dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true' 
+        run: yarn    
+
+      - name: Build ext
+        run: yarn run build:ext
 
       - name: Run tests
-        uses: GabrielBB/xvfb-action@v1.0
-        env:
-          NOCALHOST_KUBECONFIG: ${{ secrets.KUBECONFIG }}
-        with:
-          run: yarn run test:ext
-          
+        run: yarn run test:ext
+
+      - name: destroy
+        if: ${{ always() }}
+        run: ~/cluster destroy
+
       - name: Mv screenshot
         if: ${{ always() }}
-        run: mv .screenshot ~/.nh/screenshot
+        run: |
+          mv .screenshot ~/.nh/screenshot
           
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
         with:
-          name: artifact-${{ matrix.os }}-${{ github.run_id }}
+          name: artifact-${{ runner.os }}-${{ github.run_id }}
           path: |
             ~/.nh/screenshot
-            ~/.nh/nhctl/logs/
+            ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
