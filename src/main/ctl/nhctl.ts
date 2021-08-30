@@ -1417,11 +1417,8 @@ export async function checkVersion() {
         const command = "taskkill /im nhctl.exe -f";
         await execAsyncWithReturn(command, []).catch((e) => {
           logger.error(e);
-        });      
-        const nhctlPath = path.resolve(
-          NH_BIN,
-          "nhctl.exe"
-        );
+        });
+        const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
         const stopDamonCommand = `${nhctlPath} daemon stop`;
         await execAsyncWithReturn(stopDamonCommand, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
