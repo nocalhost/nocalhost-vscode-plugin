@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-
+import { omit } from "lodash";
 import ICommand from "./ICommand";
 
 import { RECONNECT_SYNC, OVERRIDE_SYNC, SYNC_SERVICE } from "./constants";
@@ -7,6 +7,7 @@ import registerCommand from "./register";
 import * as nhctl from "../ctl/nhctl";
 import host from "../host";
 import logger from "../utils/logger";
+import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
 
 export interface Sync {
   app: string;
@@ -26,22 +27,90 @@ interface SyncMsg {
 export default class SyncServiceCommand implements ICommand {
   command: string = SYNC_SERVICE;
   _id: NodeJS.Timeout | null = null;
-  syncData: Sync;
+  syncData: Partial<Sync>;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
+  }
+  static async checkSync() {
+    const currentRootPath = host.getCurrentRootPath();
+
+    if (!currentRootPath) {
+      return;
+    }
+
+    const devAssociateLocalDirectorys =
+      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) ?? {};
+    const current = devAssociateLocalDirectorys[currentRootPath];
+
+    if (current) {
+      const { app, resourceType, service, kubeConfigPath, namespace } = current;
+
+      try {
+        await nhctl.associate(
+          kubeConfigPath,
+          namespace,
+          app,
+          currentRootPath,
+          resourceType,
+          service,
+          "--migrate"
+        );
+      } catch (err) {
+        logger.error("associate migrate:", err);
+      } finally {
+        host.setGlobalState(
+          DEV_ASSOCIATE_LOCAL_DIRECTORYS,
+          omit(devAssociateLocalDirectorys, currentRootPath)
+        );
+      }
+    }
+
+    let result: {
+      kubeconfig_path: string;
+      svc_pack: {
+        ns: string;
+        app: string;
+        svc_type: string;
+        svc: string;
+        container: string;
+      };
+    };
+
+    try {
+      result = await nhctl.NhctlCommand.create(
+        `dev associate-queryer -s ${currentRootPath} --current --json`
+      )
+        .toJson()
+        .exec();
+
+      if (result) {
+        const {
+          app,
+          svc_type: resourceType,
+          svc: service,
+          ns: namespace,
+        } = result.svc_pack;
+
+        vscode.commands.executeCommand(SYNC_SERVICE, {
+          app,
+          resourceType,
+          service,
+          kubeConfigPath: result.kubeconfig_path,
+          namespace,
+        });
+      }
+    } catch (err) {
+      logger.error("checkSync error:", err);
+      vscode.commands.executeCommand(SYNC_SERVICE);
+    }
   }
   async execCommand(syncData: Sync) {
     if (this._id) {
       clearTimeout(this._id);
       this._id = null;
     }
-    if (!syncData.app || !syncData.service) {
-      logger.info("syncData.app is null", true);
-      host.statusBar.hide();
-      return;
-    }
 
-    this.syncData = syncData;
+    this.syncData = syncData || {};
 
     this.getSyncStatus();
   }

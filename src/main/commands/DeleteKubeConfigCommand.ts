@@ -41,7 +41,7 @@ export default class DeleteKubeConfigCommand implements ICommand {
     }
     host.setGlobalState(LOCAL_PATH, tmpPath);
 
-    await state.cleanAutoRefresh(node);
+    await state.disposeNode(node);
 
     Bookinfo.cleanCheck(node);
 

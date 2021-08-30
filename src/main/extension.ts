@@ -1,4 +1,4 @@
-import { DEV_ASSOCIATE_LOCAL_DIRECTORYS, PLUGIN_TEMP_DIR } from "./constants";
+import { PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
@@ -28,7 +28,7 @@ import {
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import state from "./state";
-import { START_DEV_MODE, SYNC_SERVICE } from "./commands/constants";
+import { START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
@@ -48,6 +48,7 @@ import { isExistCluster } from "./clusters/utils";
 import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
 import * as nls from "vscode-nls";
+import SyncServiceCommand from "./commands/SyncServiceCommand";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -176,13 +177,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 function launchDevspace() {
-  const devAssociateLocalDirectorys =
-    host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) ?? {};
-  const current = devAssociateLocalDirectorys[host.getCurrentRootPath()];
-
-  if (current) {
-    vscode.commands.executeCommand(SYNC_SERVICE, current);
-  }
+  SyncServiceCommand.checkSync();
 
   const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);
 
