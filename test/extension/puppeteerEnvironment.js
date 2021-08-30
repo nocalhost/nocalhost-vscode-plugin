@@ -7,12 +7,16 @@ class PuppeteerEnvironment extends NodeEnvironment {
   async setup() {
     await super.setup();
 
+    this.global.testEnvironment = this;
+
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { __BROWSER__ } = global;
 
     const page = await retry(() => getPage(__BROWSER__), {
       maxRetryTime: 10 * 1000,
     });
+
+    page.setDefaultTimeout(10 * 1000);
 
     await openNocalhost(page);
 

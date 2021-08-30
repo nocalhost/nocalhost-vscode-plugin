@@ -28,6 +28,8 @@ async function openNocalhost(page) {
  * @return {puppeteer.ElementHandle<Element>[]}
  */
 async function setInputBox(page, text) {
+  await page.waitForTimeout(500);
+
   let input = await page.waitForSelector(".input.empty");
 
   await input.type(text);
@@ -52,6 +54,8 @@ async function quickPick(page, text) {
   const index = nameList.findIndex((name) => name === text);
 
   await list[index].click();
+
+  await page.waitForTimeout(500);
 }
 
 /**

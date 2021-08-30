@@ -41,8 +41,6 @@ async function loginServer(page) {
 async function getIframe(page) {
   await page.waitForTimeout(5 * 1000);
 
-  const frames = page.mainFrame().childFrames();
-
   const parentHandle = await page.waitForSelector(
     "#webview-webviewview-nocalhost-home .webview.ready"
   );
@@ -96,7 +94,7 @@ async function pasteAsText(page) {
 
   await iframe.click(".kubeConfig-add-btn");
 
-  return await waitForMessage(page, "Success");
+  return await waitForMessage(page, "Success", 60 * 1000);
 }
 
 (async () => {

@@ -100,6 +100,7 @@ const getUserDataDir = () => {
     "workbench.editor.enablePreview": false,
     "window.restoreFullscreen": true,
     "telemetry.enableTelemetry": false,
+    "extensions.autoUpdate": false,
     "window.newWindowDimensions": "maximized",
   };
 

@@ -478,7 +478,7 @@
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
     "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
     "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
-    "pretest:ext": "vsce package --yarn -o nocalhost.vsix",
+    "build:ext": "vsce package --yarn -o nocalhost.vsix",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
     "test:watch": "jest --watch"
   },

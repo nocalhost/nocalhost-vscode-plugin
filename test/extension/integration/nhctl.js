@@ -14,6 +14,6 @@ async function dowload(page) {
 
   await waitForMessage(page, "Downloading nhctl");
 
-  await waitForMessage(page, "Download completed");
+  await waitForMessage(page, "Download completed", 3 * 60 * 1000);
 }
 module.exports = { dowload };
