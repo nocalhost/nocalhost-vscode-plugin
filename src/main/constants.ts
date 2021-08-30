@@ -41,6 +41,8 @@ export const SERVER_CLUSTER_LIST = "userinfoList_v2";
 
 export const WELCOME_DID_SHOW = "welcomeDidShow";
 
+export const DEV_ASSOCIATE_LOCAL_DIRECTORYS = "devAssociateLocalDirectorys";
+
 // tmp start record
 export const TMP_STATUS = "tmpStatus";
 export const TMP_ID = "tmpId";

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-
+import { omit } from "lodash";
 import ICommand from "./ICommand";
 
 import { RECONNECT_SYNC, OVERRIDE_SYNC, SYNC_SERVICE } from "./constants";
@@ -7,6 +7,7 @@ import registerCommand from "./register";
 import * as nhctl from "../ctl/nhctl";
 import host from "../host";
 import logger from "../utils/logger";
+import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
 
 export interface Sync {
   app: string;
@@ -35,6 +36,33 @@ export default class SyncServiceCommand implements ICommand {
 
     if (!currentRootPath) {
       return;
+    }
+
+    const devAssociateLocalDirectorys =
+      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) ?? {};
+    const current = devAssociateLocalDirectorys[currentRootPath];
+
+    if (current) {
+      const { app, resourceType, service, kubeConfigPath, namespace } = current;
+
+      try {
+        await nhctl.associate(
+          kubeConfigPath,
+          namespace,
+          app,
+          currentRootPath,
+          resourceType,
+          service,
+          "--migrate"
+        );
+      } catch (err) {
+        logger.error("associate migrate:", err);
+      } finally {
+        host.setGlobalState(
+          DEV_ASSOCIATE_LOCAL_DIRECTORYS,
+          omit(devAssociateLocalDirectorys, currentRootPath)
+        );
+      }
     }
 
     let result: {

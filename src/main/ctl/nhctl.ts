@@ -633,13 +633,14 @@ export async function associate(
   appName: string,
   dir: string,
   type: string,
-  workLoadName: string
+  workLoadName: string,
+  params = ""
 ) {
   const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName}`
+    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName} ${params}`
   );
   const result = await execAsyncWithReturn(command, []);
   return result.stdout;
@@ -1463,7 +1464,7 @@ export function nhctlCommand(
   );
   const command = `${nhctlPath} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
-  } --kubeconfig ${kubeconfigPath}`;
+  } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
   console.log(command);
   return command;
 }

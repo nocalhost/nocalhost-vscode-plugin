@@ -196,6 +196,13 @@ export class AppNode extends NocalhostFolderNode {
     this.updateContext(treeItem);
     return treeItem;
   }
+
+  updateSyncStatus() {
+    if (!this.installed()) {
+      return;
+    }
+  }
+
   installed(): boolean {
     return this.installStatus === 1;
   }
