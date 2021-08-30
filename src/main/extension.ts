@@ -161,17 +161,17 @@ export async function activate(context: vscode.ExtensionContext) {
       };
       host.disposeApp(data.devspaceName, data.appName);
     }
-    messageBus.on("install", (value) => {
-      if (value.source !== (host.getCurrentRootPath() || "")) {
-        const data = value.value as {
-          status: string;
-        };
-        host.log("messageBus installing");
-        data.status === "loading"
-          ? host.stopAutoRefresh()
-          : host.startAutoRefresh();
-      }
-    });
+  });
+  messageBus.on("install", (value) => {
+    if (value.source !== (host.getCurrentRootPath() || "")) {
+      const data = value.value as {
+        status: string;
+      };
+      host.log(`messageBus ${data.status}`, true);
+      data.status === "loading"
+        ? host.stopAutoRefresh("messageBus")
+        : host.startAutoRefresh();
+    }
   });
   await vscode.commands.executeCommand(
     "setContext",
