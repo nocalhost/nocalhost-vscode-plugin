@@ -1412,14 +1412,14 @@ export async function checkVersion() {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
         messageBus.emit("install", {
-          status: 'loading'
+          status: "loading",
         });
         const command = "taskkill /im nhctl.exe -f";
         host.log(`[cmd] ${command}`, true);
         await execAsyncWithReturn(command, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
         messageBus.emit("install", {
-          status: 'end'
+          status: "end",
         });
       }
 
