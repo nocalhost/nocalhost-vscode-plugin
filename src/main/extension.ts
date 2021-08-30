@@ -167,11 +167,11 @@ export async function activate(context: vscode.ExtensionContext) {
       const data = value.value as {
         status: string;
       };
+      host.log('isntail messagebus start, +++++', true);
       data.status === "loading"
         ? host.stopAutoRefresh("messageBus")
         : host.startAutoRefresh();
     } catch (error) {
-      console.log(error, "++++++");
       host.log(`${error}, +++++`, true);
     }
   });
