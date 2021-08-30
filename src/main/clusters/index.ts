@@ -1,4 +1,3 @@
-import state from "../state";
 import LocalCluster from "./LocalCuster";
 import AccountCluster, { AccountClusterNode } from "./AccountCluster";
 import { orderBy } from "lodash";
