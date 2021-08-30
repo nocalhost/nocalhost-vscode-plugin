@@ -29,6 +29,10 @@ jobs:
           ~/cluster create
           echo "NOCALHOST_KUBECONFIG=$(cat ~/.kube/config)" >> $GITHUB_ENV
 
+      - name: destroy
+        if: ${{ always() }}
+        run: ~/cluster destroy
+
       - uses: actions/checkout@v2
       
       - uses: actions/setup-node@v2
@@ -54,10 +58,6 @@ jobs:
 
       - name: Run tests
         run: yarn run test:ext
-
-      - name: destroy
-        if: ${{ always() }}
-        run: ~/cluster destroy
 
       - name: Mv screenshot
         if: ${{ always() }}
