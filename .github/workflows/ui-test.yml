@@ -27,7 +27,9 @@ jobs:
           curl -fL "https://codingcorp-generic.pkg.coding.net/nocalhsot-test/cluster/cluster?version=latest" -o ~/cluster
           chmod +x ~/cluster
           ~/cluster create
-          echo "NOCALHOST_KUBECONFIG=$(sudo cat ~/config)" >> $GITHUB_ENV
+          NOCALHOST_KUBECONFIG=$(cat ~/config)
+          echo $NOCALHOST_KUBECONFIG
+          echo "NOCALHOST_KUBECONFIG=$(NOCALHOST_KUBECONFIG)" >> $GITHUB_ENV
           
       - name: Destroy cluster
         if: ${{ always() }}
