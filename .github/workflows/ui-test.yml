@@ -62,7 +62,7 @@ jobs:
       - name: Run tests
         uses: GabrielBB/xvfb-action@v1.0
         env:
-          NOCALHOST_KUBECONFIG: ${{ NOCALHOST_KUBECONFIG }}
+          NOCALHOST_KUBECONFIG: ${ NOCALHOST_KUBECONFIG }
         with:
           run: yarn run test:ext
 
