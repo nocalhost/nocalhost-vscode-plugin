@@ -44,8 +44,6 @@ jobs:
         with:
           node-version: ^14
 
-      - uses: GabrielBB/xvfb-action@v1.0
-
       - uses: actions/cache@v2
         id: yarn-cache 
         with:
@@ -60,9 +58,13 @@ jobs:
 
       - name: Build ext
         run: yarn run build:ext
-
+        
       - name: Run tests
-        run: yarn run test:ext
+        uses: GabrielBB/xvfb-action@v1.0
+        env:
+          NOCALHOST_KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        with:
+          run: yarn run test:ext
 
       - name: Mv screenshot
         if: ${{ always() }}
