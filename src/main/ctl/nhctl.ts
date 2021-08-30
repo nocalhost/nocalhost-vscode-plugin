@@ -1415,7 +1415,6 @@ export async function checkVersion() {
           status: "loading",
         });
         const command = "taskkill /im nhctl.exe -f";
-        host.log(`[cmd] ${command}`, true);
         await execAsyncWithReturn(command, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
         messageBus.emit("install", {
@@ -1432,7 +1431,7 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
-    host.log(`[err] ${err}`, true);
+    // host.log(`[err] ${err}`, true);
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {

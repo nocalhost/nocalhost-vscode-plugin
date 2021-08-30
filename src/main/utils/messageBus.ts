@@ -43,23 +43,14 @@ class MessageBus {
       this.eventMap.forEach((arr, key) => {
         const value = content[key];
         if (!_.isEqual(this.content[key], value)) {
-          host.log(`${key}, chuckie isEqual`, true);
           if (this.content[key]) {
-            host.log(
-              `${key}, chuckie boolean, ${
-                this.content[key].timestamp < value.timestamp
-              }`,
-              true
-            );
             if (this.content[key].timestamp < value.timestamp) {
-              host.log(`${key}, chuckie`, true);
               arr.forEach((callback) => {
                 callback(value);
               });
               this.content[key] = value;
             }
           } else {
-            host.log(`${key}, chuckie`, true);
             arr.forEach((callback) => {
               callback(value);
             });
