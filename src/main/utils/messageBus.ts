@@ -45,18 +45,18 @@ class MessageBus {
         if (!_.isEqual(this.content[key], value)) {
           if (this.content[key]) {
             if (this.content[key].timestamp < value.timestamp) {
-                host.log(`${key}, chuckie`, true);
-                arr.forEach((callback) => {
-                  callback(value);
-                });
-                this.content[key] = value;
-              } 
+              host.log(`${key}, chuckie`, true);
+              arr.forEach((callback) => {
+                callback(value);
+              });
+              this.content[key] = value;
+            }
           } else {
-                host.log(`${key}, chuckie`, true);
-                arr.forEach((callback) => {
-                  callback(value);
-                });
-                this.content[key] = value;
+            host.log(`${key}, chuckie`, true);
+            arr.forEach((callback) => {
+              callback(value);
+            });
+            this.content[key] = value;
           }
         }
       });

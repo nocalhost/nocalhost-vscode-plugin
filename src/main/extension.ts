@@ -166,14 +166,14 @@ export async function activate(context: vscode.ExtensionContext) {
     try {
       const data = value.value as {
         status: string;
-      }; 
+      };
       data.status === "loading"
         ? host.stopAutoRefresh("messageBus")
         : host.startAutoRefresh();
     } catch (error) {
-      console.log(error, '++++++');
+      console.log(error, "++++++");
       host.log(`${error}, +++++`, true);
-    }  
+    }
   });
   await vscode.commands.executeCommand(
     "setContext",
