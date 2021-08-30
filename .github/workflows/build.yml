@@ -1,44 +1,74 @@
-name: build
-
+name: UI Tests
 on:
   push:
-    branches: [ dev ]
+    branches: [ test/vscode-puppeteer ]
   pull_request:
     branches: [ dev ]
-  workflow_dispatch:
 
 jobs:
-  build:
-    name: build test plugin
-    runs-on: ubuntu-latest
+  test:
+    strategy:
+      matrix:
+        os: [macos-latest]
+        # [ubuntu-latest]
+        # [windows-latest]
+        # [windows-latest,ubuntu-latest]
+        # [windows-latest,ubuntu-latest,macos-latest]
+        
+    name: Run UI Tests
+    runs-on: ${{ matrix.os }}
     steps:
-    - name: Set up Node 1.x
-      uses: actions/setup-node@v2.1.3
-      with:
-        node-version: 12.x
 
-    - name: Check out code into the project's root directory
-      uses: actions/checkout@v2
-    
-    - name: Set evn
-      run: echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Create cluster
+        env:
+          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
+          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
+        run: |
+          curl -fL "https://codingcorp-generic.pkg.coding.net/nocalhsot-test/cluster/cluster?version=latest" -o ~/cluster
+          chmod +x ~/cluster
+          ~/cluster create
+          echo "NOCALHOST_KUBECONFIG=$(cat ~/.kube/config)" >> $GITHUB_ENV
 
-    - name: Update the version of package.json
-      env:
-        MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-      run: node scripts/gitVersion.js
+      - uses: actions/checkout@v2
+      
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ^14
 
-    - name: Build
-      run: |
-        yarn
-        yarn run vsce package --yarn -o nocalhost.vsix
+      - uses: GabrielBB/xvfb-action@v1.0
 
-    - name: Push to Coding Artifacts
-      if: ${{ github.ref != 'refs/heads/dev' }}
-      run: |
-        curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://codingcorp-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${GITHUB_SHA}"
-    
-    - name: Push to Coding Artifacts
-      if: ${{ github.ref == 'refs/heads/dev' }}
-      run: |
-        curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://codingcorp-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=dev"
+      - uses: actions/cache@v2
+        id: yarn-cache 
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install project dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true' 
+        run: yarn    
+
+      - name: Build ext
+        run: yarn run build:ext
+
+      - name: Run tests
+        run: yarn run test:ext
+
+      - name: destroy
+        if: ${{ always() }}
+        run: ~/cluster destroy
+
+      - name: Mv screenshot
+        if: ${{ always() }}
+        run: |
+          mv .screenshot ~/.nh/screenshot
+          
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: artifact-${{ runner.os }}-${{ github.run_id }}
+          path: |
+            ~/.nh/screenshot
+            ~/.nh/nhctl/logs/nhctl.log
+            ~/.nh/vscode-plugin/vsc_log
