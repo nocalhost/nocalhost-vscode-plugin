@@ -1,5 +1,22 @@
 # Change Log
 
+## Version 0.5.2 (30 Aug 2021)
+
+### New Features
+
+- Automatically switch to GitHub release when failed download plugin from CODING 
+
+#### Refactor & Improvement
+
+- Optimize the cluster inspector performance and user experience
+- `nhctl` unified storage file sync related configuration
+
+#### Bug Fixes
+
+- Fixed the error notification "Failed to get node configs, please try again"
+- Fixed the use of `appName` issue
+
+
 ## Version 0.5.0 (16 Aug 2021)
 
 #### New Features

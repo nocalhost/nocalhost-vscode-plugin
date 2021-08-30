@@ -6,9 +6,10 @@ import NocalhostAppProvider from "../appProvider";
 import { SIGN_IN } from "../commands/constants";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
-import { LocalCluster, updateStateRootNodes } from "../clusters";
+import { LocalCluster } from "../clusters";
 import host from "../host";
 import { readYaml, readFile, getYamlDefaultContext } from "../utils/fileUtil";
+import state from "../state";
 
 export class HomeWebViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "Nocalhost.Home";
@@ -90,6 +91,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
             const localData = data.data;
 
             const { localPath, kubeConfig, contextName } = localData;
+
             let newLocalCluster = null;
             if (localPath) {
               const str = await readFile(localPath);
@@ -107,17 +109,10 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
               const newLocalNode = await LocalCluster.getLocalClusterRootNode(
                 newLocalCluster
               );
-              updateStateRootNodes(newLocalNode);
             }
 
-            await vscode.commands.executeCommand(
-              "setContext",
-              "Nocalhost.visibleTree",
-              true
-            );
-            // await vscode.commands.executeCommand("Nocalhost.refresh");
-            // host.startAutoRefresh()
-            this.appTreeProvider.refresh();
+            await state.refreshTree();
+
             vscode.window.showInformationMessage("Success");
           });
           break;

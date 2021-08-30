@@ -10,12 +10,14 @@ import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
 import { checkCluster, getAllNamespace } from "../ctl/nhctl";
 import { ClusterSource } from "../common/define";
+import { ClustersState } from ".";
 
 export class LocalClusterNode {
   filePath: string;
   id: string;
   clusterNickName?: string;
   createTime: number;
+  state: ClustersState;
 }
 
 export default class LocalCluster {
@@ -92,6 +94,7 @@ export default class LocalCluster {
       clusterSource: ClusterSource.local,
       applications,
       kubeConfigPath: filePath,
+      state,
     };
     return obj;
   };
@@ -123,11 +126,16 @@ export default class LocalCluster {
     }
     const hash = getStringHash(yamlStr.trim());
     const resultFilePath = path.resolve(KUBE_CONFIG_DIR, hash);
+
+    const state = await checkCluster(resultFilePath);
+
     const newCluster: LocalClusterNode = {
       filePath: resultFilePath,
       id: hash,
       createTime: Date.now(),
+      state,
     };
+
     if (
       !localClusterNodes.find(
         (it: LocalClusterNode) => it.filePath === resultFilePath

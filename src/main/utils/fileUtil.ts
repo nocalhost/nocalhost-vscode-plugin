@@ -17,7 +17,6 @@ export function getYamlDefaultContext(yaml: any) {
 }
 
 export function readYamlSync(filePath: string) {
-  logger.info(`[read yaml sync]: ${filePath}`);
   if (!isExistSync(filePath)) {
     return null;
   }
@@ -36,7 +35,7 @@ export function readYamlSync(filePath: string) {
 }
 export async function readYaml(filePath: string) {
   let yamlObj = null;
-  logger.info(`[read yaml]: ${filePath}`);
+
   const result = await isExist(filePath);
   if (result !== true) {
     return null;
@@ -51,8 +50,6 @@ export async function readYaml(filePath: string) {
 }
 
 export async function readFile(filePath: string): Promise<string> {
-  logger.info(`[read file]: ${filePath}`);
-
   const result = await isExist(filePath);
   if (result !== true) {
     return null;
@@ -68,8 +65,6 @@ export async function readFile(filePath: string): Promise<string> {
 }
 
 export function writeFileLock(filePath: string, writeData: string) {
-  logger.info(`[write file lock]: ${filePath}`);
-
   if (!isExistSync(filePath)) {
     writeFileAsync(filePath, writeData);
     return;
@@ -85,8 +80,6 @@ export function writeFileLock(filePath: string, writeData: string) {
 }
 
 export function writeFileAsync(filePath: string, writeData: string) {
-  logger.info(`[write file async]: ${filePath}`);
-
   const isExist = fs.existsSync(filePath);
   if (isExist) {
     const data = fs.readFileSync(filePath).toString();
