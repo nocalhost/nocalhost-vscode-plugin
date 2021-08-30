@@ -2,7 +2,7 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 
-let version = process.env.VERSION || '0.5.1';
+let version = process.env.VERSION || "0.5.1";
 console.log("> update changelog version to: ", version);
 
 let updateURL = `https://raw.githubusercontent.com/nocalhost/nocalhost.github.io/main/docs/changelogs/${version.replace(
@@ -33,13 +33,12 @@ function readUpdateFile() {
         .toString()
         .replace(/# Change Log/, "");
 
-        console.log(file);
+      console.log(file);
 
       if (file.indexOf(header2) === -1) {
         const buf = Buffer.from(`${header}\n${header2}${result}${file}`);
         fs.writeFileSync(CHANGELOG_PATH, buf);
       }
-      
     });
   });
 }
