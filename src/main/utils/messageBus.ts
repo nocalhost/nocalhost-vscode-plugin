@@ -47,6 +47,7 @@ class MessageBus {
             this.content[key] &&
             this.content[key].timestamp < value.timestamp
           ) {
+            host.log(`${key}, chuckie`, true);
             arr.forEach((callback) => {
               callback(value);
             });

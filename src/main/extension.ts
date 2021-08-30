@@ -163,6 +163,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   });
   messageBus.on("install", (value) => {
+    host.log(`messageBus init install`, true);
     if (value.source !== (host.getCurrentRootPath() || "")) {
       const data = value.value as {
         status: string;
