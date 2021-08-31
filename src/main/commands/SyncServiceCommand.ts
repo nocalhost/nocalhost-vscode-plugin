@@ -31,7 +31,7 @@ export default class SyncServiceCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  static stopSyncStatus () {
+  static stopSyncStatus() {
     vscode.commands.executeCommand(SYNC_SERVICE, {}, true);
   }
   static async checkSync() {
@@ -116,7 +116,7 @@ export default class SyncServiceCommand implements ICommand {
       this.syncData = syncData || {};
       this.getSyncStatus();
     } else {
-      host.log('clear sync status', true);
+      host.log("clear sync status", true);
     }
   }
 

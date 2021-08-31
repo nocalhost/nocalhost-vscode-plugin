@@ -1409,7 +1409,7 @@ export async function checkVersion() {
         await execAsyncWithReturn(command, []).catch((e) => {
           logger.error(e);
         });
-        const findDaemonCommand = 'tasklist | findstr nhctl.exe';
+        const findDaemonCommand = "tasklist | findstr nhctl.exe";
         const result = await execAsyncWithReturn(findDaemonCommand, []);
         if (!result) {
           host.log(`no daemon +++++++++`, true);
