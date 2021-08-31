@@ -27,6 +27,8 @@ jobs:
           curl -fL "https://codingcorp-generic.pkg.coding.net/nocalhsot-test/cluster/cluster?version=latest" -o ~/cluster
           chmod +x ~/cluster
           ~/cluster create
+          NOCALHOST_KUBECONFIG=$(cat ~/config)
+          echo "NOCALHOST_KUBECONFIG="${NOCALHOST_KUBECONFIG}"" >> $GITHUB_ENV
           
       - uses: actions/checkout@v2
       
@@ -52,10 +54,7 @@ jobs:
       - name: Run tests
 #         uses: GabrielBB/xvfb-action@v1.0
 #         with:
-        run: |
-          NOCALHOST_KUBECONFIG=$(cat ~/config)
-          echo "NOCALHOST_KUBECONFIG="${NOCALHOST_KUBECONFIG}"" >> $GITHUB_ENV
-          yarn run test:ext
+        run: yarn run test:ext
 
       - name: Destroy cluster
         if: ${{ always() }}
@@ -74,6 +73,7 @@ jobs:
         with:
           name: artifact-${{ runner.os }}-${{ github.run_id }}
           path: |
+            ~/config
             ~/.nh/screenshot
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
