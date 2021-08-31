@@ -1409,10 +1409,22 @@ export async function checkVersion() {
         await execAsyncWithReturn(command, []).catch((e) => {
           logger.error(e);
         });
+        const findDaemonCommand = 'tasklist | findstr nhctl.exe';
+        const result = await execAsyncWithReturn(findDaemonCommand, []);
+        if (!result) {
+          host.log(`no daemon +++++++++`, true);
+          fs.renameSync(binPath, TEMP_NHCTL_BIN);
+        } else {
+          host.log(`${result}, hasDaemon`, true);
+          await execAsyncWithReturn(command, []).catch((e) => {
+            logger.error(e);
+          });
+          fs.renameSync(binPath, TEMP_NHCTL_BIN);
+        }
         // const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
         // const stopDamonCommand = `${nhctlPath} daemon stop`;
         // await execAsyncWithReturn(stopDamonCommand, []);
-        fs.renameSync(binPath, TEMP_NHCTL_BIN);
+        // fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
       fs.renameSync(destinationPath, binPath);
@@ -1424,7 +1436,7 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
-    // host.log(`[err] ${err}`, true);
+    host.log(`[update err] ${err}`, true);
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {

@@ -31,6 +31,9 @@ export default class SyncServiceCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
+  static stopSyncStatus () {
+    vscode.commands.executeCommand(SYNC_SERVICE, {}, true);
+  }
   static async checkSync() {
     const currentRootPath = host.getCurrentRootPath();
 
@@ -104,15 +107,17 @@ export default class SyncServiceCommand implements ICommand {
       vscode.commands.executeCommand(SYNC_SERVICE);
     }
   }
-  async execCommand(syncData: Sync) {
+  async execCommand(syncData: Sync, isClearTimeOut?: boolean) {
     if (this._id) {
       clearTimeout(this._id);
       this._id = null;
     }
-
-    this.syncData = syncData || {};
-
-    this.getSyncStatus();
+    if (!isClearTimeOut) {
+      this.syncData = syncData || {};
+      this.getSyncStatus();
+    } else {
+      host.log('clear sync status', true);
+    }
   }
 
   async getSyncStatus() {
