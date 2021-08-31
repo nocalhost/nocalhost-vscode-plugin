@@ -26,13 +26,13 @@ async function install(page) {
 
   treeView = await getTreeView(page);
 
-  const isExpandable = (
-    await (await treeView[1].$(".monaco-tl-twistie")).evaluate((el) =>
-      el.getAttribute("class")
-    )
-  ).includes("collapsible");
+  const className = await (
+    await treeView[1].$(".monaco-tl-twistie")
+  ).evaluate((el) => el.getAttribute("class"));
 
-  if (isExpandable) {
+  const text = await treeView[1].evaluate((el) => el.innerText);
+
+  if (className.includes("collapsed")) {
     await treeView[1].click();
   }
 
