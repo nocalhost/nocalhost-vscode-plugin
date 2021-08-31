@@ -58,12 +58,12 @@ jobs:
         with:
           run: yarn run test:ext
 
-#       - name: Destroy cluster
-#         if: ${{ always() }}
-#         env:
-#           TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
-#           TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
-#         run: ~/cluster destroy
+      - name: Destroy cluster
+        if: ${{ always() }}
+        env:
+          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
+          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
+        run: ~/cluster destroy
         
       - name: Mv screenshot
         if: ${{ always() }}
