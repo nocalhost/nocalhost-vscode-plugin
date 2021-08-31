@@ -65,10 +65,10 @@ jobs:
 #           TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
 #         run: ~/cluster destroy
         
-      - name: Mv screenshot
-        if: ${{ always() }}
-        run: |
-          mv .screenshot ~/.nh/screenshot
+#       - name: Mv screenshot
+#         if: ${{ always() }}
+#         run: |
+#           mv .screenshot ~/.nh/screenshot
           
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
