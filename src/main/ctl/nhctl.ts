@@ -1409,9 +1409,9 @@ export async function checkVersion() {
         await execAsyncWithReturn(command, []).catch((e) => {
           logger.error(e);
         });
-        const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
-        const stopDamonCommand = `${nhctlPath} daemon stop`;
-        await execAsyncWithReturn(stopDamonCommand, []);
+        // const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
+        // const stopDamonCommand = `${nhctlPath} daemon stop`;
+        // await execAsyncWithReturn(stopDamonCommand, []);
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
