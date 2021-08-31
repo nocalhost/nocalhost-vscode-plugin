@@ -27,8 +27,6 @@ jobs:
           curl -fL "https://codingcorp-generic.pkg.coding.net/nocalhsot-test/cluster/cluster?version=latest" -o ~/cluster
           chmod +x ~/cluster
           ~/cluster create
-          NOCALHOST_KUBECONFIG=$(cat ~/config)
-          echo "NOCALHOST_KUBECONFIG="${NOCALHOST_KUBECONFIG}"" >> $GITHUB_ENV
           
       - uses: actions/checkout@v2
       
@@ -51,24 +49,24 @@ jobs:
       - name: Build ext
         run: yarn run build:ext
         
-#       - name: Run tests
-#         uses: GabrielBB/xvfb-action@v1.0
-#         env:
-#           NOCALHOST_KUBECONFIG: ${{ env.NOCALHOST_KUBECONFIG }}
-#         with:
-#           run: yarn run test:ext
+      - name: Run tests
+        uses: GabrielBB/xvfb-action@v1.0
+        env:
+          KUBECONFIG_PATH: ~/config
+        with:
+          run: yarn run test:ext
 
-#       - name: Destroy cluster
-#         if: ${{ always() }}
-#         env:
-#           TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
-#           TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
-#         run: ~/cluster destroy
+      - name: Destroy cluster
+        if: ${{ always() }}
+        env:
+          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
+          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
+        run: ~/cluster destroy
         
-#       - name: Mv screenshot
-#         if: ${{ always() }}
-#         run: |
-#           mv .screenshot ~/.nh/screenshot
+      - name: Mv screenshot
+        if: ${{ always() }}
+        run: |
+          mv .screenshot ~/.nh/screenshot
           
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}

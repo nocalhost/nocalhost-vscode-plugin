@@ -1,9 +1,12 @@
-const { pasteAsText } = require("./connect");
+const { pasteAsText, loadKubeConfig } = require("./connect");
 
 const connectTests = () => {
-  describe("connect to Cluster ", () => {
-    it("paste as Text", async () => {
+  describe("connect to Cluster", () => {
+    it.skip("paste as Text", async () => {
       await pasteAsText(page);
+    });
+    it("load KubeConfig", async () => {
+      await loadKubeConfig(page);
     });
   });
 };

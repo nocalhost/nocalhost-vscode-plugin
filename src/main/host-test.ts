@@ -16,6 +16,15 @@ export default class HostTest extends Host {
     }
     return uris;
   }
+  showSelectFileDialog(title: string, defaultUri?: vscode.Uri) {
+    return this.showOpenDialog({
+      defaultUri: defaultUri,
+      canSelectFolders: false,
+      canSelectFiles: true,
+      canSelectMany: false,
+      title: title,
+    });
+  }
   showInformationMessage(
     msg: string,
     options?: vscode.MessageOptions,

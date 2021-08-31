@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer-core");
 const assert = require("assert");
 const ncp = require("copy-paste");
 
-const { waitForMessage, initialize } = require("./index");
+const { waitForMessage, initialize, setInputBox } = require("./index");
 /**
  *
  * @param {puppeteer.Page} page
@@ -99,6 +99,33 @@ async function pasteAsText(page) {
   return await waitForMessage(page, "Success", 60 * 1000);
 }
 
+/**
+ *
+ * @param {puppeteer.Page} page
+ */
+async function loadKubeConfig(page) {
+  "wrapped-tabpanel-select";
+
+  const iframe = await getIframe(page);
+  const tabs = await (await iframe.$(".nocalhost-tab")).$$(":scope > *");
+  await tabs[0].click();
+
+  const buttons = await (await iframe.$(".MuiTabs-flexContainer")).$$(
+    ":scope > *"
+  );
+  await buttons[0].click();
+
+  await iframe.click(".MuiSvgIcon-root.icon");
+
+  await setInputBox(page, process.env.KUBECONFIG_PATH);
+
+  await iframe.waitForTimeout(1 * 1000);
+
+  await iframe.click(".kubeConfig-add-btn");
+
+  return await waitForMessage(page, "Success", 60 * 1000);
+}
+
 (async () => {
   if (require.main === module) {
     const page = await initialize();
@@ -106,4 +133,4 @@ async function pasteAsText(page) {
   }
 })();
 
-module.exports = { pasteAsText };
+module.exports = { pasteAsText, loadKubeConfig };
