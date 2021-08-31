@@ -26,11 +26,25 @@ async function install(page) {
 
   treeView = await getTreeView(page);
 
-  if (treeView.length === 2) {
+  const isExpandable = (
+    await (await treeView[1].$(".monaco-tl-twistie")).evaluate((el) =>
+      el.getAttribute("class")
+    )
+  ).includes("collapsible");
+
+  if (isExpandable) {
     await treeView[1].click();
   }
 
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(500);
+
+  await page.waitForFunction(() => {
+    return !document
+      .querySelector("#workbench\\.parts\\.sidebar")
+      ?.querySelectorAll(".monaco-list-row .monaco-tl-twistie")[1]
+      .getAttribute("class")
+      .includes("collapsed");
+  });
 
   const app = await getInstallApp(page, "bookinfo");
 
