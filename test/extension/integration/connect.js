@@ -90,6 +90,8 @@ async function pasteAsText(page) {
     });
   });
 
+  await iframe.waitForTimeout(1 * 1000);
+
   await iframe.type('[placeholder="KubeConfig"]', " ");
 
   await iframe.click(".kubeConfig-add-btn");
