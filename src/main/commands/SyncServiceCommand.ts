@@ -116,7 +116,7 @@ export default class SyncServiceCommand implements ICommand {
       this.syncData = syncData || {};
       this.getSyncStatus();
     } else {
-      host.log("clear sync status", true);
+      logger.info('after kill cleartime sync-status');
     }
   }
 

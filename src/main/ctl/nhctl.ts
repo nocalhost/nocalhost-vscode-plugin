@@ -1410,12 +1410,14 @@ export async function checkVersion() {
           logger.error(e);
         });
         const findDaemonCommand = "tasklist | findstr nhctl.exe";
-        const result = await execAsyncWithReturn(findDaemonCommand, []);
+        const result = await execAsyncWithReturn(findDaemonCommand, []).catch((e) => {
+          logger.error(e);
+        });
         if (!result) {
-          host.log(`no daemon +++++++++`, true);
+          logger.info('after kill no has not daemon');
           fs.renameSync(binPath, TEMP_NHCTL_BIN);
         } else {
-          host.log(`${result}, hasDaemon`, true);
+          logger.info('after kill no has daemon');
           await execAsyncWithReturn(command, []).catch((e) => {
             logger.error(e);
           });
@@ -1436,9 +1438,9 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
-    host.log(`[update err] ${err}`, true);
+    // host.log(`[update err] ${err}`, true);
     console.error(err);
-    vscode.window.showErrorMessage(failedMessage);
+    typeof err === 'string' && err.indexOf("lockerror") !== -1 ? logger.error('lockerror') : vscode.window.showErrorMessage(failedMessage);
   } finally {
     messageBus.emit("install", {
       status: "end",
