@@ -28,36 +28,35 @@ jobs:
           chmod +x ~/cluster
           ~/cluster create
           NOCALHOST_KUBECONFIG=$(cat ~/config)
-          echo $NOCALHOST_KUBECONFIG
-          echo "NOCALHOST_KUBECONFIG<<EOF${NOCALHOST_KUBECONFIG}EOF" >> $GITHUB_ENV
+          echo "NOCALHOST_KUBECONFIG="${NOCALHOST_KUBECONFIG}"" >> $GITHUB_ENV
           
-      # - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
       
-      # - uses: actions/setup-node@v2
-      #   with:
-      #     node-version: ^14
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ^14
 
-      # - uses: actions/cache@v2
-      #   id: yarn-cache 
-      #   with:
-      #     path: '**/node_modules'
-      #     key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-yarn-
+      - uses: actions/cache@v2
+        id: yarn-cache 
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
-      # - name: Install project dependencies
-      #   if: steps.yarn-cache.outputs.cache-hit != 'true' 
-      #   run: yarn    
+      - name: Install project dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true' 
+        run: yarn    
 
-      # - name: Build ext
-      #   run: yarn run build:ext
+      - name: Build ext
+        run: yarn run build:ext
         
-      # - name: Run tests
-      #   uses: GabrielBB/xvfb-action@v1.0
-      #   env:
-      #     NOCALHOST_KUBECONFIG: ${ NOCALHOST_KUBECONFIG }
-      #   with:
-      #     run: yarn run test:ext
+      - name: Run tests
+        uses: GabrielBB/xvfb-action@v1.0
+        env:
+          NOCALHOST_KUBECONFIG: ${{ env.NOCALHOST_KUBECONFIG }}
+        with:
+          run: yarn run test:ext
 
       - name: Destroy cluster
         if: ${{ always() }}
@@ -66,16 +65,16 @@ jobs:
           TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
         run: ~/cluster destroy
         
-      # - name: Mv screenshot
-      #   if: ${{ always() }}
-      #   run: |
-      #     mv .screenshot ~/.nh/screenshot
+      - name: Mv screenshot
+        if: ${{ always() }}
+        run: |
+          mv .screenshot ~/.nh/screenshot
           
-      # - uses: actions/upload-artifact@v2
-      #   if: ${{ always() }}
-      #   with:
-      #     name: artifact-${{ runner.os }}-${{ github.run_id }}
-      #     path: |
-      #       ~/.nh/screenshot
-      #       ~/.nh/nhctl/logs/nhctl.log
-      #       ~/.nh/vscode-plugin/vsc_log
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: artifact-${{ runner.os }}-${{ github.run_id }}
+          path: |
+            ~/.nh/screenshot
+            ~/.nh/nhctl/logs/nhctl.log
+            ~/.nh/vscode-plugin/vsc_log
