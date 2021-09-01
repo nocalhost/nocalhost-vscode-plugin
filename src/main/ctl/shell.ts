@@ -4,6 +4,7 @@ import * as shell from "shelljs";
 import host, { Host } from "../host";
 import { NH_BIN } from "../constants";
 import logger from "../utils/logger";
+import { GLOBAL_TIMEOUT } from "../commands/constants";
 export interface ShellResult {
   code: number;
   stdout: string;
@@ -49,10 +50,11 @@ export async function opendevSpaceExec(
 export async function execAsyncWithReturn(
   command: string,
   args: Array<any>,
-  startTime?: number
+  startTime?: number,
+  ms?: number
 ): Promise<ShellResult> {
   // host.log(`[cmd] ${command}`, true);
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const env = Object.assign(process.env, { DISABLE_SPINNER: true });
     logger.info(`[cmd] ${command}`);
@@ -60,7 +62,29 @@ export async function execAsyncWithReturn(
     let stdout = "";
     let stderr = "";
     let err = `execute command fail: ${command}`;
+
+    let isTimeOut = false;
+
+    let time: NodeJS.Timeout;
+    if (ms) {
+      time = setTimeout(() => {
+        isTimeOut = true;
+        proc.kill("SIGHUP");
+
+        logger.error(`[cmd] ${command} timeOut`);
+        host.log(`[cmd] ${command} timeOut`, true);
+
+        reject();
+      }, ms);
+    }
+
     proc.on("close", (code) => {
+      if (isTimeOut) {
+        return;
+      }
+
+      clearTimeout(time);
+
       if (code === 0) {
         if (startTime !== undefined) {
           const end = Date.now() - startTime;
@@ -94,9 +118,10 @@ export async function execChildProcessAsync(
     dialog?: string;
     output?: string;
   },
-  notShow?: boolean
+  notShow?: boolean,
+  ms?: number
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const env = Object.assign(process.env, { DISABLE_SPINNER: true });
     logger.info(`[cmd] ${command}`);
@@ -104,7 +129,29 @@ export async function execChildProcessAsync(
     let errorStr = "";
     let stdout = "";
     let err = `execute command fail: ${command}`;
+
+    let isTimeOut = false;
+
+    let time: NodeJS.Timeout;
+    if (ms) {
+      time = setTimeout(() => {
+        isTimeOut = true;
+        proc.kill("SIGHUP");
+
+        logger.error(`[cmd] ${command} timeOut`);
+        host.log(`[cmd] ${command} timeOut`, true);
+
+        reject();
+      }, ms);
+    }
+
     proc.on("close", (code) => {
+      if (isTimeOut) {
+        return;
+      }
+
+      clearTimeout(time);
+
       if (code === 0) {
         resolve(null);
       } else {

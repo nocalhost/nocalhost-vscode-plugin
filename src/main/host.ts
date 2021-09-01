@@ -8,6 +8,7 @@ import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
 import { asyncLimt } from "./utils";
+import { GLOBAL_TIMEOUT } from "./commands/constants";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -77,7 +78,7 @@ export class Host implements vscode.Disposable {
 
           return Promise.resolve();
         },
-        10 * 1000
+        GLOBAL_TIMEOUT
       );
     } catch (e) {
       this.startAutoRefresh();

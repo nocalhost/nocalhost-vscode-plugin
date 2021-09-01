@@ -22,6 +22,7 @@ import { DevSpaceNode } from "./DevSpaceNode";
 
 import arrayDiffer = require("array-differ");
 import { asyncLimt } from "../utils";
+import { GLOBAL_TIMEOUT } from "../commands/constants";
 
 async function getClusterName(res: IRootNode) {
   if (!res.kubeConfigPath) {
@@ -63,7 +64,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         return LocalCusterService.getLocalClusterRootNode(localCluster);
       },
-      10 * 1000
+      GLOBAL_TIMEOUT
     ).then((results) => {
       return results.map((result, index) => {
         if (result.status === "fulfilled") {
@@ -110,7 +111,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     let nodes = await asyncLimt(
       globalClusterRootNodes,
       (account) => AccountClusterService.getServerClusterRootNodes(account),
-      10 * 1000
+      GLOBAL_TIMEOUT
     ).then((results) => {
       return results
         .map((result, index) => {
