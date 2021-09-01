@@ -1409,9 +1409,20 @@ export async function checkVersion() {
         await execAsyncWithReturn(command, []).catch((e) => {
           logger.error(e);
         });
-        // const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
-        // const stopDamonCommand = `${nhctlPath} daemon stop`;
-        // await execAsyncWithReturn(stopDamonCommand, []);
+        const findDaemonCommand = "tasklist | findstr nhctl.exe";
+        const result = await execAsyncWithReturn(findDaemonCommand, []).catch(
+          (e) => {
+            logger.error(e);
+          }
+        );
+        if (!result) {
+          logger.info("after kill has not daemon");
+        } else {
+          logger.info("after kill has daemon");
+          await execAsyncWithReturn(command, []).catch((e) => {
+            logger.error(e);
+          });
+        }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
@@ -1424,9 +1435,11 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
-    // host.log(`[err] ${err}`, true);
+    // host.log(`[update err] ${err}`, true);
     console.error(err);
-    vscode.window.showErrorMessage(failedMessage);
+    typeof err === "string" && err.indexOf("lockerror") !== -1
+      ? logger.error("lockerror")
+      : vscode.window.showErrorMessage(failedMessage);
   } finally {
     messageBus.emit("install", {
       status: "end",
