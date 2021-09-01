@@ -30,6 +30,7 @@ import { IPvc } from "../domain";
 import { getConfiguration } from "../utils/conifg";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
+import { GLOBAL_TIMEOUT } from "../commands/constants";
 
 export interface InstalledAppInfo {
   name: string;
@@ -55,6 +56,8 @@ export class NhctlCommand {
     host.isWindow() ? "nhctl.exe" : "nhctl"
   );
   private outputMethod: string = "toJson";
+
+  private time?: number;
   constructor(base: string, baseParams?: IBaseCommand<unknown>) {
     this.baseParams = baseParams;
     this.args = [];
@@ -63,8 +66,11 @@ export class NhctlCommand {
   static create(base: string, baseParams?: IBaseCommand<unknown>) {
     return new NhctlCommand(base, baseParams);
   }
-  static get(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("get", baseParams);
+  static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
+    const command = NhctlCommand.create("get", baseParams);
+    command.time = ms;
+
+    return command;
   }
   static exec(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k exec", baseParams);
@@ -78,8 +84,11 @@ export class NhctlCommand {
   static portForward(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("port-forward", baseParams);
   }
-  static list(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("list", baseParams);
+  static list(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
+    const command = NhctlCommand.create("list", baseParams);
+    command.time = ms;
+
+    return command;
   }
 
   static install(baseParams?: IBaseCommand<unknown>) {
@@ -159,7 +168,12 @@ export class NhctlCommand {
 
   async exec(hasParse = true) {
     const command = this.getCommand();
-    const result = await execAsyncWithReturn(command, [], Date.now());
+    const result = await execAsyncWithReturn(
+      command,
+      [],
+      Date.now(),
+      this.time
+    );
     if (!result) {
       return null;
     }
