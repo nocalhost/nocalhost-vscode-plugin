@@ -1428,11 +1428,11 @@ export async function checkVersion() {
     console.error(err);
     vscode.window.showErrorMessage(failedMessage);
   } finally {
+    setUpgrade(false);
+    unlock();
     messageBus.emit("install", {
       status: "end",
     });
-    setUpgrade(false);
-    unlock();
   }
 }
 
