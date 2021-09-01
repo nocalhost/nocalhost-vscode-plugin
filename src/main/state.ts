@@ -4,7 +4,7 @@ import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import host from "./host";
 import logger from "./utils/logger";
-import { asyncLimt } from "./utils";
+import { asyncLimit } from "./utils";
 
 class State {
   private login = false;
@@ -20,7 +20,7 @@ class State {
   private running = false;
 
   private async render() {
-    await asyncLimt(this.queueRender.splice(0), (key) => {
+    await asyncLimit(this.queueRender.splice(0), (key) => {
       return new Promise((res) => {
         vscode.commands
           .executeCommand("Nocalhost.refresh", this.getNode(key))
