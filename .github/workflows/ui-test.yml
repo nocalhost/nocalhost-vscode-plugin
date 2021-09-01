@@ -49,12 +49,21 @@ jobs:
       - name: Build ext
         run: yarn run build:ext
         
+      # - name: Run tests
+      #   uses: GabrielBB/xvfb-action@v1.0
+      #   env:
+      #     KUBECONFIG_PATH: ~/config
+      #   with:
+          # run: yarn run test:ext
+
+      - name: setEnv
+        run: |
+          NOCALHOST_KUBECONFIG=$(cat ~/config)
+          echo $NOCALHOST_KUBECONFIG
+          echo "NOCALHOST_KUBECONFIG=${NOCALHOST_KUBECONFIG}" >> $GITHUB_ENV
+
       - name: Run tests
-        uses: GabrielBB/xvfb-action@v1.0
-        env:
-          KUBECONFIG_PATH: ~/config
-        with:
-          run: yarn run test:ext
+        run: yarn run test:ext
 
       - name: Destroy cluster
         if: ${{ always() }}

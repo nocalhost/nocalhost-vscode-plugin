@@ -1430,9 +1430,6 @@ export async function checkVersion() {
   } finally {
     setUpgrade(false);
     unlock();
-    messageBus.emit("install", {
-      status: "end",
-    });
   }
 }
 

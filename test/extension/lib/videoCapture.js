@@ -101,10 +101,10 @@ class VideoCapture {
           options.onError?.(err, stdout, stderr);
 
           // reject the ended promise
-          return ended.reject(err);
+          return this.ended.reject(err);
         })
         .on("end", () => {
-          return ended.resolve();
+          return this.ended.resolve();
         })
 
         // this is to prevent the error "invalid data input" error
