@@ -1416,19 +1416,14 @@ export async function checkVersion() {
           }
         );
         if (!result) {
-          logger.info("after kill no has not daemon");
-          fs.renameSync(binPath, TEMP_NHCTL_BIN);
+          logger.info("after kill has not daemon");
         } else {
-          logger.info("after kill no has daemon");
+          logger.info("after kill has daemon");
           await execAsyncWithReturn(command, []).catch((e) => {
             logger.error(e);
           });
-          fs.renameSync(binPath, TEMP_NHCTL_BIN);
         }
-        // const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
-        // const stopDamonCommand = `${nhctlPath} daemon stop`;
-        // await execAsyncWithReturn(stopDamonCommand, []);
-        // fs.renameSync(binPath, TEMP_NHCTL_BIN);
+        fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
       fs.renameSync(destinationPath, binPath);
