@@ -498,6 +498,7 @@
     }
   },
   "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@material-ui/core": "^4.11.0",
     "@material-ui/data-grid": "4.0.0-alpha.35",
     "@material-ui/icons": "^4.9.1",
@@ -535,6 +536,7 @@
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "fluent-ffmpeg": "^2.1.2",
     "glob": "^7.1.6",
     "husky": "^4.3.0",
     "identity-obj-proxy": "^3.0.0",

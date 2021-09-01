@@ -13,6 +13,9 @@ const {
 const getPort = require("get-port");
 const axios = require("axios");
 
+const VideoCapture = require("./lib/videoCapture");
+
+const videoCapture = new VideoCapture();
 /**
  *
  * @param {object} options
@@ -174,4 +177,5 @@ const getWebSocketDebuggerUrl = async (port) => {
 module.exports = {
   start,
   getWebSocketDebuggerUrl,
+  videoCapture,
 };

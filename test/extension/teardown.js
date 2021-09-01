@@ -4,6 +4,8 @@ const fse = require("fs-extra");
 const os = require("os");
 const kill = require("tree-kill");
 
+const { videoCapture } = require(".");
+
 const DIR = path.join(
   os.tmpdir(),
   process.pid.toString(),
@@ -11,6 +13,8 @@ const DIR = path.join(
 );
 
 async function teardown() {
+  await videoCapture.end();
+
   await global.__BROWSER__.disconnect();
 
   const pid = await readFile(path.join(DIR, "pid"), "utf8");
