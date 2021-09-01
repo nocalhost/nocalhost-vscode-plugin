@@ -4,7 +4,8 @@ import * as shell from "shelljs";
 import host, { Host } from "../host";
 import { NH_BIN } from "../constants";
 import logger from "../utils/logger";
-import { GLOBAL_TIMEOUT } from "../commands/constants";
+import kill = require("tree-kill");
+
 export interface ShellResult {
   code: number;
   stdout: string;
@@ -69,7 +70,10 @@ export async function execAsyncWithReturn(
     if (ms) {
       time = setTimeout(() => {
         isTimeOut = true;
-        proc.kill("SIGHUP");
+
+        kill(proc.pid, (err) => {
+          logger.error(`[cmd kill] ${command} Error:`, err);
+        });
 
         logger.error(`[cmd] ${command} timeOut:${ms}`);
         host.log(`[cmd] ${command} timeOut:${ms}`, true);
@@ -136,7 +140,10 @@ export async function execChildProcessAsync(
     if (ms) {
       time = setTimeout(() => {
         isTimeOut = true;
-        proc.kill("SIGHUP");
+
+        kill(proc.pid, (err) => {
+          logger.error(`[cmd kill] ${command} Error:`, err);
+        });
 
         logger.error(`[cmd] ${command} timeOut:${ms}`);
         host.log(`[cmd] ${command} timeOut:${ms}`, true);
