@@ -71,8 +71,8 @@ export async function execAsyncWithReturn(
         isTimeOut = true;
         proc.kill("SIGHUP");
 
-        logger.error(`[cmd] ${command} timeOut`);
-        host.log(`[cmd] ${command} timeOut`, true);
+        logger.error(`[cmd] ${command} timeOut:${ms}`);
+        host.log(`[cmd] ${command} timeOut:${ms}`, true);
 
         reject();
       }, ms);
@@ -138,8 +138,8 @@ export async function execChildProcessAsync(
         isTimeOut = true;
         proc.kill("SIGHUP");
 
-        logger.error(`[cmd] ${command} timeOut`);
-        host.log(`[cmd] ${command} timeOut`, true);
+        logger.error(`[cmd] ${command} timeOut:${ms}`);
+        host.log(`[cmd] ${command} timeOut:${ms}`, true);
 
         reject();
       }, ms);
