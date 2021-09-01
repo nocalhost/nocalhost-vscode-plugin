@@ -72,7 +72,7 @@ export async function execAsyncWithReturn(
         isTimeOut = true;
 
         kill(proc.pid, (err) => {
-          logger.error(`[cmd kill] ${command} Error:`, err);
+          err && logger.error(`[cmd kill] ${command} Error:`, err);
         });
 
         logger.error(`[cmd] ${command} timeOut:${ms}`);
@@ -142,7 +142,7 @@ export async function execChildProcessAsync(
         isTimeOut = true;
 
         kill(proc.pid, (err) => {
-          logger.error(`[cmd kill] ${command} Error:`, err);
+          err && logger.error(`[cmd kill] ${command} Error:`, err);
         });
 
         logger.error(`[cmd] ${command} timeOut:${ms}`);
