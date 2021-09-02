@@ -82,7 +82,6 @@ jobs:
         with:
           name: artifact-${{ runner.os }}-${{ github.run_id }}
           path: |
-            ~/config
             ~/.nh/screenshot
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
