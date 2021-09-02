@@ -4,7 +4,6 @@ const {
   unInstall,
   isInstallSucceed,
   getInstallApp,
-  waitForMessage,
   setInputBox,
   quickPick,
   checkPort,
@@ -20,31 +19,35 @@ async function install(page) {
 
   if (treeView.length === 1) {
     await treeView[0].click();
+    await page.waitForTimeout(3000);
   }
-
-  await page.waitForTimeout(1000);
 
   treeView = await getTreeView(page);
 
+  const index = (
+    await Promise.all(
+      treeView.map((item) => item.evaluate((el) => el.innerText))
+    )
+  ).findIndex((text) => text === "default");
+
+  const defaultView = treeView[index];
+
   const className = await (
-    await treeView[1].$(".monaco-tl-twistie")
+    await defaultView.$(".monaco-tl-twistie")
   ).evaluate((el) => el.getAttribute("class"));
 
-  const text = await treeView[1].evaluate((el) => el.innerText);
-
   if (className.includes("collapsed")) {
-    await treeView[1].click();
+    await defaultView.click();
+    await page.waitForTimeout(3000);
+
+    // await page.waitForFunction(() => {
+    //   return !document
+    //     .querySelector("#workbench\\.parts\\.sidebar")
+    //     ?.querySelectorAll(".monaco-list-row .monaco-tl-twistie")[1]
+    //     .getAttribute("class")
+    //     .includes("collapsed");
+    // });
   }
-
-  await page.waitForTimeout(500);
-
-  await page.waitForFunction(() => {
-    return !document
-      .querySelector("#workbench\\.parts\\.sidebar")
-      ?.querySelectorAll(".monaco-list-row .monaco-tl-twistie")[1]
-      .getAttribute("class")
-      .includes("collapsed");
-  });
 
   const app = await getInstallApp(page, "bookinfo");
 
@@ -52,7 +55,7 @@ async function install(page) {
     await unInstall(page, app, "bookinfo");
   }
 
-  const install = await page.waitForSelector(".codicon-rocket");
+  const install = await defaultView.$(".codicon-rocket");
 
   await install.evaluate((el) => el.click());
 }
