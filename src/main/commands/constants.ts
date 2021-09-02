@@ -63,3 +63,5 @@ export const OPEN_PROJECT = "Nocalhost.openProject";
 export const DELETE_KUBECONFIG = "Nocalhost.deleteKubeConfig";
 export const ADD_KUBECONFIG = "Nocalhost.addKubeconfig";
 export const CLUSTERS_VIEW = "Nocalhost.ClustersView";
+
+export const GLOBAL_TIMEOUT = 30 * 1000;
