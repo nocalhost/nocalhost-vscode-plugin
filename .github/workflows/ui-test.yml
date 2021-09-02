@@ -53,12 +53,12 @@ jobs:
       #   with:
       # run: yarn run test:ext
 
-      - name: Set env
-        run: |
-          NOCALHOST_KUBECONFIG=$(cat ~/config)
-          echo "NOCALHOST_KUBECONFIG<<EOF" >> $GITHUB_ENV
-          echo "$NOCALHOST_KUBECONFIG" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+#       - name: Set env
+#         run: |
+#           NOCALHOST_KUBECONFIG=$(cat ~/config)
+#           echo "NOCALHOST_KUBECONFIG<<EOF" >> $GITHUB_ENV
+#           echo "$NOCALHOST_KUBECONFIG" >> $GITHUB_ENV
+#           echo "EOF" >> $GITHUB_ENV
 
       - name: Run tests
         run: yarn run test:ext
