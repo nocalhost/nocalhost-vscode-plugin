@@ -7,7 +7,8 @@ import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
-import { asyncLimt } from "./utils";
+import { asyncLimit } from "./utils";
+import { GLOBAL_TIMEOUT } from "./commands/constants";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -59,14 +60,21 @@ export class Host implements vscode.Disposable {
     }
   }
 
+  isRefresh = false;
   public async autoRefresh() {
+    if (this.isRefresh) {
+      return;
+    }
+
     try {
+      this.isRefresh = true;
+
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
         await rootNode.updateData().catch(() => {});
       }
 
-      await asyncLimt(
+      await asyncLimit(
         Array.from(state.refreshFolderMap.entries()),
         ([id, expanded]) => {
           if (expanded) {
@@ -77,21 +85,22 @@ export class Host implements vscode.Disposable {
 
           return Promise.resolve();
         },
-        10 * 1000
+        GLOBAL_TIMEOUT
       );
     } catch (e) {
-      this.startAutoRefresh();
-      logger.error(e);
+      logger.error("autoRefresh error:", e);
+    } finally {
+      this.isRefresh = false;
+
+      this.autoRefreshTimeId = setTimeout(async () => {
+        await this.startAutoRefresh();
+      }, 10 * 1000);
     }
   }
 
   public async startAutoRefresh() {
     this.stopAutoRefresh();
     await this.autoRefresh();
-
-    this.autoRefreshTimeId = setTimeout(async () => {
-      await this.startAutoRefresh();
-    }, 10 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {

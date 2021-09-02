@@ -13,11 +13,11 @@ export const lock = async function (): Promise<void> {
   return new Promise((res, rej) => {
     fs.mkdir(lockDir, function (error) {
       if (error) {
-        rej(error);
+        rej(`${error}, lockerror`);
       }
       fs.writeFile(processDir, "true", function (err) {
         if (err) {
-          rej(err);
+          rej(`${err}, lockerror`);
         }
         res();
       });

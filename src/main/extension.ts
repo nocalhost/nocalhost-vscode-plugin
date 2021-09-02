@@ -168,9 +168,13 @@ export async function activate(context: vscode.ExtensionContext) {
       const data = value.value as {
         status: string;
       };
-      data.status === "loading"
-        ? host.stopAutoRefresh()
-        : host.startAutoRefresh();
+      if (data.status === "loading") {
+        host.stopAutoRefresh();
+        SyncServiceCommand.stopSyncStatus();
+      } else {
+        host.startAutoRefresh();
+        SyncServiceCommand.checkSync();
+      }
     } catch (error) {
       host.log(`${error}, +++++`, true);
     }
