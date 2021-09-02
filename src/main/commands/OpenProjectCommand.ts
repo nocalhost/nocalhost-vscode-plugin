@@ -6,7 +6,7 @@ import { OPEN_PROJECT } from "./constants";
 import ICommand from "./ICommand";
 import registerCommand from "./register";
 import { ControllerNodeApi } from "./StartDevModeCommand";
-import * as os from 'os';
+import * as os from "os";
 
 export default class OpenProjectCommand implements ICommand {
   command: string = OPEN_PROJECT;
@@ -59,16 +59,16 @@ export default class OpenProjectCommand implements ICommand {
         "Open Project",
         vscode.Uri.file(currentUri || os.homedir())
       );
-      
+
       if (selectUri && selectUri.length > 0) {
         await associate(
-          kubeConfigPath, 
-          namespace, 
-          appName, 
-          selectUri[0].fsPath, 
-          node.resourceType, 
+          kubeConfigPath,
+          namespace,
+          appName,
+          selectUri[0].fsPath,
+          node.resourceType,
           node.name
-          );
+        );
         vscode.commands.executeCommand("vscode.openFolder", selectUri[0], true);
       }
     }
