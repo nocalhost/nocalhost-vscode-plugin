@@ -1,11 +1,12 @@
 import { existsSync } from "fs";
 import * as vscode from "vscode";
-import { getServiceConfig } from "../ctl/nhctl";
+import { getServiceConfig, associate } from "../ctl/nhctl";
 import host from "../host";
 import { OPEN_PROJECT } from "./constants";
 import ICommand from "./ICommand";
 import registerCommand from "./register";
 import { ControllerNodeApi } from "./StartDevModeCommand";
+import * as os from 'os';
 
 export default class OpenProjectCommand implements ICommand {
   command: string = OPEN_PROJECT;
@@ -24,10 +25,15 @@ export default class OpenProjectCommand implements ICommand {
     if (status !== "developing") {
       return;
     }
+
+    const kubeConfigPath = node.getKubeConfigPath();
+    const namespace = node.getNameSpace();
+    const appName = node.getAppName();
+
     const profile = await getServiceConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
+      kubeConfigPath,
+      namespace,
+      appName,
       node.name,
       node.resourceType
     );
@@ -47,9 +53,24 @@ export default class OpenProjectCommand implements ICommand {
         vscode.commands.executeCommand("vscode.openFolder", uri, true);
       }
     } else {
-      host.showInformationMessage(
-        "You are not associated with source directory"
+      const currentUri = host.getCurrentRootPath();
+
+      const selectUri = await host.showSelectFolderDialog(
+        "Open Project",
+        vscode.Uri.file(currentUri || os.homedir())
       );
+      
+      if (selectUri && selectUri.length > 0) {
+        await associate(
+          kubeConfigPath, 
+          namespace, 
+          appName, 
+          selectUri[0].fsPath, 
+          node.resourceType, 
+          node.name
+          );
+        vscode.commands.executeCommand("vscode.openFolder", selectUri[0], true);
+      }
     }
   }
 }
