@@ -1455,11 +1455,11 @@ export async function checkVersion() {
       ? logger.error("lockerror")
       : vscode.window.showErrorMessage(failedMessage);
   } finally {
+    setUpgrade(false);
+    unlock();
     messageBus.emit("install", {
       status: "end",
     });
-    setUpgrade(false);
-    unlock();
   }
 }
 
