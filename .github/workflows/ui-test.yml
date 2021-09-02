@@ -46,6 +46,7 @@ jobs:
       - name: Build ext
         run: |
           yarn run build:ext
+          rm -rf .vscode-test
           ls -al
 
       # - name: Run tests
