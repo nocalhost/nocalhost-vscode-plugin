@@ -134,8 +134,6 @@ export async function activate(context: vscode.ExtensionContext) {
   host.getOutputChannel().show(true);
   // await registerYamlSchemaSupport();
 
-  await messageBus.init();
-
   messageBus.on("devstart", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
       host.disposeBookInfo();
@@ -298,6 +296,7 @@ async function init(context: vscode.ExtensionContext) {
   // fileStore.initConfig();
   host.setGlobalState("extensionPath", context.extensionPath);
   updateServerConfigStatus();
+  await messageBus.init();
   await checkVersion();
   LocalClusterService.verifyLocalCluster();
 
