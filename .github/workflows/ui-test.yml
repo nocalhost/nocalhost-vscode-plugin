@@ -1,9 +1,7 @@
 name: UI Tests
 on:
-  push:
-    branches: [test/vscode-puppeteer]
-  # pull_request:
-  #   branches: [ dev ]
+  pull_request:
+    branches: [dev, main]
 
 jobs:
   test:
