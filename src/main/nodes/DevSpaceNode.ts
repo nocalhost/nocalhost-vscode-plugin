@@ -140,10 +140,6 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public async updateData(isInit?: boolean): Promise<any> {
     let data = [];
 
-    await new Promise((res) => {
-      setTimeout(res, 10 * 1000);
-    });
-
     if (!this.resetting()) {
       data = await this.getInstalledApp(
         this.info.namespace,
