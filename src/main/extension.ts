@@ -356,11 +356,9 @@ process.on("unhandledRejection", (error: any) => {
     }
     vscode.window.showErrorMessage(error.error.message);
   } else {
-    const message: string = (error && error.message) || error;
-    if (
-      message &&
-      message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
-    ) {
+    const message = error.message;
+
+    if (message?.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")) {
       return;
     }
     vscode.window.showErrorMessage(message);

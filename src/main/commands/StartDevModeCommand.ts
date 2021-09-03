@@ -6,7 +6,7 @@ import { NhctlCommand } from "./../ctl/nhctl";
 import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import { get as _get, isEqual, omit } from "lodash";
-import { opendevSpaceExec } from "../ctl/shell";
+import { openDevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
   TMP_CONTAINER,
@@ -507,7 +507,7 @@ export default class StartDevModeCommand implements ICommand {
           await vscode.commands.executeCommand("Nocalhost.refresh", parent);
 
           // await vscode.commands.executeCommand(EXEC, node);
-          const terminal = await opendevSpaceExec(
+          const terminal = await openDevSpaceExec(
             node.getAppName(),
             node.name,
             node.resourceType,

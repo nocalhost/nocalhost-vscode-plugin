@@ -41,7 +41,7 @@ class Bookinfo {
     let bookinfo = new Bookinfo(app);
     this.checkList.push(bookinfo);
 
-    host.showProgressingToken(
+    host.withProgress(
       {
         title: "Waiting for deployment ready.",
         cancellable: true,

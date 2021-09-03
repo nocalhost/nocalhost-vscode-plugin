@@ -22,7 +22,7 @@ export default class DebugCommand implements ICommand {
       return;
     }
 
-    await host.showProgressingToken(
+    await host.withProgress(
       {
         title: "Debugging ...",
         cancellable: true,
