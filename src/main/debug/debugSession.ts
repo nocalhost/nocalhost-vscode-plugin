@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
+
+const isPortReachable = require("is-port-reachable");
+
 import { ChildProcess, spawn, spawnSync } from "child_process";
 import { NhctlCommand } from "./../ctl/nhctl";
 import host from "../host";
@@ -102,37 +105,24 @@ export class DebugSession {
         debugCommand,
         node.getNameSpace()
       );
-      if (!containerProc.killed) {
-        containerProc.kill();
-      }
+      // if (!containerProc.killed) {
+      //   containerProc.kill();
+      // }
     };
     host.log("[debug] launch debug", true);
-    const containerProc = this.enterContainer(
-      podNames[0],
-      node.getKubeConfigPath(),
-      debugCommand,
-      terminatedCallback,
-      node.getNameSpace()
-    );
+    // const containerProc = this.enterContainer(
+    //   podNames[0],
+    //   node.getKubeConfigPath(),
+    //   debugCommand,
+    //   function(){},
+    //   node.getNameSpace()
+    // );
 
     const cwd = workspaceFolder.uri.fsPath;
-    if (!containerProc) {
-      // proc.kill();
-      return;
-    }
-
-    // wait launch success
-    host.log("[debug] wait launch", true);
-    await this.waitLaunch(
-      port,
-      podNames[0],
-      node.getKubeConfigPath(),
-      node.getNameSpace()
-    ).catch((err) => {
-      host.log("[debug] wait error");
-      terminatedCallback();
-      throw err;
-    });
+    // if (!containerProc) {
+    //   // proc.kill();
+    //   return;
+    // }
 
     host.log("[debug] port forward", true);
     const proc = await this.portForward({
@@ -148,11 +138,31 @@ export class DebugSession {
       return;
     }
 
+    const isReachable = await isPortReachable(port, { timeout: 1000, host: '127.0.0.1' });
+
+    if(!isReachable){
+      return;
+    }
+    
+    // wait launch success
+    host.log("[debug] wait launch", true);
+
+    // await this.waitLaunch(
+    //   port,
+    //   podNames[0],
+    //   node.getKubeConfigPath(),
+    //   node.getNameSpace()
+    // ).catch((err) => {
+    //   host.log("[debug] wait error");
+    //   terminatedCallback();
+    //   throw err;
+    // });
+
     host.log("[debug] wait port forward", true);
-    await this.waitingPortForwardReady(proc).catch((err) => {
-      terminatedCallback();
-      throw err;
-    });
+    // await this.waitingPortForwardReady(proc).catch((err) => {
+    //   terminatedCallback();
+    //   throw err;
+    // });
     const workDir = container.dev.workDir || "/home/nocalhost-dev";
 
     host.log("[debug] start debug", true);

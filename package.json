@@ -122,6 +122,11 @@
           "group": "developing@3"
         },
         {
+          "command": "Nocalhost.debug",
+          "when": "viewItem =~ /^workload-(deployment)-(.+?)-developing/i",
+          "group": "developing@2"
+        },
+        {
           "command": "Nocalhost.showApp",
           "when": "viewItem =~ /^devspace-server/i",
           "group": "inline@0"
