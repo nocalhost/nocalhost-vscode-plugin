@@ -138,12 +138,15 @@ export class DebugSession {
       return;
     }
 
-    const isReachable = await isPortReachable(port, { timeout: 1000, host: '127.0.0.1' });
+    const isReachable = await isPortReachable(port, {
+      timeout: 1000,
+      host: "127.0.0.1",
+    });
 
-    if(!isReachable){
+    if (!isReachable) {
       return;
     }
-    
+
     // wait launch success
     host.log("[debug] wait launch", true);
 
