@@ -1,8 +1,5 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
-
-const isPortReachable = require("is-port-reachable");
-
 import { ChildProcess, spawn, spawnSync } from "child_process";
 import { NhctlCommand } from "./../ctl/nhctl";
 import host from "../host";
@@ -23,14 +20,10 @@ export class DebugSession {
     if (!workspaceFolder) {
       return;
     }
-    // if enter dev mode
-    if (!node.isDeveloping) {
-      host.showWarnMessage("Not in DevMode");
-      return;
-    }
+
     const isInstalled = await debugProvider.isDebuggerInstalled();
     if (!isInstalled) {
-      host.showInformationMessage("Please install golang extension.");
+      host.showInformationMessage("please install golang extension.");
       return;
     }
     // port-forward debug port
@@ -52,7 +45,7 @@ export class DebugSession {
     } else if (containers.length === 1) {
       container = containers[0];
     } else {
-      host.showInformationMessage("Missing container configuration.");
+      host.showInformationMessage("Missing container confiuration");
       return;
     }
     const valid = this.validateDebugConfig(container);
@@ -97,32 +90,45 @@ export class DebugSession {
         throw new Error("Cannot access proc");
       }
       if (!proc.killed) {
-        proc.kill();
+        proc.stdin.write("\x03");
       }
-      debugProvider.killContainerDebugProcess(
-        podNames[0],
-        node.getKubeConfigPath(),
-        debugCommand,
-        node.getNameSpace()
-      );
+      // debugProvider.killContainerDebugProcess(
+      //   podNames[0],
+      //   node.getKubeConfigPath(),
+      //   debugCommand,
+      //   node.getNameSpace()
+      // );
       // if (!containerProc.killed) {
       //   containerProc.kill();
       // }
     };
     host.log("[debug] launch debug", true);
-    // const containerProc = this.enterContainer(
-    //   podNames[0],
-    //   node.getKubeConfigPath(),
-    //   debugCommand,
-    //   function(){},
-    //   node.getNameSpace()
-    // );
+    const containerProc = this.enterContainer(
+      podNames[0],
+      node.getKubeConfigPath(),
+      debugCommand,
+      terminatedCallback,
+      node.getNameSpace()
+    );
 
     const cwd = workspaceFolder.uri.fsPath;
-    // if (!containerProc) {
-    //   // proc.kill();
-    //   return;
-    // }
+    if (!containerProc) {
+      // proc.kill();
+      return;
+    }
+
+    // wait launch success
+    host.log("[debug] wait launch", true);
+    await this.waitLaunch(
+      port,
+      podNames[0],
+      node.getKubeConfigPath(),
+      node.getNameSpace()
+    ).catch((err) => {
+      host.log("[debug] wait error");
+      terminatedCallback();
+      throw err;
+    });
 
     host.log("[debug] port forward", true);
     const proc = await this.portForward({
@@ -138,34 +144,12 @@ export class DebugSession {
       return;
     }
 
-    const isReachable = await isPortReachable(port, {
-      timeout: 1000,
-      host: "127.0.0.1",
-    });
-
-    if (!isReachable) {
-      return;
-    }
-
-    // wait launch success
-    host.log("[debug] wait launch", true);
-
-    // await this.waitLaunch(
-    //   port,
-    //   podNames[0],
-    //   node.getKubeConfigPath(),
-    //   node.getNameSpace()
-    // ).catch((err) => {
-    //   host.log("[debug] wait error");
-    //   terminatedCallback();
-    //   throw err;
-    // });
-
-    host.log("[debug] wait port forward", true);
+    // host.log("[debug] wait port forward", true);
     // await this.waitingPortForwardReady(proc).catch((err) => {
     //   terminatedCallback();
     //   throw err;
     // });
+
     const workDir = container.dev.workDir || "/home/nocalhost-dev";
 
     host.log("[debug] start debug", true);
@@ -228,7 +212,7 @@ export class DebugSession {
     terminatedCallback: Function,
     namespace: string
   ) {
-    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
+    const command = `k exec ${podName} -it -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
     const args = command.split(" ");
     args.push("bash", "-c", `${execCommand.join(" ")}`);
 
@@ -245,7 +229,6 @@ export class DebugSession {
     });
 
     proc.on("close", async (code) => {
-      await terminatedCallback();
       host.log("close debug container", true);
     });
 
@@ -269,7 +252,7 @@ export class DebugSession {
       kubeconfigPath,
       namespace,
     } = props;
-    const command = `port-forward start ${appName} -d ${workloadName} --pod ${podName} -p ${port} --kubeconfig ${kubeconfigPath} -n ${namespace} --follow`;
+    const command = `port-forward start ${appName} -d ${workloadName} --pod ${podName} -p ${port} --kubeconfig ${kubeconfigPath} -n ${namespace}`;
     const cmd = `${NhctlCommand.nhctlPath} ${command}`;
     host.log(`[debug] port-forward: ${cmd}`, true);
     logger.info(`[debug] port-forward: ${cmd}`);

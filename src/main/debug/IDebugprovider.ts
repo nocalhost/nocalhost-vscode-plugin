@@ -1,4 +1,6 @@
 import { spawnSync } from "child_process";
+import * as vscode from "vscode";
+
 import host from "../host";
 import logger from "../utils/logger";
 import { NhctlCommand } from "./../ctl/nhctl";
@@ -36,6 +38,47 @@ export abstract class IDebugProvider {
 
   public async isDebuggerInstalled() {
     return Promise.resolve(true);
+  }
+
+  /**
+   * install
+   */
+  public async installExtension(
+    extensionName: string,
+    extensionArry: string[]
+  ) {
+    let answer = await vscode.window.showInformationMessage(
+      `Go debugging requires the '${extensionName}' extension. Would you like to install it now?`,
+      "Install Now"
+    );
+
+    if (!answer) {
+      return;
+    }
+
+    await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification },
+      async (p) => {
+        p.report({ message: `Installing ${extensionName} ...` });
+        for (const id of extensionArry) {
+          await vscode.commands.executeCommand(
+            "workbench.extensions.installExtension",
+            id
+          );
+        }
+      }
+    );
+
+    const RELOAD = "Reload Window";
+    const choice = await vscode.window.showInformationMessage(
+      "Please reload window to activate Language Support for Java.",
+      RELOAD
+    );
+    if (choice === RELOAD) {
+      await vscode.commands.executeCommand("workbench.action.reloadWindow");
+    }
+
+    return false;
   }
 
   public checkRequiredCommand(

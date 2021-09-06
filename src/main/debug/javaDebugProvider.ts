@@ -5,9 +5,6 @@ import host from "../host";
 import { NhctlCommand } from "./../ctl/nhctl";
 import { spawnSync } from "child_process";
 
-const defaultJavaDebuggerExtensionId = "vscjava.vscode-java-debug";
-const defaultJavaDebuggerExtension = "Debugger for Java";
-
 export class JavaDebugProvider extends IDebugProvider {
   async startDebug(
     workspaceFolder: string,
@@ -20,6 +17,8 @@ export class JavaDebugProvider extends IDebugProvider {
       type: "java",
       name: sessionName,
       projectName: sessionName,
+      remotePath: workDir || "/home/nocalhost-dev/",
+      localRoot: "${workspaceRoot}",
       request: "attach",
       hostName: "localhost",
       port,
@@ -75,16 +74,15 @@ export class JavaDebugProvider extends IDebugProvider {
   }
 
   public async isDebuggerInstalled(): Promise<boolean> {
-    if (vscode.extensions.getExtension(defaultJavaDebuggerExtensionId)) {
+    if (
+      vscode.extensions.getExtension("vscjava.vscode-java-debug") &&
+      vscode.extensions.getExtension("redhat.java")
+    ) {
       return true;
     }
-    const answer = await vscode.window.showInformationMessage(
-      `Go debugging requires the '${defaultJavaDebuggerExtension}' extension. Would you like to install it now?`,
-      "Install Now"
-    );
-    if (answer === "Install Now") {
-      return await host.installVscodeExtension(defaultJavaDebuggerExtensionId);
-    }
-    return false;
+    return super.installExtension("Debugger for Java", [
+      "vscjava.vscode-java-debug",
+      "redhat.java",
+    ]);
   }
 }

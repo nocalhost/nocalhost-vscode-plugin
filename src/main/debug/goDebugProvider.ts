@@ -5,10 +5,6 @@ import { NhctlCommand } from "./../ctl/nhctl";
 import { IDebugProvider } from "./IDebugprovider";
 import host from "../host";
 
-const defaultGoDebuggerExtensionId = "golang.go";
-
-const defaultGoDebuggerExtension = "golang";
-
 export class GoDebugProvider extends IDebugProvider {
   async startDebug(
     workspaceFolder: string,
@@ -23,8 +19,8 @@ export class GoDebugProvider extends IDebugProvider {
       type: "go",
       request: "attach",
       mode: "remote",
-      // remotePath: workDir || "/home/nocalhost-dev/",
-      remotePath: "${workspaceFolder}",
+      remotePath: workDir || "/home/nocalhost-dev/",
+      localRoot: "${workspaceRoot}",
       port,
       host: "localhost",
       // trace: "verbose", // check debug step
@@ -58,17 +54,11 @@ export class GoDebugProvider extends IDebugProvider {
   }
 
   public async isDebuggerInstalled(): Promise<boolean> {
-    if (vscode.extensions.getExtension(defaultGoDebuggerExtensionId)) {
+    if (vscode.extensions.getExtension("golang.go")) {
       return true;
     }
-    const answer = await vscode.window.showInformationMessage(
-      `Go debugging requires the '${defaultGoDebuggerExtension}' extension. Would you like to install it now?`,
-      "Install Now"
-    );
-    if (answer === "Install Now") {
-      return await host.installVscodeExtension(defaultGoDebuggerExtensionId);
-    }
-    return false;
+
+    return super.installExtension("golang", ["golang.go"]);
   }
 
   public killContainerDebugProcess(
