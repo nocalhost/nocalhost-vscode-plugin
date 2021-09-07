@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
-import * as path from "path";
 import { IDebugProvider } from "./IDebugprovider";
-import host from "../host";
 
 export class NodeDebugProvider extends IDebugProvider {
   async startDebug(
@@ -9,7 +7,7 @@ export class NodeDebugProvider extends IDebugProvider {
     sessionName: string,
     port: number,
     workDir: string,
-    terminatedCallback: () => any
+    terminatedCallback?: Function
   ): Promise<boolean> {
     const debugConfiguration: vscode.DebugConfiguration = {
       type: "node",
@@ -22,30 +20,11 @@ export class NodeDebugProvider extends IDebugProvider {
       localRoot: "${workspaceRoot}",
       remoteRoot: workDir || "/home/nocalhost-dev/",
     };
-    const currentFolder = (vscode.workspace.workspaceFolders || []).find(
-      (folder) => folder.name === path.basename(workspaceFolder)
-    );
-    const disposables: vscode.Disposable[] = [];
-    disposables.push(
-      vscode.debug.onDidStartDebugSession((debugSession) => {
-        if (debugSession.name === sessionName) {
-          host.log(
-            "The debug session has started. Your application is ready for you to debug.",
-            true
-          );
-        }
-      })
-    );
 
-    disposables.push(
-      vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
-        if (debugSession.name === sessionName) {
-          disposables.forEach((d) => d.dispose());
-          await terminatedCallback();
-          host.log("Terminated debug session", true);
-        }
-      })
+    return super.startDebugging(
+      workspaceFolder,
+      debugConfiguration,
+      terminatedCallback
     );
-    return await vscode.debug.startDebugging(currentFolder, debugConfiguration);
   }
 }

@@ -1,5 +1,6 @@
 import { spawnSync } from "child_process";
 import * as vscode from "vscode";
+import * as path from "path";
 
 import host from "../host";
 import logger from "../utils/logger";
@@ -7,14 +8,47 @@ import { NhctlCommand } from "./../ctl/nhctl";
 
 export abstract class IDebugProvider {
   static requiredCommand = ["ps", "awk", "netstat"];
+
   abstract startDebug(
     workspaceFolder: string,
     sessionName: string,
     port: number,
     workDir: string,
-    terminatedCallback?: () => any
+    terminatedCallback?: Function
   ): Promise<boolean>;
 
+  startDebugging(
+    workspaceFolder: string,
+    config: vscode.DebugConfiguration,
+    terminatedCallback?: Function
+  ): Thenable<boolean> {
+    const { name } = config;
+
+    const currentFolder = (vscode.workspace.workspaceFolders || []).find(
+      (folder) => folder.name === path.basename(workspaceFolder)
+    );
+
+    const disposables: vscode.Disposable[] = [
+      vscode.debug.onDidStartDebugSession((debugSession) => {
+        if (debugSession.name === name) {
+          host.log(
+            "The debug session has started. Your application is ready for you to debug.",
+            true
+          );
+        }
+      }),
+      vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
+        if (debugSession.name === name) {
+          disposables.forEach((d) => d.dispose());
+          terminatedCallback && terminatedCallback();
+
+          host.log("Terminated debug session", true);
+        }
+      }),
+    ];
+
+    return vscode.debug.startDebugging(currentFolder, config);
+  }
   public killContainerDebugProcess(
     podName: string,
     kubeconfigPath: string,
@@ -60,6 +94,7 @@ export abstract class IDebugProvider {
       { location: vscode.ProgressLocation.Notification },
       async (p) => {
         p.report({ message: `Installing ${extensionName} ...` });
+
         for (const id of extensionArry) {
           await vscode.commands.executeCommand(
             "workbench.extensions.installExtension",
@@ -94,10 +129,8 @@ export abstract class IDebugProvider {
       host.log(`[cmd]：${NhctlCommand.nhctlPath} ${args.join(" ")}`, true);
 
       const result = spawnSync(NhctlCommand.nhctlPath, args);
-      if (`${result.stdout}`) {
-        return true;
-      }
-      return false;
+
+      return result.stdout;
     }
     const notFound: Array<string> = [];
     IDebugProvider.requiredCommand.forEach((c) => {

@@ -10,6 +10,7 @@ import { NodeDebugProvider } from "../debug/nodeDebugProvider";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import { GoDebugProvider } from "../debug/goDebugProvider";
 import logger from "../utils/logger";
+import { IDebugProvider } from "../debug/IDebugprovider";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -31,26 +32,21 @@ export default class DebugCommand implements ICommand {
       async (progress, token) => {
         try {
           const debugSession = new DebugSession();
-          // get current workspaceFolder
+
           const workspaceFolder = await host.showWorkspaceFolderPick();
+
           if (!workspaceFolder) {
             host.showInformationMessage(
               "You need to open a folder before execute this command."
             );
             return;
           }
-          // TODO:
-          const supportType = ["node", "java", "go"];
-          const type = await vscode.window.showQuickPick(supportType);
-          if (!type) {
-            return;
-          }
-          const debugProvider = this.getDebugProvider(type);
-          if (!debugProvider) {
-            host.showInformationMessage("Not support");
-            return;
-          }
-          await debugSession.launch(workspaceFolder, debugProvider, node);
+
+          await debugSession.launch(
+            workspaceFolder,
+            await this.getDebugProvider(node),
+            node
+          );
         } catch (e) {
           (token as any).cancel();
           host.log("[debug] cancel");
@@ -59,14 +55,41 @@ export default class DebugCommand implements ICommand {
       }
     );
   }
+  async getDebugProvider(node: Deployment): Promise<IDebugProvider> {
+    let containerConfig = await DebugSession.getContainer(node);
 
-  getDebugProvider(type: string) {
+    let type: string;
+    if (containerConfig.dev.image.includes("nocalhost/dev-images/node:")) {
+      type = "node";
+    } else if (
+      containerConfig.dev.image.includes("nocalhost/dev-images/golang")
+    ) {
+      type = "golang";
+    } else if (
+      containerConfig.dev.image.includes("nocalhost/dev-images/python")
+    ) {
+      type = "python";
+    } else if (
+      containerConfig.dev.image.includes("nocalhost/dev-images/java")
+    ) {
+      type = "java";
+    }
+    return await this.chooseDebugProvider(type);
+  }
+
+  async chooseDebugProvider(type?: string) {
+    const supportType = ["node", "java", "go"];
+
+    if (!type) {
+      type = await vscode.window.showQuickPick(supportType);
+    }
+
     let debugProvider = null;
     switch (type) {
       case "node":
         debugProvider = new NodeDebugProvider();
         break;
-      case "go":
+      case "golang":
         debugProvider = new GoDebugProvider();
         break;
       case "java":
