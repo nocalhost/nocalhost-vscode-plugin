@@ -1333,7 +1333,7 @@ function getNhctlPath(version: string) {
 
   return {
     sourcePath: [
-      `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
+      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
       `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
     ],
     binPath,
