@@ -1524,3 +1524,16 @@ export async function checkCluster(
 
   return result;
 }
+
+export async function kubeconfig(
+  kubeConfigPath: string,
+  command: "add" | "remove"
+) {
+  const result = await NhctlCommand.create(`kubeconfig ${command}`, {
+    kubeConfigPath,
+  })
+    .toJson()
+    .exec();
+
+  return result;
+}
