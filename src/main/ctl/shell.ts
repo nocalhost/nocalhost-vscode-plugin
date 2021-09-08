@@ -85,7 +85,7 @@ function startTimeout(param: {
   }
 
   let timeoutId = setTimeout(() => {
-    if (timeoutId) {
+    if (timeoutId && !proc.killed) {
       kill(proc.pid, "SIGTERM", (err) => {
         if (err) {
           const str = `[cmd kill] ${command} Error:`;
@@ -170,14 +170,16 @@ export function exec(
   return {
     promise,
     cancel() {
-      kill(proc.pid, "SIGTERM", (err) => {
-        const log = `\n[cmd cancel] ${command}`;
+      if (!proc.killed) {
+        kill(proc.pid, "SIGTERM", (err) => {
+          const log = `\n[cmd cancel] ${command}`;
 
-        host.log(log, true);
-        logger.info(log);
+          host.log(log, true);
+          logger.info(log);
 
-        err && logger.info(`[cmd kill] ${command} Error:`, err);
-      });
+          err && logger.info(`[cmd kill] ${command} Error:`, err);
+        });
+      }
 
       return { dispose() {} };
     },
@@ -188,8 +190,6 @@ export function execWithProgress(
   param: ExecParam & { title: string }
 ): Promise<ExecOutputReturnValue> {
   const { title, ...rest } = param;
-
-  host.log(`[cmd] ${rest.command}`, true);
 
   return Promise.resolve(
     host.withProgress(

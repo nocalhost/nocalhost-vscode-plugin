@@ -706,12 +706,13 @@ export async function devStart(
       devStartAppendCommand ? devStartAppendCommand : ""
     }`
   );
-  host.log(`[cmd] ${command}`, true);
 
-  await exec({
+  return execWithProgress({
+    title: "Starting DevMode",
     command,
-  }).promise.catch(() => {
+  }).catch(() => {
     host.showErrorMessage(`Start devMode (${appName}/${workLoadName}) fail`);
+    return Promise.reject();
   });
 }
 
@@ -942,7 +943,7 @@ export async function getServiceConfig(
     `describe ${appName} -d ${workloadName} ${type ? `--type ${type}` : ""}`
   );
 
-  const result = await exec({ command }).promise;
+  const result = await exec({ command, async: true }).promise;
 
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {
@@ -996,7 +997,7 @@ export async function getImageByContainer(props: {
     } --key image -t ${workloadType.toLowerCase()}`
   );
 
-  const result = await exec({ command }).promise;
+  const result = await exec({ command, async: true }).promise;
   try {
     return JSON.parse(result.stdout);
   } catch (e) {
@@ -1220,7 +1221,7 @@ export async function getSyncStatus(
 
   const command = nhctlCommand(kubeConfigPath, namespace, baseCommand);
 
-  const r = await exec({ command }).promise.catch((e) => {
+  const r = await exec({ command, async: true }).promise.catch((e) => {
     logger.info("Nocalhost.syncService syncCommand");
     logger.error(e);
 
