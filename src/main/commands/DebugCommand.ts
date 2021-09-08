@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import ICommand from "./ICommand";
-import { DEBUG } from "./constants";
+import { DEBUG, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
@@ -23,13 +23,20 @@ export default class DebugCommand implements ICommand {
       return;
     }
 
+    const status = await node.getStatus(true);
+
+    if (status !== "developing") {
+      await vscode.commands.executeCommand(START_DEV_MODE, node, DEBUG);
+      return;
+    }
+
     await host.showProgressingToken(
       {
         title: "Debugging ...",
         cancellable: true,
         location: vscode.ProgressLocation.Notification,
       },
-      async (progress, token) => {
+      async (_, token) => {
         try {
           const debugSession = new DebugSession();
 
@@ -59,26 +66,24 @@ export default class DebugCommand implements ICommand {
     let containerConfig = await DebugSession.getContainer(node);
 
     let type: string;
-    if (containerConfig.dev.image.includes("nocalhost/dev-images/node:")) {
-      type = "node";
-    } else if (
-      containerConfig.dev.image.includes("nocalhost/dev-images/golang")
-    ) {
-      type = "golang";
-    } else if (
-      containerConfig.dev.image.includes("nocalhost/dev-images/python")
-    ) {
-      type = "python";
-    } else if (
-      containerConfig.dev.image.includes("nocalhost/dev-images/java")
-    ) {
-      type = "java";
+
+    if (containerConfig.dev.image.includes("nocalhost/dev-images")) {
+      if (containerConfig.dev.image.includes("node")) {
+        type = "node";
+      } else if (containerConfig.dev.image.includes("golang")) {
+        type = "golang";
+      } else if (containerConfig.dev.image.includes("python")) {
+        type = "python";
+      } else if (containerConfig.dev.image.includes("java")) {
+        type = "java";
+      }
     }
+
     return await this.chooseDebugProvider(type);
   }
 
   async chooseDebugProvider(type?: string) {
-    const supportType = ["node", "java", "go"];
+    const supportType = ["node", "java", "golang"];
 
     if (!type) {
       type = await vscode.window.showQuickPick(supportType);

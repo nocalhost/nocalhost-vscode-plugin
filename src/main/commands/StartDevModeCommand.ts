@@ -90,7 +90,9 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   private node: ControllerNodeApi;
-  async execCommand(node: ControllerNodeApi) {
+  async execCommand(...rest: any[]) {
+    const [node, command] = rest as [ControllerNodeApi, string];
+
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
@@ -204,7 +206,7 @@ export default class StartDevModeCommand implements ICommand {
       destDir === true ||
       (destDir && destDir === host.getCurrentRootPath())
     ) {
-      await this.startDevMode(host, appName, node, containerName);
+      await this.startDevMode(host, appName, node, containerName, command);
     } else if (destDir) {
       this.saveAndOpenFolder(appName, node, destDir, containerName);
       messageBus.emit("devstart", {
@@ -443,7 +445,8 @@ export default class StartDevModeCommand implements ICommand {
     host: Host,
     appName: string,
     node: ControllerNodeApi,
-    containerName: string
+    containerName: string,
+    command?: string
   ) {
     const currentUri = host.getCurrentRootPath() || os.homedir();
 
@@ -499,7 +502,6 @@ export default class StartDevModeCommand implements ICommand {
           );
           host.log("sync file end", true);
           host.log("", true);
-          node.setStatus("");
           const parent = node.getParent();
           if (parent && parent.updateData) {
             await parent.updateData(true);
@@ -522,20 +524,25 @@ export default class StartDevModeCommand implements ICommand {
             node.name,
             terminal
           );
+
+          vscode.commands.executeCommand(SYNC_SERVICE, {
+            app: appName,
+            resourceType: node.resourceType,
+            service: node.name,
+            kubeConfigPath: node.getKubeConfigPath(),
+            namespace: node.getNameSpace(),
+          });
+
+          if (command) {
+            vscode.commands.executeCommand(command, node);
+          }
         } catch (error) {
           logger.error(error);
+        } finally {
           node.setStatus("");
         }
       }
     );
-
-    vscode.commands.executeCommand(SYNC_SERVICE, {
-      app: appName,
-      resourceType: node.resourceType,
-      service: node.name,
-      kubeConfigPath: node.getKubeConfigPath(),
-      namespace: node.getNameSpace(),
-    });
   }
 
   private setTmpStartRecord(
