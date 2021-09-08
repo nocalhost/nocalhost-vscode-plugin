@@ -208,7 +208,7 @@
         },
         {
           "command": "Nocalhost.log",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
           "group": "1"
         },
         {
@@ -219,7 +219,7 @@
         },
         {
           "command": "Nocalhost.portForward",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
           "group": "1"
         },
         {
@@ -229,12 +229,12 @@
         },
         {
           "command": "Nocalhost.portForwardList",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
           "group": "1"
         },
         {
           "command": "Nocalhost.portForwardList",
-          "when": "viewItem =~ /^application-(.*)-installed/i",
+          "when": "viewItem =~ /^(viewer:|)application-(.*)-installed/i",
           "group": "navigation"
         },
         {
