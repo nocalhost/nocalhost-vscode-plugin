@@ -10,6 +10,7 @@ import host from "../host";
 import { LocalClusterNode } from "../clusters/LocalCuster";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import Bookinfo from "../common/bookinfo";
+import { kubeconfig } from "../ctl/nhctl";
 
 export default class DeleteKubeConfigCommand implements ICommand {
   command: string = DELETE_KUBECONFIG;
@@ -49,6 +50,8 @@ export default class DeleteKubeConfigCommand implements ICommand {
 
     deleted.forEach(async (f) => {
       if (await isExist(f.filePath)) {
+        await kubeconfig(f.filePath, "remove");
+
         fs.unlinkSync(f.filePath);
       }
     });
