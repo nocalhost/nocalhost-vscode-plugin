@@ -206,7 +206,7 @@ export default class StartDevModeCommand implements ICommand {
       destDir === true ||
       (destDir && destDir === host.getCurrentRootPath())
     ) {
-      await this.startDevMode(host, appName, node, containerName, command);
+      return this.startDevMode(host, appName, node, containerName, command);
     } else if (destDir) {
       this.saveAndOpenFolder(appName, node, destDir, containerName);
       messageBus.emit("devstart", {
@@ -531,11 +531,9 @@ export default class StartDevModeCommand implements ICommand {
             service: node.name,
             kubeConfigPath: node.getKubeConfigPath(),
             namespace: node.getNameSpace(),
+            command,
+            node,
           });
-
-          if (command) {
-            vscode.commands.executeCommand(command, node);
-          }
         } catch (error) {
           logger.error(error);
         } finally {

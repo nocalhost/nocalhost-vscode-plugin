@@ -17,19 +17,25 @@ export default class DebugCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  async execCommand(node: Deployment) {
+  async execCommand(...rest: any[]) {
+    const [node, command] = rest as [Deployment, string];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
-    const status = await node.getStatus(true);
+    if (!command) {
+      const status = await node.getStatus(true);
 
-    if (status !== "developing") {
-      await vscode.commands.executeCommand(START_DEV_MODE, node, DEBUG);
-      return;
+      if (status !== "developing") {
+        vscode.commands.executeCommand(START_DEV_MODE, node, DEBUG);
+        return;
+      }
     }
+    this.startDebugging(node);
+  }
 
+  async startDebugging(node: Deployment) {
     await host.showProgressingToken(
       {
         title: "Debugging ...",
@@ -62,6 +68,7 @@ export default class DebugCommand implements ICommand {
       }
     );
   }
+
   async getDebugProvider(node: Deployment): Promise<IDebugProvider> {
     let containerConfig = await DebugSession.getContainer(node);
 

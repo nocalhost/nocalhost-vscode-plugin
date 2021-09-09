@@ -8,6 +8,7 @@ import * as nhctl from "../ctl/nhctl";
 import host from "../host";
 import logger from "../utils/logger";
 import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
+import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 
 export interface Sync {
   app: string;
@@ -15,6 +16,8 @@ export interface Sync {
   service: string;
   kubeConfigPath: string;
   namespace: string;
+  command?: string;
+  node?: Deployment;
 }
 
 interface SyncMsg {
@@ -203,6 +206,17 @@ export default class SyncServiceCommand implements ICommand {
         break;
       case "idle":
         icon = "check";
+
+        if (this.syncData.command) {
+          vscode.commands.executeCommand(
+            this.syncData.command,
+            this.syncData.node,
+            SYNC_SERVICE
+          );
+
+          this.syncData.node = null;
+          this.syncData.command = null;
+        }
         break;
       case "end":
         icon = "error";
