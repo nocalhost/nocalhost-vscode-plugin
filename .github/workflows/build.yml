@@ -28,6 +28,11 @@ jobs:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
         run: node scripts/gitVersion.js
 
+      - name: Update CHANGELOG
+        env:
+          VERSION: ${{ env.RELEASE_VERSION }}
+        run: node scripts/updateChangelog.js
+
       - name: Build
         run: |
           yarn
