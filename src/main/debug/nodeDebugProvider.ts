@@ -9,7 +9,6 @@ export class NodeDebugProvider extends IDebugProvider {
     workDir: string,
     terminatedCallback?: Function
   ): Promise<boolean> {
-
     //https://github.dev/microsoft/vscode-js-debug/blob/a570239f82641de25583ccdaadf9c0903c1a6a78/src/targets/node/restartPolicy.ts
 
     const debugConfiguration: vscode.DebugConfiguration = {
@@ -25,7 +24,7 @@ export class NodeDebugProvider extends IDebugProvider {
       //nodemon
       restart: {
         delay: 500,
-        maxAttempts: 10
+        maxAttempts: 10,
       },
     };
 
