@@ -1333,7 +1333,7 @@ function getNhctlPath(version: string) {
 
   return {
     sourcePath: [
-      `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
+      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
       `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
     ],
     binPath,
@@ -1519,6 +1519,19 @@ export async function checkCluster(
       kubeConfigPath: kubeConfigPath,
     }
   )
+    .toJson()
+    .exec();
+
+  return result;
+}
+
+export async function kubeconfig(
+  kubeConfigPath: string,
+  command: "add" | "remove"
+) {
+  const result = await NhctlCommand.create(`kubeconfig ${command}`, {
+    kubeConfigPath,
+  })
     .toJson()
     .exec();
 
