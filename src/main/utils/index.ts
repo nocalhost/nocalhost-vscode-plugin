@@ -26,9 +26,9 @@ export const isArray = (a: any) => Array.isArray(a);
 export const snakeToCamel = (str: string) =>
   str.replace(/([-_]\w)/g, (g) => g[1].toUpperCase());
 
-export async function asyncLimt<T, R>(
+export async function asyncLimit<T, R>(
   array: T[],
-  iteratorFn: (result: T, arry: T[]) => Promise<R>,
+  iteratorFn: (result: T, array: T[]) => Promise<R>,
   /**
    * millisecond
    */

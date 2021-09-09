@@ -15,6 +15,7 @@ import {
   IStatus,
   IResourceStatus,
 } from "./../../../domain/IK8sResource";
+import { DevSpaceNode } from "../../DevSpaceNode";
 
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
   public label: string;
@@ -22,7 +23,16 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
 
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
+
     treeItem.contextValue = `workload-${this.resourceType}`;
+
+    const devSpaceNode = this.getAppNode()?.getParent() as DevSpaceNode;
+    if (devSpaceNode) {
+      treeItem.contextValue = devSpaceNode.getSpaceOwnTypeContextValue(
+        treeItem.contextValue
+      );
+    }
+
     return treeItem;
   }
   constructor(
