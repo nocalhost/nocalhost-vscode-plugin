@@ -21,7 +21,7 @@ jobs:
           TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
           TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
         run: |
-          curl -fL "https://nocalhost-generic.pkg.coding.net/nocalhsot-test/binary/tketools?version=latest" -o ~/cluster
+          curl -fL "https://nocalhost-generic.pkg.coding.net/nocalhost-test/binary/tketools?version=latest" -o ~/cluster
           chmod +x ~/cluster
           ~/cluster create
 
