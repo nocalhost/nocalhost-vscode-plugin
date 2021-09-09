@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as path from "path";
 
 import ICommand from "./ICommand";
@@ -48,11 +47,11 @@ export default class SignOutCommand implements ICommand {
     this.cleanKubeConfig(node.accountClusterService.accountClusterNode);
   }
 
-  cleanKubeConfig(accountCluser: AccountClusterNode) {
-    const { baseUrl, username } = accountCluser.loginInfo;
+  cleanKubeConfig(accountCluster: AccountClusterNode) {
+    const { baseUrl, username } = accountCluster.loginInfo;
     const KEY = `USER_LINK:${baseUrl}-${username}`;
 
-    const prevData = state.getData(KEY);
+    const prevData = host.getGlobalState(KEY);
 
     if (prevData) {
       Promise.allSettled(
@@ -62,14 +61,12 @@ export default class SignOutCommand implements ICommand {
 
             await kubeconfig(file, "remove");
 
-            await fs.unlinkSync(file);
-
             res();
           });
         })
       );
     }
 
-    state.delete(KEY);
+    host.removeGlobalState(KEY);
   }
 }
