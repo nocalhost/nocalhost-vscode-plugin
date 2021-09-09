@@ -25,6 +25,12 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     const kubeConfigPath = node.getKubeConfigPath()
 
     const status = await node.getStatus()
+    if (status === 'developing' && !openDir) {
+      host.showWarnMessage(
+        'You are already in DevMode, please exit and try again'
+      )
+      return
+    }
 
     const profile = await getServiceConfig(
       node.getKubeConfigPath(),
