@@ -1535,5 +1535,7 @@ export async function kubeconfig(
     .toJson()
     .exec();
 
+  logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
+
   return result;
 }
