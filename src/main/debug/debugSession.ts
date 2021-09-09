@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
-import * as JsonSchema from "json-schema";
 import { spawn } from "child_process";
-import { validate } from "json-schema";
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
@@ -14,7 +12,8 @@ export class DebugSession {
   public async launch(
     workspaceFolder: vscode.WorkspaceFolder,
     debugProvider: IDebugProvider,
-    node: Deployment
+    node: Deployment,
+    container: ContainerConfig
   ) {
     if (!workspaceFolder) {
       return;
@@ -25,8 +24,6 @@ export class DebugSession {
       host.showInformationMessage("please install dependent extension.");
       return;
     }
-
-    let container: ContainerConfig = await DebugSession.getContainer(node);
 
     const port =
       (container.dev.debug && container.dev.debug.remoteDebugPort) || 9229;
@@ -103,80 +100,6 @@ export class DebugSession {
 
     if (!success) {
       terminatedCallback();
-    }
-  }
-  static async getContainer(node: Deployment) {
-    let container: ContainerConfig | undefined;
-
-    const serviceConfig = node.getConfig();
-    const containers = (serviceConfig && serviceConfig.containers) || [];
-    if (containers.length > 1) {
-      const containerNames = containers.map((c) => c.name);
-      const containerName = await vscode.window.showQuickPick(containerNames);
-
-      if (!containerName) {
-        return;
-      }
-
-      container = containers.filter((c) => {
-        return c.name === containerName;
-      })[0];
-    } else if (containers.length === 1) {
-      container = containers[0];
-    } else {
-      host.showInformationMessage("Missing container confiuration");
-      return;
-    }
-
-    DebugSession.validateDebugConfig(container);
-
-    return container;
-  }
-
-  static validateDebugConfig(config: ContainerConfig) {
-    const schema: JsonSchema.JSONSchema6 = {
-      $schema: "http://json-schema.org/schema#",
-      type: "object",
-      required: ["dev"],
-      properties: {
-        dev: {
-          type: "object",
-          required: ["command", "debug"],
-          properties: {
-            command: {
-              type: "object",
-              required: ["debug"],
-              properties: {
-                debug: {
-                  type: "array",
-                  minItems: 1,
-                  items: {
-                    type: "string",
-                  },
-                },
-              },
-            },
-            debug: {
-              type: "object",
-              properties: {
-                remoteDebugPort: {
-                  type: "number",
-                },
-              },
-            },
-          },
-        },
-      },
-    };
-
-    const valid = validate(config, schema);
-
-    if (valid.errors.length > 0) {
-      let message = "please check config.\n";
-      valid.errors.forEach((e) => {
-        message += `${e.property}: ${e.message} \n`;
-      });
-      throw new Error(message);
     }
   }
 

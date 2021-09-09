@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as JsonSchema from "json-schema";
+import { validate } from "json-schema";
 
 import ICommand from "./ICommand";
 import { DEBUG, START_DEV_MODE } from "./constants";
@@ -11,6 +13,7 @@ import { Deployment } from "../nodes/workloads/controllerResources/deployment/De
 import { GoDebugProvider } from "../debug/goDebugProvider";
 import logger from "../utils/logger";
 import { IDebugProvider } from "../debug/IDebugprovider";
+import { ContainerConfig } from "../service/configService";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -24,6 +27,8 @@ export default class DebugCommand implements ICommand {
       return;
     }
 
+    await this.getContainer(node);
+
     if (!command) {
       const status = await node.getStatus(true);
 
@@ -32,7 +37,82 @@ export default class DebugCommand implements ICommand {
         return;
       }
     }
+
     this.startDebugging(node);
+  }
+  async getContainer(node: Deployment) {
+    let container: ContainerConfig | undefined;
+
+    const serviceConfig = node.getConfig();
+    const containers = (serviceConfig && serviceConfig.containers) || [];
+    if (containers.length > 1) {
+      const containerNames = containers.map((c) => c.name);
+      const containerName = await vscode.window.showQuickPick(containerNames);
+
+      if (!containerName) {
+        return;
+      }
+
+      container = containers.filter((c) => {
+        return c.name === containerName;
+      })[0];
+    } else if (containers.length === 1) {
+      container = containers[0];
+    } else {
+      host.showInformationMessage("Missing container confiuration");
+      return;
+    }
+
+    this.validateDebugConfig(container);
+
+    return container;
+  }
+
+  validateDebugConfig(config: ContainerConfig) {
+    const schema: JsonSchema.JSONSchema6 = {
+      $schema: "http://json-schema.org/schema#",
+      type: "object",
+      required: ["dev"],
+      properties: {
+        dev: {
+          type: "object",
+          required: ["command", "debug"],
+          properties: {
+            command: {
+              type: "object",
+              required: ["debug"],
+              properties: {
+                debug: {
+                  type: "array",
+                  minItems: 1,
+                  items: {
+                    type: "string",
+                  },
+                },
+              },
+            },
+            debug: {
+              type: "object",
+              properties: {
+                remoteDebugPort: {
+                  type: "number",
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const valid = validate(config, schema);
+
+    if (valid.errors.length > 0) {
+      let message = "please check config.\n";
+      valid.errors.forEach((e) => {
+        message += `${e.property}: ${e.message} \n`;
+      });
+      throw new Error(message);
+    }
   }
 
   async startDebugging(node: Deployment) {
@@ -58,7 +138,8 @@ export default class DebugCommand implements ICommand {
           await debugSession.launch(
             workspaceFolder,
             await this.getDebugProvider(node),
-            node
+            node,
+            await this.getContainer(node)
           );
         } catch (e) {
           (token as any).cancel();
@@ -70,7 +151,7 @@ export default class DebugCommand implements ICommand {
   }
 
   async getDebugProvider(node: Deployment): Promise<IDebugProvider> {
-    let containerConfig = await DebugSession.getContainer(node);
+    let containerConfig = await this.getContainer(node);
 
     let type: string;
 
