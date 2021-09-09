@@ -134,8 +134,6 @@ export async function activate(context: vscode.ExtensionContext) {
   host.getOutputChannel().show(true);
   // await registerYamlSchemaSupport();
 
-  await messageBus.init();
-
   messageBus.on("devstart", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
       host.disposeBookInfo();
@@ -161,6 +159,22 @@ export async function activate(context: vscode.ExtensionContext) {
         appName: string;
       };
       host.disposeApp(data.devspaceName, data.appName);
+    }
+  });
+  messageBus.on("install", (value) => {
+    try {
+      const data = value.value as {
+        status: string;
+      };
+      if (data.status === "loading") {
+        host.stopAutoRefresh();
+        SyncServiceCommand.stopSyncStatus();
+      } else {
+        host.startAutoRefresh();
+        SyncServiceCommand.checkSync();
+      }
+    } catch (error) {
+      host.log(`${error}, +++++`, true);
     }
   });
   await vscode.commands.executeCommand(
@@ -282,6 +296,7 @@ async function init(context: vscode.ExtensionContext) {
   // fileStore.initConfig();
   host.setGlobalState("extensionPath", context.extensionPath);
   updateServerConfigStatus();
+  await messageBus.init();
   await checkVersion();
   LocalClusterService.verifyLocalCluster();
 

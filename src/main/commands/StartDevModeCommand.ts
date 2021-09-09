@@ -160,7 +160,7 @@ export default class StartDevModeCommand implements ICommand {
     );
     if (!image) {
       const result = await host.showInformationMessage(
-        "Please specify develop image",
+        "Please specify development image",
         { modal: true },
         "Select",
         "Custom"
@@ -170,14 +170,14 @@ export default class StartDevModeCommand implements ICommand {
       }
       if (result === "Select") {
         const images = [
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/java:11",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/ruby:3.0",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/node:14",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/python:3.9",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/golang:1.16",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/perl:latest",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/rust:latest",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/php:latest",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/java:11",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/ruby:3.0",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/node:14",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/python:3.9",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/golang:1.16",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/perl:latest",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/rust:latest",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/php:latest",
         ];
         image = await host.showQuickPick(images);
       } else if (result === "Custom") {

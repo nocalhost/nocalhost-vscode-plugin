@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-
+import { omit } from "lodash";
 import ICommand from "./ICommand";
 
 import { RECONNECT_SYNC, OVERRIDE_SYNC, SYNC_SERVICE } from "./constants";
@@ -7,6 +7,7 @@ import registerCommand from "./register";
 import * as nhctl from "../ctl/nhctl";
 import host from "../host";
 import logger from "../utils/logger";
+import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
 
 export interface Sync {
   app: string;
@@ -30,11 +31,41 @@ export default class SyncServiceCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
+  static stopSyncStatus() {
+    vscode.commands.executeCommand(SYNC_SERVICE, {}, true);
+  }
   static async checkSync() {
     const currentRootPath = host.getCurrentRootPath();
 
     if (!currentRootPath) {
       return;
+    }
+
+    const devAssociateLocalDirectorys =
+      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) ?? {};
+    const current = devAssociateLocalDirectorys[currentRootPath];
+
+    if (current) {
+      const { app, resourceType, service, kubeConfigPath, namespace } = current;
+
+      try {
+        await nhctl.associate(
+          kubeConfigPath,
+          namespace,
+          app,
+          currentRootPath,
+          resourceType,
+          service,
+          "--migrate"
+        );
+      } catch (err) {
+        logger.error("associate migrate:", err);
+      } finally {
+        host.setGlobalState(
+          DEV_ASSOCIATE_LOCAL_DIRECTORYS,
+          omit(devAssociateLocalDirectorys, currentRootPath)
+        );
+      }
     }
 
     let result: {
@@ -76,15 +107,17 @@ export default class SyncServiceCommand implements ICommand {
       vscode.commands.executeCommand(SYNC_SERVICE);
     }
   }
-  async execCommand(syncData: Sync) {
+  async execCommand(syncData: Sync, isClearTimeOut?: boolean) {
     if (this._id) {
       clearTimeout(this._id);
       this._id = null;
     }
-
-    this.syncData = syncData || {};
-
-    this.getSyncStatus();
+    if (!isClearTimeOut) {
+      this.syncData = syncData || {};
+      this.getSyncStatus();
+    } else {
+      logger.info("after kill cleartime sync-status");
+    }
   }
 
   async getSyncStatus() {

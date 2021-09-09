@@ -12,8 +12,7 @@ import { NocalhostRootNode } from "./NocalhostRootNode";
 import { resolveVSCodeUri, writeFileLock } from "../utils/fileUtil";
 import { DevSpaceNode } from "./DevSpaceNode";
 import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
-
-export type KubeConfigState = { code: 200 | 201; info: string };
+import { ClustersState } from "../clusters";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
@@ -31,7 +30,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   public kubeConfigPath: string;
   public accountClusterService: AccountClusterService;
 
-  private state: KubeConfigState;
+  private state: ClustersState;
   constructor(props: {
     id: string;
     parent: NocalhostRootNode;
@@ -42,7 +41,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     kubeConfigPath: string;
     userInfo: IUserInfo;
     accountClusterService?: AccountClusterService;
-    state: KubeConfigState;
+    state: ClustersState;
   }) {
     super();
     const {

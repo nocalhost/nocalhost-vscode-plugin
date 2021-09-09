@@ -7,6 +7,8 @@ import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
+import { asyncLimit } from "./utils";
+import { GLOBAL_TIMEOUT } from "./commands/constants";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
@@ -58,50 +60,47 @@ export class Host implements vscode.Disposable {
     }
   }
 
+  isRefresh = false;
   public async autoRefresh() {
+    if (this.isRefresh) {
+      return;
+    }
+
     try {
+      this.isRefresh = true;
+
       const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
       if (rootNode) {
         await rootNode.updateData().catch(() => {});
       }
-      for (const [id, expanded] of state.refreshFolderMap) {
-        if (expanded) {
-          const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-          if (node) {
-            // filter parent is close
-            // function isClose(parentNode: BaseNocalhostNode): boolean {
-            //   const child = parentNode.getParent();
-            //   if (!child) {
-            //     return false;
-            //   }
-            //   if (child instanceof NocalhostFolderNode && !child.isExpand) {
-            //     return true;
-            //   }
 
-            //   return isClose(child);
-            // }
-            // const close = isClose(node);
-            await node.updateData().catch(() => {});
-            // if (!close) {
-            //   await node.updateData();
-            // }
+      await asyncLimit(
+        Array.from(state.refreshFolderMap.entries()),
+        ([id, expanded]) => {
+          if (expanded) {
+            const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
+
+            return node.updateData();
           }
-        }
-      }
+
+          return Promise.resolve();
+        },
+        GLOBAL_TIMEOUT
+      );
     } catch (e) {
-      this.startAutoRefresh();
-      logger.error(e);
+      logger.error("autoRefresh error:", e);
+    } finally {
+      this.isRefresh = false;
+
+      this.autoRefreshTimeId = setTimeout(async () => {
+        await this.startAutoRefresh();
+      }, 10 * 1000);
     }
   }
 
   public async startAutoRefresh() {
     this.stopAutoRefresh();
-
     await this.autoRefresh();
-
-    this.autoRefreshTimeId = setTimeout(async () => {
-      this.startAutoRefresh();
-    }, 10 * 1000);
   }
 
   public setGlobalState(key: string, state: any) {
@@ -284,7 +283,7 @@ export class Host implements vscode.Disposable {
     msg: string,
     options?: vscode.MessageOptions,
     ...items: string[]
-  ) {
+  ): Thenable<string | undefined> {
     if (options && options.modal) {
       return vscode.window.showInformationMessage(msg, options, ...items);
     }
@@ -479,4 +478,11 @@ export class Host implements vscode.Disposable {
   }
 }
 
-export default new Host();
+let defaultHost: Host = new Host();
+
+if (process.env.puppeteer) {
+  let hostTest = require("./host-test").default;
+  defaultHost = new hostTest();
+}
+
+export default defaultHost;

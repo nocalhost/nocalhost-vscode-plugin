@@ -1,11 +1,11 @@
 import { IUserInfo } from "./IUserInfo";
-import { IApplicationInfo } from "./IApplicationInfo";
 
 import { IDevSpaceInfo } from "./IDevSpaceInfo";
 import { IV2ApplicationInfo } from "./IV2ApplicationInfo";
 
 import { ClusterSource } from "../common/define";
 import AccountClusterService from "../clusters/AccountCluster";
+import { ClustersState } from "../clusters";
 
 export interface IRootNode {
   devSpaces: IDevSpaceInfo[];
@@ -17,4 +17,5 @@ export interface IRootNode {
   clusterName?: string;
   userInfo?: IUserInfo;
   kubeConfigPath: string;
+  state: ClustersState;
 }

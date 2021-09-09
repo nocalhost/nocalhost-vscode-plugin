@@ -1,6 +1,5 @@
 import { homedir, tmpdir } from "os";
 import * as path from "path";
-export const ROOT_NODE_KEY = "Nocalhost";
 export const HOME_DIR = homedir();
 export const NH_CONFIG_DIR = path.resolve(HOME_DIR, ".nh");
 export const PLUGIN_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "vscode-plugin");
@@ -41,6 +40,8 @@ export const USERINFO = "userinfo";
 export const SERVER_CLUSTER_LIST = "userinfoList_v2";
 
 export const WELCOME_DID_SHOW = "welcomeDidShow";
+
+export const DEV_ASSOCIATE_LOCAL_DIRECTORYS = "devAssociateLocalDirectorys";
 
 // tmp start record
 export const TMP_STATUS = "tmpStatus";

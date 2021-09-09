@@ -28,7 +28,9 @@ import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 import { getConfiguration } from "../utils/conifg";
-import { KubeConfigState } from "../nodes/KubeConfigNode";
+import messageBus from "../utils/messageBus";
+import { ClustersState } from "../clusters";
+import { GLOBAL_TIMEOUT } from "../commands/constants";
 
 export interface InstalledAppInfo {
   name: string;
@@ -54,6 +56,8 @@ export class NhctlCommand {
     host.isWindow() ? "nhctl.exe" : "nhctl"
   );
   private outputMethod: string = "toJson";
+
+  private time?: number;
   constructor(base: string, baseParams?: IBaseCommand<unknown>) {
     this.baseParams = baseParams;
     this.args = [];
@@ -62,8 +66,11 @@ export class NhctlCommand {
   static create(base: string, baseParams?: IBaseCommand<unknown>) {
     return new NhctlCommand(base, baseParams);
   }
-  static get(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("get", baseParams);
+  static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
+    const command = NhctlCommand.create("get", baseParams);
+    command.time = ms;
+
+    return command;
   }
   static exec(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k exec", baseParams);
@@ -77,8 +84,11 @@ export class NhctlCommand {
   static portForward(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("port-forward", baseParams);
   }
-  static list(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("list", baseParams);
+  static list(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
+    const command = NhctlCommand.create("list", baseParams);
+    command.time = ms;
+
+    return command;
   }
 
   static install(baseParams?: IBaseCommand<unknown>) {
@@ -158,7 +168,12 @@ export class NhctlCommand {
 
   async exec(hasParse = true) {
     const command = this.getCommand();
-    const result = await execAsyncWithReturn(command, [], Date.now());
+    const result = await execAsyncWithReturn(
+      command,
+      [],
+      Date.now(),
+      this.time
+    );
     if (!result) {
       return null;
     }
@@ -633,13 +648,14 @@ export async function associate(
   appName: string,
   dir: string,
   type: string,
-  workLoadName: string
+  workLoadName: string,
+  params = ""
 ) {
   const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName}`
+    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName} ${params}`
   );
   const result = await execAsyncWithReturn(command, []);
   return result.stdout;
@@ -1317,7 +1333,7 @@ function getNhctlPath(version: string) {
 
   return {
     sourcePath: [
-      `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
+      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
       `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
     ],
     binPath,
@@ -1400,8 +1416,27 @@ export async function checkVersion() {
         if (fs.existsSync(TEMP_NHCTL_BIN)) {
           fs.unlinkSync(TEMP_NHCTL_BIN);
         }
-        // const command = "taskkill /im nhctl.exe -f";
-        // await execAsyncWithReturn(command, []);
+        messageBus.emit("install", {
+          status: "loading",
+        });
+        const command = "taskkill /im nhctl.exe -f";
+        await execAsyncWithReturn(command, []).catch((e) => {
+          logger.error(e);
+        });
+        const findDaemonCommand = "tasklist | findstr nhctl.exe";
+        const result = await execAsyncWithReturn(findDaemonCommand, []).catch(
+          (e) => {
+            logger.error(e);
+          }
+        );
+        if (!result) {
+          logger.info("after kill has not daemon");
+        } else {
+          logger.info("after kill has daemon");
+          await execAsyncWithReturn(command, []).catch((e) => {
+            logger.error(e);
+          });
+        }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
@@ -1414,11 +1449,17 @@ export async function checkVersion() {
       }
     });
   } catch (err) {
+    // host.log(`[update err] ${err}`, true);
     console.error(err);
-    vscode.window.showErrorMessage(failedMessage);
+    typeof err === "string" && err.indexOf("lockerror") !== -1
+      ? logger.error("lockerror")
+      : vscode.window.showErrorMessage(failedMessage);
   } finally {
     setUpgrade(false);
     unlock();
+    messageBus.emit("install", {
+      status: "end",
+    });
   }
 }
 
@@ -1463,17 +1504,21 @@ export function nhctlCommand(
   );
   const command = `${nhctlPath} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
-  } --kubeconfig ${kubeconfigPath}`;
+  } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
   console.log(command);
   return command;
 }
 
 export async function checkCluster(
-  kubeConfigPath: string
-): Promise<KubeConfigState> {
-  const result = await NhctlCommand.create("check cluster", {
-    kubeConfigPath: kubeConfigPath,
-  })
+  kubeConfigPath: string,
+  timeout = 10
+): Promise<ClustersState> {
+  const result = await NhctlCommand.create(
+    `check cluster --timeout ${timeout}`,
+    {
+      kubeConfigPath: kubeConfigPath,
+    }
+  )
     .toJson()
     .exec();
 
