@@ -56,7 +56,7 @@ export class DebugSession {
       (container.dev.command && container.dev.command.debug) || [];
 
     host.log("[debug] launch debug", true);
-    const debugProc = this.enterContainer(
+    let terminal = this.enterContainer(
       node.getKubeConfigPath(),
       debugCommand,
       node.getNameSpace(),
@@ -85,8 +85,10 @@ export class DebugSession {
     host.log("[debug] start debug", true);
 
     const terminatedCallback = async () => {
-      if (!debugProc.killed) {
-        debugProc.stdin.write("\x03");
+      if (terminal) {
+        terminal.sendText("\x03");
+        terminal.hide();
+        terminal = null;
       }
     };
 
@@ -130,18 +132,18 @@ export class DebugSession {
     logger.info(`[debug] ${cmd}`);
     host.log(`${cmd}`, true);
 
-    const proc = spawn(NhctlCommand.nhctlPath, args, { shell: true });
-    proc.stdout.on("data", function (data) {
-      host.log(`${data}`);
-    });
-    proc.stderr.on("data", (data) => {
-      host.log(`${data}`);
-    });
-    proc.on("close", async (code) => {
-      host.log(`close debug container code:${code}`, true);
+    const name = `debug--${node.getAppName()}-${node.label}`;
+
+    const terminal = host.invokeInNewTerminal(cmd, name);
+    terminal.show();
+
+    vscode.window.onDidCloseTerminal((e) => {
+      if (e.name === name) {
+        terminal.sendText("\x03");
+      }
     });
 
-    return proc;
+    return terminal;
   }
 
   async portForward(props: {
