@@ -39,18 +39,11 @@ export class DebugSession {
       return;
     }
 
-    // host.log("[debug] check required command", true);
-    // const notFoundCommands = debugProvider.checkRequiredCommand(
+    // await debugProvider.checkRequiredCommand(
     //   podNames[0],
     //   node.getNameSpace(),
     //   node.getKubeConfigPath()
     // );
-    // if (notFoundCommands.length > 0) {
-    //   const msg =
-    //     "Not found command in container: " + notFoundCommands.join(" ");
-    //   host.showErrorMessage(msg);
-    //   throw new Error(msg);
-    // }
 
     const debugCommand =
       (container.dev.command && container.dev.command.debug) || [];

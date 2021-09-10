@@ -116,11 +116,13 @@ export abstract class IDebugProvider {
     return false;
   }
 
-  public checkRequiredCommand(
+  async checkRequiredCommand(
     podName: string,
     namespace: string,
     kubeconfigPath: string
   ) {
+    host.log("[debug] check required command", true);
+
     function check(requiredCommand: string) {
       const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace}  --`;
       const args = command.split(" ");
@@ -139,6 +141,10 @@ export abstract class IDebugProvider {
         notFound.push(c);
       }
     });
-    return notFound;
+
+    if (notFound.length > 0) {
+      const msg = "Not found command in container: " + notFound.join(" ");
+      throw new Error(msg);
+    }
   }
 }

@@ -1,10 +1,8 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
-import * as path from "path";
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
-import { NH_BIN } from "../constants";
 import registerCommand from "./register";
 import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
@@ -75,10 +73,10 @@ export default class RunCommand implements ICommand {
       const terminal = host.invokeInNewTerminal(cmd, name);
       terminal.show();
 
-      vscode.window.onDidCloseTerminal((e) => {
+      let onClose = vscode.window.onDidCloseTerminal((e) => {
         if (e.name === name) {
-          terminal.sendText("\x03");
-          terminal.hide();
+          onClose.dispose();
+          onClose = null;
         }
       });
     });
