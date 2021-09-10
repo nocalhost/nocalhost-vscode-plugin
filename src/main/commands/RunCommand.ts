@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
+import { spawnSync } from "child_process";
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
@@ -47,17 +48,19 @@ export default class RunCommand implements ICommand {
 
   startRun(node: Deployment, container: ContainerConfig) {
     host.showProgressing("running ...", async () => {
+      const command = container.dev.command?.run ?? [];
+
       const args = [
         "exec",
         node.getAppName(),
         "-d",
         node.label,
         "--command",
-        "bash",
+        "sh",
         "--command",
         "-c",
         "--command",
-        `${(container.dev.command?.run ?? []).join(" ")}`,
+        command,
         "--kubeconfig",
         node.getKubeConfigPath(),
         "-n",
@@ -75,11 +78,51 @@ export default class RunCommand implements ICommand {
 
       let onClose = vscode.window.onDidCloseTerminal((e) => {
         if (e.name === name) {
+          const killCommand = `kill -9 \`ps aux|grep -i '${command}'|grep -v grep|awk '{print $2}'\``;
+          spawnSync(NhctlCommand.nhctlPath, [
+            "exec",
+            node.getAppName(),
+            "-d",
+            node.label,
+            "--command",
+            "sh",
+            "--command",
+            "-c",
+            "--command",
+            killCommand,
+            "--kubeconfig",
+            node.getKubeConfigPath(),
+            "-n",
+            node.getNameSpace(),
+            ,
+          ]);
+
           onClose.dispose();
           onClose = null;
         }
       });
     });
+  }
+
+  killContainerDebugProcess(
+    podName: string,
+    kubeconfigPath: string,
+    execCommand: string[],
+    namespace: string
+  ) {
+    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
+    const args = command.split(" ");
+    const sliceCommands = execCommand.join(" ");
+
+    const killCommand = `kill -9 \`ps aux|grep -i '${sliceCommands}'|grep -v grep|awk '{print $2}'\``;
+
+    args.push("bash", "-c", `${killCommand}`);
+
+    const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
+    host.log(`[debug] ${cmd}`, true);
+    logger.error(`[cmd]: ${cmd}`);
+
+    spawnSync(NhctlCommand.nhctlPath, args);
   }
 
   async getContainer(node: Deployment) {

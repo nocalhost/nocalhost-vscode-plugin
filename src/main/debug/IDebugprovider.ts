@@ -55,16 +55,16 @@ export abstract class IDebugProvider {
   ) {
     const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
     const args = command.split(" ");
-    const sliceCommands = execCommand.join(" ").split("&&");
+    const sliceCommands = execCommand.join(" ");
 
-    const killCommand = `kill -9 \`ps aux|grep -i '${sliceCommands[
-      sliceCommands.length - 1
-    ].trim()}'|grep -v grep|awk '{print $2}'\``;
+    const killCommand = `kill -9 \`ps aux|grep -i '${sliceCommands}'|grep -v grep|awk '{print $2}'\``;
 
     args.push("bash", "-c", `${killCommand}`);
+
     const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
     host.log(`[debug] ${cmd}`, true);
     logger.error(`[cmd]: ${cmd}`);
+
     spawnSync(NhctlCommand.nhctlPath, args);
   }
 

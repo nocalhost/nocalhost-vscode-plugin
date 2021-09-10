@@ -80,7 +80,8 @@ export class DebugSession {
     const terminatedCallback = async () => {
       if (terminal) {
         terminal.sendText("\x03");
-        terminal.hide();
+        terminal.dispose();
+
         terminal = null;
       }
     };
