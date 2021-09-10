@@ -39,11 +39,11 @@ export class DebugSession {
       return;
     }
 
-    // await debugProvider.checkRequiredCommand(
-    //   podNames[0],
-    //   node.getNameSpace(),
-    //   node.getKubeConfigPath()
-    // );
+    await debugProvider.checkRequiredCommand(
+      podNames[0],
+      node.getNameSpace(),
+      node.getKubeConfigPath()
+    );
 
     const debugCommand =
       (container.dev.command && container.dev.command.debug) || [];

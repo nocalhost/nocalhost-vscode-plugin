@@ -7,8 +7,6 @@ import logger from "../utils/logger";
 import { NhctlCommand } from "./../ctl/nhctl";
 
 export abstract class IDebugProvider {
-  static requiredCommand = ["ps", "awk", "netstat"];
-
   abstract startDebug(
     workspaceFolder: string,
     sessionName: string,
@@ -135,7 +133,7 @@ export abstract class IDebugProvider {
       return result.stdout;
     }
     const notFound: Array<string> = [];
-    IDebugProvider.requiredCommand.forEach((c) => {
+    ["ps", "awk", "netstat"].forEach((c) => {
       const r = check(c);
       if (!r) {
         notFound.push(c);
