@@ -48,7 +48,7 @@ export default class RunCommand implements ICommand {
 
   startRun(node: Deployment, container: ContainerConfig) {
     host.showProgressing("running ...", async () => {
-      const command = container.dev.command?.run ?? [];
+      const command = (container.dev.command?.run ?? []).join(" ");
 
       const args = [
         "exec",
@@ -71,14 +71,15 @@ export default class RunCommand implements ICommand {
       logger.info(`[run] ${cmd}`);
       host.log(`${cmd}`, true);
 
-      const name = `run---${node.getAppName()}-${node.label}`;
+      const name = `run:${node.getAppName()}-${node.label}`;
 
       const terminal = host.invokeInNewTerminal(cmd, name);
       terminal.show();
 
       let onClose = vscode.window.onDidCloseTerminal((e) => {
         if (e.name === name) {
-          const killCommand = `kill -9 \`ps aux|grep -i '${command}'|grep -v grep|awk '{print $2}'\``;
+          const killCommand = `ps aux|grep -i '${command}'|grep -v grep|awk '{print $2}'|xargs kill -9`;
+
           spawnSync(NhctlCommand.nhctlPath, [
             "exec",
             node.getAppName(),

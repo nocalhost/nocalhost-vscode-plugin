@@ -11,7 +11,7 @@ export class NodeDebugProvider extends IDebugProvider {
   ): Promise<boolean> {
     //https://github.dev/microsoft/vscode-js-debug/blob/a570239f82641de25583ccdaadf9c0903c1a6a78/src/targets/node/restartPolicy.ts
 
-    const debugConfiguration: vscode.DebugConfiguration = {
+    const debugConfiguration = {
       type: "node",
       request: "attach",
       name: sessionName,
@@ -22,10 +22,10 @@ export class NodeDebugProvider extends IDebugProvider {
       localRoot: "${workspaceRoot}",
       remoteRoot: workDir || "/home/nocalhost-dev/",
       //nodemon
-      restart: {
-        delay: 500,
-        maxAttempts: 10,
-      },
+      // restart: {
+      //   delay: 500,
+      //   maxAttempts: 10,
+      // },
     };
 
     return super.startDebugging(

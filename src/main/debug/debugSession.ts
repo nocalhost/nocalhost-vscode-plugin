@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { spawn } from "child_process";
+import { spawn, spawnSync } from "child_process";
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
@@ -105,6 +105,7 @@ export class DebugSession {
     namespace: string,
     node: Deployment
   ) {
+    const command = execCommand.join(" ");
     const args = [
       "exec",
       node.getAppName(),
@@ -115,7 +116,7 @@ export class DebugSession {
       "--command",
       "-c",
       "--command",
-      `${execCommand.join(" ")}`,
+      command,
       "--kubeconfig",
       kubeconfigPath,
       "-n",
@@ -126,14 +127,35 @@ export class DebugSession {
     logger.info(`[debug] ${cmd}`);
     host.log(`${cmd}`, true);
 
-    const name = `debug--${node.getAppName()}-${node.label}`;
+    const name = `debug:${node.getAppName()}-${node.label}`;
 
     const terminal = host.invokeInNewTerminal(cmd, name);
     terminal.show();
 
-    vscode.window.onDidCloseTerminal((e) => {
+    let onClose = vscode.window.onDidCloseTerminal((e) => {
       if (e.name === name) {
-        terminal.sendText("\x03");
+        const killCommand = `ps aux|grep -i '${command}'|grep -v grep|awk '{print $2}'|xargs kill -9`;
+
+        spawnSync(NhctlCommand.nhctlPath, [
+          "exec",
+          node.getAppName(),
+          "-d",
+          node.label,
+          "--command",
+          "sh",
+          "--command",
+          "-c",
+          "--command",
+          killCommand,
+          "--kubeconfig",
+          node.getKubeConfigPath(),
+          "-n",
+          node.getNameSpace(),
+          ,
+        ]);
+
+        onClose.dispose();
+        onClose = null;
       }
     });
 

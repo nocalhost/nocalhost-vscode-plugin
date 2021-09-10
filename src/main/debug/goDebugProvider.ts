@@ -9,7 +9,7 @@ export class GoDebugProvider extends IDebugProvider {
     workDir: string,
     terminatedCallback: Function
   ): Promise<boolean> {
-    const debugConfiguration: vscode.DebugConfiguration = {
+    const debugConfiguration = {
       name: sessionName,
       type: "go",
       request: "attach",

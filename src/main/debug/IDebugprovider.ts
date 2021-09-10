@@ -1,6 +1,8 @@
 import { spawnSync } from "child_process";
 import * as vscode from "vscode";
 import * as path from "path";
+const isPortReachable = require("is-port-reachable");
+const retry = require("async-retry");
 
 import host from "../host";
 import logger from "../utils/logger";
@@ -15,12 +17,21 @@ export abstract class IDebugProvider {
     terminatedCallback?: Function
   ): Promise<boolean>;
 
-  startDebugging(
+  async startDebugging(
     workspaceFolder: string,
-    config: vscode.DebugConfiguration,
+    config: vscode.DebugConfiguration & { port: number },
     terminatedCallback?: Function
-  ): Thenable<boolean> {
-    const { name } = config;
+  ): Promise<boolean> {
+    const { name, port, hostName } = config;
+
+    await retry(
+      () =>
+        isPortReachable(port, {
+          host: hostName,
+          timeout: 1 * 1000,
+        }),
+      { maxRetryTime: 30 * 1000 }
+    );
 
     const currentFolder = (vscode.workspace.workspaceFolders || []).find(
       (folder) => folder.name === path.basename(workspaceFolder)
@@ -57,9 +68,9 @@ export abstract class IDebugProvider {
     const args = command.split(" ");
     const sliceCommands = execCommand.join(" ");
 
-    const killCommand = `kill -9 \`ps aux|grep -i '${sliceCommands}'|grep -v grep|awk '{print $2}'\``;
+    const killCommand = `ps aux|grep -i '${sliceCommands}'|grep -v grep|awk '{print $2}'|xargs kill -9`;
 
-    args.push("bash", "-c", `${killCommand}`);
+    args.push("sh", "-c", `${killCommand}`);
 
     const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
     host.log(`[debug] ${cmd}`, true);
