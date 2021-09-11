@@ -152,6 +152,7 @@ export class DebugSession {
     ];
 
     const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
+
     logger.info(`[debug] ${cmd}`);
     host.log(`${cmd}`, true);
 
