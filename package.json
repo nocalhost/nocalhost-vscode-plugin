@@ -489,7 +489,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && yarn run ts-compile-check "
+      "pre-commit": "lint-staged && yarn run ts-compile-check"
     }
   },
   "lint-staged": {
