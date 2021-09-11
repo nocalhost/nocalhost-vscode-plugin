@@ -45,13 +45,10 @@ export class DebugSession {
       node.getKubeConfigPath()
     );
 
-    const debugCommand =
-      (container.dev.command && container.dev.command.debug) || [];
-
     host.log("[debug] launch debug", true);
     let terminal = this.enterContainer(
       node.getKubeConfigPath(),
-      debugCommand,
+      container,
       node.getNameSpace(),
       node
     );
@@ -79,7 +76,6 @@ export class DebugSession {
 
     const terminatedCallback = async () => {
       if (terminal) {
-        terminal.sendText("\x03");
         terminal.dispose();
 
         terminal = null;
@@ -101,22 +97,54 @@ export class DebugSession {
 
   enterContainer(
     kubeconfigPath: string,
-    execCommand: string[],
+    container: ContainerConfig,
     namespace: string,
     node: Deployment
   ) {
-    const command = execCommand.join(" ");
+    const runCommand = (container.dev.command?.run ?? []).join(" ");
+    const debugCommand = (container.dev.command?.debug ?? []).join(" ");
+
+    const grepPattern: Array<string> = [];
+    if (runCommand) {
+      grepPattern.push(`-e '${runCommand}'`);
+    }
+    if (debugCommand) {
+      grepPattern.push(`-e '${debugCommand}'`);
+    }
+
+    const grepStr = "grep " + grepPattern.join(" ");
+
+    const killCommand = `ps aux|${grepStr}|grep -v grep|awk '{print $2}'|xargs kill -9`;
+
+    spawnSync(NhctlCommand.nhctlPath, [
+      "exec",
+      node.getAppName(),
+      "-d",
+      node.label,
+      "--command",
+      "sh",
+      "--command",
+      "-c",
+      "--command",
+      killCommand,
+      "--kubeconfig",
+      node.getKubeConfigPath(),
+      "-n",
+      node.getNameSpace(),
+      ,
+    ]);
+
     const args = [
       "exec",
       node.getAppName(),
       "-d",
       node.label,
       "--command",
-      "bash",
+      "sh",
       "--command",
       "-c",
       "--command",
-      command,
+      debugCommand,
       "--kubeconfig",
       kubeconfigPath,
       "-n",
@@ -131,33 +159,6 @@ export class DebugSession {
 
     const terminal = host.invokeInNewTerminal(cmd, name);
     terminal.show();
-
-    let onClose = vscode.window.onDidCloseTerminal((e) => {
-      if (e.name === name) {
-        const killCommand = `ps aux|grep -i '${command}'|grep -v grep|awk '{print $2}'|xargs kill -9`;
-
-        spawnSync(NhctlCommand.nhctlPath, [
-          "exec",
-          node.getAppName(),
-          "-d",
-          node.label,
-          "--command",
-          "sh",
-          "--command",
-          "-c",
-          "--command",
-          killCommand,
-          "--kubeconfig",
-          node.getKubeConfigPath(),
-          "-n",
-          node.getNameSpace(),
-          ,
-        ]);
-
-        onClose.dispose();
-        onClose = null;
-      }
-    });
 
     return terminal;
   }

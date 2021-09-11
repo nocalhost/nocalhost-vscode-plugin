@@ -47,9 +47,40 @@ export default class RunCommand implements ICommand {
   }
 
   startRun(node: Deployment, container: ContainerConfig) {
-    host.showProgressing("running ...", async () => {
-      const command = (container.dev.command?.run ?? []).join(" ");
+    const runCommand = (container.dev.command?.run ?? []).join(" ");
+    const debugCommand = (container.dev.command?.debug ?? []).join(" ");
 
+    const grepPattern: Array<string> = [];
+    if (runCommand) {
+      grepPattern.push(`-e '${runCommand}'`);
+    }
+    if (debugCommand) {
+      grepPattern.push(`-e '${debugCommand}'`);
+    }
+
+    const grepStr = "grep " + grepPattern.join(" ");
+
+    const killCommand = `ps aux| ${grepStr}|grep -v grep|awk '{print $2}'|xargs kill -9`;
+
+    spawnSync(NhctlCommand.nhctlPath, [
+      "exec",
+      node.getAppName(),
+      "-d",
+      node.label,
+      "--command",
+      "sh",
+      "--command",
+      "-c",
+      "--command",
+      killCommand,
+      "--kubeconfig",
+      node.getKubeConfigPath(),
+      "-n",
+      node.getNameSpace(),
+      ,
+    ]);
+
+    host.showProgressing("running ...", async () => {
       const args = [
         "exec",
         node.getAppName(),
@@ -60,7 +91,7 @@ export default class RunCommand implements ICommand {
         "--command",
         "-c",
         "--command",
-        command,
+        runCommand,
         "--kubeconfig",
         node.getKubeConfigPath(),
         "-n",
@@ -75,33 +106,6 @@ export default class RunCommand implements ICommand {
 
       const terminal = host.invokeInNewTerminal(cmd, name);
       terminal.show();
-
-      let onClose = vscode.window.onDidCloseTerminal((e) => {
-        if (e.name === name) {
-          const killCommand = `ps aux|grep -i '${command}'|grep -v grep|awk '{print $2}'|xargs kill -9`;
-
-          spawnSync(NhctlCommand.nhctlPath, [
-            "exec",
-            node.getAppName(),
-            "-d",
-            node.label,
-            "--command",
-            "sh",
-            "--command",
-            "-c",
-            "--command",
-            killCommand,
-            "--kubeconfig",
-            node.getKubeConfigPath(),
-            "-n",
-            node.getNameSpace(),
-            ,
-          ]);
-
-          onClose.dispose();
-          onClose = null;
-        }
-      });
     });
   }
 
