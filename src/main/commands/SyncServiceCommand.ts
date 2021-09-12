@@ -20,7 +20,7 @@ export interface Sync {
   node?: Deployment;
 }
 
-interface SyncMsg {
+export interface SyncMsg {
   status: string;
   msg: string;
   tips: string;

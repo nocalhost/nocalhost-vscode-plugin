@@ -1505,7 +1505,6 @@ export function nhctlCommand(
   const command = `${nhctlPath} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
   } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
-  console.log(command);
   return command;
 }
 

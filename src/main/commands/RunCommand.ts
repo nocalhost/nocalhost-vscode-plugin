@@ -11,6 +11,8 @@ import { validate } from "json-schema";
 import { ContainerConfig } from "../service/configService";
 import { NhctlCommand } from "../ctl/nhctl";
 import logger from "../utils/logger";
+import { LiveReload } from "../debug/liveReload";
+import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 
 export interface ExecCommandParam {
   appName: string;
@@ -23,16 +25,25 @@ export interface ExecCommandParam {
 
 export default class RunCommand implements ICommand {
   command: string = RUN;
+  node: Deployment;
+  container: ContainerConfig;
+  disposable: { array: Array<{ dispose(): any }>; onDidDispose?: Function } = {
+    array: [],
+  };
+
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
+
   async execCommand(...rest: any[]) {
     const [node, command] = rest as [Deployment, string];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    const container = await this.getContainer(node);
+
+    this.node = node;
+    this.container = await this.getContainer();
 
     if (!command) {
       const status = await node.getStatus(true);
@@ -43,10 +54,19 @@ export default class RunCommand implements ICommand {
       }
     }
 
-    this.startRun(node, container);
+    await this.startRun();
   }
 
-  startRun(node: Deployment, container: ContainerConfig) {
+  async syncComplete() {
+    this.disposable.onDidDispose = this.startRun.bind(this);
+
+    this.disposable.array[0].dispose();
+  }
+
+  startRun() {
+    this.disposable.onDidDispose = null;
+
+    const { container, node } = this;
     const runCommand = (container.dev.command?.run ?? []).join(" ");
     const debugCommand = (container.dev.command?.debug ?? []).join(" ");
 
@@ -102,38 +122,43 @@ export default class RunCommand implements ICommand {
       logger.info(`[run] ${cmd}`);
       host.log(`${cmd}`, true);
 
-      const name = `run:${node.getAppName()}-${node.label}`;
+      const resourceNode = node as KubernetesResourceNode;
+
+      const liveReload = new LiveReload(
+        {
+          namespace: node.getNameSpace(),
+          kubeConfigPath: node.getKubeConfigPath(),
+          resourceType: resourceNode.resourceType,
+          appName: node.getAppName(),
+          workloadName: resourceNode.name,
+        },
+        this.syncComplete.bind(this)
+      );
+
+      const name = `run`;
 
       const terminal = host.invokeInNewTerminal(cmd, name);
       terminal.show();
+
+      this.disposable.array.push(
+        terminal,
+        liveReload,
+        vscode.window.onDidCloseTerminal((e) => {
+          if (e.name === name) {
+            this.disposable.array.forEach((d) => d.dispose());
+            this.disposable.array.length = 0;
+
+            this.disposable.onDidDispose && this.disposable.onDidDispose();
+          }
+        })
+      );
     });
   }
 
-  killContainerDebugProcess(
-    podName: string,
-    kubeconfigPath: string,
-    execCommand: string[],
-    namespace: string
-  ) {
-    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
-    const args = command.split(" ");
-    const sliceCommands = execCommand.join(" ");
-
-    const killCommand = `kill -9 \`ps aux|grep -i '${sliceCommands}'|grep -v grep|awk '{print $2}'\``;
-
-    args.push("bash", "-c", `${killCommand}`);
-
-    const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
-    host.log(`[debug] ${cmd}`, true);
-    logger.error(`[cmd]: ${cmd}`);
-
-    spawnSync(NhctlCommand.nhctlPath, args);
-  }
-
-  async getContainer(node: Deployment) {
+  async getContainer() {
     let container: ContainerConfig | undefined;
 
-    const serviceConfig = node.getConfig();
+    const serviceConfig = this.node.getConfig();
     const containers = (serviceConfig && serviceConfig.containers) || [];
     if (containers.length > 1) {
       const containerNames = containers.map((c) => c.name);
