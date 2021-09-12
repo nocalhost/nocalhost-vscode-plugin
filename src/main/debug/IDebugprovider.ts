@@ -6,7 +6,7 @@ const retry = require("async-retry");
 
 import host from "../host";
 import logger from "../utils/logger";
-import { NhctlCommand } from "./../ctl/nhctl";
+import { NhctlCommand } from "../ctl/nhctl";
 
 export abstract class IDebugProvider {
   abstract startDebug(

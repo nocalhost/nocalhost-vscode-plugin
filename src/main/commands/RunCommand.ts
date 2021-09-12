@@ -27,6 +27,7 @@ export default class RunCommand implements ICommand {
   command: string = RUN;
   node: Deployment;
   container: ContainerConfig;
+
   disposable: { array: Array<{ dispose(): any }>; onDidDispose?: Function } = {
     array: [],
   };

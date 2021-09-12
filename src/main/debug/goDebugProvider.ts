@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { IDebugProvider } from "./IDebugprovider";
+import { IDebugProvider } from "./iDebugProvider";
 
 export class GoDebugProvider extends IDebugProvider {
   async startDebug(
