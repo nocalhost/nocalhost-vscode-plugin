@@ -9,9 +9,13 @@ import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import logger from "../utils/logger";
-import { IDebugProvider } from "../debug/provider/iDebugProvider";
 import { ContainerConfig } from "../service/configService";
-import { chooseDebugProvider, Language } from "../debug/provider";
+
+import {
+  chooseDebugProvider,
+  Language,
+  IDebugProvider,
+} from "../debug/provider";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;

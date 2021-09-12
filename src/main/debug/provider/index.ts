@@ -13,11 +13,9 @@ const support = {
   python: PythonDebugProvider,
 };
 
-export type Language = keyof typeof support;
+type Language = keyof typeof support;
 
-export async function chooseDebugProvider(
-  type?: Language
-): Promise<IDebugProvider> {
+async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
   const supportType = Object.keys(support) as Array<Language>;
 
   if (!type) {
@@ -28,3 +26,5 @@ export async function chooseDebugProvider(
 
   return new debugProvider();
 }
+
+export { IDebugProvider, chooseDebugProvider, Language };
