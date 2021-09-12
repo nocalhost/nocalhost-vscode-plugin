@@ -5,7 +5,7 @@ import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import { ContainerConfig } from "../service/configService";
-import { IDebugProvider } from "./IDebugprovider";
+import { IDebugProvider } from "./provider/iDebugProvider";
 import logger from "../utils/logger";
 
 export class DebugSession {
@@ -46,7 +46,7 @@ export class DebugSession {
     );
 
     host.log("[debug] launch debug", true);
-    let terminal = this.enterContainer(
+    let terminal = await this.enterContainer(
       node.getKubeConfigPath(),
       container,
       node.getNameSpace(),
@@ -95,7 +95,7 @@ export class DebugSession {
     }
   }
 
-  enterContainer(
+  async enterContainer(
     kubeconfigPath: string,
     container: ContainerConfig,
     namespace: string,

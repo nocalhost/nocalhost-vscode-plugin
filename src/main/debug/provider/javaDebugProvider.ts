@@ -1,11 +1,14 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { IDebugProvider } from "./IDebugprovider";
-import host from "../host";
-import { NhctlCommand } from "./../ctl/nhctl";
+import { IDebugProvider } from "./iDebugProvider";
+import host from "../../host";
+import { NhctlCommand } from "../../ctl/nhctl";
 import { spawnSync } from "child_process";
 
 export class JavaDebugProvider extends IDebugProvider {
+  name: "java";
+  requireExtensions: ["vscjava.vscode-java-debug", "redhat.java"];
+
   async startDebug(
     workspaceFolder: string,
     sessionName: string,
@@ -71,18 +74,5 @@ export class JavaDebugProvider extends IDebugProvider {
     const killCommand = `kill -9 \`ps aux|grep -i '${searchCommand.trim()}'|grep -v grep|awk '{print $2}'\``;
     args.push("bash", "-c", `${killCommand}`);
     spawnSync(NhctlCommand.nhctlPath, args);
-  }
-
-  public async isDebuggerInstalled(): Promise<boolean> {
-    if (
-      vscode.extensions.getExtension("vscjava.vscode-java-debug") &&
-      vscode.extensions.getExtension("redhat.java")
-    ) {
-      return true;
-    }
-    return super.installExtension("Debugger for Java", [
-      "vscjava.vscode-java-debug",
-      "redhat.java",
-    ]);
   }
 }

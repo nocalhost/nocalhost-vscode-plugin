@@ -2,6 +2,9 @@ import * as vscode from "vscode";
 import { IDebugProvider } from "./iDebugProvider";
 
 export class GoDebugProvider extends IDebugProvider {
+  name = "golang";
+  requireExtensions = ["golang.go"];
+
   async startDebug(
     workspaceFolder: string,
     sessionName: string,
@@ -27,13 +30,5 @@ export class GoDebugProvider extends IDebugProvider {
       debugConfiguration,
       terminatedCallback
     );
-  }
-
-  public async isDebuggerInstalled(): Promise<boolean> {
-    if (vscode.extensions.getExtension("golang.go")) {
-      return true;
-    }
-
-    return super.installExtension("golang", ["golang.go"]);
   }
 }

@@ -1,7 +1,9 @@
-import * as vscode from "vscode";
-import { IDebugProvider } from "./IDebugprovider";
+import { IDebugProvider } from "./iDebugProvider";
 
 export class NodeDebugProvider extends IDebugProvider {
+  name: "node";
+  requireExtensions: [];
+
   async startDebug(
     workspaceFolder: string,
     sessionName: string,

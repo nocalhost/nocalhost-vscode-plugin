@@ -4,11 +4,14 @@ import * as path from "path";
 const isPortReachable = require("is-port-reachable");
 const retry = require("async-retry");
 
-import host from "../host";
-import logger from "../utils/logger";
-import { NhctlCommand } from "../ctl/nhctl";
+import host from "../../host";
+import logger from "../../utils/logger";
+import { NhctlCommand } from "../../ctl/nhctl";
 
 export abstract class IDebugProvider {
+  abstract name: string = null;
+  abstract requireExtensions: Array<string> = [];
+
   abstract startDebug(
     workspaceFolder: string,
     sessionName: string,
@@ -80,18 +83,25 @@ export abstract class IDebugProvider {
   }
 
   public async isDebuggerInstalled() {
+    if (
+      this.requireExtensions.length > 0 &&
+      !this.existExtensions(this.requireExtensions)
+    ) {
+      return await this.installExtension(this.requireExtensions);
+    }
+
     return Promise.resolve(true);
   }
 
+  private existExtensions(extensionArray: string[]) {
+    return extensionArray.every(vscode.extensions.getExtension);
+  }
   /**
    * install
    */
-  public async installExtension(
-    extensionName: string,
-    extensionArry: string[]
-  ) {
+  private async installExtension(extensionArray: string[]) {
     let answer = await vscode.window.showInformationMessage(
-      `Go debugging requires the '${extensionName}' extension. Would you like to install it now?`,
+      `Debugger for ${this.name} requires extension. Would you like to install it now?`,
       "Install Now"
     );
 
@@ -102,9 +112,9 @@ export abstract class IDebugProvider {
     await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification },
       async (p) => {
-        p.report({ message: `Installing ${extensionName} ...` });
+        p.report({ message: `Installing debugger for ${this.name} ...` });
 
-        for (const id of extensionArry) {
+        for (const id of extensionArray) {
           await vscode.commands.executeCommand(
             "workbench.extensions.installExtension",
             id

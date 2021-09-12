@@ -7,13 +7,11 @@ import { DEBUG, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
-import { JavaDebugProvider } from "../debug/javaDebugProvider";
-import { NodeDebugProvider } from "../debug/nodeDebugProvider";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
-import { GoDebugProvider } from "../debug/goDebugProvider";
 import logger from "../utils/logger";
-import { IDebugProvider } from "../debug/IDebugprovider";
+import { IDebugProvider } from "../debug/provider/iDebugProvider";
 import { ContainerConfig } from "../service/configService";
+import { chooseDebugProvider, Language } from "../debug/provider";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -153,44 +151,22 @@ export default class DebugCommand implements ICommand {
   async getDebugProvider(node: Deployment): Promise<IDebugProvider> {
     let containerConfig = await this.getContainer(node);
 
-    let type: string;
+    let type: Language = null;
 
-    if (containerConfig.dev.image.includes("nocalhost/dev-images")) {
-      if (containerConfig.dev.image.includes("node")) {
+    const { image } = containerConfig.dev;
+
+    if (image.includes("nocalhost/dev-images")) {
+      if (image.includes("node")) {
         type = "node";
-      } else if (containerConfig.dev.image.includes("golang")) {
+      } else if (image.includes("golang")) {
         type = "golang";
-      } else if (containerConfig.dev.image.includes("python")) {
+      } else if (image.includes("python")) {
         type = "python";
-      } else if (containerConfig.dev.image.includes("java")) {
+      } else if (image.includes("java")) {
         type = "java";
       }
     }
 
-    return await this.chooseDebugProvider(type);
-  }
-
-  async chooseDebugProvider(type?: string) {
-    const supportType = ["node", "java", "golang"];
-
-    if (!type) {
-      type = await vscode.window.showQuickPick(supportType);
-    }
-
-    let debugProvider = null;
-    switch (type) {
-      case "node":
-        debugProvider = new NodeDebugProvider();
-        break;
-      case "golang":
-        debugProvider = new GoDebugProvider();
-        break;
-      case "java":
-        debugProvider = new JavaDebugProvider();
-        break;
-      default:
-    }
-
-    return debugProvider;
+    return await chooseDebugProvider(type);
   }
 }
