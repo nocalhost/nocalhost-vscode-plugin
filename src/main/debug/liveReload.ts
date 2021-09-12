@@ -52,7 +52,7 @@ export class LiveReload {
       let syncMsg = JSON.parse(result) as SyncMsg;
 
       if (syncMsg.status !== "idle") {
-        this.syncTimeoutId = setTimeout(() => this.witSyncComplete(), 500);
+        this.syncTimeoutId = setTimeout(this.witSyncComplete.bind(this), 500);
       } else {
         this.syncTimeoutId = null;
         this.syncComplete();
