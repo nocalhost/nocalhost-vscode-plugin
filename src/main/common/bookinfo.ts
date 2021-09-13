@@ -14,8 +14,8 @@ class Bookinfo {
   timeoutId: NodeJS.Timeout;
   port: string;
   callBack: {
-    cancell: Function;
-    succes: Function;
+    canceled: Function;
+    success: Function;
   };
 
   private static checkList: Bookinfo[] = [];
@@ -47,19 +47,19 @@ class Bookinfo {
         cancellable: true,
         location: vscode.ProgressLocation.Notification,
       },
-      async (progress, token) => {
+      async (_, token) => {
         token.onCancellationRequested(() => {
           Bookinfo.cleanCheck(bookinfo.app);
-          bookinfo.callBack.cancell();
+          bookinfo.callBack.canceled();
         });
-        return new Promise((succes, cancell) => {
+        return new Promise((success, canceled) => {
           bookinfo.timeoutId = setTimeout(
             () => bookinfo.checkState(),
             2 * 1000
           );
           bookinfo.callBack = {
-            cancell,
-            succes,
+            canceled,
+            success,
           };
         }).catch((err) => {
           host.showWarnMessage(err);
@@ -74,7 +74,7 @@ class Bookinfo {
         const bookinfo = this.checkList[index];
         if (bookinfo) {
           clearTimeout(bookinfo.timeoutId);
-          bookinfo.callBack.cancell();
+          bookinfo.callBack.canceled();
         }
 
         this.checkList.splice(index, 1);
@@ -158,7 +158,7 @@ class Bookinfo {
     if (
       state.getAppState(devSpaceNode.getNodeStateId(), "uninstalling") === true
     ) {
-      this.callBack.cancell();
+      this.callBack.canceled();
       return;
     }
 
@@ -169,7 +169,7 @@ class Bookinfo {
       const message = "Waiting time out";
 
       logger.info(message);
-      this.callBack.cancell(message);
+      this.callBack.canceled(message);
 
       return;
     }
@@ -181,7 +181,7 @@ class Bookinfo {
     if (await this.checkBookInfoStatus(this.app).catch(() => {})) {
       this.openUrl();
       Bookinfo.cleanCheck(this.app);
-      this.callBack.succes();
+      this.callBack.success();
       return;
     }
     this.timeoutId = setTimeout(() => this.checkState(), 2 * 1000);

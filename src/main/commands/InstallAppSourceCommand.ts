@@ -1,23 +1,23 @@
-import { NhctlCommand } from "./../ctl/nhctl";
 import * as vscode from "vscode";
 import * as path from "path";
-import { execWithProgress } from "../ctl/shell";
 import * as tempy from "tempy";
-import Bookinfo from "../common/bookinfo";
+import * as yaml from "yaml";
+import * as nls from "vscode-nls";
 
+import Bookinfo from "../common/bookinfo";
+import { NhctlCommand } from "./../ctl/nhctl";
+import { execWithProgress } from "../ctl/shell";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { replaceSpacePath } from "../utils/fileUtil";
-import * as yaml from "yaml";
 import git from "../ctl/git";
 import ICommand from "./ICommand";
 import { INSTALL_APP_SOURCE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import { getFilesByDir, readYaml } from "../utils/fileUtil";
+import { getFilesByDir } from "../utils/fileUtil";
 import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
 import state from "../state";
-import * as nls from "vscode-nls";
 import { ID_SPLIT } from "../nodes/nodeContants";
 
 const localize = nls.loadMessageBundle();
