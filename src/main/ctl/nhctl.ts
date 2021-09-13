@@ -662,6 +662,24 @@ export async function associate(
   return result.stdout;
 }
 
+export async function associateInfo(
+  kubeconfigPath: string,
+  namespace: string,
+  appName: string,
+  type: string,
+  workLoadName: string,
+  container: string,
+  params = ""
+) {
+  const command = nhctlCommand(
+    kubeconfigPath,
+    namespace,
+    `dev associate ${appName} -c ${container} -t ${type} -d ${workLoadName} ${params} --info`
+  );
+  const result = await execAsyncWithReturn(command, []);
+  return result.stdout;
+}
+
 export async function uninstall(
   host: Host,
   kubeconfigPath: string,
