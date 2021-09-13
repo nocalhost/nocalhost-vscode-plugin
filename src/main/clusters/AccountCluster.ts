@@ -23,8 +23,6 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
 import { ClustersState } from ".";
-import state from "../state";
-import { unlinkSync } from "fs";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -213,7 +211,10 @@ export default class AccountClusterService {
       newRootNodes.push(obj);
     }
 
-    AccountClusterService.cleanDiffKubeConfig(newAccountCluser, kubeConfigArr);
+    await AccountClusterService.cleanDiffKubeConfig(
+      newAccountCluser,
+      kubeConfigArr
+    );
 
     return newRootNodes;
   };
@@ -225,7 +226,7 @@ export default class AccountClusterService {
     const { baseUrl, username } = accountCluser.loginInfo;
     const KEY = `USER_LINK:${baseUrl}-${username}`;
 
-    const prevData = state.getData(KEY);
+    const prevData = host.getGlobalState(KEY);
 
     if (prevData) {
       const diff = arrayDiffer(prevData as Array<string>, configs);
@@ -234,14 +235,12 @@ export default class AccountClusterService {
         return;
       }
 
-      Promise.allSettled(
+      await Promise.allSettled(
         diff.map((id) => {
           return new Promise(async (res, rej) => {
             const file = path.resolve(KUBE_CONFIG_DIR, id);
 
             await kubeconfig(file, "remove");
-
-            await unlinkSync(file);
 
             res();
           });
@@ -249,7 +248,7 @@ export default class AccountClusterService {
       );
     }
 
-    state.setData(KEY, configs);
+    host.setGlobalState(KEY, configs);
   }
 
   static async saveKubeConfig(accountInfo: IServiceAccountInfo) {
