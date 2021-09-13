@@ -6,7 +6,9 @@ import { ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
 import registerCommand from "./register";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import host from "../host";
-import { associate, getServiceConfig } from "../ctl/nhctl";
+import { associate, getServiceConfig, NhctlCommand } from "../ctl/nhctl";
+import { getContainer } from "../utils/getContainer";
+import { INhCtlGetResult } from "../domain";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
   command: string = ASSOCIATE_LOCAL_DIRECTORY;
@@ -40,6 +42,18 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       node.resourceType
     );
 
+    const resource: INhCtlGetResult = await NhctlCommand.get({
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+    })
+      .addArgumentStrict(node.resourceType, node.name)
+      .addArgument("-a", node.getAppName())
+      .addArgument("-o", "json")
+      .exec();
+
+    const containerName =
+      (await node.getContainer()) || (await getContainer(resource.info));
+
     const currentUri = host.getCurrentRootPath();
 
     const selectUri = await host.showSelectFolderDialog(
@@ -53,7 +67,8 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
         appName,
         selectUri[0].fsPath,
         node.resourceType,
-        workloadName
+        workloadName,
+        containerName
       );
       if (openDir) {
         vscode.commands.executeCommand("vscode.openFolder", selectUri[0], true);

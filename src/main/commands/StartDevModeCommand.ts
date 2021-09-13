@@ -403,7 +403,8 @@ export default class StartDevModeCommand implements ICommand {
         node.getAppName(),
         destDir as string,
         node.resourceType,
-        node.name
+        node.name,
+        containerName
       );
     }
 
