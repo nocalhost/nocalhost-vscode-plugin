@@ -7,6 +7,7 @@ import { Deployment } from "../nodes/workloads/controllerResources/deployment/De
 import { ContainerConfig } from "../service/configService";
 import { IDebugProvider } from "./provider/iDebugProvider";
 import logger from "../utils/logger";
+import { Terminal } from "vscode";
 
 export class DebugSession {
   public async launch(
@@ -156,12 +157,25 @@ export class DebugSession {
     logger.info(`[debug] ${cmd}`);
     host.log(`${cmd}`, true);
 
-    const name = `debug:${node.getAppName()}-${node.label}`;
+    const name = `debug`;
 
     const terminal = host.invokeInNewTerminal(cmd, name);
     terminal.show();
 
-    return terminal;
+    return new Promise<Terminal>((res) => {
+      const disposable = [
+        vscode.window.onDidCloseTerminal((e) => {
+          if (e.name === name) {
+            disposable.forEach((d) => d.dispose());
+          }
+        }),
+        vscode.window.onDidOpenTerminal((e) => {
+          if (e.name === name) {
+            res(terminal);
+          }
+        }),
+      ];
+    });
   }
 
   async portForward(props: {

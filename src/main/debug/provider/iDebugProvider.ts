@@ -9,8 +9,8 @@ import logger from "../../utils/logger";
 import { NhctlCommand } from "../../ctl/nhctl";
 
 export abstract class IDebugProvider {
-  abstract name: string = null;
-  abstract requireExtensions: Array<string> = [];
+  name: string = null;
+  requireExtensions: Array<string> = [];
 
   abstract startDebug(
     workspaceFolder: string,

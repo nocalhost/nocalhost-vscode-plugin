@@ -146,7 +146,7 @@ export default class DebugCommand implements ICommand {
         } catch (e) {
           (token as any).cancel();
           host.log("[debug] cancel");
-          logger.info("[debug] cancel");
+          logger.error("[debug] cancel", e);
         }
       }
     );
