@@ -45,13 +45,6 @@ export async function openDevSpaceExec(
   return terminalDisposed;
 }
 
-interface ExecParam {
-  command: string;
-  args?: any[];
-  timeout?: number;
-  async?: boolean;
-}
-
 function showGlobalError(str: string) {
   if (str.indexOf("[WARNING]") > -1) {
     host.showInformationMessage(str, {
@@ -110,42 +103,49 @@ function startTimeout(param: {
   });
 }
 
-export function exec(
-  param: ExecParam
-): {
-  cancel: Event<any>;
-  promise: Promise<ExecOutputReturnValue>;
-} {
-  const { command, args, timeout, async } = param;
+interface ExecParam {
+  command: string;
+  args?: any[];
+  timeout?: number;
+  output?: OutPut;
+}
 
-  logger.info(`[cmd] ${command}`);
+type OutPut = boolean | { err: boolean; out: boolean };
+
+function getOutput(output: OutPut = { err: true, out: false }) {
+  if (typeof output === "boolean") {
+    return {
+      err: output,
+      out: output,
+    };
+  }
+  return output;
+}
+
+export function createProcess(param: ExecParam) {
+  const { command, args, output } = param;
 
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+
   const proc = spawn(command, args, { shell: true, env });
 
-  const startTime = Date.now();
+  const { err, out } = getOutput(output);
   let stderr = "";
   let stdout = "";
 
-  startTimeout({ timeout, proc, command });
-
-  proc.stdout.on("data", function (data) {
-    let str = "" + data;
+  proc.stdout.on("data", function (data: Buffer) {
+    let str = data.toString();
     stdout += data;
 
-    !async && host.log(str);
+    out && host.log(str);
+    showGlobalError(str);
   });
 
   proc.stderr.on("data", function (data) {
-    const str = data + "";
+    const str = data.toString();
     stderr += str;
 
-    !async && host.log(str);
-    !async && showGlobalError(str);
-  });
-
-  proc.on("exit", () => {
-    longTime(startTime, command);
+    err && host.log(str);
   });
 
   const promise = new Promise<ExecOutputReturnValue>(async (res, rej) => {
@@ -165,6 +165,29 @@ export function exec(
         rej({ code, stdout, stderr });
       }
     });
+  });
+
+  return { proc, promise };
+}
+
+export function exec(
+  param: ExecParam
+): {
+  cancel: Event<any>;
+  promise: Promise<ExecOutputReturnValue>;
+} {
+  const { command, timeout } = param;
+
+  logger.info(`[cmd] ${command}`);
+
+  const { proc, promise } = createProcess(param);
+
+  startTimeout({ timeout, proc, command });
+
+  const startTime = Date.now();
+
+  proc.on("exit", () => {
+    longTime(startTime, command);
   });
 
   return {
@@ -198,7 +221,7 @@ export function execWithProgress(
         cancellable: true,
       },
       (_, token) => {
-        const { promise, cancel } = exec(rest);
+        const { promise, cancel } = exec({ output: true, ...rest });
 
         token.onCancellationRequested(cancel);
 

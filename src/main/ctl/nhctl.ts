@@ -164,8 +164,7 @@ export class NhctlCommand {
 
   async exec(hasParse = true) {
     const command = this.getCommand();
-    const result = await exec({ command, timeout: this.time, async: true })
-      .promise;
+    const result = await exec({ command, timeout: this.time }).promise;
 
     if (!result) {
       return null;
@@ -894,7 +893,7 @@ export async function endDevMode(
 
   const title = `Ending DevMode: ${appName}/${workLoadName}`;
 
-  await execWithProgress({ command, title }).catch(() => {
+  await execWithProgress({ command, title, output: true }).catch(() => {
     host.showErrorMessage(`${title} fail`);
   });
 }
@@ -943,7 +942,7 @@ export async function getServiceConfig(
     `describe ${appName} -d ${workloadName} ${type ? `--type ${type}` : ""}`
   );
 
-  const result = await exec({ command, async: true }).promise;
+  const result = await exec({ command }).promise;
 
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {
@@ -997,7 +996,7 @@ export async function getImageByContainer(props: {
     } --key image -t ${workloadType.toLowerCase()}`
   );
 
-  const result = await exec({ command, async: true }).promise;
+  const result = await exec({ command }).promise;
   try {
     return JSON.parse(result.stdout);
   } catch (e) {
@@ -1055,7 +1054,7 @@ export async function getConfig(
     }`
   );
 
-  const result = await exec({ command, async: true }).promise;
+  const result = await exec({ command }).promise;
   return result.stdout;
 }
 
@@ -1221,7 +1220,7 @@ export async function getSyncStatus(
 
   const command = nhctlCommand(kubeConfigPath, namespace, baseCommand);
 
-  const r = await exec({ command, async: true }).promise.catch((e) => {
+  const r = await exec({ command }).promise.catch((e) => {
     logger.info("Nocalhost.syncService syncCommand");
     logger.error(e);
 
