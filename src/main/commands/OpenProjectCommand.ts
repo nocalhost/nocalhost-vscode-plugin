@@ -70,8 +70,7 @@ export default class OpenProjectCommand implements ICommand {
       vscode.commands.executeCommand(
         ASSOCIATE_LOCAL_DIRECTORY,
         node,
-        containerName,
-        true
+        containerName
       );
     }
   }
