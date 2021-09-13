@@ -1,13 +1,13 @@
-import { existsSync } from 'fs';
-import * as vscode from 'vscode';
-import { associateInfo, NhctlCommand } from '../ctl/nhctl';
-import host from '../host';
-import { OPEN_PROJECT, ASSOCIATE_LOCAL_DIRECTORY } from './constants';
-import ICommand from './ICommand';
-import registerCommand from './register';
-import { ControllerNodeApi } from './StartDevModeCommand';
-import { getContainer } from '../utils/getContainer';
-import { INhCtlGetResult } from '../domain';
+import { existsSync } from "fs";
+import * as vscode from "vscode";
+import { associateInfo, NhctlCommand } from "../ctl/nhctl";
+import host from "../host";
+import { OPEN_PROJECT, ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
+import ICommand from "./ICommand";
+import registerCommand from "./register";
+import { ControllerNodeApi } from "./StartDevModeCommand";
+import { getContainer } from "../utils/getContainer";
+import { INhCtlGetResult } from "../domain";
 
 export default class OpenProjectCommand implements ICommand {
   command: string = OPEN_PROJECT;
@@ -19,11 +19,11 @@ export default class OpenProjectCommand implements ICommand {
 
   async execCommand(node: ControllerNodeApi) {
     if (!node) {
-      host.showWarnMessage('Failed to get node configs, please try again.');
+      host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
     const status = await node.getStatus();
-    if (status !== 'developing') {
+    if (status !== "developing") {
       return;
     }
 
@@ -36,8 +36,8 @@ export default class OpenProjectCommand implements ICommand {
       namespace: node.getNameSpace(),
     })
       .addArgumentStrict(node.resourceType, node.name)
-      .addArgument('-a', node.getAppName())
-      .addArgument('-o', 'json')
+      .addArgument("-a", node.getAppName())
+      .addArgument("-o", "json")
       .exec();
 
     const containerName =
@@ -64,7 +64,7 @@ export default class OpenProjectCommand implements ICommand {
       const uri = vscode.Uri.file(profile);
 
       if (currentUri !== uri.fsPath) {
-        vscode.commands.executeCommand('vscode.openFolder', uri);
+        vscode.commands.executeCommand("vscode.openFolder", uri);
       }
     } else {
       vscode.commands.executeCommand(
