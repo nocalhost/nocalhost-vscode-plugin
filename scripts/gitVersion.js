@@ -6,15 +6,22 @@ const packageJson = JSON.parse(
   fs.readFileSync(packageJsonUri, { encoding: "utf8" })
 );
 
-const { PLUGIN_VERSION } = process.env;
+const {
+  PLUGIN_VERSION,
+  NHCTL_VERSION,
+  MINIMUNM_VERSION_REQUIREMENT,
+} = process.env;
 
 console.log("> update the version to: ", PLUGIN_VERSION);
 
 const version = `-beta.${PLUGIN_VERSION}`;
 
 packageJson.version += version;
-packageJson.nhctl.version = "dev";
-packageJson.nhctl.serverVersion = process.env.MINIMUNM_VERSION_REQUIREMENT;
+packageJson.nhctl.serverVersion = MINIMUNM_VERSION_REQUIREMENT;
+
+if (NHCTL_VERSION) {
+  packageJson.nhctl.version = NHCTL_VERSION;
+}
 
 fs.unlinkSync(packageJsonUri);
 fs.writeFileSync(packageJsonUri, JSON.stringify(packageJson));
