@@ -13,7 +13,7 @@ console.log("> update the version to: ", PLUGIN_VERSION);
 const version = `-beta.${PLUGIN_VERSION}`;
 
 packageJson.version += version;
-packageJson.nhctl.server = "dev";
+packageJson.nhctl.version = "dev";
 packageJson.nhctl.serverVersion = process.env.MINIMUNM_VERSION_REQUIREMENT;
 
 fs.unlinkSync(packageJsonUri);
