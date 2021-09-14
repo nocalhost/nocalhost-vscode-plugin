@@ -1231,9 +1231,8 @@ export async function overrideSyncFolders(
     namespace,
     `sync-status ${appName} -d ${workloadName} --override`
   );
-  host.log(`[cmd] ${command}`);
 
-  await exec({ command });
+  await execWithProgress({ command, title: "Sync..." });
 }
 
 export async function reconnectSync(
