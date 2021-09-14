@@ -8,7 +8,7 @@ import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
 import { sortResources } from "../clusters";
 import logger from "../utils/logger";
 
-import { LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
+import { GLOBAL_TIMEOUT, LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
 import { AppNode } from "./AppNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
@@ -22,7 +22,6 @@ import { DevSpaceNode } from "./DevSpaceNode";
 
 import arrayDiffer = require("array-differ");
 import { asyncLimit } from "../utils";
-import { GLOBAL_TIMEOUT } from "../commands/constants";
 
 async function getClusterName(res: IRootNode) {
   if (!res.kubeConfigPath) {

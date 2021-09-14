@@ -1,4 +1,9 @@
-import { PLUGIN_TEMP_DIR, TEMP_NHCTL_BIN } from "./../constants";
+import {
+  DEV_VERSION,
+  GLOBAL_TIMEOUT,
+  PLUGIN_TEMP_DIR,
+  TEMP_NHCTL_BIN,
+} from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -30,7 +35,6 @@ import { IPvc } from "../domain";
 import { getConfiguration } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
-import { GLOBAL_TIMEOUT } from "../commands/constants";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1332,7 +1336,7 @@ function getNhctlPath(version: string) {
   }
 
   let versionName = version;
-  if (version !== "dev") {
+  if (version !== DEV_VERSION) {
     versionName = "v" + version;
   }
 
@@ -1351,6 +1355,11 @@ export async function checkDownloadNhctlVersion(
   nhctlPath: string = NH_BIN
 ) {
   const tempVersion: string = await services.fetchNhctlVersion(nhctlPath);
+
+  if (version === DEV_VERSION) {
+    version = "";
+  }
+
   return tempVersion === version;
 }
 
