@@ -73,8 +73,8 @@ jobs:
       #     echo "EOF" >> $GITHUB_ENV
       #     echo "::add-mask::$NOCALHOST_KUBECONFIG"
 
-      # - name: Run tests
-      #   run: yarn run test:ext
+      - name: Run tests
+        run: yarn run test:ext
 
       # - name: Destroy cluster
       #   if: ${{ always() }}
@@ -83,10 +83,10 @@ jobs:
       #     TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
       #   run: ~/cluster destroy
 
-      # - name: Mv screenshot
-      #   if: ${{ always() }}
-      #   run: |
-      #     mv .screenshot ~/.nh/screenshot
+      - name: Mv screenshot
+        if: ${{ always() }}
+        run: |
+          mv .screenshot ~/.nh/screenshot
 
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
