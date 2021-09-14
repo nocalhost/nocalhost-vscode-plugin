@@ -44,11 +44,6 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
 
-      - name: Update the version of package.json
-        env:
-          MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-        run: node scripts/gitVersion.js
-
       # - name: Run tests
       #   uses: GabrielBB/xvfb-action@v1.0
       #   env:
@@ -65,6 +60,11 @@ jobs:
           echo "$NOCALHOST_KUBECONFIG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
           echo "::add-mask::$NOCALHOST_KUBECONFIG"
+
+      - name: Update the version of package.json
+        env:
+          MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
+        run: node scripts/gitVersion.js
 
       - name: Build ext
         run: |
