@@ -40,8 +40,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Set evn
-
       - name: Install project dependencies
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
