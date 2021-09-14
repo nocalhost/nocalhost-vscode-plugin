@@ -1,10 +1,10 @@
 # Change Log
 
-## Version 0.5.2 (2021-08-30)
+## 0.5.2 (2021-08-30)
 
 #### New Features
 
-- Automatically switch to GitHub release when failed download plugin from CODING 
+- Automatically switch to GitHub release when failed download plugin from CODING
 
 #### Refactor & Improvement
 
@@ -16,7 +16,8 @@
 - Fixed the error notification "Failed to get node configs, please try again"
 - Fixed the use of `appName` issue
 
-## Version 0.5.0 (2021-08-06)
+## 0.5.0 (2021-08-06)
+
 #### New Features
 
 - Add cluster status
@@ -35,7 +36,7 @@
 - Fixed `run` command
 - Fixed the config issue of `StatefulSet`
 
-## Version 0.4.19 (2021-08-02)
+## 0.4.19 (2021-08-02)
 
 ### New Features
 
@@ -56,7 +57,7 @@
 - Add prompt when `Open Project` is not associated with a target directory
 - Unify description of menu and page
 
-## Version 0.4.18 (2021-07-23)
+## 0.4.18 (2021-07-23)
 
 ### New Features
 
@@ -77,7 +78,7 @@
 
 - Optimize the status display when file sync in outOfSync
 
-## Version 0.4.14 (2021-07-16)
+## 0.4.14 (2021-07-16)
 
 ### New Features
 

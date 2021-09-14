@@ -13,7 +13,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  async execCommand(node: Deployment) {
+  async execCommand(node: Deployment, openDir?: boolean) {
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
@@ -25,7 +25,7 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     const kubeConfigPath = node.getKubeConfigPath();
 
     const status = await node.getStatus();
-    if (status === "developing") {
+    if (status === "developing" && !openDir) {
       host.showWarnMessage(
         "You are already in DevMode, please exit and try again"
       );
@@ -55,7 +55,11 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
         node.resourceType,
         workloadName
       );
-      host.showInformationMessage("Directory successfully linked");
+      if (openDir) {
+        vscode.commands.executeCommand("vscode.openFolder", selectUri[0], true);
+      } else {
+        host.showInformationMessage("Directory successfully linked");
+      }
     }
   }
 }
