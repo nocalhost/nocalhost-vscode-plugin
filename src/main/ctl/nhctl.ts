@@ -4,7 +4,7 @@ import * as semver from "semver";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
-import { exec, execWithProgress } from "./shell";
+import { exec, ExecParam, execWithProgress } from "./shell";
 import host, { Host } from "../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
@@ -53,7 +53,8 @@ export class NhctlCommand {
   );
   private outputMethod: string = "toJson";
 
-  private time?: number;
+  private execParam: Omit<ExecParam, "command"> = {};
+
   constructor(base: string, baseParams?: IBaseCommand<unknown>) {
     this.baseParams = baseParams;
     this.args = [];
@@ -64,7 +65,7 @@ export class NhctlCommand {
   }
   static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
     const command = NhctlCommand.create("get", baseParams);
-    command.time = ms;
+    command.execParam.timeout = ms;
 
     return command;
   }
@@ -82,7 +83,7 @@ export class NhctlCommand {
   }
   static list(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
     const command = NhctlCommand.create("list", baseParams);
-    command.time = ms;
+    command.execParam.timeout = ms;
 
     return command;
   }
@@ -103,6 +104,7 @@ export class NhctlCommand {
 
     const nhctlCommand = NhctlCommand.create(base, rest);
     nhctlCommand.args = args;
+    nhctlCommand.execParam.output = false;
 
     return nhctlCommand;
   }
@@ -164,7 +166,7 @@ export class NhctlCommand {
 
   async exec(hasParse = true) {
     const command = this.getCommand();
-    const result = await exec({ command, timeout: this.time }).promise;
+    const result = await exec({ command, ...this.execParam }).promise;
 
     if (!result) {
       return null;
@@ -546,14 +548,11 @@ export async function install(props: {
     } ${refOrVersion}`;
   }
 
-  host.log("cmd: " + command, true);
-
   return execWithProgress({
     title: `Installing application: ${appName}`,
     command,
   }).catch(() => {
-    host.showErrorMessage(`Install application (${appName}) fail`);
-    return Promise.reject();
+    return Promise.reject(new Error(`Install application (${appName}) fail`));
   });
 }
 
@@ -664,8 +663,7 @@ export async function uninstall(
     command,
     title,
   }).catch(() => {
-    host.showErrorMessage(`${title} fail`);
-    return Promise.reject();
+    return Promise.reject(new Error(`${title} fail`));
   });
 }
 
@@ -804,9 +802,9 @@ export async function startPortForward(
 
   const sudo = isSudo(ports);
 
-  host.log(`[cmd] ${sudo ? `sudo -S ${command}` : command}`, true);
-
   if (sudo) {
+    host.log(`[cmd] ${sudo ? `sudo -S ${command}` : command}`, true);
+
     return await sudoPortForward(`sudo -S ${command}`);
   }
 
@@ -816,8 +814,9 @@ export async function startPortForward(
     title,
     command,
   }).catch(() => {
-    host.showErrorMessage(`Port-forward (${appName}/${workloadName}) fail`);
-    return Promise.reject();
+    return Promise.reject(
+      new Error(`Port-forward (${appName}/${workloadName}) fail`)
+    );
   });
 }
 
@@ -843,13 +842,12 @@ export async function endPortForward(
     host.log(`[cmd] sudo -S ${command}`, true);
     await sudoPortForward(`sudo -S ${command}`);
   } else {
-    host.log(`[cmd] ${command}`, true);
-
-    await exec({
+    await execWithProgress({
       command,
-    }).promise.catch(() => {
-      host.showErrorMessage(
-        `End port-forward (${appName}/${workloadName}) fail`
+      title: `End port-forward (${appName}/${workloadName})`,
+    }).catch(() => {
+      return Promise.reject(
+        new Error(`End port-forward (${appName}/${workloadName}) fail`)
       );
     });
   }
@@ -957,18 +955,6 @@ export async function getServiceConfig(
   }
 
   return svcProfile;
-}
-
-export async function printAppInfo(
-  host: Host,
-  kubeconfigPath: string,
-  namespace: string,
-  appName: string
-) {
-  const command = nhctlCommand(kubeconfigPath, namespace, `list ${appName}`);
-  host.log(`[cmd] ${command}`, true);
-
-  await exec({ command });
 }
 
 // ~/.nh/bin/nhctl profile get bookinfo-coding -d centos-01 --container xxx  --key image -t xxx  -n xxx --kubeconfig xxx
@@ -1123,9 +1109,7 @@ export async function resetApp(
     command,
     title,
   }).catch(() => {
-    host.showErrorMessage(`${title} fail`);
-
-    return Promise.reject();
+    return Promise.reject(new Error(`${title} fail`));
   });
 }
 

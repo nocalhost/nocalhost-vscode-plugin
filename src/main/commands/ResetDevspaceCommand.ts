@@ -52,8 +52,6 @@ export default class ResetDevspaceCommand implements ICommand {
 
       vscode.commands.executeCommand("Nocalhost.refresh", nocalhostRootNode);
 
-      host.showInformationMessage(`reset ${node.info.spaceName}`);
-
       state.delete(node.info.spaceName);
     });
   }

@@ -460,7 +460,7 @@ export default class InstallAppSourceCommand implements ICommand {
       command,
     })
       .catch(() => {
-        throw new Error(`${title} fail`);
+        return Promise.reject(new Error(`${title} fail`));
       })
       .finally(() => {
         state.deleteAppState(this.getNodeStateId(appName), "installing");

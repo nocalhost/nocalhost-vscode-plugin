@@ -332,7 +332,7 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (error: any) => {
-  if (error === "ignore") {
+  if (error === undefined || error === "ignore") {
     return;
   }
 
@@ -355,12 +355,13 @@ process.on("unhandledRejection", (error: any) => {
       return;
     }
     vscode.window.showErrorMessage(error.error.message);
-  } else {
+  } else if (error instanceof Error) {
     const message = error.message;
 
     if (message?.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")) {
       return;
     }
+
     vscode.window.showErrorMessage(message);
   }
 });

@@ -103,7 +103,7 @@ function startTimeout(param: {
   });
 }
 
-interface ExecParam {
+export interface ExecParam {
   command: string;
   args?: any[];
   timeout?: number;
@@ -124,7 +124,6 @@ function getOutput(output: OutPut = { err: true, out: false }) {
 
 export function createProcess(param: ExecParam) {
   const { command, args, output } = param;
-
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
 
   const proc = spawn(command, args, { shell: true, env });
@@ -132,6 +131,10 @@ export function createProcess(param: ExecParam) {
   const { err, out } = getOutput(output);
   let stderr = "";
   let stdout = "";
+
+  if (out) {
+    host.log(`\n[cmd] ${command}`, true);
+  }
 
   proc.stdout.on("data", function (data: Buffer) {
     let str = data.toString();
@@ -177,14 +180,12 @@ export function exec(
   promise: Promise<ExecOutputReturnValue>;
 } {
   const { command, timeout } = param;
+  const startTime = Date.now();
+  const { proc, promise } = createProcess(param);
 
   logger.info(`[cmd] ${command}`);
 
-  const { proc, promise } = createProcess(param);
-
   startTimeout({ timeout, proc, command });
-
-  const startTime = Date.now();
 
   proc.on("exit", () => {
     longTime(startTime, command);
