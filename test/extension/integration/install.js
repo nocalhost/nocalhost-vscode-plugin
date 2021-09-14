@@ -25,16 +25,16 @@ async function install(page) {
 
   treeView = await getTreeView(page);
 
+  treeView = await Promise.all(
+    treeView.filter((item) =>
+      item.evaluate((el) => el.getAttribute("aria-level") === "2")
+    )
+  );
+
   const index = (
     await Promise.all(
-      treeView.filter((item) =>
-        item.evaluate((el) => el.getAttribute("aria-level") === "2")
-      )
-    ).then((els) => {
-      return Promise.all(
-        els.map((item) => item.evaluate((el) => el.innerText))
-      );
-    })
+      treeView.map((item) => item.evaluate((el) => el.innerText))
+    )
   ).findIndex((text) => text === "default");
 
   logger.debug(`install treeView:${treeView.length} index:${index}`);
