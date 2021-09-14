@@ -26,8 +26,14 @@ async function install(page) {
 
   const index = (
     await Promise.all(
-      treeView.map((item) => item.evaluate((el) => el.innerText))
-    )
+      treeView.filter((item) =>
+        item.evaluate((el) => el.getAttribute("aria-level") === "2")
+      )
+    ).then((els) => {
+      return Promise.all(
+        els.map((item) => item.evaluate((el) => el.innerText))
+      );
+    })
   ).findIndex((text) => text === "default");
 
   const defaultView = treeView[index];
@@ -39,14 +45,6 @@ async function install(page) {
   if (className.includes("collapsed")) {
     await defaultView.click();
     await page.waitForTimeout(3000);
-
-    // await page.waitForFunction(() => {
-    //   return !document
-    //     .querySelector("#workbench\\.parts\\.sidebar")
-    //     ?.querySelectorAll(".monaco-list-row .monaco-tl-twistie")[1]
-    //     .getAttribute("class")
-    //     .includes("collapsed");
-    // });
   }
 
   const app = await getInstallApp(page, "bookinfo");
