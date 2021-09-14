@@ -27,7 +27,7 @@ import {
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
-import { getConfiguration } from "../utils/conifg";
+import { getConfiguration } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
 import { GLOBAL_TIMEOUT } from "../commands/constants";
