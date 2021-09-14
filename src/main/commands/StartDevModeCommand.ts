@@ -478,21 +478,14 @@ export default class StartDevModeCommand implements ICommand {
 
       host.log("sync file ...", true);
 
-      await host.withProgress(
-        {
-          title: "syncing file",
-        },
-        async () => {
-          await nhctl.syncFile(
-            host,
-            node.getKubeConfigPath(),
-            node.getNameSpace(),
-            appName,
-            node.name,
-            node.resourceType,
-            containerName
-          );
-        }
+      await nhctl.syncFile(
+        host,
+        node.getKubeConfigPath(),
+        node.getNameSpace(),
+        appName,
+        node.name,
+        node.resourceType,
+        containerName
       );
 
       host.log("sync file end", true);

@@ -45,7 +45,7 @@ export async function openDevSpaceExec(
   return terminalDisposed;
 }
 
-function showGlobalError(str: string) {
+function showGlobalMsg(str: string) {
   if (str.indexOf("[WARNING]") > -1) {
     host.showInformationMessage(str, {
       modal: true,
@@ -141,7 +141,7 @@ export function createProcess(param: ExecParam) {
     stdout += data;
 
     out && host.log(str);
-    showGlobalError(str);
+    showGlobalMsg(str);
   });
 
   proc.stderr.on("data", function (data) {
