@@ -551,12 +551,10 @@ export async function install(props: {
   return execWithProgress({
     title: `Installing application: ${appName}`,
     command,
-  }).then(
-    (result) => result,
-    (_) => {
-      host.showErrorMessage(`Install application (${appName}) fail`);
-    }
-  );
+  }).catch(() => {
+    host.showErrorMessage(`Install application (${appName}) fail`);
+    return Promise.reject();
+  });
 }
 
 export async function upgrade(
@@ -624,6 +622,7 @@ export async function upgrade(
     command,
   }).catch(() => {
     host.showErrorMessage(`upgrade application (${appName}) fail`);
+    return Promise.reject();
   });
 }
 
@@ -666,6 +665,7 @@ export async function uninstall(
     title,
   }).catch(() => {
     host.showErrorMessage(`${title} fail`);
+    return Promise.reject();
   });
 }
 
@@ -817,6 +817,7 @@ export async function startPortForward(
     command,
   }).catch(() => {
     host.showErrorMessage(`Port-forward (${appName}/${workloadName}) fail`);
+    return Promise.reject();
   });
 }
 
@@ -893,8 +894,9 @@ export async function endDevMode(
 
   const title = `Ending DevMode: ${appName}/${workLoadName}`;
 
-  await execWithProgress({ command, title, output: true }).catch(() => {
+  await execWithProgress({ command, title }).catch(() => {
     host.showErrorMessage(`${title} fail`);
+    return Promise.reject();
   });
 }
 
@@ -1122,6 +1124,8 @@ export async function resetApp(
     title,
   }).catch(() => {
     host.showErrorMessage(`${title} fail`);
+
+    return Promise.reject();
   });
 }
 
@@ -1141,6 +1145,8 @@ export async function resetService(
 
   await execWithProgress({ title, command }).catch(() => {
     host.showErrorMessage(`${title} fail`);
+
+    return Promise.reject(new Error(`${title} fail`));
   });
 }
 
