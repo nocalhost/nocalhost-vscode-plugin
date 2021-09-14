@@ -14,6 +14,8 @@ async function dowload(page) {
 
   await waitForMessage(page, "Downloading nhctl");
 
-  await waitForMessage(page, "Download completed", 3 * 60 * 1000);
+  await waitForMessage(page, "Download completed", 10 * 60 * 1000);
+
+  jest.setTimeout(5 * 60 * 1000);
 }
 module.exports = { dowload };

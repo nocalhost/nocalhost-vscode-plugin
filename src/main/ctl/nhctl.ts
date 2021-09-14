@@ -1341,7 +1341,7 @@ function getNhctlPath(version: string) {
   };
 }
 
-export async function checkDownloadNhclVersion(
+export async function checkDownloadNhctlVersion(
   version: string,
   nhctlPath: string = NH_BIN
 ) {
@@ -1406,9 +1406,9 @@ export async function checkVersion() {
     await lock();
     setUpgrade(true);
 
-    await host.showProgressing(progressingTitle, async (aciton) => {
+    await host.showProgressing(progressingTitle, async (acton) => {
       await downloadNhctl(sourcePath, destinationPath, (increment) => {
-        aciton.report({ increment });
+        acton.report({ increment });
       });
 
       // windows A lot of Windows Defender firewall warnings #167
@@ -1442,7 +1442,7 @@ export async function checkVersion() {
 
       fs.renameSync(destinationPath, binPath);
 
-      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+      if (!(await checkDownloadNhctlVersion(requiredVersion))) {
         vscode.window.showErrorMessage(failedMessage);
       } else {
         vscode.window.showInformationMessage(completedMessage);
