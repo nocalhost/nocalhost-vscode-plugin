@@ -9,6 +9,7 @@ const {
   checkPort,
 } = require("./index");
 const assert = require("assert");
+const logger = require("../lib/log");
 
 /**
  *
@@ -35,6 +36,8 @@ async function install(page) {
       );
     })
   ).findIndex((text) => text === "default");
+
+  logger.debug(`install treeView:${treeView.length} index:${index}`);
 
   const defaultView = treeView[index];
 
