@@ -1331,10 +1331,15 @@ function getNhctlPath(version: string) {
     binPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
+  let versionName = version;
+  if (version !== "dev") {
+    versionName = "v" + version;
+  }
+
   return {
     sourcePath: [
-      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
-      `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
+      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=${versionName}`,
+      `https://github.com/nocalhost/nocalhost/releases/download/${versionName}/${name}`,
     ],
     binPath,
     destinationPath,
