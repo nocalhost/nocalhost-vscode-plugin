@@ -1,4 +1,4 @@
-// jest.setTimeout(5 * 60 * 1000);
+jest.setTimeout(5 * 60 * 1000);
 
 jasmine.getEnv().addReporter({
   specStarted: (result) => (jasmine.currentTest = result),

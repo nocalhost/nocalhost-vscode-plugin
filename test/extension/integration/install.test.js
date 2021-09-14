@@ -57,7 +57,7 @@ const installTests = () => {
   });
 
   describe("deploy From Git Repo", () => {
-    it("kstomize", async () => {
+    it("kustomize", async () => {
       await installKustomizeGit(page);
     });
     it("helm", async () => {

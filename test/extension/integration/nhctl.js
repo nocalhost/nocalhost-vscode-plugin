@@ -6,7 +6,7 @@ const shell = require("shelljs");
 /**
  * @param {puppeteer.Page} page
  */
-async function dowload(page) {
+async function download(page) {
   const result = shell.which(path.resolve(homedir(), ".nh", "bin", "nhctl"));
   if (result && result.code === 0) {
     return;
@@ -15,7 +15,5 @@ async function dowload(page) {
   await waitForMessage(page, "Downloading nhctl");
 
   await waitForMessage(page, "Download completed", 10 * 60 * 1000);
-
-  jest.setTimeout(5 * 60 * 1000);
 }
-module.exports = { dowload };
+module.exports = { download };
