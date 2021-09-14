@@ -40,6 +40,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
+      - name: Set evn
+        run: echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Install project dependencies
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
