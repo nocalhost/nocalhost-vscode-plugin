@@ -1357,7 +1357,7 @@ export async function checkDownloadNhctlVersion(
   const tempVersion: string = await services.fetchNhctlVersion(nhctlPath);
 
   if (version === DEV_VERSION) {
-    version = "";
+    version = undefined;
   }
 
   return tempVersion === version;
