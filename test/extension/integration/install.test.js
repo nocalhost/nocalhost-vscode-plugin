@@ -1,7 +1,6 @@
 const cp = require("child_process");
 const rimraf = require("rimraf");
 const os = require("os");
-const fs = require("fs-extra");
 const path = require("path");
 
 const {
@@ -43,7 +42,7 @@ const installTests = () => {
     });
 
     afterAll(async () => {
-      fs.moveSync(bookInfoPath, path.join(__dirname, "../../../.screenshot/"));
+      rimraf.sync(bookInfoPath);
     });
 
     it("kustomize", async () => {
