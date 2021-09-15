@@ -73,7 +73,7 @@ jobs:
           ls -al
 
       - name: Run tests
-        evn:
+        env:
           CYPRESS_EVERY_NTH_FRAME: 1
         run: yarn run test:ext
 
