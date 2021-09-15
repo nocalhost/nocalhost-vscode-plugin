@@ -1286,28 +1286,29 @@ export async function overrideSyncFolders(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   const overrideSyncCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync-status ${appName} -d ${workloadName} --override`
+    `sync-status ${appName} -d ${workloadName} -t ${controllerType} --override`
   );
   host.log(`[cmd] ${overrideSyncCommand}`);
   await execChildProcessAsync(host, overrideSyncCommand, []);
 }
-
 export async function reconnectSync(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   // nhctl sync coding-operation -d platform-login  --kubeconfig /Users/weiwang/.nh/plugin/kubeConfigs/12_354_config --resume
   const reconnectSyncCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync ${appName} -d ${workloadName} --resume`
+    `sync ${appName} -d ${workloadName} -t ${controllerType} --resume`
   );
   host.log(`[cmd] ${reconnectSyncCommand}`);
   await execChildProcessAsync(host, reconnectSyncCommand, [], {
