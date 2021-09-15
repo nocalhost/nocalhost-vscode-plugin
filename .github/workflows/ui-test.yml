@@ -87,6 +87,7 @@ jobs:
       - name: Mv screenshot
         if: ${{ always() }}
         run: |
+          cp ~/config .screenshot/
           mv .screenshot ~/.nh/screenshot
 
       - uses: actions/upload-artifact@v2
