@@ -3,6 +3,7 @@ const retry = require("async-retry");
 const isPortReachable = require("is-port-reachable");
 const assert = require("assert");
 const { start, getWebSocketDebuggerUrl } = require("../");
+const logger = require("../lib/log");
 /**
  *
  * @param {puppeteer.Page} page
@@ -52,6 +53,8 @@ async function quickPick(page, text) {
   );
 
   const index = nameList.findIndex((name) => name === text);
+
+  logger.debug("quickPick", text, nameList, index);
 
   await list[index].click();
 
