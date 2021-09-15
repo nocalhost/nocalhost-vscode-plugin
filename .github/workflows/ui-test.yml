@@ -54,7 +54,6 @@ jobs:
       - name: Set env
         run: |
           echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "NHCTL_VERSION=dev" >> $GITHUB_ENV
           NOCALHOST_KUBECONFIG=$(cat ~/config)
           echo "NOCALHOST_KUBECONFIG<<EOF" >> $GITHUB_ENV
           echo "$NOCALHOST_KUBECONFIG" >> $GITHUB_ENV
@@ -64,6 +63,7 @@ jobs:
       - name: Update the version of package.json
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
+          NHCTL_VERSION: dev
         run: node scripts/gitVersion.js
 
       - name: Build ext
@@ -73,6 +73,8 @@ jobs:
           ls -al
 
       - name: Run tests
+        evn:
+          CYPRESS_EVERY_NTH_FRAME: 1
         run: yarn run test:ext
 
       # - name: Destroy cluster
