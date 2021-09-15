@@ -210,21 +210,18 @@ const getPage = async (browser) => {
  * @param {number} timeout
  */
 async function checkPort(port) {
-  return await retry(
-    () =>
-      new Promise((res, rej) => {
-        const connect = isPortReachable(port, {
-          host: "127.0.0.1",
-          timeout: 1 * 1000,
-        });
-        if (connect) {
-          res(true);
-          return;
-        }
-        rej();
-      }),
+  const connect = await retry(
+    async () => {
+      const connect = await isPortReachable(port, {
+        host: "127.0.0.1",
+        timeout: 1 * 1000,
+      });
+      return Promise[connect ? "resolve" : "reject"](connect);
+    },
     { maxRetryTime: 30 * 1000 }
   );
+
+  return connect;
 }
 
 module.exports = {
