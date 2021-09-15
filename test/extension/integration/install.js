@@ -145,7 +145,7 @@ async function installFromLocal(page, path) {
 async function installHelmLocal(page, path) {
   await installFromLocal(page, path);
 
-  await quickPick(page, "config.kustomize.local.yaml");
+  await quickPick(page, "config.helm.local.yaml");
 
   await setInputBox(page, "Use Default");
 

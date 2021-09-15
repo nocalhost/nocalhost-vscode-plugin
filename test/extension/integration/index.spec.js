@@ -28,3 +28,7 @@ afterEach(async () => {
 describe("nhctl", nhctlTests);
 describe("connect", connectTests);
 describe("install", installTests);
+
+module.exports = {
+  screenshotPath,
+};
