@@ -2,7 +2,7 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 
-let version = process.env.VERSION;
+let version = process.env.VERSION || "";
 console.log("> update changelog version to: ", version);
 
 const matched = version.match(/\d+\.\d+\.\d+/);
