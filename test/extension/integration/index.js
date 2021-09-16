@@ -216,7 +216,7 @@ async function checkPort(port) {
         host: "127.0.0.1",
         timeout: 1 * 1000,
       });
-      assert(connect);
+      assert(connect, "checkPort Error");
     },
     { randomize: false, retries: 6 }
   );
