@@ -653,13 +653,32 @@ export async function associate(
   dir: string,
   type: string,
   workLoadName: string,
+  container: string,
   params = ""
 ) {
   const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName} ${params}`
+    `dev associate ${appName} -s ${resultDir} -c ${container} -t ${type} -d ${workLoadName} ${params}`
+  );
+  const result = await execAsyncWithReturn(command, []);
+  return result.stdout;
+}
+
+export async function associateInfo(
+  kubeconfigPath: string,
+  namespace: string,
+  appName: string,
+  type: string,
+  workLoadName: string,
+  container: string,
+  params = ""
+) {
+  const command = nhctlCommand(
+    kubeconfigPath,
+    namespace,
+    `dev associate ${appName} -c ${container} -t ${type} -d ${workLoadName} ${params} --info`
   );
   const result = await execAsyncWithReturn(command, []);
   return result.stdout;
@@ -1290,28 +1309,29 @@ export async function overrideSyncFolders(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   const overrideSyncCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync-status ${appName} -d ${workloadName} --override`
+    `sync-status ${appName} -d ${workloadName} -t ${controllerType} --override`
   );
   host.log(`[cmd] ${overrideSyncCommand}`);
   await execChildProcessAsync(host, overrideSyncCommand, []);
 }
-
 export async function reconnectSync(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   // nhctl sync coding-operation -d platform-login  --kubeconfig /Users/weiwang/.nh/plugin/kubeConfigs/12_354_config --resume
   const reconnectSyncCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync ${appName} -d ${workloadName} --resume`
+    `sync ${appName} -d ${workloadName} -t ${controllerType} --resume`
   );
   host.log(`[cmd] ${reconnectSyncCommand}`);
   await execChildProcessAsync(host, reconnectSyncCommand, [], {
