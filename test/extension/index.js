@@ -1,17 +1,15 @@
-const http = require("http");
 const cp = require("child_process");
 const path = require("path");
 const fse = require("fs-extra");
 const assert = require("assert");
 const isWindows = require("is-windows");
 const os = require("os");
-
+const getPort = require("get-port");
+const axios = require("axios");
 const {
   downloadAndUnzipVSCode,
   resolveCliPathFromVSCodeExecutablePath,
 } = require("vscode-test");
-const getPort = require("get-port");
-const axios = require("axios");
 
 const logger = require("./lib/log");
 const VideoCapture = require("./lib/videoCapture");
@@ -132,7 +130,7 @@ const run = async (executable, args, testsEnv) => {
   });
 
   cmd.stderr.on("data", function (data) {
-    logger.error(data.toString());
+    logger.warn(data.toString());
   });
 
   cmd.on("error", function (data) {
