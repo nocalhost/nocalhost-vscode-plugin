@@ -174,7 +174,7 @@ async function initialize() {
   const { pid, port } = await start();
 
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
-    maxRetryTime: 10 * 1000,
+    retries: 3,
   });
 
   const browser = await puppeteer.connect({
