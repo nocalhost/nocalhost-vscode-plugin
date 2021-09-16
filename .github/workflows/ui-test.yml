@@ -90,29 +90,39 @@ jobs:
       - name: Run tests
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
-          LOGGER_LEVEL: DEBUG
+          # LOGGER_LEVEL: DEBUG
         run: yarn run test:ext
 
       # - name: Destroy cluster
-      #   if: ${{ always() }}
+      #   if: ${{ always() }} failure
       #   env:
       #     TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
       #     TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
       #   run: ~/cluster destroy
 
       - name: Mv screenshot
-        if: ${{ failure() }}
-        run: |
-          cp nocalhost.vsix .screenshot/
-          cp ~/config .screenshot/
-          cp ~/.nh/bin/nhctl .screenshot/
-          mv .screenshot ~/.nh/screenshot
+        if: ${{ always() }}
+        run: mv .screenshot ~/.nh/screenshot
 
       - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
+        if: ${{ always() }}
         with:
           name: artifact-${{ runner.os }}-${{ github.run_id }}
           path: |
             ~/.nh/screenshot
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
+
+      - name: Build dependency
+        if: ${{ always() }}
+        run: |
+          mkdir .dependency
+          cp ~/.nh/bin/nhctl .dependency/
+          cp nocalhost.vsix .dependency/
+          cp ~/config .dependency/
+
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: artifact-${{ runner.os }}-${{ github.run_id }}-dependency
+          path: .dependency
