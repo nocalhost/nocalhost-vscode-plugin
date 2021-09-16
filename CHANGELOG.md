@@ -1,5 +1,20 @@
 # Change Log
 
+## Version 0.5.6 (2021-09-16)
+
+#### New Features
+
+- Add new Nocalhost Server dashboard features support
+
+#### Refactor & Improvement
+
+- Notify `nhctl` to clean up the cache for expired KubeConfig
+
+#### Bug Fixes
+
+- Fixed container selector issue when opening or associate directory
+- Fixed an issue that could not be recovered after code synchronization for non-Deployment workloads was disconnected
+
 ## Version 0.5.2 (2021-08-30)
 
 #### New Features
