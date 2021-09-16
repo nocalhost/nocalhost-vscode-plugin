@@ -645,7 +645,7 @@ export async function associate(
     namespace,
     `dev associate ${appName} -s ${resultDir} -c ${container} -t ${type} -d ${workLoadName} ${params}`
   );
-  const result = await execAsyncWithReturn(command, []);
+  const result = await exec({ command }).promise;
   return result.stdout;
 }
 
