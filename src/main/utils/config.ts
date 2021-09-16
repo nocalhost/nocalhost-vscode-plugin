@@ -6,7 +6,7 @@ export function getConfiguration(name: ConfigName) {
   const KEY = "nocalhost." + name;
 
   return (
-    process.env[KEY.toUpperCase().replace(".", "_")] ||
+    process.env[KEY.toUpperCase().replace(/\./g, "_")] ||
     vscode.workspace.getConfiguration().get(KEY)
   );
 }
