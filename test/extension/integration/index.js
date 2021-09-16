@@ -182,7 +182,7 @@ async function initialize() {
     defaultViewport: null,
   });
 
-  const page = await retry(() => getPage(browser), { maxRetryTime: 10 * 1000 });
+  const page = await retry(() => getPage(browser), { retries: 3 });
 
   await openNocalhost(page);
 
