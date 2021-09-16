@@ -158,6 +158,12 @@ export class AppNode extends NocalhostFolderNode {
     if (devspace.clusterSource === ClusterSource.server) {
       treeItem.contextValue = `${treeItem.contextValue}-server`;
     }
+
+    const devSpaceNode = this.getParent() as DevSpaceNode;
+
+    treeItem.contextValue = devSpaceNode.getSpaceOwnTypeContextValue(
+      treeItem.contextValue
+    );
   }
 
   public getKubeConfigPath() {
