@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 
 import ICommand from "./ICommand";
 import { SIGN_OUT } from "./constants";
@@ -9,8 +10,9 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import host from "../host";
 import { IUserInfo } from "../domain";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
-import * as fs from "fs";
 import Bookinfo from "../common/bookinfo";
+import { AccountClusterNode } from "../clusters";
+import { kubeconfig } from "../ctl/nhctl";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -41,11 +43,30 @@ export default class SignOutCommand implements ICommand {
     Bookinfo.cleanCheck(node);
 
     await state.refreshTree();
+
+    this.cleanKubeConfig(node.accountClusterService.accountClusterNode);
   }
 
-  async removeAllKubeconfig() {
-    KUBE_CONFIG_DIR;
-    fs.rmdirSync(KUBE_CONFIG_DIR, { recursive: true });
-    fs.mkdirSync(KUBE_CONFIG_DIR);
+  cleanKubeConfig(accountCluster: AccountClusterNode) {
+    const { baseUrl, username } = accountCluster.loginInfo;
+    const KEY = `USER_LINK:${baseUrl}-${username}`;
+
+    const prevData = host.getGlobalState(KEY);
+
+    if (prevData) {
+      Promise.allSettled(
+        (prevData as Array<string>).map((id) => {
+          return new Promise(async (res, rej) => {
+            const file = path.resolve(KUBE_CONFIG_DIR, id);
+
+            await kubeconfig(file, "remove");
+
+            res();
+          });
+        })
+      );
+    }
+
+    host.removeGlobalState(KEY);
   }
 }

@@ -1,4 +1,9 @@
-import { PLUGIN_TEMP_DIR, TEMP_NHCTL_BIN } from "./../constants";
+import {
+  DEV_VERSION,
+  GLOBAL_TIMEOUT,
+  PLUGIN_TEMP_DIR,
+  TEMP_NHCTL_BIN,
+} from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -27,7 +32,7 @@ import {
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
-import { getConfiguration } from "../utils/conifg";
+import { getConfiguration } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
 
@@ -55,6 +60,8 @@ export class NhctlCommand {
     host.isWindow() ? "nhctl.exe" : "nhctl"
   );
   private outputMethod: string = "toJson";
+
+  private time?: number;
   constructor(base: string, baseParams?: IBaseCommand<unknown>) {
     this.baseParams = baseParams;
     this.args = [];
@@ -63,8 +70,11 @@ export class NhctlCommand {
   static create(base: string, baseParams?: IBaseCommand<unknown>) {
     return new NhctlCommand(base, baseParams);
   }
-  static get(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("get", baseParams);
+  static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
+    const command = NhctlCommand.create("get", baseParams);
+    command.time = ms;
+
+    return command;
   }
   static exec(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k exec", baseParams);
@@ -78,8 +88,11 @@ export class NhctlCommand {
   static portForward(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("port-forward", baseParams);
   }
-  static list(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("list", baseParams);
+  static list(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
+    const command = NhctlCommand.create("list", baseParams);
+    command.time = ms;
+
+    return command;
   }
 
   static install(baseParams?: IBaseCommand<unknown>) {
@@ -159,7 +172,12 @@ export class NhctlCommand {
 
   async exec(hasParse = true) {
     const command = this.getCommand();
-    const result = await execAsyncWithReturn(command, [], Date.now());
+    const result = await execAsyncWithReturn(
+      command,
+      [],
+      Date.now(),
+      this.time
+    );
     if (!result) {
       return null;
     }
@@ -635,13 +653,32 @@ export async function associate(
   dir: string,
   type: string,
   workLoadName: string,
+  container: string,
   params = ""
 ) {
   const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName} ${params}`
+    `dev associate ${appName} -s ${resultDir} -c ${container} -t ${type} -d ${workLoadName} ${params}`
+  );
+  const result = await execAsyncWithReturn(command, []);
+  return result.stdout;
+}
+
+export async function associateInfo(
+  kubeconfigPath: string,
+  namespace: string,
+  appName: string,
+  type: string,
+  workLoadName: string,
+  container: string,
+  params = ""
+) {
+  const command = nhctlCommand(
+    kubeconfigPath,
+    namespace,
+    `dev associate ${appName} -c ${container} -t ${type} -d ${workLoadName} ${params} --info`
   );
   const result = await execAsyncWithReturn(command, []);
   return result.stdout;
@@ -1272,28 +1309,29 @@ export async function overrideSyncFolders(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   const overrideSyncCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync-status ${appName} -d ${workloadName} --override`
+    `sync-status ${appName} -d ${workloadName} -t ${controllerType} --override`
   );
   host.log(`[cmd] ${overrideSyncCommand}`);
   await execChildProcessAsync(host, overrideSyncCommand, []);
 }
-
 export async function reconnectSync(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   // nhctl sync coding-operation -d platform-login  --kubeconfig /Users/weiwang/.nh/plugin/kubeConfigs/12_354_config --resume
   const reconnectSyncCommand = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync ${appName} -d ${workloadName} --resume`
+    `sync ${appName} -d ${workloadName} -t ${controllerType} --resume`
   );
   host.log(`[cmd] ${reconnectSyncCommand}`);
   await execChildProcessAsync(host, reconnectSyncCommand, [], {
@@ -1317,21 +1355,31 @@ function getNhctlPath(version: string) {
     binPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
+  let versionName = version;
+  if (version !== DEV_VERSION) {
+    versionName = "v" + version;
+  }
+
   return {
     sourcePath: [
-      `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
-      `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
+      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=${versionName}`,
+      `https://github.com/nocalhost/nocalhost/releases/download/${versionName}/${name}`,
     ],
     binPath,
     destinationPath,
   };
 }
 
-export async function checkDownloadNhclVersion(
+export async function checkDownloadNhctlVersion(
   version: string,
   nhctlPath: string = NH_BIN
 ) {
   const tempVersion: string = await services.fetchNhctlVersion(nhctlPath);
+
+  if (version === DEV_VERSION) {
+    version = undefined;
+  }
+
   return tempVersion === version;
 }
 
@@ -1392,9 +1440,9 @@ export async function checkVersion() {
     await lock();
     setUpgrade(true);
 
-    await host.showProgressing(progressingTitle, async (aciton) => {
+    await host.showProgressing(progressingTitle, async (acton) => {
       await downloadNhctl(sourcePath, destinationPath, (increment) => {
-        aciton.report({ increment });
+        acton.report({ increment });
       });
 
       // windows A lot of Windows Defender firewall warnings #167
@@ -1409,30 +1457,43 @@ export async function checkVersion() {
         await execAsyncWithReturn(command, []).catch((e) => {
           logger.error(e);
         });
-        const nhctlPath = path.resolve(NH_BIN, "nhctl.exe");
-        const stopDamonCommand = `${nhctlPath} daemon stop`;
-        await execAsyncWithReturn(stopDamonCommand, []);
+        const findDaemonCommand = "tasklist | findstr nhctl.exe";
+        const result = await execAsyncWithReturn(findDaemonCommand, []).catch(
+          (e) => {
+            logger.error(e);
+          }
+        );
+        if (!result) {
+          logger.info("after kill has not daemon");
+        } else {
+          logger.info("after kill has daemon");
+          await execAsyncWithReturn(command, []).catch((e) => {
+            logger.error(e);
+          });
+        }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
       fs.renameSync(destinationPath, binPath);
 
-      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+      if (!(await checkDownloadNhctlVersion(requiredVersion))) {
         vscode.window.showErrorMessage(failedMessage);
       } else {
         vscode.window.showInformationMessage(completedMessage);
       }
     });
   } catch (err) {
-    // host.log(`[err] ${err}`, true);
+    // host.log(`[update err] ${err}`, true);
     console.error(err);
-    vscode.window.showErrorMessage(failedMessage);
+    typeof err === "string" && err.indexOf("lockerror") !== -1
+      ? logger.error("lockerror")
+      : vscode.window.showErrorMessage(failedMessage);
   } finally {
+    setUpgrade(false);
+    unlock();
     messageBus.emit("install", {
       status: "end",
     });
-    setUpgrade(false);
-    unlock();
   }
 }
 
@@ -1494,6 +1555,21 @@ export async function checkCluster(
   )
     .toJson()
     .exec();
+
+  return result;
+}
+
+export async function kubeconfig(
+  kubeConfigPath: string,
+  command: "add" | "remove"
+) {
+  const result = await NhctlCommand.create(`kubeconfig ${command}`, {
+    kubeConfigPath,
+  })
+    .toJson()
+    .exec();
+
+  logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
 
   return result;
 }

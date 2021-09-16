@@ -8,7 +8,7 @@ import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
 import { sortResources } from "../clusters";
 import logger from "../utils/logger";
 
-import { LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
+import { GLOBAL_TIMEOUT, LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
 import { AppNode } from "./AppNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
@@ -21,7 +21,7 @@ import { ClusterSource } from "../common/define";
 import { DevSpaceNode } from "./DevSpaceNode";
 
 import arrayDiffer = require("array-differ");
-import { asyncLimt } from "../utils";
+import { asyncLimit } from "../utils";
 
 async function getClusterName(res: IRootNode) {
   if (!res.kubeConfigPath) {
@@ -54,7 +54,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     const localClusterNodes =
       (host.getGlobalState(LOCAL_PATH) as LocalClusterNode[]) || [];
 
-    let nodes = await asyncLimt(
+    let nodes = await asyncLimit(
       localClusterNodes,
       (localCluster) => {
         if (!isExistSync(localCluster.filePath)) {
@@ -63,7 +63,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         return LocalCusterService.getLocalClusterRootNode(localCluster);
       },
-      10 * 1000
+      GLOBAL_TIMEOUT
     ).then((results) => {
       return results.map((result, index) => {
         if (result.status === "fulfilled") {
@@ -107,10 +107,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       `[globalClusterRootNodes]: ${JSON.stringify(globalClusterRootNodes)}`
     );
 
-    let nodes = await asyncLimt(
+    let nodes = await asyncLimit(
       globalClusterRootNodes,
       (account) => AccountClusterService.getServerClusterRootNodes(account),
-      10 * 1000
+      GLOBAL_TIMEOUT
     ).then((results) => {
       return results
         .map((result, index) => {
@@ -225,7 +225,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     resources = resources.filter((it) => Boolean(it));
 
-    const children = await asyncLimt(resources, async (res) => {
+    const children = await asyncLimit(resources, async (res) => {
       const clusterName = await getClusterName(res);
 
       return new KubeConfigNode({

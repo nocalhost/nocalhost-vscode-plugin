@@ -15,11 +15,12 @@
 - Fixed container selector issue when opening or associate directory
 - Fixed an issue that could not be recovered after code synchronization for non-Deployment workloads was disconnected
 
-## Version 0.5.2 (2021-08-30)
+
+## 0.5.2 (2021-08-30)
 
 #### New Features
 
-- Automatically switch to GitHub release when failed download plugin from CODING 
+- Automatically switch to GitHub release when failed download plugin from CODING
 
 #### Refactor & Improvement
 
@@ -31,7 +32,9 @@
 - Fixed the error notification "Failed to get node configs, please try again"
 - Fixed the use of `appName` issue
 
+
 ## Version 0.5.0 (2021-08-06)
+
 #### New Features
 
 - Add cluster status

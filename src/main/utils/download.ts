@@ -13,11 +13,11 @@ export const lock = async function (): Promise<void> {
   return new Promise((res, rej) => {
     fs.mkdir(lockDir, function (error) {
       if (error) {
-        rej(error);
+        rej(`${error}, lockerror`);
       }
       fs.writeFile(processDir, "true", function (err) {
         if (err) {
-          rej(err);
+          rej(`${err}, lockerror`);
         }
         res();
       });
@@ -77,12 +77,14 @@ async function download(
 }
 
 export const downloadNhctl = async (
-  pkgs: string[],
+  pkgArr: string[],
   destinationPath: string,
   onDownloadProgress: (progress: number) => void
 ) => {
-  for (const pkg of pkgs) {
+  for (const pkg of pkgArr) {
     try {
+      logger.info("downloadNhctl", pkg);
+
       await download(pkg, destinationPath, onDownloadProgress);
       break;
     } catch (error) {

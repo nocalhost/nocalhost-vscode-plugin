@@ -15,6 +15,12 @@
       "preLaunchTask": "${defaultBuildTask}"
     },
     {
+      "name": "UI Tests",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run test:ext"
+    },
+    {
       "name": "Extension Tests",
       "type": "extensionHost",
       "request": "launch",

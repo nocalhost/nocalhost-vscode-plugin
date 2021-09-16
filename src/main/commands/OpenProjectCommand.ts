@@ -1,11 +1,13 @@
 import { existsSync } from "fs";
 import * as vscode from "vscode";
-import { getServiceConfig } from "../ctl/nhctl";
+import { associateInfo, NhctlCommand } from "../ctl/nhctl";
 import host from "../host";
-import { OPEN_PROJECT } from "./constants";
+import { OPEN_PROJECT, ASSOCIATE_LOCAL_DIRECTORY } from "./constants";
 import ICommand from "./ICommand";
 import registerCommand from "./register";
 import { ControllerNodeApi } from "./StartDevModeCommand";
+import { getContainer } from "../utils/getContainer";
+import { INhCtlGetResult } from "../domain";
 
 export default class OpenProjectCommand implements ICommand {
   command: string = OPEN_PROJECT;
@@ -24,31 +26,51 @@ export default class OpenProjectCommand implements ICommand {
     if (status !== "developing") {
       return;
     }
-    const profile = await getServiceConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
+
+    const kubeConfigPath = node.getKubeConfigPath();
+    const namespace = node.getNameSpace();
+    const appName = node.getAppName();
+
+    const resource: INhCtlGetResult = await NhctlCommand.get({
+      kubeConfigPath: node.getKubeConfigPath(),
+      namespace: node.getNameSpace(),
+    })
+      .addArgumentStrict(node.resourceType, node.name)
+      .addArgument("-a", node.getAppName())
+      .addArgument("-o", "json")
+      .exec();
+
+    const containerName =
+      (await node.getContainer()) || (await getContainer(resource.info));
+
+    const profile = await associateInfo(
+      kubeConfigPath,
+      namespace,
+      appName,
+      node.resourceType,
       node.name,
-      node.resourceType
+      containerName
     );
 
-    if (profile.associate) {
-      if (!existsSync(profile.associate)) {
-        host.showInformationMessage(
-          "The directory does not exist,you are not associated with source directory"
-        );
+    host.log(`[associate info: ] ${profile}`, true);
+
+    if (profile) {
+      if (!existsSync(profile)) {
+        vscode.commands.executeCommand(ASSOCIATE_LOCAL_DIRECTORY, node, true);
         return;
       }
       const currentUri = host.getCurrentRootPath();
 
-      const uri = vscode.Uri.file(profile.associate);
+      const uri = vscode.Uri.file(profile);
 
       if (currentUri !== uri.fsPath) {
-        vscode.commands.executeCommand("vscode.openFolder", uri, true);
+        vscode.commands.executeCommand("vscode.openFolder", uri);
       }
     } else {
-      host.showInformationMessage(
-        "You are not associated with source directory"
+      vscode.commands.executeCommand(
+        ASSOCIATE_LOCAL_DIRECTORY,
+        node,
+        containerName
       );
     }
   }
