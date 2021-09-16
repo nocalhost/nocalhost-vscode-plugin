@@ -30,8 +30,8 @@ class Bookinfo {
       [
         "https://github.com/nocalhost/bookinfo.git",
         "git@github.com:nocalhost/bookinfo.git",
-        "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
-        "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
+        "https://e.coding.net/nocalhost/nocalhost/bookinfo.git",
+        "git@e.coding.net:nocalhost/nocalhost/bookinfo.git",
       ].includes(app.url) && app.name === "bookinfo";
 
     if (!isBookInfo) {

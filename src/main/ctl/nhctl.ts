@@ -1,4 +1,9 @@
-import { PLUGIN_TEMP_DIR, TEMP_NHCTL_BIN } from "./../constants";
+import {
+  DEV_VERSION,
+  GLOBAL_TIMEOUT,
+  PLUGIN_TEMP_DIR,
+  TEMP_NHCTL_BIN,
+} from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -23,10 +28,9 @@ import {
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
-import { getConfiguration } from "../utils/conifg";
+import { getConfiguration } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
-import { GLOBAL_TIMEOUT } from "../commands/constants";
 
 export interface InstalledAppInfo {
   name: string;
@@ -632,13 +636,32 @@ export async function associate(
   dir: string,
   type: string,
   workLoadName: string,
+  container: string,
   params = ""
 ) {
   const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} -t ${type} -d ${workLoadName} ${params}`
+    `dev associate ${appName} -s ${resultDir} -c ${container} -t ${type} -d ${workLoadName} ${params}`
+  );
+  const result = await execAsyncWithReturn(command, []);
+  return result.stdout;
+}
+
+export async function associateInfo(
+  kubeconfigPath: string,
+  namespace: string,
+  appName: string,
+  type: string,
+  workLoadName: string,
+  container: string,
+  params = ""
+) {
+  const command = nhctlCommand(
+    kubeconfigPath,
+    namespace,
+    `dev associate ${appName} -c ${container} -t ${type} -d ${workLoadName} ${params} --info`
   );
 
   const result = await exec({ command }).promise;
@@ -1224,28 +1247,29 @@ export async function overrideSyncFolders(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync-status ${appName} -d ${workloadName} --override`
+    `sync-status ${appName} -d ${workloadName} -t ${controllerType} --override`
   );
 
   await execWithProgress({ command, title: "Sync..." });
 }
-
 export async function reconnectSync(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  controllerType: string
 ) {
   // nhctl sync coding-operation -d platform-login  --kubeconfig /Users/weiwang/.nh/plugin/kubeConfigs/12_354_config --resume
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `sync ${appName} -d ${workloadName} --resume`
+    `sync ${appName} -d ${workloadName} -t ${controllerType} --resume`
   );
   host.log(`[cmd] ${command}`);
 
@@ -1271,21 +1295,31 @@ function getNhctlPath(version: string) {
     binPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
+  let versionName = version;
+  if (version !== DEV_VERSION) {
+    versionName = "v" + version;
+  }
+
   return {
     sourcePath: [
-      `https://codingcorp-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
-      `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
+      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=${versionName}`,
+      `https://github.com/nocalhost/nocalhost/releases/download/${versionName}/${name}`,
     ],
     binPath,
     destinationPath,
   };
 }
 
-export async function checkDownloadNhclVersion(
+export async function checkDownloadNhctlVersion(
   version: string,
   nhctlPath: string = NH_BIN
 ) {
   const tempVersion: string = await services.fetchNhctlVersion(nhctlPath);
+
+  if (version === DEV_VERSION) {
+    version = undefined;
+  }
+
   return tempVersion === version;
 }
 
@@ -1346,9 +1380,9 @@ export async function checkVersion() {
     await lock();
     setUpgrade(true);
 
-    await host.showProgressing(progressingTitle, async (aciton) => {
+    await host.showProgressing(progressingTitle, async (acton) => {
       await downloadNhctl(sourcePath, destinationPath, (increment) => {
-        aciton.report({ increment });
+        acton.report({ increment });
       });
 
       // windows A lot of Windows Defender firewall warnings #167
@@ -1378,7 +1412,7 @@ export async function checkVersion() {
 
       fs.renameSync(destinationPath, binPath);
 
-      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+      if (!(await checkDownloadNhctlVersion(requiredVersion))) {
         vscode.window.showErrorMessage(failedMessage);
       } else {
         vscode.window.showInformationMessage(completedMessage);
@@ -1458,6 +1492,21 @@ export async function checkCluster(
   )
     .toJson()
     .exec();
+
+  return result;
+}
+
+export async function kubeconfig(
+  kubeConfigPath: string,
+  command: "add" | "remove"
+) {
+  const result = await NhctlCommand.create(`kubeconfig ${command}`, {
+    kubeConfigPath,
+  })
+    .toJson()
+    .exec();
+
+  logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
 
   return result;
 }

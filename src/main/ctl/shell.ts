@@ -2,12 +2,12 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as path from "path";
 import * as shell from "shelljs";
 import { Event } from "vscode";
+import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
 
 import host from "../host";
 import { NH_BIN } from "../constants";
 import logger from "../utils/logger";
-import { ExecOutputReturnValue } from "shelljs";
 
 export async function openDevSpaceExec(
   appName: string,

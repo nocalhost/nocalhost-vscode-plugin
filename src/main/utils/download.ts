@@ -77,12 +77,14 @@ async function download(
 }
 
 export const downloadNhctl = async (
-  pkgs: string[],
+  pkgArr: string[],
   destinationPath: string,
   onDownloadProgress: (progress: number) => void
 ) => {
-  for (const pkg of pkgs) {
+  for (const pkg of pkgArr) {
     try {
+      logger.info("downloadNhctl", pkg);
+
       await download(pkg, destinationPath, onDownloadProgress);
       break;
     } catch (error) {

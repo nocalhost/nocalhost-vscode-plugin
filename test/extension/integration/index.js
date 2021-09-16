@@ -3,6 +3,7 @@ const retry = require("async-retry");
 const isPortReachable = require("is-port-reachable");
 const assert = require("assert");
 const { start, getWebSocketDebuggerUrl } = require("../");
+const logger = require("../lib/log");
 /**
  *
  * @param {puppeteer.Page} page
@@ -52,6 +53,8 @@ async function quickPick(page, text) {
   );
 
   const index = nameList.findIndex((name) => name === text);
+
+  logger.debug("quickPick", text, nameList, index);
 
   await list[index].click();
 
@@ -171,7 +174,7 @@ async function initialize() {
   const { pid, port } = await start();
 
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
-    maxRetryTime: 10 * 1000,
+    retries: 3,
   });
 
   const browser = await puppeteer.connect({
@@ -179,7 +182,7 @@ async function initialize() {
     defaultViewport: null,
   });
 
-  const page = await retry(() => getPage(browser), { maxRetryTime: 10 * 1000 });
+  const page = await retry(() => getPage(browser), { retries: 3 });
 
   await openNocalhost(page);
 
@@ -207,20 +210,15 @@ const getPage = async (browser) => {
  * @param {number} timeout
  */
 async function checkPort(port) {
-  return await retry(
-    () =>
-      new Promise((res, rej) => {
-        const connect = isPortReachable(port, {
-          host: "127.0.0.1",
-          timeout: 1 * 1000,
-        });
-        if (connect) {
-          res(true);
-          return;
-        }
-        rej();
-      }),
-    { maxRetryTime: 30 * 1000 }
+  await retry(
+    async () => {
+      const connect = await isPortReachable(port, {
+        host: "127.0.0.1",
+        timeout: 1 * 1000,
+      });
+      assert(connect, "checkPort Error");
+    },
+    { randomize: false, retries: 6 }
   );
 }
 

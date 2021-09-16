@@ -2,7 +2,8 @@ name: UI Tests
 on:
   pull_request:
     branches: [dev, main]
-
+  push:
+    branches: [test/vscode-puppeteer]
 jobs:
   test:
     strategy:
@@ -21,9 +22,9 @@ jobs:
           TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
           TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
         run: |
-          curl -fL "https://codingcorp-generic.pkg.coding.net/nocalhsot-test/cluster/cluster?version=latest" -o ~/cluster
+          curl -fL "https://nocalhost-generic.pkg.coding.net/nocalhost-test/binary/tketools?version=latest" -o ~/cluster
           chmod +x ~/cluster
-          ~/cluster create
+          ~/cluster create &
 
       - uses: actions/checkout@v2
 
@@ -43,12 +44,6 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn
 
-      - name: Build ext
-        run: |
-          yarn run build:ext
-          rm -rf .vscode-test
-          ls -al
-
       # - name: Run tests
       #   uses: GabrielBB/xvfb-action@v1.0
       #   env:
@@ -56,7 +51,35 @@ jobs:
       #   with:
       # run: yarn run test:ext
 
-      - name: Set env
+      - name: Set plugin version
+        run: echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Update the version of package.json
+        env:
+          MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
+          NHCTL_VERSION: dev
+        run: node scripts/gitVersion.js
+
+      - name: Build ext
+        run: |
+          yarn run build:ext
+          rm -rf .vscode-test
+          ls -al
+
+      - name: Wait cluster ready
+        run: >-
+          for ((i=1;i<=100;i++))
+          do
+            if [ ! -f "${HOME}/config" ]; then
+              time=`date "+%Y-%m-%d %H:%M:%S"`
+              echo  $time wait cluster ready
+              sleep 5s;
+            else
+              break;
+            fi
+          done
+
+      - name: Set kubeconfig
         run: |
           NOCALHOST_KUBECONFIG=$(cat ~/config)
           echo "NOCALHOST_KUBECONFIG<<EOF" >> $GITHUB_ENV
@@ -65,19 +88,21 @@ jobs:
           echo "::add-mask::$NOCALHOST_KUBECONFIG"
 
       - name: Run tests
+        env:
+          CYPRESS_EVERY_NTH_FRAME: 1
+          # LOGGER_LEVEL: DEBUG
         run: yarn run test:ext
 
-      - name: Destroy cluster
-        if: ${{ always() }}
-        env:
-          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
-          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
-        run: ~/cluster destroy
+      # - name: Destroy cluster
+      #   if: ${{ always() }} failure
+      #   env:
+      #     TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
+      #     TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
+      #   run: ~/cluster destroy
 
       - name: Mv screenshot
         if: ${{ always() }}
-        run: |
-          mv .screenshot ~/.nh/screenshot
+        run: mv .screenshot ~/.nh/screenshot
 
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
@@ -87,3 +112,17 @@ jobs:
             ~/.nh/screenshot
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
+
+      - name: Actions dependency
+        if: ${{ failure() }}
+        run: |
+          mkdir .dependency
+          cp ~/.nh/bin/nhctl .dependency/
+          cp nocalhost.vsix .dependency/
+          cp ~/config .dependency/
+
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: artifact-${{ runner.os }}-${{ github.run_id }}-dependency
+          path: .dependency
