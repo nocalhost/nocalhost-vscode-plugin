@@ -8,7 +8,6 @@ import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
-import logger from "../utils/logger";
 import { ContainerConfig } from "../service/configService";
 
 import {
@@ -120,34 +119,28 @@ export default class DebugCommand implements ICommand {
   async startDebugging(node: Deployment) {
     await host.showProgressingToken(
       {
-        title: "Debugging ...",
+        title: "Waiting for debugging ...",
         cancellable: true,
         location: vscode.ProgressLocation.Notification,
       },
-      async (_, token) => {
-        try {
-          const debugSession = new DebugSession();
+      async (_) => {
+        const debugSession = new DebugSession();
 
-          const workspaceFolder = await host.showWorkspaceFolderPick();
+        const workspaceFolder = await host.showWorkspaceFolderPick();
 
-          if (!workspaceFolder) {
-            host.showInformationMessage(
-              "You need to open a folder before execute this command."
-            );
-            return;
-          }
-
-          await debugSession.launch(
-            workspaceFolder,
-            await this.getDebugProvider(node),
-            node,
-            await this.getContainer(node)
+        if (!workspaceFolder) {
+          host.showInformationMessage(
+            "You need to open a folder before execute this command."
           );
-        } catch (e) {
-          (token as any).cancel();
-          host.log("[debug] cancel");
-          logger.error("[debug] cancel", e);
+          return;
         }
+
+        await debugSession.launch(
+          workspaceFolder,
+          await this.getDebugProvider(node),
+          node,
+          await this.getContainer(node)
+        );
       }
     );
   }
