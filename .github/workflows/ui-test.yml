@@ -113,8 +113,8 @@ jobs:
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
 
-      - name: Build dependency
-        if: ${{ always() }}
+      - name: Actions dependency
+        if: ${{ failure() }}
         run: |
           mkdir .dependency
           cp ~/.nh/bin/nhctl .dependency/
@@ -122,7 +122,7 @@ jobs:
           cp ~/config .dependency/
 
       - uses: actions/upload-artifact@v2
-        if: ${{ always() }}
+        if: ${{ failure() }}
         with:
           name: artifact-${{ runner.os }}-${{ github.run_id }}-dependency
           path: .dependency
