@@ -1,4 +1,9 @@
-import { PLUGIN_TEMP_DIR, TEMP_NHCTL_BIN } from "./../constants";
+import {
+  DEV_VERSION,
+  GLOBAL_TIMEOUT,
+  PLUGIN_TEMP_DIR,
+  TEMP_NHCTL_BIN,
+} from "./../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
@@ -27,10 +32,9 @@ import {
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
-import { getConfiguration } from "../utils/conifg";
+import { getConfiguration } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
-import { GLOBAL_TIMEOUT } from "../commands/constants";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1351,21 +1355,31 @@ function getNhctlPath(version: string) {
     binPath = path.resolve(NH_BIN, "nhctl.exe");
   }
 
+  let versionName = version;
+  if (version !== DEV_VERSION) {
+    versionName = "v" + version;
+  }
+
   return {
     sourcePath: [
-      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=v${version}`,
-      `https://github.com/nocalhost/nocalhost/releases/download/v${version}/${name}`,
+      `https://nocalhost-generic.pkg.coding.net/nocalhost/nhctl/${name}?version=${versionName}`,
+      `https://github.com/nocalhost/nocalhost/releases/download/${versionName}/${name}`,
     ],
     binPath,
     destinationPath,
   };
 }
 
-export async function checkDownloadNhclVersion(
+export async function checkDownloadNhctlVersion(
   version: string,
   nhctlPath: string = NH_BIN
 ) {
   const tempVersion: string = await services.fetchNhctlVersion(nhctlPath);
+
+  if (version === DEV_VERSION) {
+    version = undefined;
+  }
+
   return tempVersion === version;
 }
 
@@ -1426,9 +1440,9 @@ export async function checkVersion() {
     await lock();
     setUpgrade(true);
 
-    await host.showProgressing(progressingTitle, async (aciton) => {
+    await host.showProgressing(progressingTitle, async (acton) => {
       await downloadNhctl(sourcePath, destinationPath, (increment) => {
-        aciton.report({ increment });
+        acton.report({ increment });
       });
 
       // windows A lot of Windows Defender firewall warnings #167
@@ -1462,7 +1476,7 @@ export async function checkVersion() {
 
       fs.renameSync(destinationPath, binPath);
 
-      if (!(await checkDownloadNhclVersion(requiredVersion))) {
+      if (!(await checkDownloadNhctlVersion(requiredVersion))) {
         vscode.window.showErrorMessage(failedMessage);
       } else {
         vscode.window.showInformationMessage(completedMessage);

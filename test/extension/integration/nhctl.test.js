@@ -1,9 +1,13 @@
-const { dowload } = require("./nhctl");
+const { download } = require("./nhctl");
 
 const nhctlTests = () => {
-  test("dowload", async () => {
-    await dowload(page);
-  });
+  it(
+    "download",
+    async () => {
+      await download(page);
+    },
+    10 * 60 * 1000
+  );
 };
 
 module.exports = { nhctlTests };

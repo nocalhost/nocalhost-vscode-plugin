@@ -58,3 +58,6 @@ export const TMP_CONTAINER = "tmpContainer";
 export const TMP_DEVSTART_APPEND_COMMAND = "tmpDevstartAppendCommand";
 
 export const DATA_CENTER_INTERVAL_MS = 5000;
+export const GLOBAL_TIMEOUT = 30 * 1000;
+
+export const DEV_VERSION = "dev";
