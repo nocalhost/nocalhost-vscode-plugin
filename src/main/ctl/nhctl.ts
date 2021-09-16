@@ -28,7 +28,7 @@ import {
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
-import { getConfiguration } from "../utils/config";
+import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
 
@@ -1343,7 +1343,7 @@ function setUpgrade(isUpgrade: boolean) {
 }
 
 export async function checkVersion() {
-  if (getConfiguration("nhctl.checkVersion") === false) {
+  if (!getBooleanValue("nhctl.checkVersion")) {
     return;
   }
 
