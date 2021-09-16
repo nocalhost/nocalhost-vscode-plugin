@@ -10,7 +10,7 @@ if (!matched || matched.length !== 1) {
   return;
 }
 
-let updateURL = `https://raw.githubusercontent.com/nocalhost/nocalhost.github.io/release/docs/changelogs/${version.replace(
+let updateURL = `https://raw.githubusercontent.com/nocalhost/nocalhost.github.io/release/${version}/docs/changelogs/${version.replace(
   /(\d\.\d\.)(\d)/,
   "$1x"
 )}.md`;
@@ -48,7 +48,7 @@ function readUpdateFile() {
       });
     },
     function (error) {
-      console.log("Not get file: ", error);
+      console.log(`Not get file ${updateURL}`, error);
     }
   );
 }
