@@ -53,4 +53,4 @@ function readUpdateFile() {
   );
 }
 
-readUpdateFile();
+// readUpdateFile();
