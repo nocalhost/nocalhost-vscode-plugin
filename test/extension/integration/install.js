@@ -67,7 +67,7 @@ async function install(page) {
  */
 async function checkInstall(page) {
   assert(await (await isInstallSucceed(page, "bookinfo")).jsonValue());
-  // assert(await checkPort("39080"));
+  await checkPort("39080");
 }
 
 /**
