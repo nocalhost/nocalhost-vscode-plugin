@@ -1,4 +1,9 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
+import * as semver from "semver";
+import arrayDiffer = require("array-differ");
+import { uniqBy } from "lodash";
+import * as path from "path";
+
 import {
   IResponseData,
   IServiceAccountInfo,
@@ -9,17 +14,14 @@ import {
 } from "../domain";
 import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
-import * as path from "path";
-import { getAllNamespace } from "../ctl/nhctl";
+import { getAllNamespace, kubeconfig } from "../ctl/nhctl";
 import host from "../host";
 import { getStringHash } from "../utils/common";
-import { uniqBy } from "lodash";
 import { LoginInfo } from "./interface";
-import { writeFileLock } from "../utils/fileUtil";
+import { isExist, writeFileLock } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
-import * as semver from "semver";
 import { ClustersState } from ".";
 
 export class AccountClusterNode {
@@ -135,13 +137,17 @@ export default class AccountClusterService {
       }`
     );
 
+    const kubeConfigArr: Array<string> = [];
+
     for (const sa of serviceAccounts) {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
-      const id = getStringHash(
-        `${newAccountCluser.loginInfo.baseUrl}${sa.clusterId}${newAccountCluser.userInfo.id}_config`
+
+      const { id, kubeConfigPath } = await AccountClusterService.saveKubeConfig(
+        sa
       );
-      const kubeConfigPath = path.resolve(KUBE_CONFIG_DIR, id);
-      await writeFileLock(kubeConfigPath, sa.kubeconfig);
+
+      kubeConfigArr.push(id);
+
       if (sa.privilege) {
         const devs = await getAllNamespace({
           kubeConfigPath: kubeConfigPath,
@@ -189,6 +195,7 @@ export default class AccountClusterService {
           devSpaces.push(devInfo);
         }
       }
+
       const obj: IRootNode = {
         devSpaces,
         applications,
@@ -200,12 +207,63 @@ export default class AccountClusterService {
         kubeConfigPath,
         state: { code: 200 },
       };
+
       newRootNodes.push(obj);
     }
+
+    await AccountClusterService.cleanDiffKubeConfig(
+      newAccountCluser,
+      kubeConfigArr
+    );
 
     return newRootNodes;
   };
 
+  static async cleanDiffKubeConfig(
+    accountCluser: AccountClusterNode,
+    configs: Array<string>
+  ) {
+    const { baseUrl, username } = accountCluser.loginInfo;
+    const KEY = `USER_LINK:${baseUrl}-${username}`;
+
+    const prevData = host.getGlobalState(KEY);
+
+    if (prevData) {
+      const diff = arrayDiffer(prevData as Array<string>, configs);
+
+      if (diff.length === 0) {
+        return;
+      }
+
+      await Promise.allSettled(
+        diff.map((id) => {
+          return new Promise(async (res, rej) => {
+            const file = path.resolve(KUBE_CONFIG_DIR, id);
+
+            await kubeconfig(file, "remove");
+
+            res();
+          });
+        })
+      );
+    }
+
+    host.setGlobalState(KEY, configs);
+  }
+
+  static async saveKubeConfig(accountInfo: IServiceAccountInfo) {
+    const id = getStringHash(accountInfo.kubeconfig.trim());
+
+    const kubeConfigPath = path.resolve(KUBE_CONFIG_DIR, id);
+
+    if (!(await isExist(kubeConfigPath))) {
+      await writeFileLock(kubeConfigPath, accountInfo.kubeconfig);
+
+      kubeconfig(kubeConfigPath, "add");
+    }
+
+    return { id, kubeConfigPath };
+  }
   static appendClusterByLoginInfo = async (loginInfo: LoginInfo) => {
     const accountServer = new AccountClusterService(loginInfo);
     const newAccountCluser = await accountServer.buildAccountClusterNode();

@@ -1,17 +1,16 @@
+import * as vscode from "vscode";
+import Axios from "axios";
+const retry = require("async-retry");
+
 import { AppNode } from "../nodes/AppNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import state from "../state";
 import logger from "../utils/logger";
 import host from "../host";
-import * as vscode from "vscode";
-import { NhctlCommand } from "../ctl/nhctl";
-import { INhCtlGetResult, IResourceStatus } from "../domain";
 import { NocalhostFolderNode } from "../nodes/abstract/NocalhostFolderNode";
 
 class Bookinfo {
   app: AppNode;
-  startTime: number;
-  timeoutId: NodeJS.Timeout;
   port: string;
   callBack: {
     canceled: Function;
@@ -22,16 +21,19 @@ class Bookinfo {
 
   constructor(app: AppNode) {
     this.app = app;
-    this.startTime = new Date().getTime();
   }
 
   static checkInstall(app: AppNode) {
+    if (process.env.puppeteer) {
+      return;
+    }
+
     const isBookInfo =
       [
         "https://github.com/nocalhost/bookinfo.git",
         "git@github.com:nocalhost/bookinfo.git",
-        "https://e.coding.net/codingcorp/nocalhost/bookinfo.git",
-        "git@e.coding.net:codingcorp/nocalhost/bookinfo.git",
+        "https://e.coding.net/nocalhost/nocalhost/bookinfo.git",
+        "git@e.coding.net:nocalhost/nocalhost/bookinfo.git",
       ].includes(app.url) && app.name === "bookinfo";
 
     if (!isBookInfo) {
@@ -53,10 +55,7 @@ class Bookinfo {
           bookinfo.callBack.canceled();
         });
         return new Promise((success, canceled) => {
-          bookinfo.timeoutId = setTimeout(
-            () => bookinfo.checkState(),
-            2 * 1000
-          );
+          bookinfo.checkConnect();
           bookinfo.callBack = {
             canceled,
             success,
@@ -73,7 +72,6 @@ class Bookinfo {
       if (item.app.getNodeStateId().startsWith(node.getNodeStateId())) {
         const bookinfo = this.checkList[index];
         if (bookinfo) {
-          clearTimeout(bookinfo.timeoutId);
           bookinfo.callBack.canceled();
         }
 
@@ -81,32 +79,15 @@ class Bookinfo {
       }
     });
   }
-  private async checkBookInfoStatus(appNode: AppNode) {
-    const result = (await NhctlCommand.get({
-      kubeConfigPath: appNode.getKubeConfigPath(),
-      namespace: appNode.namespace,
-    })
-      .addArgument("Deployments")
-      .addArgument("-a", appNode.name)
-      .addArgument("-o", "json")
-      .toJson()
-      .exec()) as INhCtlGetResult[];
-
-    const productpage = result.find(
-      (item) => item.description?.actualName === "productpage"
+  static existCheck(node: NocalhostFolderNode) {
+    return (
+      this.checkList.findIndex((item) =>
+        item.app.getNodeStateId().startsWith(node.getNodeStateId())
+      ) > -1
     );
-
-    const status = productpage.info?.status as IResourceStatus;
-
-    if (status?.conditions) {
-      return status?.conditions.some(
-        (item) => item.type === "Available" && item.status === "True"
-      );
-    }
-
-    return false;
   }
-  async getProt() {
+
+  async getUrl() {
     if (!this.port) {
       let port: string;
       const nocalhostConfig = await this.app.getNocalhostConfig();
@@ -128,19 +109,16 @@ class Bookinfo {
       } else {
         logger.info("appname: " + this.app.name + "not service config");
 
-        return false;
+        throw new Error("appname: " + this.app.name + "not service config");
       }
 
       this.port = port;
-
-      return port;
     }
 
-    return true;
+    return `http://127.0.0.1:${this.port}/productpage`;
   }
-  async openUrl() {
-    const url = `http://127.0.0.1:${this.port}/productpage`;
 
+  async openUrl() {
     const res = await host.showInformationMessage(
       "Do you want to open the browser to access application?",
       { modal: true },
@@ -148,43 +126,38 @@ class Bookinfo {
     );
 
     if (res === "go") {
-      const uri = vscode.Uri.parse(url);
+      const uri = vscode.Uri.parse(await this.getUrl());
       vscode.env.openExternal(uri);
     }
   }
-  async checkState() {
+  async check() {
     const devSpaceNode = this.app.parent as DevSpaceNode;
 
     if (
+      !Bookinfo.existCheck(this.app) ||
       state.getAppState(devSpaceNode.getNodeStateId(), "uninstalling") === true
     ) {
-      this.callBack.canceled();
-      return;
+      return false;
     }
 
-    const MAX_TIME = 1 * 60 * 1000;
-    const diff = new Date().getTime() - this.startTime;
-
-    if (diff > MAX_TIME) {
-      const message = "Waiting time out";
-
-      logger.info(message);
-      this.callBack.canceled(message);
-
-      return;
-    }
-
-    if (!(await this.getProt())) {
-      return;
-    }
-
-    if (await this.checkBookInfoStatus(this.app).catch(() => {})) {
+    await Axios.get(await this.getUrl()).then(() => {
       this.openUrl();
-      Bookinfo.cleanCheck(this.app);
       this.callBack.success();
-      return;
+    });
+  }
+  async checkConnect() {
+    const url = await this.getUrl();
+    try {
+      await retry(async () => this.check(), {
+        randomize: false,
+        retries: 6,
+      });
+    } catch (err) {
+      logger.warn("checkConnect:", url, err);
+      this.callBack.canceled("Waiting time out");
+    } finally {
+      Bookinfo.cleanCheck(this.app);
     }
-    this.timeoutId = setTimeout(() => this.checkState(), 2 * 1000);
   }
 }
 

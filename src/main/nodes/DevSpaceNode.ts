@@ -263,9 +263,11 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       treeItem.iconPath = resolveVSCodeUri(iconName);
     }
 
-    treeItem.contextValue = `devspace-${
-      this.clusterSource === ClusterSource.local ? "local" : "server"
-    }`;
+    treeItem.contextValue = this.getSpaceOwnTypeContextValue(
+      `devspace-${
+        this.clusterSource === ClusterSource.local ? "local" : "server"
+      }`
+    );
 
     return Promise.resolve(treeItem);
   }
@@ -297,5 +299,14 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
         throw new Error("not implement the resource");
     }
     return node;
+  }
+
+  getSpaceOwnTypeContextValue(val: string) {
+    let contextValue = "";
+    if (this.info?.spaceOwnType === "Viewer") {
+      contextValue = "viewer:";
+    }
+
+    return contextValue + val;
   }
 }

@@ -8,7 +8,7 @@ import { IRootNode } from "../domain";
 import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
-import { checkCluster, getAllNamespace } from "../ctl/nhctl";
+import { checkCluster, getAllNamespace, kubeconfig } from "../ctl/nhctl";
 import { ClusterSource } from "../common/define";
 import { ClustersState } from ".";
 
@@ -144,6 +144,9 @@ export default class LocalCluster {
       writeFileAsync(resultFilePath, yamlStr);
       localClusterNodes.push(newCluster);
       host.setGlobalState(LOCAL_PATH, localClusterNodes);
+
+      await kubeconfig(resultFilePath, "add");
+
       return newCluster;
     } else {
       host.log(`The cluster already exists`, true);

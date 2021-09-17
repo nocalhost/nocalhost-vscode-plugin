@@ -1,18 +1,12 @@
 import * as vscode from "vscode";
 
 import ICommand from "./ICommand";
+import { Sync } from "./SyncServiceCommand";
 
 import { OVERRIDE_SYNC } from "./constants";
 import registerCommand from "./register";
 import * as nhctl from "../ctl/nhctl";
 import host from "../host";
-
-export interface Sync {
-  app: string;
-  service: string;
-  kubeConfigPath: string;
-  namespace: string;
-}
 
 export default class OverrideSyncCommand implements ICommand {
   command: string = OVERRIDE_SYNC;
@@ -36,7 +30,8 @@ export default class OverrideSyncCommand implements ICommand {
       syncData.kubeConfigPath,
       syncData.namespace,
       syncData.app,
-      syncData.service
+      syncData.service,
+      syncData.resourceType
     );
   }
 }

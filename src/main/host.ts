@@ -8,7 +8,7 @@ import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
 import { asyncLimit } from "./utils";
-import { GLOBAL_TIMEOUT } from "./commands/constants";
+import { GLOBAL_TIMEOUT } from "./constants";
 
 // import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
