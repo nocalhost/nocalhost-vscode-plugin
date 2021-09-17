@@ -17,7 +17,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
     const { __BROWSER__ } = global;
 
     const page = await retry(() => getPage(__BROWSER__), {
-      maxRetryTime: 10 * 1000,
+      retries: 3,
     });
 
     page.setDefaultTimeout(10 * 1000);

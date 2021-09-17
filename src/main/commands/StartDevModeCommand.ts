@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 import * as os from "os";
-import { INhCtlGetResult, IDescribeConfig, IK8sResource } from "../domain";
+import { INhCtlGetResult, IDescribeConfig } from "../domain";
 import ICommand from "./ICommand";
 import { NhctlCommand } from "./../ctl/nhctl";
 import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
-import { get as _get, isEqual, omit } from "lodash";
-import { opendevSpaceExec } from "../ctl/shell";
+import { get as _get } from "lodash";
+import { openDevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
   TMP_CONTAINER,
@@ -34,6 +34,7 @@ import { appTreeView } from "../extension";
 import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
 import { existsSync } from "fs";
+import { getContainer } from "../utils/getContainer";
 
 export interface ControllerNodeApi {
   name: string;
@@ -57,36 +58,6 @@ export default class StartDevModeCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
     registerCommand(context, this.command, true, this.execCommand.bind(this));
-  }
-
-  async getContainers(info: IK8sResource) {
-    if (!info || !info.kind) {
-      host.log("Missing kind field", true);
-      return;
-    }
-    let containers: {
-      name: string;
-    }[] = _get(info, "spec.template.spec.containers");
-    if (info.kind.toLowerCase() === "pod") {
-      containers = _get(info, "spec.containers");
-    }
-
-    if (info.kind.toLowerCase() === "cronjob") {
-      containers = _get(info, "spec.jobTemplate.spec.template.spec.containers");
-    }
-
-    const containerNames = (containers || [])
-      .map(({ name }) => name)
-      .filter(Boolean);
-    if (!containerNames || containerNames.length === 0) {
-      vscode.window.showErrorMessage("No container available");
-      return;
-    }
-    let containerName = containerNames[0];
-    if (containers.length > 1) {
-      containerName = await host.showQuickPick(containerNames);
-    }
-    return containerName;
   }
 
   private node: ControllerNodeApi;
@@ -123,7 +94,7 @@ export default class StartDevModeCommand implements ICommand {
     const description: IDescribeConfig =
       resource.description || Object.create(null);
     const containerName =
-      (await node.getContainer()) || (await this.getContainers(resource.info));
+      (await node.getContainer()) || (await getContainer(resource.info));
     if (!containerName) {
       return;
     }
@@ -172,14 +143,14 @@ export default class StartDevModeCommand implements ICommand {
       }
       if (result === "Select") {
         const images = [
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/java:11",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/ruby:3.0",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/node:14",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/python:3.9",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/golang:1.16",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/perl:latest",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/rust:latest",
-          "codingcorp-docker.pkg.coding.net/nocalhost/dev-images/php:latest",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/java:11",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/ruby:3.0",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/node:14",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/python:3.9",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/golang:1.16",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/perl:latest",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/rust:latest",
+          "nocalhost-docker.pkg.coding.net/nocalhost/dev-images/php:latest",
         ];
         image = await host.showQuickPick(images);
       } else if (result === "Custom") {
@@ -434,7 +405,8 @@ export default class StartDevModeCommand implements ICommand {
         node.getAppName(),
         destDir as string,
         node.resourceType,
-        node.name
+        node.name,
+        containerName
       );
     }
 
@@ -450,97 +422,86 @@ export default class StartDevModeCommand implements ICommand {
   ) {
     const currentUri = host.getCurrentRootPath() || os.homedir();
 
-    await vscode.window.withProgress(
-      {
-        title: "Starting DevMode",
-        location: vscode.ProgressLocation.Notification,
-        cancellable: false,
-      },
-      async (progress) => {
-        try {
-          await node.setStatus(DeploymentStatus.starting);
-          host.getOutputChannel().show(true);
-          progress.report({
-            message: "dev start",
-          });
-          host.log("dev start ...", true);
-          let dirs: Array<string> | string = new Array<string>();
-          let isOld = false;
-          dirs = host.formalizePath(currentUri);
-          // update deployment label
-          node.setContainer(containerName);
-          await nhctl.devStart(
-            host,
-            node.getKubeConfigPath(),
-            node.getNameSpace(),
-            appName,
-            node.name,
-            node.resourceType,
-            {
-              isOld: isOld,
-              dirs: dirs,
-            },
-            containerName,
-            node.getStorageClass(),
-            node.getDevStartAppendCommand()
-          );
-          host.log("dev start end", true);
-          host.log("", true);
+    try {
+      await node.setStatus(DeploymentStatus.starting);
+      host.getOutputChannel().show(true);
 
-          progress.report({
-            message: "syncing file",
-          });
-          host.log("sync file ...", true);
-          await nhctl.syncFile(
-            host,
-            node.getKubeConfigPath(),
-            node.getNameSpace(),
-            appName,
-            node.name,
-            node.resourceType,
-            containerName
-          );
-          host.log("sync file end", true);
-          host.log("", true);
-          const parent = node.getParent();
-          if (parent && parent.updateData) {
-            await parent.updateData(true);
-          }
-          await vscode.commands.executeCommand("Nocalhost.refresh", parent);
+      host.log("dev start ...", true);
+      let dirs: Array<string> | string = new Array<string>();
+      let isOld = false;
+      dirs = host.formalizePath(currentUri);
+      // update deployment label
+      node.setContainer(containerName);
 
-          // await vscode.commands.executeCommand(EXEC, node);
-          const terminal = await opendevSpaceExec(
-            node.getAppName(),
-            node.name,
-            node.resourceType,
-            "nocalhost-dev",
-            node.getKubeConfigPath(),
-            node.getNameSpace(),
-            null
-          );
-          host.pushDispose(
-            node.getSpaceName(),
-            node.getAppName(),
-            node.name,
-            terminal
-          );
+      await nhctl.devStart(
+        host,
+        node.getKubeConfigPath(),
+        node.getNameSpace(),
+        appName,
+        node.name,
+        node.resourceType,
+        {
+          isOld: isOld,
+          dirs: dirs,
+        },
+        containerName,
+        node.getStorageClass(),
+        node.getDevStartAppendCommand()
+      );
+      host.log("dev start end", true);
+      host.log("", true);
 
-          vscode.commands.executeCommand(SYNC_SERVICE, {
-            app: appName,
-            resourceType: node.resourceType,
-            service: node.name,
-            kubeConfigPath: node.getKubeConfigPath(),
-            namespace: node.getNameSpace(),
-            command,
-            node,
-          });
-        } catch (error) {
-          logger.error(error);
-        } finally {
-          node.setStatus("");
-        }
+      host.log("sync file ...", true);
+
+      await nhctl.syncFile(
+        host,
+        node.getKubeConfigPath(),
+        node.getNameSpace(),
+        appName,
+        node.name,
+        node.resourceType,
+        containerName
+      );
+
+      host.log("sync file end", true);
+      host.log("", true);
+      node.setStatus("");
+      const parent = node.getParent();
+      if (parent && parent.updateData) {
+        await parent.updateData(true);
       }
-    );
+      await vscode.commands.executeCommand("Nocalhost.refresh", parent);
+
+      // await vscode.commands.executeCommand(EXEC, node);
+      const terminal = await openDevSpaceExec(
+        node.getAppName(),
+        node.name,
+        node.resourceType,
+        "nocalhost-dev",
+        node.getKubeConfigPath(),
+        node.getNameSpace(),
+        null
+      );
+      host.pushDispose(
+        node.getSpaceName(),
+        node.getAppName(),
+        node.name,
+        terminal
+      );
+
+      vscode.commands.executeCommand(SYNC_SERVICE, {
+        app: appName,
+        resourceType: node.resourceType,
+        service: node.name,
+        kubeConfigPath: node.getKubeConfigPath(),
+        namespace: node.getNameSpace(),
+        command,
+        node,
+      });
+    } catch (error) {
+      logger.error(error);
+      node.setStatus("");
+    }
   }
 
   private setTmpStartRecord(

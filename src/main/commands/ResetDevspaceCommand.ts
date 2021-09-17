@@ -52,8 +52,6 @@ export default class ResetDevspaceCommand implements ICommand {
 
       vscode.commands.executeCommand("Nocalhost.refresh", nocalhostRootNode);
 
-      host.showInformationMessage(`reset ${node.info.spaceName}`);
-
       state.delete(node.info.spaceName);
     });
   }
@@ -65,7 +63,6 @@ export default class ResetDevspaceCommand implements ICommand {
     devspaceName: string
   ) {
     host.log(`Reseting devspace: ${devspaceName}`, true);
-    host.showInformationMessage(`Reseting devspace: ${devspaceName}`);
     await nhctl.resetApp(kubeconfigPath, namespace, devspaceName);
     host.removeGlobalState(devspaceName);
     host.log(`Devspace ${devspaceName} reset`, true);

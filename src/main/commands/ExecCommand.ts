@@ -1,16 +1,15 @@
 import * as vscode from "vscode";
-import * as path from "path";
 
 import ICommand from "./ICommand";
 import { EXEC } from "./constants";
 import registerCommand from "./register";
-import host, { Host } from "../host";
+import host from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as shell from "../ctl/shell";
 import { getPodNames, NhctlCommand, getContainerNames } from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
-import { NH_BIN } from "../constants";
+import { ExecOutputReturnValue } from "shelljs";
 
 export default class ExecCommand implements ICommand {
   command: string = EXEC;
@@ -43,7 +42,7 @@ export default class ExecCommand implements ICommand {
         container = "nocalhost-dev";
         pod = "";
       }
-      const terminal = await shell.opendevSpaceExec(
+      const terminal = await shell.openDevSpaceExec(
         node.getAppName(),
         node.name,
         node.resourceType,
@@ -81,24 +80,23 @@ export default class ExecCommand implements ICommand {
     let defaultShell = "sh";
     for (let i = 0; i < ExecCommand.defaultShells.length; i++) {
       let notExist = false;
-      const shellObj = await shell
-        .execAsyncWithReturn(
-          NhctlCommand.exec({
-            kubeConfigPath: kubeConfigPath,
-          })
-            .addArgument(podName)
-            .addArgument("-c", constainerName)
-            .addArgumentTheTail(`-- which ${ExecCommand.defaultShells[i]}`)
-            .getCommand(),
-          []
-        )
-        .catch(() => {
-          notExist = true;
-        });
+
+      const command = NhctlCommand.exec({
+        kubeConfigPath,
+      })
+        .addArgument(podName)
+        .addArgument("-c", constainerName)
+        .addArgumentTheTail(`-- which ${ExecCommand.defaultShells[i]}`)
+        .getCommand();
+
+      const shellObj = await shell.exec({ command }).promise.catch(() => {
+        notExist = true;
+      });
+
       if (notExist) {
         continue;
       } else {
-        const result = shellObj as shell.ShellResult;
+        const result = shellObj as ExecOutputReturnValue;
         if (result.code === 0 && result.stdout) {
           defaultShell = ExecCommand.defaultShells[i];
           break;

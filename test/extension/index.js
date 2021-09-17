@@ -1,18 +1,17 @@
-const http = require("http");
 const cp = require("child_process");
 const path = require("path");
 const fse = require("fs-extra");
 const assert = require("assert");
 const isWindows = require("is-windows");
 const os = require("os");
-
+const getPort = require("get-port");
+const axios = require("axios");
 const {
   downloadAndUnzipVSCode,
   resolveCliPathFromVSCodeExecutablePath,
 } = require("vscode-test");
-const getPort = require("get-port");
-const axios = require("axios");
 
+const logger = require("./lib/log");
 const VideoCapture = require("./lib/videoCapture");
 
 const videoCapture = new VideoCapture();
@@ -40,7 +39,12 @@ const start = async (options = {}) => {
 
   const syncReturns = cp.spawnSync(
     cliPath,
-    ["--install-extension", path.join(__dirname, "../../nocalhost.vsix")],
+    [
+      "--extensions-dir",
+      getExtensionsDir(true),
+      "--install-extension",
+      path.join(__dirname, "../../nocalhost.vsix"),
+    ],
     {
       encoding: "utf-8",
       stdio: "inherit",
@@ -55,9 +59,9 @@ const start = async (options = {}) => {
 
   const port = await getPort();
 
-  console.warn("port", port);
+  logger.debug("port", port);
 
-  console.warn("useDataDir", userDataDir);
+  logger.debug("useDataDir", userDataDir);
 
   let args = [
     // https://github.com/microsoft/vscode/issues/84238
@@ -69,6 +73,7 @@ const start = async (options = {}) => {
     "--disable-features=IsolateOrigins",
     "--disable-site-isolation-trials",
     // "--disable-extensions",
+    `--extensions-dir=${getExtensionsDir()}`,
     `--user-data-dir=${userDataDir}`,
     `--remote-debugging-port=${port}`,
   ];
@@ -81,6 +86,27 @@ const start = async (options = {}) => {
   return { pid, port };
 };
 
+const getExtensionsDir = (isInit = false) => {
+  let extensionsDir = path.join(__dirname, "../../.vscode-test/extensions");
+
+  if (isWindows()) {
+    extensionsDir = path.join(
+      os.tmpdir(),
+      process.pid.toString(),
+      ".vscode-test/extensions"
+    );
+  }
+
+  if (isInit) {
+    if (fse.existsSync(extensionsDir)) {
+      fse.removeSync(extensionsDir);
+    }
+
+    fse.mkdirpSync(extensionsDir);
+  }
+
+  return extensionsDir;
+};
 const getUserDataDir = () => {
   let userDataDir = path.join(__dirname, "../../.vscode-test/user-data");
 
@@ -127,15 +153,15 @@ const run = async (executable, args, testsEnv) => {
   const cmd = cp.spawn(executable, args, { env: fullEnv });
 
   cmd.stdout.on("data", function (data) {
-    console.log(data.toString());
+    logger.log(data.toString());
   });
 
   cmd.stderr.on("data", function (data) {
-    console.error(data.toString());
+    logger.warn(data.toString());
   });
 
   cmd.on("error", function (data) {
-    console.error("Test error: " + data.toString());
+    logger.error("Test error: " + data.toString());
   });
 
   let finished = false;
@@ -144,15 +170,15 @@ const run = async (executable, args, testsEnv) => {
       return;
     }
     finished = true;
-    console.log(`Exit code:   ${code ?? signal}`);
+    logger.info(`Exit code:   ${code ?? signal}`);
 
     if (code === null) {
-      console.log(signal);
+      logger.debug(signal);
     } else if (code !== 0) {
-      console.error("Failed");
+      logger.error("Failed");
     }
 
-    console.log("Done\n");
+    logger.info("Done\n");
   }
 
   cmd.on("close", onProcessClosed);
@@ -161,7 +187,7 @@ const run = async (executable, args, testsEnv) => {
 
   const { pid } = cmd;
 
-  console.warn("pid", pid);
+  logger.debug("pid", pid);
 
   return pid;
 };

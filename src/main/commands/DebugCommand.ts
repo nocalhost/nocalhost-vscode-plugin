@@ -117,7 +117,7 @@ export default class DebugCommand implements ICommand {
   }
 
   async startDebugging(node: Deployment) {
-    await host.showProgressingToken(
+    await host.withProgress(
       {
         title: "Waiting for debugging ...",
         cancellable: true,

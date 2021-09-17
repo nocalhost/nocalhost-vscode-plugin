@@ -123,7 +123,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
             .addArgument(podName)
             .addArgument("-c", containerName)
             .getCommand();
-          const shellObj = await shell.execAsyncWithReturn(command, []);
+          const shellObj = await shell.exec({ command }).promise;
           if (shellObj.code === 0) {
             result = shellObj.stdout;
           } else {
