@@ -1,9 +1,6 @@
 import { spawnSync } from "child_process";
 import * as vscode from "vscode";
 import * as path from "path";
-import * as assert from "assert";
-const isPortReachable = require("is-port-reachable");
-const retry = require("async-retry");
 
 import host from "../../host";
 import logger from "../../utils/logger";
@@ -26,18 +23,7 @@ export abstract class IDebugProvider {
     config: vscode.DebugConfiguration & { port: number },
     terminatedCallback?: Function
   ): Promise<boolean> {
-    const { name, port, hostName } = config;
-
-    await retry(
-      async () => {
-        const connect = await isPortReachable(port, {
-          host: "127.0.0.1",
-          timeout: 1 * 1000,
-        });
-        assert(connect, "Failed to connect to remote debugging.");
-      },
-      { randomize: false, retries: 6 }
-    );
+    const { name } = config;
 
     const currentFolder = (vscode.workspace.workspaceFolders || []).find(
       (folder) => folder.name === path.basename(workspaceFolder)
@@ -150,7 +136,6 @@ export abstract class IDebugProvider {
       const args = command.split(" ");
 
       args.push(`which ${requiredCommand}`);
-      host.log(`[cmd]：${NhctlCommand.nhctlPath} ${args.join(" ")}`, true);
 
       const result = spawnSync(NhctlCommand.nhctlPath, args);
 

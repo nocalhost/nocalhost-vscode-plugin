@@ -1,3 +1,7 @@
+import Axios from "axios";
+
+const retry = require("async-retry");
+
 import { IDebugProvider } from "./iDebugProvider";
 
 export class NodeDebugProvider extends IDebugProvider {
@@ -12,6 +16,8 @@ export class NodeDebugProvider extends IDebugProvider {
     terminatedCallback?: Function
   ): Promise<boolean> {
     //https://github.dev/microsoft/vscode-js-debug/blob/a570239f82641de25583ccdaadf9c0903c1a6a78/src/targets/node/restartPolicy.ts
+
+    await this.waitForDebug(port);
 
     const debugConfiguration = {
       type: "node",
@@ -35,5 +41,18 @@ export class NodeDebugProvider extends IDebugProvider {
       debugConfiguration,
       terminatedCallback
     );
+  }
+
+  async waitForDebug(port: number) {
+    try {
+      await retry(() => Axios.get(`http://127.0.0.1:${port}/json`), {
+        randomize: false,
+        retries: 6,
+      });
+    } catch (error) {
+      throw new Error(
+        "The attempt to connect to the remote debug port timed out."
+      );
+    }
   }
 }
