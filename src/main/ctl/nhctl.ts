@@ -1256,7 +1256,7 @@ export async function overrideSyncFolders(
     `sync-status ${appName} -d ${workloadName} -t ${controllerType} --override`
   );
 
-  await execWithProgress({ command, title: "Sync..." });
+  await exec({ command });
 }
 export async function reconnectSync(
   kubeConfigPath: string,
