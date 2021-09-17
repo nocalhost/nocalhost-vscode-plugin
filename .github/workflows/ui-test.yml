@@ -100,7 +100,7 @@ jobs:
       #     TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
       #   run: ~/cluster destroy
 
-      - name: Mv screenshot
+      - name: Artifact screenshot
         if: ${{ always() }}
         run: mv .screenshot ~/.nh/screenshot
 
@@ -113,7 +113,7 @@ jobs:
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
 
-      - name: Actions dependency
+      - name: Artifact dependency
         if: ${{ failure() }}
         run: |
           mkdir .dependency
