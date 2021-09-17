@@ -24,6 +24,10 @@ class Bookinfo {
   }
 
   static checkInstall(app: AppNode) {
+    if (process.env.puppeteer) {
+      return;
+    }
+
     const isBookInfo =
       [
         "https://github.com/nocalhost/bookinfo.git",
