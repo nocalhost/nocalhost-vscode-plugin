@@ -1186,7 +1186,7 @@ export async function cleanPVC(
     kubeConfigPath,
     namespace,
     `pvc clean --app ${appName} ${
-      workloadName ? `--svc ${workloadName}` : ""
+      workloadName ? `--controller ${workloadName}` : ""
     } ${pvcName ? `--name ${pvcName}` : ""}`
   );
   host.log(`[cmd] ${command}`, true);
