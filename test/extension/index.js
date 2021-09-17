@@ -39,7 +39,12 @@ const start = async (options = {}) => {
 
   const syncReturns = cp.spawnSync(
     cliPath,
-    ["--install-extension", path.join(__dirname, "../../nocalhost.vsix")],
+    [
+      "--extensions-dir",
+      getExtensionsDir(true),
+      "--install-extension",
+      path.join(__dirname, "../../nocalhost.vsix"),
+    ],
     {
       encoding: "utf-8",
       stdio: "inherit",
@@ -68,6 +73,7 @@ const start = async (options = {}) => {
     "--disable-features=IsolateOrigins",
     "--disable-site-isolation-trials",
     // "--disable-extensions",
+    `--extensions-dir=${getExtensionsDir()}`,
     `--user-data-dir=${userDataDir}`,
     `--remote-debugging-port=${port}`,
   ];
@@ -80,6 +86,27 @@ const start = async (options = {}) => {
   return { pid, port };
 };
 
+const getExtensionsDir = (isInit = false) => {
+  let extensionsDir = path.join(__dirname, "../../.vscode-test/extensions");
+
+  if (isWindows()) {
+    extensionsDir = path.join(
+      os.tmpdir(),
+      process.pid.toString(),
+      ".vscode-test/extensions"
+    );
+  }
+
+  if (isInit) {
+    if (fse.existsSync(extensionsDir)) {
+      fse.removeSync(extensionsDir);
+    }
+
+    fse.mkdirpSync(extensionsDir);
+  }
+
+  return extensionsDir;
+};
 const getUserDataDir = () => {
   let userDataDir = path.join(__dirname, "../../.vscode-test/user-data");
 

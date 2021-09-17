@@ -44,7 +44,7 @@ export default class DataCenter {
     let success: boolean = false;
     let value: string = "apply error";
     try {
-      const shellObj = await shell.execAsyncWithReturn(command, []);
+      const shellObj = await shell.exec({ command }).promise;
       success = true;
       value = shellObj.stdout;
     } catch (e) {

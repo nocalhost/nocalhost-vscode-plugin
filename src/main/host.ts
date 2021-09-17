@@ -253,14 +253,20 @@ export class Host implements vscode.Disposable {
     return this.showInputBox(options);
   }
 
-  public showProgressingToken<R>(
-    options: vscode.ProgressOptions,
+  public withProgress<R>(
+    options: Partial<vscode.ProgressOptions>,
     task: (
       progress: Progress<{ message?: string; increment?: number }>,
       token: vscode.CancellationToken
     ) => Thenable<R>
   ) {
-    return vscode.window.withProgress(options, task);
+    const location = vscode.ProgressLocation.Notification;
+    const cancellable = false;
+
+    return vscode.window.withProgress(
+      { location, cancellable, ...options },
+      task
+    );
   }
 
   public showProgressing(
@@ -460,10 +466,10 @@ export class Host implements vscode.Disposable {
 
   async installVscodeExtension(extensionId: string): Promise<boolean> {
     const vscodeCliPath = path.join(path.dirname(process.argv0), "bin", "code");
-    const shellResult = await shell.execAsyncWithReturn(
-      `"${vscodeCliPath}" --install-extension ${extensionId}`,
-      []
-    );
+    const shellResult = await shell.exec({
+      command: `"${vscodeCliPath}" --install-extension ${extensionId}`,
+    }).promise;
+
     if (shellResult && shellResult.code === 0) {
       const answer = await vscode.window.showInformationMessage(
         `Extension '${extensionId}' was successfully installed. Please reload IDE to enable it.`,

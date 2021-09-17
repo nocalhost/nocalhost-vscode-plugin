@@ -11,6 +11,7 @@ import { NhctlCommand, getContainerNames, getPodNames } from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
 import { NH_BIN } from "../constants";
+import { ExecOutputReturnValue } from "shelljs";
 
 export default class CopyTerminalCommand implements ICommand {
   command: string = COPY_TERMINAL;
@@ -67,26 +68,22 @@ export default class CopyTerminalCommand implements ICommand {
     let defaultShell = "sh";
     for (let i = 0; i < CopyTerminalCommand.defaultShells.length; i++) {
       let notExist = false;
-      const shellObj = await shell
-        .execAsyncWithReturn(
-          NhctlCommand.exec({
-            kubeConfigPath: kubeConfigPath,
-          })
-            .addArgument(podName)
-            .addArgumentStrict("-c", constainerName)
-            .addArgumentTheTail(
-              `-- which ${CopyTerminalCommand.defaultShells[i]}`
-            )
-            .getCommand(),
-          []
-        )
-        .catch(() => {
-          notExist = true;
-        });
+
+      const command = NhctlCommand.exec({
+        kubeConfigPath,
+      })
+        .addArgument(podName)
+        .addArgumentStrict("-c", constainerName)
+        .addArgumentTheTail(`-- which ${CopyTerminalCommand.defaultShells[i]}`)
+        .getCommand();
+
+      const shellObj = await shell.exec({ command }).promise.catch(() => {
+        notExist = true;
+      });
       if (notExist) {
         continue;
       } else {
-        const result = shellObj as shell.ShellResult;
+        const result = shellObj as ExecOutputReturnValue;
         if (result.code === 0 && result.stdout) {
           defaultShell = CopyTerminalCommand.defaultShells[i];
           break;

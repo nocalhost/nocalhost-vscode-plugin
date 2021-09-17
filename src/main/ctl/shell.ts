@@ -1,18 +1,15 @@
-import { spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as path from "path";
 import * as shell from "shelljs";
-import host, { Host } from "../host";
-import { NH_BIN } from "../constants";
-import logger from "../utils/logger";
+import { Event } from "vscode";
+import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
 
-export interface ShellResult {
-  code: number;
-  stdout: string;
-  stderr: string;
-}
+import host from "../host";
+import { NH_BIN } from "../constants";
+import logger from "../utils/logger";
 
-export async function opendevSpaceExec(
+export async function openDevSpaceExec(
   appName: string,
   workloadName: string,
   workloadType: string,
@@ -48,160 +45,195 @@ export async function opendevSpaceExec(
   return terminalDisposed;
 }
 
-export async function execAsyncWithReturn(
-  command: string,
-  args: Array<any>,
-  startTime?: number,
-  ms?: number
-): Promise<ShellResult> {
-  // host.log(`[cmd] ${command}`, true);
-  return new Promise(async (resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const env = Object.assign(process.env, { DISABLE_SPINNER: true });
-    logger.info(`[cmd] ${command}`);
-    const proc = spawn(command, args, { shell: true, env });
-    let stdout = "";
-    let stderr = "";
-    let err = `execute command fail: ${command}`;
+function showGlobalMsg(str: string) {
+  if (str.indexOf("[WARNING]") > -1) {
+    host.showInformationMessage(str, {
+      modal: true,
+    });
+  }
+  if (str.indexOf("[INFO]") > -1) {
+    host.showWarnMessage(str);
+  }
+  if (str.indexOf("ERROR") > -1) {
+    host.showErrorMessage(str);
+  }
+}
 
-    let isTimeOut = false;
+function longTime(startTime: number, command: string) {
+  const end = Date.now() - startTime;
+  if (end > 1000) {
+    logger.info(`[Time-consuming]: ${command} ${end}`);
+  }
+}
 
-    let time: NodeJS.Timeout;
-    if (ms) {
-      time = setTimeout(() => {
-        isTimeOut = true;
+function startTimeout(param: {
+  timeout?: number;
+  proc: ChildProcessWithoutNullStreams;
+  command: string;
+}) {
+  const { timeout, proc, command } = param;
 
-        kill(proc.pid, (err) => {
-          err && logger.error(`[cmd kill] ${command} Error:`, err);
-        });
+  if (!timeout) {
+    return;
+  }
 
-        logger.error(`[cmd] ${command} timeOut:${ms}`);
-        host.log(`[cmd] ${command} timeOut:${ms}`, true);
+  let timeoutId = setTimeout(() => {
+    if (timeoutId && !proc.killed) {
+      kill(proc.pid, "SIGTERM", (err) => {
+        if (err) {
+          const str = `[cmd kill] ${command} Error:`;
 
-        reject();
-      }, ms);
-    }
-
-    proc.on("close", (code) => {
-      if (isTimeOut) {
-        return;
-      }
-
-      clearTimeout(time);
-
-      if (code === 0) {
-        if (startTime !== undefined) {
-          const end = Date.now() - startTime;
-          if (end > 1000) {
-            logger.info(`[Time-consuming]: ${command} ${end}`);
-          }
+          logger.error(str, err);
+          host.log(str + err, true);
         }
-        resolve({ stdout, stderr, code });
-      } else {
-        logger.error(`[cmd] ${command} ${stdout}  ${stderr}`);
-        host.log(`[cmd] ${command} ${stdout} ${stderr}`, true);
-        reject(new Error(`${err}. ${stderr}`));
-      }
-    });
+      });
 
-    proc.stdout.on("data", function (data) {
-      stdout += data;
-    });
+      const log = `[cmd] ${command} timeout:${timeout}`;
 
-    proc.stderr.on("data", function (data) {
-      stderr += data;
-    });
+      logger.log(log);
+      host.log(log, true);
+    }
+  }, timeout);
+
+  proc.once("exit", () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
   });
 }
 
-export async function execChildProcessAsync(
-  host: Host,
-  command: string,
-  args: Array<any>,
-  errorTips?: {
-    dialog?: string;
-    output?: string;
-  },
-  notShow?: boolean,
-  ms?: number
-) {
-  return new Promise(async (resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const env = Object.assign(process.env, { DISABLE_SPINNER: true });
-    logger.info(`[cmd] ${command}`);
-    const proc = spawn(command, args, { shell: true, env });
-    let errorStr = "";
-    let stdout = "";
-    let err = `execute command fail: ${command}`;
+export interface ExecParam {
+  command: string;
+  args?: any[];
+  timeout?: number;
+  output?: OutPut;
+}
 
-    let isTimeOut = false;
+type OutPut = boolean | { err: boolean; out: boolean };
 
-    let time: NodeJS.Timeout;
-    if (ms) {
-      time = setTimeout(() => {
-        isTimeOut = true;
+function getOutput(output: OutPut = { err: true, out: false }) {
+  if (typeof output === "boolean") {
+    return {
+      err: output,
+      out: output,
+    };
+  }
+  return output;
+}
 
-        kill(proc.pid, (err) => {
-          err && logger.error(`[cmd kill] ${command} Error:`, err);
-        });
+export function createProcess(param: ExecParam) {
+  const { command, args, output } = param;
+  const env = Object.assign(process.env, { DISABLE_SPINNER: true });
 
-        logger.error(`[cmd] ${command} timeOut:${ms}`);
-        host.log(`[cmd] ${command} timeOut:${ms}`, true);
+  const proc = spawn(command, args, { shell: true, env });
 
-        reject();
-      }, ms);
-    }
+  const { err, out } = getOutput(output);
+  let stderr = "";
+  let stdout = "";
 
-    proc.on("close", (code) => {
-      if (isTimeOut) {
-        return;
-      }
+  if (out) {
+    host.log(`\n[cmd] ${command}`, true);
+  }
 
-      clearTimeout(time);
+  proc.stdout.on("data", function (data: Buffer) {
+    let str = data.toString();
+    stdout += data;
 
+    out && host.log(str);
+    showGlobalMsg(str);
+  });
+
+  proc.stderr.on("data", function (data) {
+    const str = data.toString();
+    stderr += str;
+
+    err && host.log(str);
+  });
+
+  const promise = new Promise<ExecOutputReturnValue>(async (res, rej) => {
+    proc.on("close", (code, signal) => {
       if (code === 0) {
-        resolve(null);
+        res({ code, stdout, stderr });
       } else {
-        logger.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`);
-        host.log(`[cmd] ${command} [code] ${code} ${stdout} ${errorStr}`, true);
-        if ((errorTips && errorTips.dialog) || errorStr) {
-          host.showErrorMessage((errorTips && errorTips.dialog) || errorStr);
+        logger.log(
+          `[cmd] ${command} code: ${code} stdout: ${stdout} error:${stderr}`
+        );
+
+        if ("SIGTERM" === signal) {
+          rej(new Error(`${command} ${stderr}`));
+          return;
         }
-        reject((errorTips && errorTips.dialog) || `${err}. ${errorStr}`);
-      }
-    });
 
-    proc.stdout.on("data", function (data) {
-      let str = "" + data;
-      host.log(str);
-      stdout += data;
-      // waring info show dialog
-      if (str.indexOf("[WARNING]") > -1) {
-        host.showInformationMessage(str, {
-          modal: true,
-        });
+        rej({ code, stdout, stderr });
       }
-      if (str.indexOf("[INFO]") > -1) {
-        host.showWarnMessage(str);
-      }
-      if (str.indexOf("ERROR") > -1) {
-        host.showErrorMessage(str);
-      }
-    });
-
-    proc.stderr.on("data", function (data) {
-      errorStr += data + "";
-      host.log("" + data);
-      logger.error(`[cmd] ${command} error: ${data}`);
     });
   });
+
+  return { proc, promise };
+}
+
+export function exec(
+  param: ExecParam
+): {
+  cancel: Event<any>;
+  promise: Promise<ExecOutputReturnValue>;
+} {
+  const { command, timeout } = param;
+  const startTime = Date.now();
+  const { proc, promise } = createProcess(param);
+
+  logger.info(`[cmd] ${command}`);
+
+  startTimeout({ timeout, proc, command });
+
+  proc.on("exit", () => {
+    longTime(startTime, command);
+  });
+
+  return {
+    promise,
+    cancel() {
+      if (!proc.killed) {
+        kill(proc.pid, "SIGTERM", (err) => {
+          const log = `\n[cmd cancel] ${command}`;
+
+          host.log(log, true);
+          logger.info(log);
+
+          err && logger.info(`[cmd kill] ${command} Error:`, err);
+        });
+      }
+
+      return { dispose() {} };
+    },
+  };
+}
+
+export function execWithProgress(
+  param: ExecParam & { title: string }
+): Promise<ExecOutputReturnValue> {
+  const { title, ...rest } = param;
+
+  return Promise.resolve(
+    host.withProgress(
+      {
+        title,
+        cancellable: true,
+      },
+      (_, token) => {
+        const { promise, cancel } = exec({ output: true, ...rest });
+
+        token.onCancellationRequested(cancel);
+
+        return promise;
+      }
+    )
+  );
 }
 
 export function which(name: string) {
   const result = shell.which(name);
-  if (result && result.code === 0) {
-    return true;
-  }
 
-  return false;
+  return result && result.code === 0;
 }
