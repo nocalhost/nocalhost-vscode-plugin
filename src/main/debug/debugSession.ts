@@ -3,17 +3,17 @@ import { spawn, spawnSync } from "child_process";
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
-import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import { ContainerConfig } from "../service/configService";
 import { IDebugProvider } from "./provider/iDebugProvider";
 import logger from "../utils/logger";
 import { Terminal } from "vscode";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export class DebugSession {
   public async launch(
     workspaceFolder: vscode.WorkspaceFolder,
     debugProvider: IDebugProvider,
-    node: Deployment,
+    node: ControllerResourceNode,
     container: ContainerConfig
   ) {
     if (!workspaceFolder) {
@@ -100,7 +100,7 @@ export class DebugSession {
     kubeconfigPath: string,
     container: ContainerConfig,
     namespace: string,
-    node: Deployment
+    node: ControllerResourceNode
   ) {
     const runCommand = (container.dev.command?.run ?? []).join(" ");
     const debugCommand = (container.dev.command?.debug ?? []).join(" ");

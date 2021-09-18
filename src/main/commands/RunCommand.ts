@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
-import { spawnSync } from "child_process";
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
@@ -9,10 +8,11 @@ import host from "../host";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import { validate } from "json-schema";
 import { ContainerConfig } from "../service/configService";
-import { NhctlCommand } from "../ctl/nhctl";
+import { getRunningPodNames, NhctlCommand } from "../ctl/nhctl";
 import logger from "../utils/logger";
 import { LiveReload } from "../debug/liveReload";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
+import { exec } from "../ctl/shell";
 
 export interface ExecCommandParam {
   appName: string;
@@ -64,7 +64,7 @@ export default class RunCommand implements ICommand {
     this.disposable.array[0].dispose();
   }
 
-  startRun() {
+  async startRun() {
     this.disposable.onDidDispose = null;
 
     const { container, node } = this;
@@ -81,47 +81,39 @@ export default class RunCommand implements ICommand {
 
     const grepStr = "grep " + grepPattern.join(" ");
 
-    const killCommand = `ps aux| ${grepStr}|grep -v grep|awk '{print $2}'|xargs kill -9`;
+    const podNames = await getRunningPodNames({
+      name: node.name,
+      kind: node.resourceType,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+    });
+    if (podNames.length < 1) {
+      logger.info(`debug: not found pod`);
+      return;
+    }
 
-    spawnSync(NhctlCommand.nhctlPath, [
-      "exec",
-      node.getAppName(),
-      "-d",
-      node.label,
-      "--command",
-      "sh",
-      "--command",
-      "-c",
-      "--command",
-      killCommand,
-      "--kubeconfig",
-      node.getKubeConfigPath(),
-      "-n",
-      node.getNameSpace(),
-      ,
-    ]);
+    const command = await NhctlCommand.exec({
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+    });
+
+    await exec({
+      command: command.getCommand(),
+      args: [
+        podNames[0],
+        `-c nocalhost-dev`,
+        `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print \\$2}'|xargs kill -9"`,
+      ],
+      output: false,
+    }).promise.catch(function () {});
 
     host.showProgressing("running ...", async () => {
-      const args = [
-        "exec",
-        node.getAppName(),
-        "-d",
-        node.label,
-        "--command",
-        "sh",
-        "--command",
-        "-c",
-        "--command",
-        runCommand,
-        "--kubeconfig",
-        node.getKubeConfigPath(),
-        "-n",
-        node.getNameSpace(),
+      command.args = [
+        podNames[0],
+        "-it",
+        `-c nocalhost-dev`,
+        `-- bash -c "${debugCommand}"`,
       ];
-
-      const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
-      logger.info(`[run] ${cmd}`);
-      host.log(`${cmd}`, true);
 
       const resourceNode = node as KubernetesResourceNode;
 
@@ -136,9 +128,19 @@ export default class RunCommand implements ICommand {
         this.syncComplete.bind(this)
       );
 
-      const name = `run`;
+      const name = `${node.getAppName()}-${node.name}`;
 
-      const terminal = host.invokeInNewTerminal(cmd, name);
+      let terminals = vscode.window.terminals.filter((t) =>
+        t.name.endsWith(name)
+      );
+      if (terminals.length) {
+        terminals.forEach((t) => t.dispose());
+      }
+
+      const terminal = host.invokeInNewTerminal(
+        command.getCommand(),
+        "run:" + name
+      );
       terminal.show();
 
       this.disposable.array.push(

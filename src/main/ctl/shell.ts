@@ -123,10 +123,11 @@ function getOutput(output: OutPut = { err: true, out: false }) {
 }
 
 export function createProcess(param: ExecParam) {
-  const { command, args, output } = param;
+  let { command, args, output } = param;
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
+  command = command + " " + (args || []).join(" ");
 
-  const proc = spawn(command, args, { shell: true, env });
+  const proc = spawn(command, [], { shell: true, env });
 
   const { err, out } = getOutput(output);
   let stderr = "";

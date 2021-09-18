@@ -1,7 +1,10 @@
-import { PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+import { has } from "lodash";
+import { ExecOutputReturnValue } from "shelljs";
+
+import { PLUGIN_TEMP_DIR } from "./constants";
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
@@ -331,37 +334,40 @@ process.on("uncaughtException", (error) => {
   vscode.window.showErrorMessage(error.message);
 });
 
-process.on("unhandledRejection", (error: any) => {
-  if (error === undefined || error === "ignore") {
-    return;
-  }
-
-  logger.error(
-    `[unhandledRejection] ${(error && error.message) || error} ${
-      error && error.stack
-    }`
-  );
-  if (error && error.message === "read ENOTCONN") {
-    return;
-  }
-
-  if (error.source === "api" && error.error && error.error.code) {
-    if (
-      error.error.message.includes(
-        "routines:OPENSSL_internal:WRONG_VERSION_NUMBER"
-      )
-    ) {
-      logger.info("api: occur" + error.error.message);
-      return;
-    }
-    vscode.window.showErrorMessage(error.error.message);
-  } else if (error instanceof Error) {
-    const message = error.message;
-
-    if (message?.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")) {
+process.on(
+  "unhandledRejection",
+  (error: string | Error | ExecOutputReturnValue | any) => {
+    if (error === undefined || error === "ignore") {
       return;
     }
 
-    vscode.window.showErrorMessage(message);
+    function isIgnoreError(message: string) {
+      if (
+        message === "read ENOTCONN" ||
+        message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
+      ) {
+        return true;
+      }
+    }
+
+    if (error instanceof Error) {
+      logger.error(
+        `[unhandledRejection] ${(error && error.message) || error} ${
+          error && error.stack
+        }`
+      );
+      const { message } = error;
+
+      if (!isIgnoreError(message)) {
+        vscode.window.showErrorMessage(message);
+      }
+    } else if (error.source === "api" && error.error && error.error.code) {
+      const { message } = error.error;
+
+      if (message && !isIgnoreError(message)) {
+        vscode.window.showErrorMessage(message);
+      }
+    } else if (has(error, ["code", "stdout", "stderr"])) {
+    }
   }
-});
+);

@@ -237,7 +237,7 @@ export default class AccountClusterService {
 
       await Promise.allSettled(
         diff.map((id) => {
-          return new Promise(async (res, rej) => {
+          return new Promise<void>(async (res) => {
             const file = path.resolve(KUBE_CONFIG_DIR, id);
 
             await kubeconfig(file, "remove");
@@ -308,7 +308,7 @@ export default class AccountClusterService {
       },
     };
   };
-  resetDevspace = async (devSpaceId: number) => {
+  resetDevSpace = async (devSpaceId: number) => {
     return this.instance.post(`/v1/plugin/${devSpaceId}/recreate`);
   };
   login = async (loginInfo: LoginInfo) => {

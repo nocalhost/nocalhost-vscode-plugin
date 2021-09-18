@@ -495,9 +495,11 @@ export default class StartDevModeCommand implements ICommand {
         service: node.name,
         kubeConfigPath: node.getKubeConfigPath(),
         namespace: node.getNameSpace(),
-        command,
-        node,
       });
+
+      if (command) {
+        vscode.commands.executeCommand(command, node, START_DEV_MODE);
+      }
     } catch (error) {
       logger.error(error);
       node.setStatus("");

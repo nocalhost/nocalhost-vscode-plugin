@@ -73,8 +73,11 @@ export class NhctlCommand {
 
     return command;
   }
-  static exec(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("k exec", baseParams);
+  static exec(baseParams?: IBaseCommand<{ args?: string[] }>) {
+    const command = NhctlCommand.create("k exec", baseParams);
+    command.execParam.args = baseParams.args;
+
+    return command;
   }
   static logs(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k logs", baseParams);
@@ -1224,7 +1227,8 @@ export async function getSyncStatus(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  args: string[] = []
 ) {
   let baseCommand = "sync-status ";
   if (appName) {
@@ -1233,10 +1237,7 @@ export async function getSyncStatus(
 
   const command = nhctlCommand(kubeConfigPath, namespace, baseCommand);
 
-  const r = await exec({ command }).promise.catch((e) => {
-    logger.info("Nocalhost.syncService syncCommand");
-    logger.error(e);
-
+  const r = await exec({ command, args }).promise.catch((e) => {
     return { code: 0, stdout: "", stderr: "" };
   });
 
