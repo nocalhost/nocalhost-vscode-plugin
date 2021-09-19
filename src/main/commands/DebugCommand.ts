@@ -47,11 +47,7 @@ export default class DebugCommand implements ICommand {
 
     await retry(this.waitForSync.bind(this), { randomize: false, retries: 3 });
 
-    this.start();
-  }
-
-  async start() {
-    this.startDebugging(this.node);
+    this.startDebugging(node);
   }
 
   async waitForSync() {
@@ -66,6 +62,7 @@ export default class DebugCommand implements ICommand {
     );
 
     const syncMsg: SyncMsg = JSON.parse(str);
+
     if (syncMsg.status === "idle") {
       return;
     }

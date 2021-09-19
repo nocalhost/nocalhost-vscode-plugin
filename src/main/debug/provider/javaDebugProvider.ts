@@ -2,9 +2,6 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { IDebugProvider } from "./iDebugProvider";
 import host from "../../host";
-import { NhctlCommand } from "../../ctl/nhctl";
-import { spawnSync } from "child_process";
-
 export class JavaDebugProvider extends IDebugProvider {
   name: "java";
   requireExtensions: ["vscjava.vscode-java-debug", "redhat.java"];
@@ -51,28 +48,5 @@ export class JavaDebugProvider extends IDebugProvider {
       })
     );
     return await vscode.debug.startDebugging(currentFolder, debugConfiguration);
-  }
-
-  public killContainerDebugProcess(
-    podName: string,
-    kubeconfigPath: string,
-    execCommand: string[],
-    namespace: string
-  ) {
-    super.killContainerDebugProcess(
-      podName,
-      kubeconfigPath,
-      execCommand,
-      namespace
-    );
-    // kill exec program
-    const searchCommand = "java";
-    host.log("searchCommand: " + searchCommand, true);
-    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} --`;
-    const args = command.split(" ");
-
-    const killCommand = `kill -9 \`ps aux|grep -i '${searchCommand.trim()}'|grep -v grep|awk '{print $2}'\``;
-    args.push("bash", "-c", `${killCommand}`);
-    spawnSync(NhctlCommand.nhctlPath, args);
   }
 }

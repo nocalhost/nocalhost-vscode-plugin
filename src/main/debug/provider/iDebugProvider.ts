@@ -1,10 +1,7 @@
-import { spawnSync } from "child_process";
 import * as vscode from "vscode";
 import * as path from "path";
 
 import host from "../../host";
-import logger from "../../utils/logger";
-import { NhctlCommand } from "../../ctl/nhctl";
 
 export abstract class IDebugProvider {
   name: string = null;
@@ -50,27 +47,6 @@ export abstract class IDebugProvider {
 
     return vscode.debug.startDebugging(currentFolder, config);
   }
-  public killContainerDebugProcess(
-    podName: string,
-    kubeconfigPath: string,
-    execCommand: string[],
-    namespace: string
-  ) {
-    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace} --`;
-    const args = command.split(" ");
-    const sliceCommands = execCommand.join(" ");
-
-    const killCommand = `ps aux|grep -i '${sliceCommands}'|grep -v grep|awk '{print $2}'|xargs kill -9`;
-
-    args.push("sh", "-c", `${killCommand}`);
-
-    const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
-    host.log(`[debug] ${cmd}`, true);
-    logger.error(`[cmd]: ${cmd}`);
-
-    spawnSync(NhctlCommand.nhctlPath, args);
-  }
-
   public async isDebuggerInstalled() {
     if (
       this.requireExtensions.length > 0 &&
@@ -122,36 +98,5 @@ export abstract class IDebugProvider {
     }
 
     return false;
-  }
-
-  async checkRequiredCommand(
-    podName: string,
-    namespace: string,
-    kubeconfigPath: string
-  ) {
-    host.log("[debug] check required command", true);
-
-    function check(requiredCommand: string) {
-      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace}  --`;
-      const args = command.split(" ");
-
-      args.push(`which ${requiredCommand}`);
-
-      const result = spawnSync(NhctlCommand.nhctlPath, args);
-
-      return result.stdout;
-    }
-    const notFound: Array<string> = [];
-    ["ps", "awk", "netstat"].forEach((c) => {
-      const r = check(c);
-      if (!r) {
-        notFound.push(c);
-      }
-    });
-
-    if (notFound.length > 0) {
-      const msg = "Not found command in container: " + notFound.join(" ");
-      throw new Error(msg);
-    }
   }
 }

@@ -1,13 +1,14 @@
 import * as vscode from "vscode";
 import { spawn, spawnSync } from "child_process";
+import * as assert from "assert";
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
 import { ContainerConfig } from "../service/configService";
 import { IDebugProvider } from "./provider/iDebugProvider";
 import logger from "../utils/logger";
-import { Terminal } from "vscode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
+import RunCommand from "../commands/RunCommand";
 
 export class DebugSession {
   public async launch(
@@ -35,18 +36,17 @@ export class DebugSession {
       namespace: node.getNameSpace(),
       kubeConfigPath: node.getKubeConfigPath(),
     });
-    if (podNames.length < 1) {
-      logger.info(`debug: not found pod`);
-      return;
-    }
 
-    await debugProvider.checkRequiredCommand(
+    assert.strictEqual(podNames.length, 1, "not found pod");
+
+    await RunCommand.checkRequiredCommand(
       podNames[0],
       node.getNameSpace(),
       node.getKubeConfigPath()
     );
 
     host.log("[debug] launch debug", true);
+
     let terminal = await this.enterContainer(
       node.getKubeConfigPath(),
       container,
@@ -157,25 +157,26 @@ export class DebugSession {
     logger.info(`[debug] ${cmd}`);
     host.log(`${cmd}`, true);
 
-    const name = `debug`;
+    const name = "run:" + `${node.getAppName()}-${node.name}`;
 
-    const terminal = host.invokeInNewTerminal(cmd, name);
-    terminal.show();
+    let terminal = vscode.window.terminals.find((t) => t.name === name);
+    if (terminal) {
+      terminal.sendText("clear");
+      terminal.sendText(cmd);
+      terminal.show();
+      return;
+    } else {
+      terminal = host.invokeInNewTerminal(cmd, name);
 
-    return new Promise<Terminal>((res) => {
       const disposable = [
         vscode.window.onDidCloseTerminal((e) => {
           if (e.name === name) {
             disposable.forEach((d) => d.dispose());
           }
         }),
-        vscode.window.onDidOpenTerminal((e) => {
-          if (e.name === name) {
-            res(terminal);
-          }
-        }),
       ];
-    });
+    }
+    return terminal;
   }
 
   async portForward(props: {

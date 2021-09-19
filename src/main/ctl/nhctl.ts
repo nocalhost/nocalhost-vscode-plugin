@@ -75,7 +75,7 @@ export class NhctlCommand {
   }
   static exec(baseParams?: IBaseCommand<{ args?: string[] }>) {
     const command = NhctlCommand.create("k exec", baseParams);
-    command.execParam.args = baseParams.args;
+    command.args = baseParams.args ?? [];
 
     return command;
   }
