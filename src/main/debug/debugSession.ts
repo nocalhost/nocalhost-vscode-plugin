@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as assert from "assert";
-const retry = require("async-retry");
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";

@@ -105,7 +105,7 @@ export async function killContainerCommandProcess(
       args: [
         podName,
         `-c nocalhost-dev`,
-        `-- bash -c "kill -9 ${stdout.split("\n").join(" ")}"`,
+        `-- bash -c "kill -SIGTERM -- -${stdout.split("\n").join(" -")}"`,
       ],
     }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
