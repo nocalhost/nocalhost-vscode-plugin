@@ -120,12 +120,13 @@ export class DebugSession {
       this.dispose();
       return;
     }
-
-    vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
-      if (debugSession.name === debugSessionName) {
-        this.dispose();
-      }
-    });
+    this.disposable.push(
+      vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
+        if (debugSession.name === debugSessionName) {
+          await killContainerCommandProcess(container, node, this.podName);
+        }
+      })
+    );
   }
 
   async enterContainer() {
@@ -148,10 +149,9 @@ export class DebugSession {
 
     const name = "debug:" + `${node.getAppName()}-${node.name}`;
 
-    let terminal = host.invokeInNewTerminal(command.getCommand(), name);
+    host.invokeInNewTerminal(command.getCommand(), name);
 
     this.disposable = [
-      terminal,
       vscode.window.onDidCloseTerminal(async (e) => {
         if (e.name === name) {
           this.dispose();

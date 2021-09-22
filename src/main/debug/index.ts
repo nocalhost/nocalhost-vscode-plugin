@@ -41,7 +41,7 @@ export async function checkRequiredCommand(
     "Not found command in container: " + notFound.join(" ")
   );
 }
-async function closeOld(node: ControllerResourceNode) {
+async function closeTerminals(node: ControllerResourceNode) {
   let condition = (t: vscode.Terminal) =>
     t.name.endsWith(`${node.getAppName()}-${node.name}`);
 
@@ -70,6 +70,8 @@ export async function killContainerCommandProcess(
 ) {
   const runCommand = (container.dev.command?.run ?? []).join(" ");
   const debugCommand = (container.dev.command?.debug ?? []).join(" ");
+
+  await closeTerminals(node);
 
   const grepPattern: Array<string> = [];
   if (runCommand) {
@@ -109,8 +111,6 @@ export async function killContainerCommandProcess(
 
     assert.strictEqual(0, code, "kill command error");
   }
-
-  await closeOld(node);
 
   return Promise.resolve();
 }

@@ -101,14 +101,15 @@ export default class RunCommand implements ICommand {
 
     const name = "run:" + `${node.getAppName()}-${node.name}`;
 
-    let terminal = host.invokeInNewTerminal(command.getCommand(), name);
+    host.invokeInNewTerminal(command.getCommand(), name);
 
     this.disposable.push(
-      terminal,
       vscode.window.onDidCloseTerminal(async (e) => {
         if (e.name === name) {
           this.disposable.forEach((d) => d.dispose());
           this.disposable.length = 0;
+
+          await killContainerCommandProcess(container, node, podNames[0]);
         }
       })
     );
