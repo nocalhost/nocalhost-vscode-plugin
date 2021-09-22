@@ -145,7 +145,7 @@ export function createProcess(param: ExecParam) {
     showGlobalMsg(str);
   });
 
-  proc.stderr.on("data", function (data) {
+  proc.stderr.on("data", function (data: Buffer) {
     const str = data.toString();
     stderr += str;
 

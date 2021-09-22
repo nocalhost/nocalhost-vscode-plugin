@@ -10,8 +10,7 @@ export class JavaDebugProvider extends IDebugProvider {
     workspaceFolder: string,
     sessionName: string,
     port: number,
-    workDir: string,
-    terminatedCallback: () => any
+    workDir: string
   ): Promise<boolean> {
     const debugConfiguration: vscode.DebugConfiguration = {
       type: "java",
@@ -42,7 +41,6 @@ export class JavaDebugProvider extends IDebugProvider {
       vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
         if (debugSession.name === sessionName) {
           disposables.forEach((d) => d.dispose());
-          await terminatedCallback();
           host.log("Terminated debug session", true);
         }
       })

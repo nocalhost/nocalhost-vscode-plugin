@@ -12,8 +12,7 @@ export class NodeDebugProvider extends IDebugProvider {
     workspaceFolder: string,
     sessionName: string,
     port: number,
-    workDir: string,
-    terminatedCallback?: Function
+    workDir: string
   ): Promise<boolean> {
     //https://github.dev/microsoft/vscode-js-debug/blob/a570239f82641de25583ccdaadf9c0903c1a6a78/src/targets/node/restartPolicy.ts
 
@@ -36,11 +35,7 @@ export class NodeDebugProvider extends IDebugProvider {
       // },
     };
 
-    return super.startDebugging(
-      workspaceFolder,
-      debugConfiguration,
-      terminatedCallback
-    );
+    return super.startDebugging(workspaceFolder, debugConfiguration);
   }
 
   async waitForDebug(port: number) {

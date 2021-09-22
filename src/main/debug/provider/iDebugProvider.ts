@@ -11,14 +11,12 @@ export abstract class IDebugProvider {
     workspaceFolder: string,
     sessionName: string,
     port: number,
-    workDir: string,
-    terminatedCallback?: Function
+    workDir: string
   ): Promise<boolean>;
 
   async startDebugging(
     workspaceFolder: string,
-    config: vscode.DebugConfiguration & { port: number },
-    terminatedCallback?: Function
+    config: vscode.DebugConfiguration & { port: number }
   ): Promise<boolean> {
     const { name } = config;
 
@@ -38,8 +36,6 @@ export abstract class IDebugProvider {
       vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
         if (debugSession.name === name) {
           disposables.forEach((d) => d.dispose());
-          terminatedCallback && terminatedCallback();
-
           host.log("Terminated debug session", true);
         }
       }),

@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
+import * as assert from "assert";
 import { validate } from "json-schema";
 const retry = require("async-retry");
 
 import ICommand from "./ICommand";
-import { SyncMsg } from "./SyncServiceCommand";
 import { DEBUG, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
@@ -16,12 +16,14 @@ import {
   Language,
   IDebugProvider,
 } from "../debug/provider";
-import { getSyncStatus } from "../ctl/nhctl";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
+import { getContainer, waitForSync } from "../debug";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
   node: ControllerResourceNode;
+  container: ContainerConfig;
+
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
@@ -33,8 +35,8 @@ export default class DebugCommand implements ICommand {
     }
 
     this.node = node;
-
-    await this.getContainer(node);
+    this.container = await getContainer(node);
+    this.validateDebugConfig(this.container);
 
     if (!command) {
       const status = await node.getStatus(true);
@@ -45,55 +47,9 @@ export default class DebugCommand implements ICommand {
       }
     }
 
-    await retry(this.waitForSync.bind(this), { randomize: false, retries: 3 });
+    await retry(waitForSync.bind(null, node), { randomize: false, retries: 3 });
 
     this.startDebugging(node);
-  }
-
-  async waitForSync() {
-    const { node } = this;
-    const str = await getSyncStatus(
-      node.resourceType,
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
-      node.name,
-      ["--timeout 120", "--wait"]
-    );
-
-    const syncMsg: SyncMsg = JSON.parse(str);
-
-    if (syncMsg.status === "idle") {
-      return;
-    }
-    throw new Error("wait for sync timeout");
-  }
-  async getContainer(node: ControllerResourceNode) {
-    let container: ContainerConfig | undefined;
-
-    const serviceConfig = node.nocalhostService;
-    const containers = (serviceConfig && serviceConfig.containers) || [];
-    if (containers.length > 1) {
-      const containerNames = containers.map((c) => c.name);
-      const containerName = await vscode.window.showQuickPick(containerNames);
-
-      if (!containerName) {
-        return;
-      }
-
-      container = containers.filter((c) => {
-        return c.name === containerName;
-      })[0];
-    } else if (containers.length === 1) {
-      container = containers[0];
-    } else {
-      host.showInformationMessage("Missing container confiuration");
-      return;
-    }
-
-    this.validateDebugConfig(container);
-
-    return container;
   }
 
   validateDebugConfig(config: ContainerConfig) {
@@ -134,16 +90,16 @@ export default class DebugCommand implements ICommand {
 
     const valid = validate(config, schema);
 
-    if (valid.errors.length > 0) {
-      let message = "please check config.\n";
-      valid.errors.forEach((e) => {
-        message += `${e.property}: ${e.message} \n`;
-      });
-      throw new Error(message);
-    }
+    assert.strictEqual(
+      valid.errors.length,
+      0,
+      `please check config.\n${valid.errors
+        .map((e) => `${e.property}:${e.message}`)
+        .join("\n")}`
+    );
   }
 
-  private async startDebugging(node: ControllerResourceNode) {
+  async startDebugging(node: ControllerResourceNode) {
     await host.withProgress(
       {
         title: "Waiting for debugging ...",
@@ -166,16 +122,16 @@ export default class DebugCommand implements ICommand {
           workspaceFolder,
           await this.getDebugProvider(node),
           node,
-          await this.getContainer(node)
+          await getContainer(node)
         );
       }
     );
   }
 
-  private async getDebugProvider(
+  async getDebugProvider(
     node: ControllerResourceNode
   ): Promise<IDebugProvider> {
-    let containerConfig = await this.getContainer(node);
+    let containerConfig = await getContainer(node);
 
     let type: Language = null;
 

@@ -1,20 +1,23 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
-import { spawnSync } from "child_process";
 import * as assert from "assert";
+const retry = require("async-retry");
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 import { validate } from "json-schema";
 import { ContainerConfig } from "../service/configService";
 import { getRunningPodNames, NhctlCommand } from "../ctl/nhctl";
 import { LiveReload } from "../debug/liveReload";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
-import { exec } from "../ctl/shell";
-import { ExecOutputReturnValue } from "shelljs";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
+import {
+  getContainer,
+  killContainerCommandProcess,
+  waitForSync,
+} from "../debug";
 
 export interface ExecCommandParam {
   appName: string;
@@ -27,26 +30,26 @@ export interface ExecCommandParam {
 
 export default class RunCommand implements ICommand {
   command: string = RUN;
-  node: Deployment;
+  node: ControllerResourceNode;
   container: ContainerConfig;
 
-  disposable: { array: Array<{ dispose(): any }>; onDidDispose?: Function } = {
-    array: [],
-  };
+  disposable: Array<{ dispose(): any }> = [];
 
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
 
   async execCommand(...rest: any[]) {
-    const [node, command] = rest as [Deployment, string];
+    const [node, command] = rest as [ControllerResourceNode, string];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
     this.node = node;
-    this.container = await this.getContainer();
+    this.container = await getContainer(node);
+
+    this.validateRunConfig(this.container);
 
     if (!command) {
       const status = await node.getStatus(true);
@@ -57,193 +60,91 @@ export default class RunCommand implements ICommand {
       }
     }
 
-    await this.startRun();
-  }
-  static async checkRequiredCommand(
-    podName: string,
-    namespace: string,
-    kubeconfigPath: string
-  ) {
-    host.log("[debug] check required command", true);
+    host.showProgressing("Waiting for running ...", async () => {
+      await retry(waitForSync.bind(null, node), {
+        randomize: false,
+        retries: 3,
+      });
 
-    function check(requiredCommand: string) {
-      const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace}  --`;
-      const args = command.split(" ");
-
-      args.push(`which ${requiredCommand}`);
-
-      const result = spawnSync(NhctlCommand.nhctlPath, args);
-
-      return result.stdout;
-    }
-
-    const notFound: Array<string> = [];
-    ["ps", "awk"].forEach((c) => {
-      const r = check(c);
-      if (!r) {
-        notFound.push(c);
-      }
+      await this.startRun();
     });
-
-    assert.strictEqual(
-      notFound.length,
-      0,
-      "Not found command in container: " + notFound.join(" ")
-    );
   }
-  static async killContainerCommandProcess(
-    container: ContainerConfig,
-    node: Deployment,
-    podName: string
-  ) {
+
+  async startRun() {
+    const { container, node } = this;
+
     const runCommand = (container.dev.command?.run ?? []).join(" ");
-    const debugCommand = (container.dev.command?.debug ?? []).join(" ");
 
-    const grepPattern: Array<string> = [];
-    if (runCommand) {
-      grepPattern.push(`-e '${runCommand}'`);
-    }
-    if (debugCommand) {
-      grepPattern.push(`-e '${debugCommand}'`);
-    }
-
-    const grepStr = "grep " + grepPattern.join(" ");
-
-    const command = await NhctlCommand.exec({
+    const podNames = await getRunningPodNames({
+      name: node.name,
+      kind: node.resourceType,
       namespace: node.getNameSpace(),
       kubeConfigPath: node.getKubeConfigPath(),
     });
 
-    const { code, stdout } = (await exec({
-      command: command.getCommand(),
+    assert.strictEqual(podNames.length, 1, "not found pod");
+
+    await killContainerCommandProcess(container, node, podNames[0]);
+
+    const command = await NhctlCommand.exec({
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
       args: [
-        podName,
+        podNames[0],
+        "-it",
         `-c nocalhost-dev`,
-        `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print \\$2}'"`,
+        `-- bash -c "${runCommand}"`,
       ],
-    }).promise.catch((err) => err)) as ExecOutputReturnValue;
+    });
 
-    assert.strictEqual(0, code, "find command error");
+    const resourceNode = node as KubernetesResourceNode;
 
-    if (stdout) {
-      const { code, stderr } = (await exec({
-        command: command.getCommand(),
-        args: [
-          podName,
-          `-c nocalhost-dev`,
-          `-- bash -c "kill -9 ${stdout.split("\n").join(" ")}"`,
-        ],
-      }).promise.catch((err) => err)) as ExecOutputReturnValue;
+    const name = "run:" + `${node.getAppName()}-${node.name}`;
 
-      assert.strictEqual(0, code, "kill command error");
-    }
-    return Promise.resolve();
-  }
-  async syncComplete() {
-    this.disposable.onDidDispose = this.startRun.bind(this);
+    let terminal = vscode.window.terminals.find((t) => t.name === name);
 
-    this.disposable.array[0].dispose();
-  }
+    if (terminal) {
+      terminal.sendText("clear");
+      terminal.sendText(command.getCommand());
+      terminal.show();
 
-  async startRun() {
-    this.disposable.onDidDispose = null;
-
-    const { container, node } = this;
-
-    host.showProgressing("running ...", async () => {
-      const runCommand = (container.dev.command?.run ?? []).join(" ");
-
-      const podNames = await getRunningPodNames({
-        name: node.name,
-        kind: node.resourceType,
-        namespace: node.getNameSpace(),
-        kubeConfigPath: node.getKubeConfigPath(),
-      });
-
-      assert.strictEqual(podNames.length, 1, "not found pod");
-
-      await RunCommand.killContainerCommandProcess(
-        container,
-        node,
-        podNames[0]
+      const index = this.disposable.findIndex(
+        (item) => item instanceof LiveReload
       );
 
-      const command = await NhctlCommand.exec({
-        namespace: node.getNameSpace(),
-        kubeConfigPath: node.getKubeConfigPath(),
-        args: [
-          podNames[0],
-          "-it",
-          `-c nocalhost-dev`,
-          `-- bash -c "${runCommand}"`,
-        ],
-      });
+      if (index > -1) {
+        this.disposable[index].dispose();
+        this.disposable.splice(index, 1);
+      }
+    } else {
+      terminal = host.invokeInNewTerminal(command.getCommand(), name);
+      this.disposable.push(
+        terminal,
+        vscode.window.onDidCloseTerminal(async (e) => {
+          if (e.name === name) {
+            this.disposable.forEach((d) => d.dispose());
+            this.disposable.length = 0;
 
-      const resourceNode = node as KubernetesResourceNode;
+            await killContainerCommandProcess(container, node, podNames[0]);
+          }
+        })
+      );
+    }
 
+    if (this.container.dev.hotReload === true) {
       const liveReload = new LiveReload(
         {
           namespace: node.getNameSpace(),
           kubeConfigPath: node.getKubeConfigPath(),
           resourceType: resourceNode.resourceType,
-          appName: node.getAppName(),
-          workloadName: resourceNode.name,
+          app: node.getAppName(),
+          service: resourceNode.name,
         },
-        this.syncComplete.bind(this)
+        this.startRun.bind(this)
       );
 
-      const name = "run:" + `${node.getAppName()}-${node.name}`;
-
-      let terminal = vscode.window.terminals.find((t) => t.name === name);
-      if (terminal) {
-        terminal.sendText("clear");
-        terminal.sendText(command.getCommand());
-        terminal.show();
-        return;
-      } else {
-        terminal = host.invokeInNewTerminal(command.getCommand(), name);
-        this.disposable.array.push(
-          terminal,
-          liveReload,
-          vscode.window.onDidCloseTerminal((e) => {
-            if (e.name === name && e.processId === terminal.processId) {
-              this.disposable.array.forEach((d) => d.dispose());
-              this.disposable.array.length = 0;
-
-              this.disposable.onDidDispose && this.disposable.onDidDispose();
-            }
-          })
-        );
-      }
-    });
-  }
-
-  async getContainer() {
-    let container: ContainerConfig | undefined;
-
-    const serviceConfig = this.node.getConfig();
-    const containers = (serviceConfig && serviceConfig.containers) || [];
-    if (containers.length > 1) {
-      const containerNames = containers.map((c) => c.name);
-      const containerName = await vscode.window.showQuickPick(containerNames);
-
-      if (!containerName) {
-        return;
-      }
-
-      container = containers.filter((c) => {
-        return c.name === containerName;
-      })[0];
-    } else if (containers.length === 1) {
-      container = containers[0];
-    } else {
-      host.showInformationMessage("Missing container confiuration");
-      return;
+      this.disposable.unshift(liveReload);
     }
-
-    this.validateRunConfig(container);
-
-    return container;
   }
 
   validateRunConfig(config: ContainerConfig) {
@@ -276,12 +177,12 @@ export default class RunCommand implements ICommand {
 
     const valid = validate(config, schema);
 
-    if (valid.errors.length > 0) {
-      let message = "please check config.\n";
-      valid.errors.forEach((e) => {
-        message += `${e.property}: ${e.message} \n`;
-      });
-      throw new Error(message);
-    }
+    assert.strictEqual(
+      valid.errors.length,
+      0,
+      `please check config.\n${valid.errors
+        .map((e) => `${e.property}:${e.message}`)
+        .join("\n")}`
+    );
   }
 }

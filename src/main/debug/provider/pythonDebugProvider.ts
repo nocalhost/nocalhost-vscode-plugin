@@ -8,8 +8,7 @@ export class PythonDebugProvider extends IDebugProvider {
     workspaceFolder: string,
     sessionName: string,
     port: number,
-    workDir: string,
-    terminatedCallback: Function
+    workDir: string
   ): Promise<boolean> {
     const debugConfiguration = {
       name: sessionName,
@@ -24,10 +23,6 @@ export class PythonDebugProvider extends IDebugProvider {
       // NOT SUPPORT CWD, will occur error
     };
 
-    return super.startDebugging(
-      workspaceFolder,
-      debugConfiguration,
-      terminatedCallback
-    );
+    return super.startDebugging(workspaceFolder, debugConfiguration);
   }
 }

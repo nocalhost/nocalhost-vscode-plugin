@@ -1470,11 +1470,7 @@ export function nhctlCommand(
   namespace: string,
   baseCommand: string
 ) {
-  const nhctlPath = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
-  const command = `${nhctlPath} ${baseCommand} ${
+  const command = `${NhctlCommand.nhctlPath} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
   } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
   return command;

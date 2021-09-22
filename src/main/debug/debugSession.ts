@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { spawn, spawnSync } from "child_process";
+import { spawn } from "child_process";
 import * as assert from "assert";
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
@@ -8,7 +8,7 @@ import { ContainerConfig } from "../service/configService";
 import { IDebugProvider } from "./provider/iDebugProvider";
 import logger from "../utils/logger";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import RunCommand from "../commands/RunCommand";
+import { checkRequiredCommand, killContainerCommandProcess } from ".";
 
 export class DebugSession {
   public async launch(
@@ -39,12 +39,12 @@ export class DebugSession {
 
     assert.strictEqual(podNames.length, 1, "not found pod");
 
-    await RunCommand.checkRequiredCommand(
+    await checkRequiredCommand(
       podNames[0],
       node.getNameSpace(),
       node.getKubeConfigPath()
     );
-
+    await killContainerCommandProcess(container, node, podNames[0]);
     host.log("[debug] launch debug", true);
 
     let terminal = await this.enterContainer(
@@ -87,8 +87,7 @@ export class DebugSession {
       cwd,
       `${Date.now()}`,
       port,
-      workDir,
-      terminatedCallback
+      workDir
     );
 
     if (!success) {
@@ -102,38 +101,7 @@ export class DebugSession {
     namespace: string,
     node: ControllerResourceNode
   ) {
-    const runCommand = (container.dev.command?.run ?? []).join(" ");
     const debugCommand = (container.dev.command?.debug ?? []).join(" ");
-
-    const grepPattern: Array<string> = [];
-    if (runCommand) {
-      grepPattern.push(`-e '${runCommand}'`);
-    }
-    if (debugCommand) {
-      grepPattern.push(`-e '${debugCommand}'`);
-    }
-
-    const grepStr = "grep " + grepPattern.join(" ");
-
-    const killCommand = `ps aux|${grepStr}|grep -v grep|awk '{print $2}'|xargs kill -9`;
-
-    spawnSync(NhctlCommand.nhctlPath, [
-      "exec",
-      node.getAppName(),
-      "-d",
-      node.label,
-      "--command",
-      "sh",
-      "--command",
-      "-c",
-      "--command",
-      killCommand,
-      "--kubeconfig",
-      node.getKubeConfigPath(),
-      "-n",
-      node.getNameSpace(),
-      ,
-    ]);
 
     const args = [
       "exec",
