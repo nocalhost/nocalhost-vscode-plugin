@@ -1,6 +1,8 @@
 import * as assert from "assert";
+import * as vscode from "vscode";
 import { spawnSync } from "child_process";
 import { ExecOutputReturnValue } from "shelljs";
+const retry = require("async-retry");
 
 import { SyncMsg } from "../commands/SyncServiceCommand";
 import { getSyncStatus, NhctlCommand } from "../ctl/nhctl";
@@ -14,8 +16,6 @@ export async function checkRequiredCommand(
   namespace: string,
   kubeconfigPath: string
 ) {
-  host.log("[debug] check required command", true);
-
   function check(requiredCommand: string) {
     const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace}  --`;
     const args = command.split(" ");
@@ -39,6 +39,28 @@ export async function checkRequiredCommand(
     notFound.length,
     0,
     "Not found command in container: " + notFound.join(" ")
+  );
+}
+async function closeOld(node: ControllerResourceNode) {
+  let condition = (t: vscode.Terminal) =>
+    t.name.endsWith(`${node.getAppName()}-${node.name}`);
+
+  const terminals = vscode.window.terminals.filter(condition);
+  if (terminals.length === 0) {
+    return;
+  }
+
+  terminals.forEach((i) => i.dispose());
+
+  await retry(
+    () => {
+      const terminal = vscode.window.terminals.find(condition);
+      assert(!terminal, "close old terminal error");
+    },
+    {
+      randomize: false,
+      retries: 3,
+    }
   );
 }
 export async function killContainerCommandProcess(
@@ -87,6 +109,9 @@ export async function killContainerCommandProcess(
 
     assert.strictEqual(0, code, "kill command error");
   }
+
+  await closeOld(node);
+
   return Promise.resolve();
 }
 

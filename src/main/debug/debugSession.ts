@@ -1,21 +1,31 @@
 import * as vscode from "vscode";
-import { spawn } from "child_process";
 import * as assert from "assert";
+const retry = require("async-retry");
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
 import { ContainerConfig } from "../service/configService";
 import { IDebugProvider } from "./provider/iDebugProvider";
-import logger from "../utils/logger";
+import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { checkRequiredCommand, killContainerCommandProcess } from ".";
+import {
+  checkRequiredCommand,
+  getContainer,
+  killContainerCommandProcess,
+} from "./index";
+import { exec } from "../ctl/shell";
 
 export class DebugSession {
+  disposable: Array<{ dispose(): any }> = [];
+  container: ContainerConfig;
+  node: ControllerResourceNode;
+  podName: string;
+
   public async launch(
     workspaceFolder: vscode.WorkspaceFolder,
     debugProvider: IDebugProvider,
     node: ControllerResourceNode,
-    container: ContainerConfig
+    container?: ContainerConfig
   ) {
     if (!workspaceFolder) {
       return;
@@ -27,8 +37,11 @@ export class DebugSession {
       return;
     }
 
-    const port =
-      (container.dev.debug && container.dev.debug.remoteDebugPort) || 9229;
+    if (!container) {
+      container = await getContainer(node);
+    }
+    this.container = container;
+    this.node = node;
 
     const podNames = await getRunningPodNames({
       name: node.name,
@@ -39,137 +52,115 @@ export class DebugSession {
 
     assert.strictEqual(podNames.length, 1, "not found pod");
 
+    this.podName = podNames[0];
+
     await checkRequiredCommand(
       podNames[0],
       node.getNameSpace(),
       node.getKubeConfigPath()
     );
-    await killContainerCommandProcess(container, node, podNames[0]);
-    host.log("[debug] launch debug", true);
 
-    let terminal = await this.enterContainer(
-      node.getKubeConfigPath(),
-      container,
-      node.getNameSpace(),
-      node
-    );
+    await this.startDebug(debugProvider, workspaceFolder);
+  }
+
+  async startDebug(
+    debugProvider: IDebugProvider,
+    workspaceFolder: vscode.WorkspaceFolder
+  ) {
+    const { container, node } = this;
+    const port =
+      (container.dev.debug && container.dev.debug.remoteDebugPort) || 9229;
+
+    await exec({
+      command: NhctlCommand.nhctlPath,
+      args: [
+        "port-forward",
+        "start",
+        node.getAppName(),
+        `-d ${node.name}`,
+        `-t ${node.resourceType}`,
+        `-p ${port}:${port}`,
+        `-n ${node.getNameSpace()}`,
+        `--kubeconfig ${node.getKubeConfigPath()}`,
+      ],
+    }).promise;
 
     const cwd = workspaceFolder.uri.fsPath;
-
-    host.log("[debug] port forward", true);
-
-    const proc = await this.portForward({
-      port: `${port}:${port}`,
-      appName: node.getAppName(),
-      podName: podNames[0],
-      kubeconfigPath: node.getKubeConfigPath(),
-      namespace: node.getNameSpace(),
-      workloadName: node.name,
-      resourceType: node.resourceType,
-    });
-    if (!proc) {
-      return;
-    }
-
     const workDir = container.dev.workDir || "/home/nocalhost-dev";
 
-    host.log("[debug] start debug", true);
+    await this.enterContainer();
 
-    const terminatedCallback = async () => {
-      if (terminal) {
-        terminal.dispose();
+    if (container.dev.hotReload === true) {
+      const liveReload = new LiveReload(
+        {
+          namespace: node.getNameSpace(),
+          kubeConfigPath: node.getKubeConfigPath(),
+          resourceType: node.resourceType,
+          app: node.getAppName(),
+          service: node.name,
+        },
+        () => {
+          this.startDebug(debugProvider, workspaceFolder);
+        }
+      );
 
-        terminal = null;
-      }
-    };
+      this.disposable.unshift(liveReload);
+    }
+
+    const debugSessionName = `${node.getAppName()}-${node.name}`;
 
     const success = await debugProvider.startDebug(
       cwd,
-      `${Date.now()}`,
+      debugSessionName,
       port,
       workDir
     );
 
     if (!success) {
-      terminatedCallback();
+      this.dispose();
+      return;
     }
+
+    vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
+      if (debugSession.name === debugSessionName) {
+        this.dispose();
+      }
+    });
   }
 
-  async enterContainer(
-    kubeconfigPath: string,
-    container: ContainerConfig,
-    namespace: string,
-    node: ControllerResourceNode
-  ) {
+  async enterContainer() {
+    const { container, node, podName } = this;
+
+    await killContainerCommandProcess(container, node, podName);
+
     const debugCommand = (container.dev.command?.debug ?? []).join(" ");
 
-    const args = [
-      "exec",
-      node.getAppName(),
-      "-d",
-      node.label,
-      "--command",
-      "sh",
-      "--command",
-      "-c",
-      "--command",
-      debugCommand,
-      "--kubeconfig",
-      kubeconfigPath,
-      "-n",
-      namespace,
+    const command = await NhctlCommand.exec({
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+      args: [
+        podName,
+        "-it",
+        `-c nocalhost-dev`,
+        `-- bash -c "${debugCommand}"`,
+      ],
+    });
+
+    const name = "debug:" + `${node.getAppName()}-${node.name}`;
+
+    let terminal = host.invokeInNewTerminal(command.getCommand(), name);
+
+    this.disposable = [
+      terminal,
+      vscode.window.onDidCloseTerminal(async (e) => {
+        if (e.name === name) {
+          this.dispose();
+        }
+      }),
     ];
-
-    const cmd = `${NhctlCommand.nhctlPath} ${args.join(" ")}`;
-
-    logger.info(`[debug] ${cmd}`);
-    host.log(`${cmd}`, true);
-
-    const name = "run:" + `${node.getAppName()}-${node.name}`;
-
-    let terminal = vscode.window.terminals.find((t) => t.name === name);
-    if (terminal) {
-      terminal.sendText("clear");
-      terminal.sendText(cmd);
-      terminal.show();
-      return;
-    } else {
-      terminal = host.invokeInNewTerminal(cmd, name);
-
-      const disposable = [
-        vscode.window.onDidCloseTerminal((e) => {
-          if (e.name === name) {
-            disposable.forEach((d) => d.dispose());
-          }
-        }),
-      ];
-    }
-    return terminal;
   }
-
-  async portForward(props: {
-    port: string;
-    appName: string;
-    workloadName: string;
-    resourceType: string;
-    podName: string;
-    kubeconfigPath: string;
-    namespace: string;
-  }) {
-    const {
-      port,
-      workloadName,
-      appName,
-      podName,
-      kubeconfigPath,
-      namespace,
-    } = props;
-    const command = `port-forward start ${appName} -d ${workloadName} --pod ${podName} -p ${port} --kubeconfig ${kubeconfigPath} -n ${namespace}`;
-    const cmd = `${NhctlCommand.nhctlPath} ${command}`;
-    host.log(`[debug] port-forward: ${cmd}`, true);
-    logger.info(`[debug] port-forward: ${cmd}`);
-    const proc = spawn(NhctlCommand.nhctlPath, command.split(" "));
-
-    return proc;
+  async dispose() {
+    this.disposable.forEach((d) => d.dispose());
+    this.disposable.length = 0;
   }
 }

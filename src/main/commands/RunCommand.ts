@@ -101,35 +101,17 @@ export default class RunCommand implements ICommand {
 
     const name = "run:" + `${node.getAppName()}-${node.name}`;
 
-    let terminal = vscode.window.terminals.find((t) => t.name === name);
+    let terminal = host.invokeInNewTerminal(command.getCommand(), name);
 
-    if (terminal) {
-      terminal.sendText("clear");
-      terminal.sendText(command.getCommand());
-      terminal.show();
-
-      const index = this.disposable.findIndex(
-        (item) => item instanceof LiveReload
-      );
-
-      if (index > -1) {
-        this.disposable[index].dispose();
-        this.disposable.splice(index, 1);
-      }
-    } else {
-      terminal = host.invokeInNewTerminal(command.getCommand(), name);
-      this.disposable.push(
-        terminal,
-        vscode.window.onDidCloseTerminal(async (e) => {
-          if (e.name === name) {
-            this.disposable.forEach((d) => d.dispose());
-            this.disposable.length = 0;
-
-            await killContainerCommandProcess(container, node, podNames[0]);
-          }
-        })
-      );
-    }
+    this.disposable.push(
+      terminal,
+      vscode.window.onDidCloseTerminal(async (e) => {
+        if (e.name === name) {
+          this.disposable.forEach((d) => d.dispose());
+          this.disposable.length = 0;
+        }
+      })
+    );
 
     if (this.container.dev.hotReload === true) {
       const liveReload = new LiveReload(

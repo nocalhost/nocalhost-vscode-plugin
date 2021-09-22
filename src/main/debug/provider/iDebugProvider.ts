@@ -1,8 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
-import host from "../../host";
-
 export abstract class IDebugProvider {
   name: string = null;
   requireExtensions: Array<string> = [];
@@ -18,28 +16,9 @@ export abstract class IDebugProvider {
     workspaceFolder: string,
     config: vscode.DebugConfiguration & { port: number }
   ): Promise<boolean> {
-    const { name } = config;
-
     const currentFolder = (vscode.workspace.workspaceFolders || []).find(
       (folder) => folder.name === path.basename(workspaceFolder)
     );
-
-    const disposables: vscode.Disposable[] = [
-      vscode.debug.onDidStartDebugSession((debugSession) => {
-        if (debugSession.name === name) {
-          host.log(
-            "The debug session has started. Your application is ready for you to debug.",
-            true
-          );
-        }
-      }),
-      vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
-        if (debugSession.name === name) {
-          disposables.forEach((d) => d.dispose());
-          host.log("Terminated debug session", true);
-        }
-      }),
-    ];
 
     return vscode.debug.startDebugging(currentFolder, config);
   }

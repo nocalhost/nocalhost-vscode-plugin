@@ -47,9 +47,18 @@ export default class DebugCommand implements ICommand {
       }
     }
 
-    await retry(waitForSync.bind(null, node), { randomize: false, retries: 3 });
-
-    this.startDebugging(node);
+    await host.withProgress(
+      {
+        title: "Waiting for debugging ...",
+      },
+      async () => {
+        await retry(waitForSync.bind(null, node), {
+          randomize: false,
+          retries: 3,
+        });
+        await this.startDebugging(node);
+      }
+    );
   }
 
   validateDebugConfig(config: ContainerConfig) {
@@ -100,31 +109,22 @@ export default class DebugCommand implements ICommand {
   }
 
   async startDebugging(node: ControllerResourceNode) {
-    await host.withProgress(
-      {
-        title: "Waiting for debugging ...",
-        cancellable: true,
-        location: vscode.ProgressLocation.Notification,
-      },
-      async (_) => {
-        const debugSession = new DebugSession();
+    const debugSession = new DebugSession();
 
-        const workspaceFolder = await host.showWorkspaceFolderPick();
+    const workspaceFolder = await host.showWorkspaceFolderPick();
 
-        if (!workspaceFolder) {
-          host.showInformationMessage(
-            "You need to open a folder before execute this command."
-          );
-          return;
-        }
+    if (!workspaceFolder) {
+      host.showInformationMessage(
+        "You need to open a folder before execute this command."
+      );
+      return;
+    }
 
-        await debugSession.launch(
-          workspaceFolder,
-          await this.getDebugProvider(node),
-          node,
-          await getContainer(node)
-        );
-      }
+    await debugSession.launch(
+      workspaceFolder,
+      await this.getDebugProvider(node),
+      node,
+      await getContainer(node)
     );
   }
 
