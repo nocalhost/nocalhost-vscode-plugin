@@ -271,7 +271,7 @@ export class Host implements vscode.Disposable {
 
   public showProgressing(
     title: string,
-    aciton: (
+    task: (
       progress: Progress<{ message?: string; increment?: number }>
     ) => Thenable<unknown>
   ) {
@@ -281,7 +281,7 @@ export class Host implements vscode.Disposable {
         location: vscode.ProgressLocation.Notification,
         cancellable: false,
       },
-      aciton
+      task
     );
   }
 

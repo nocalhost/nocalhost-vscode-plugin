@@ -100,7 +100,7 @@ export async function killContainerCommandProcess(
   assert.strictEqual(0, code, "find command error");
 
   if (stdout) {
-    const { code } = (await exec({
+    const { code, stderr } = (await exec({
       command: command.getCommand(),
       args: [
         podName,

@@ -5,6 +5,7 @@ declare module "json-rpc2" {
       args: any[],
       callback: (err: Error, result: T) => void
     ): void;
+    on(handler: "error", callback: (err: Error) => void): void;
   }
 
   export class Client {

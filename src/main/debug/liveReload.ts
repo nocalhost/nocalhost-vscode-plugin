@@ -5,6 +5,7 @@ import {
   TextDocumentSaveReason,
   TextDocumentWillSaveEvent,
   workspace,
+  debug,
 } from "vscode";
 import kill = require("tree-kill");
 
@@ -54,8 +55,8 @@ export class LiveReload {
       "--watch",
     ];
 
-    host.showProgressing("Waiting for reload ...", async () => {
-      return new Promise<void>((res, rej) => {
+    host.withProgress({ title: "Waiting for sync file ..." }, async () => {
+      return new Promise<void>(async (res, rej) => {
         const proc = spawn(nhctlCmd.getCommand(), [], {
           shell: true,
           env: Object.assign(process.env, { DISABLE_SPINNER: true }),
@@ -71,9 +72,9 @@ export class LiveReload {
             let syncMsg = JSON.parse(str) as SyncMsg;
 
             if (syncMsg.status === "idle") {
-              await this.changeCallback();
+              !proc.killed && kill(proc.pid);
 
-              kill(proc.pid);
+              await this.changeCallback();
 
               res();
             }

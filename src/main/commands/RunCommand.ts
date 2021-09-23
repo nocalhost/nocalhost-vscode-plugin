@@ -60,12 +60,15 @@ export default class RunCommand implements ICommand {
       }
     }
 
-    host.showProgressing("Waiting for running ...", async () => {
+    await host.withProgress({}, async (acton) => {
+      acton.report({ message: "Waiting for sync file ..." });
+
       await retry(waitForSync.bind(null, node), {
         randomize: false,
         retries: 3,
       });
 
+      acton.report({ message: "Waiting for running ..." });
       await this.startRun();
     });
   }

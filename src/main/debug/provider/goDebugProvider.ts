@@ -1,7 +1,8 @@
 import * as assert from "assert";
+import { Client } from "json-rpc2";
 const retry = require("async-retry");
-const rpc = require("json-rpc2");
 
+import host from "../../host";
 import { IDebugProvider } from "./iDebugProvider";
 
 export class GoDebugProvider extends IDebugProvider {
@@ -30,40 +31,30 @@ export class GoDebugProvider extends IDebugProvider {
 
     return super.startDebugging(workspaceFolder, debugConfiguration);
   }
-  async connectClient(port: number, host: string) {
-    // Add a slight delay to avoid issues on Linux with
-    // Delve failing calls made shortly after connection.
+  async connectClient(client: Client) {
     return new Promise((res, rej) => {
-      setTimeout(() => {
-        const client = rpc.Client.$create(port, host);
+      setTimeout(() => rej(new Error("connect client timeout")), 3 * 1000);
 
-        client.connectSocket((err: any, conn: any) => {
+      client.connectSocket((err, conn) => {
+        if (err) {
+          rej(err);
+        }
+        conn.call("RPCServer.GetVersion", [], function (err: any, result: any) {
           if (err) {
-            return rej(err);
+            rej(err);
+            return;
           }
-          return res(conn);
+          res(result);
         });
-        client.on("error", rej);
-      }, 200);
-    }).then((conn: any) => {
-      return new Promise((res, rej) => {
-        conn.call(
-          "RPCServer.GetVersion",
-          null,
-          function (err: any, result: any) {
-            if (err) {
-              return rej(err);
-            }
-            res(result);
-          }
-        );
       });
     });
   }
   async waitForDebug(port: number) {
+    const client = Client.$create(port, "127.0.0.1");
+
     await retry(
       async () => {
-        const result = await this.connectClient(port, "127.0.0.1");
+        const result = await this.connectClient(client);
         assert.ok(
           result,
           "The attempt to connect to the remote debug port timed out."
@@ -71,7 +62,7 @@ export class GoDebugProvider extends IDebugProvider {
       },
       {
         randomize: false,
-        retries: 6,
+        retries: 3,
       }
     );
   }

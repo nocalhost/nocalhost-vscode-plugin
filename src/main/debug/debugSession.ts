@@ -19,6 +19,7 @@ export class DebugSession {
   container: ContainerConfig;
   node: ControllerResourceNode;
   podName: string;
+  isReload: boolean;
 
   public async launch(
     workspaceFolder: vscode.WorkspaceFolder,
@@ -87,7 +88,9 @@ export class DebugSession {
     const cwd = workspaceFolder.uri.fsPath;
     const workDir = container.dev.workDir || "/home/nocalhost-dev";
 
-    await this.enterContainer();
+    const terminal = await this.enterContainer();
+
+    const debugSessionName = `${node.getAppName()}-${node.name}`;
 
     if (container.dev.hotReload === true) {
       const liveReload = new LiveReload(
@@ -98,15 +101,14 @@ export class DebugSession {
           app: node.getAppName(),
           service: node.name,
         },
-        () => {
-          this.startDebug(debugProvider, workspaceFolder);
+        async () => {
+          this.isReload = true;
+          await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
         }
       );
 
       this.disposable.unshift(liveReload);
     }
-
-    const debugSessionName = `${node.getAppName()}-${node.name}`;
 
     const success = await debugProvider.startDebug(
       cwd,
@@ -123,6 +125,19 @@ export class DebugSession {
       vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
         if (debugSession.name === debugSessionName) {
           await killContainerCommandProcess(container, node, this.podName);
+
+          if (this.isReload) {
+            const debugSession = new DebugSession();
+
+            host.withProgress({ title: "Waiting for reload ..." }, async () => {
+              await debugSession.launch(
+                workspaceFolder,
+                debugProvider,
+                this.node,
+                this.container
+              );
+            });
+          }
         }
       })
     );
@@ -148,7 +163,7 @@ export class DebugSession {
 
     const name = "debug:" + `${node.getAppName()}-${node.name}`;
 
-    host.invokeInNewTerminal(command.getCommand(), name);
+    const terminal = host.invokeInNewTerminal(command.getCommand(), name);
 
     this.disposable = [
       vscode.window.onDidCloseTerminal(async (e) => {
@@ -157,6 +172,8 @@ export class DebugSession {
         }
       }),
     ];
+
+    return terminal;
   }
   async dispose() {
     this.disposable.forEach((d) => d.dispose());
