@@ -47,18 +47,18 @@ export default class DebugCommand implements ICommand {
       }
     }
 
-    await host.withProgress(
-      {
-        title: "Waiting for debugging ...",
-      },
-      async () => {
-        await retry(waitForSync.bind(null, node), {
-          randomize: false,
-          retries: 3,
-        });
-        await this.startDebugging(node);
-      }
-    );
+    await host.withProgress({}, async (acton) => {
+      acton.report({ message: "Waiting for sync file ..." });
+
+      await retry(waitForSync.bind(null, node), {
+        randomize: false,
+        retries: 3,
+      });
+
+      acton.report({ message: "Waiting for debugging ..." });
+
+      await this.startDebugging(node);
+    });
   }
 
   validateDebugConfig(config: ContainerConfig) {
