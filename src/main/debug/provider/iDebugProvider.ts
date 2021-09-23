@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import host from "../../host";
 
 export abstract class IDebugProvider {
   name: string = null;
@@ -14,7 +15,7 @@ export abstract class IDebugProvider {
 
   async startDebugging(
     workspaceFolder: string,
-    config: vscode.DebugConfiguration & { port: number }
+    config: vscode.DebugConfiguration
   ): Promise<boolean> {
     const currentFolder = (vscode.workspace.workspaceFolders || []).find(
       (folder) => folder.name === path.basename(workspaceFolder)
@@ -22,15 +23,16 @@ export abstract class IDebugProvider {
 
     return vscode.debug.startDebugging(currentFolder, config);
   }
-  public async isDebuggerInstalled() {
+  public isDebuggerInstalled() {
     if (
       this.requireExtensions.length > 0 &&
       !this.existExtensions(this.requireExtensions)
     ) {
-      return await this.installExtension(this.requireExtensions);
+      this.installExtension(this.requireExtensions);
+      return false;
     }
 
-    return Promise.resolve(true);
+    return true;
   }
 
   private existExtensions(extensionArray: string[]) {
@@ -46,13 +48,16 @@ export abstract class IDebugProvider {
     );
 
     if (!answer) {
+      host.showInformationMessage("please install dependent extension.");
       return;
     }
 
     await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification },
       async (p) => {
-        p.report({ message: `Installing debugger for ${this.name} ...` });
+        p.report({
+          message: `Installing Language Support for ${this.name} ...`,
+        });
 
         for (const id of extensionArray) {
           await vscode.commands.executeCommand(
@@ -65,7 +70,7 @@ export abstract class IDebugProvider {
 
     const RELOAD = "Reload Window";
     const choice = await vscode.window.showInformationMessage(
-      "Please reload window to activate Language Support for Java.",
+      `Please reload window to activate Language Support for ${this.name}.`,
       RELOAD
     );
     if (choice === RELOAD) {

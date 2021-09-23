@@ -12,15 +12,20 @@ export class PythonDebugProvider extends IDebugProvider {
   ): Promise<boolean> {
     const debugConfiguration = {
       name: sessionName,
-      type: "go",
+      type: "python",
       request: "attach",
       mode: "remote",
-      remotePath: workDir || "/home/nocalhost-dev/",
-      localRoot: "${workspaceRoot}",
-      port,
-      host: "localhost",
-      // trace: "verbose", // check debug step
-      // NOT SUPPORT CWD, will occur error
+      pathMappings: [
+        {
+          localRoot: "${workspaceFolder}", // Maps C:\Users\user1\project1
+          remoteRoot: workDir || "/home/nocalhost-dev/", // To current working directory ~/project1
+        },
+      ],
+
+      connect: {
+        port,
+        host: "127.0.0.1",
+      },
     };
 
     return super.startDebugging(workspaceFolder, debugConfiguration);

@@ -31,9 +31,8 @@ export class DebugSession {
       return;
     }
 
-    const isInstalled = await debugProvider.isDebuggerInstalled();
+    const isInstalled = debugProvider.isDebuggerInstalled();
     if (!isInstalled) {
-      host.showInformationMessage("please install dependent extension.");
       return;
     }
 
