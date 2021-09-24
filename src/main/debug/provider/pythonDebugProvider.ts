@@ -16,8 +16,8 @@ export class PythonDebugProvider extends IDebugProvider {
       request: "attach",
       pathMappings: [
         {
-          localRoot: "${workspaceFolder}", // Maps C:\Users\user1\project1
-          remoteRoot: workDir || "/home/nocalhost-dev/", // To current working directory ~/project1
+          localRoot: "${workspaceFolder}",
+          remoteRoot: workDir || "/home/nocalhost-dev/",
         },
       ],
       connect: {
