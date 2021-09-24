@@ -157,9 +157,10 @@ export function createProcess(param: ExecParam) {
       if (code === 0) {
         res({ code, stdout, stderr });
       } else {
-        logger.log(
-          `[cmd] ${command} code: ${code} stdout: ${stdout} error:${stderr}`
-        );
+        const msg = `\n[cmd]: ${command} \n[code]: ${code} \n[stdout]: ${stdout} \n[error]: ${stderr}`;
+
+        host.log(msg, true);
+        logger.log(msg);
 
         if ("SIGTERM" === signal) {
           rej(new Error(`${command} ${stderr}`));

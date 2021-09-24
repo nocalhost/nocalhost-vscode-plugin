@@ -2,7 +2,6 @@ import * as assert from "assert";
 import { Client } from "json-rpc2";
 const retry = require("async-retry");
 
-import host from "../../host";
 import { IDebugProvider } from "./iDebugProvider";
 
 export class GoDebugProvider extends IDebugProvider {

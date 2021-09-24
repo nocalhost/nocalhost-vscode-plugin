@@ -13,11 +13,7 @@ import { getRunningPodNames, NhctlCommand } from "../ctl/nhctl";
 import { LiveReload } from "../debug/liveReload";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import {
-  getContainer,
-  killContainerCommandProcess,
-  waitForSync,
-} from "../debug";
+import { getContainer, killContainerProcess, waitForSync } from "../debug";
 
 export interface ExecCommandParam {
   appName: string;
@@ -87,7 +83,7 @@ export default class RunCommand implements ICommand {
 
     assert.strictEqual(podNames.length, 1, "not found pod");
 
-    await killContainerCommandProcess(container, node, podNames[0]);
+    await killContainerProcess(container, node, podNames[0]);
 
     const command = await NhctlCommand.exec({
       namespace: node.getNameSpace(),
@@ -112,7 +108,7 @@ export default class RunCommand implements ICommand {
           this.disposable.forEach((d) => d.dispose());
           this.disposable.length = 0;
 
-          await killContainerCommandProcess(container, node, podNames[0]);
+          await killContainerProcess(container, node, podNames[0]);
         }
       })
     );

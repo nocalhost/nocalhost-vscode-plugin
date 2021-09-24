@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { spawnSync } from "child_process";
+import { uniq } from "lodash";
 import { ExecOutputReturnValue } from "shelljs";
 const retry = require("async-retry");
 
@@ -14,32 +14,30 @@ import { ContainerConfig } from "../service/configService";
 export async function checkRequiredCommand(
   podName: string,
   namespace: string,
-  kubeconfigPath: string
+  kubeConfigPath: string
 ) {
-  function check(requiredCommand: string) {
-    const command = `k exec ${podName} -c nocalhost-dev --kubeconfig ${kubeconfigPath} -n ${namespace}  --`;
-    const args = command.split(" ");
-
-    args.push(`which ${requiredCommand}`);
-
-    const result = spawnSync(NhctlCommand.nhctlPath, args);
-
-    return result.stdout;
-  }
-
-  const notFound: Array<string> = [];
-  ["ps", "awk"].forEach((c) => {
-    const r = check(c);
-    if (!r) {
-      notFound.push(c);
-    }
+  const command = await NhctlCommand.exec({
+    namespace,
+    kubeConfigPath,
   });
 
-  assert.strictEqual(
-    notFound.length,
-    0,
-    "Not found command in container: " + notFound.join(" ")
-  );
+  const requiredCommand = ["ps", "pkill", "awk"];
+
+  return Promise.allSettled(
+    requiredCommand.map(
+      (cmd) =>
+        exec({
+          command: command.getCommand(),
+          args: [podName, `-c nocalhost-dev`, `-- bash -c "which ${cmd}"`],
+        }).promise
+    )
+  ).then((results) => {
+    assert.strictEqual(
+      results.filter((item) => item.status === "rejected").length,
+      0,
+      "The container depends on ps, pkill, awk, please check"
+    );
+  });
 }
 async function closeTerminals(node: ControllerResourceNode) {
   let condition = (t: vscode.Terminal) =>
@@ -63,16 +61,13 @@ async function closeTerminals(node: ControllerResourceNode) {
     }
   );
 }
-export async function killContainerCommandProcess(
+async function killCommandProcess(
   container: ContainerConfig,
-  node: ControllerResourceNode,
+  command: NhctlCommand,
   podName: string
 ) {
   const runCommand = (container.dev.command?.run ?? []).join(" ");
   const debugCommand = (container.dev.command?.debug ?? []).join(" ");
-
-  await closeTerminals(node);
-
   const grepPattern: Array<string> = [];
   if (runCommand) {
     grepPattern.push(`-e '${runCommand}'`);
@@ -82,11 +77,6 @@ export async function killContainerCommandProcess(
   }
 
   const grepStr = "grep " + grepPattern.join(" ");
-
-  const command = await NhctlCommand.exec({
-    namespace: node.getNameSpace(),
-    kubeConfigPath: node.getKubeConfigPath(),
-  });
 
   const { code, stdout } = (await exec({
     command: command.getCommand(),
@@ -100,7 +90,7 @@ export async function killContainerCommandProcess(
   assert.strictEqual(0, code, "find command error");
 
   if (stdout) {
-    const { code, stderr } = (await exec({
+    const { code } = (await exec({
       command: command.getCommand(),
       args: [
         podName,
@@ -111,8 +101,54 @@ export async function killContainerCommandProcess(
 
     assert.strictEqual(0, code, "kill command error");
   }
+}
+async function killPortProcess(
+  container: ContainerConfig,
+  command: NhctlCommand,
+  podName: string
+) {
+  const { remoteDebugPort } = container.dev.debug;
 
-  return Promise.resolve();
+  const { code, stdout } = (await exec({
+    command: command.getCommand(),
+    args: [
+      podName,
+      `-c nocalhost-dev`,
+      `-- bash -c "lsof -i:${remoteDebugPort}|awk 'NR == 1 {next} {print \\$2}'"`,
+    ],
+  }).promise.catch((err) => err)) as ExecOutputReturnValue;
+
+  assert.strictEqual(0, code, "find port error");
+
+  if (stdout) {
+    const { code } = (await exec({
+      command: command.getCommand(),
+      args: [
+        podName,
+        `-c nocalhost-dev`,
+        `-- bash -c "kill -9 ${uniq(stdout.split("\n")).join(" ")}"`,
+      ],
+    }).promise.catch((err) => err)) as ExecOutputReturnValue;
+
+    assert.strictEqual(0, code, "kill port error");
+  }
+}
+export async function killContainerProcess(
+  container: ContainerConfig,
+  node: ControllerResourceNode,
+  podName: string
+) {
+  await closeTerminals(node);
+
+  const command = await NhctlCommand.exec({
+    namespace: node.getNameSpace(),
+    kubeConfigPath: node.getKubeConfigPath(),
+  });
+
+  return Promise.all([
+    killCommandProcess(container, command, podName),
+    killPortProcess(container, command, podName),
+  ]);
 }
 
 export async function waitForSync(node: ControllerResourceNode) {

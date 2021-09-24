@@ -14,14 +14,12 @@ export class PythonDebugProvider extends IDebugProvider {
       name: sessionName,
       type: "python",
       request: "attach",
-      mode: "remote",
       pathMappings: [
         {
           localRoot: "${workspaceFolder}", // Maps C:\Users\user1\project1
           remoteRoot: workDir || "/home/nocalhost-dev/", // To current working directory ~/project1
         },
       ],
-
       connect: {
         port,
         host: "127.0.0.1",

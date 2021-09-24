@@ -10,7 +10,7 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 import {
   checkRequiredCommand,
   getContainer,
-  killContainerCommandProcess,
+  killContainerProcess,
 } from "./index";
 import { exec } from "../ctl/shell";
 
@@ -123,7 +123,7 @@ export class DebugSession {
     this.disposable.push(
       vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
         if (debugSession.name === debugSessionName) {
-          await killContainerCommandProcess(container, node, this.podName);
+          await killContainerProcess(container, node, this.podName);
 
           if (this.isReload) {
             const debugSession = new DebugSession();
@@ -145,7 +145,7 @@ export class DebugSession {
   async enterContainer() {
     const { container, node, podName } = this;
 
-    await killContainerCommandProcess(container, node, podName);
+    await killContainerProcess(container, node, podName);
 
     const debugCommand = (container.dev.command?.debug ?? []).join(" ");
 

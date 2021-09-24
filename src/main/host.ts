@@ -377,8 +377,8 @@ export class Host implements vscode.Disposable {
 
   invokeInNewTerminal(command: string, name?: string) {
     this.newTerminal = vscode.window.createTerminal(name);
-    this.newTerminal.show();
     this.newTerminal.sendText(command);
+    this.newTerminal.show();
     return this.newTerminal;
   }
 

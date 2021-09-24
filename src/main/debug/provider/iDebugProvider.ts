@@ -1,5 +1,8 @@
+import * as assert from "assert";
 import * as vscode from "vscode";
 import * as path from "path";
+const retry = require("async-retry");
+
 import host from "../../host";
 
 export abstract class IDebugProvider {
@@ -20,8 +23,19 @@ export abstract class IDebugProvider {
     const currentFolder = (vscode.workspace.workspaceFolders || []).find(
       (folder) => folder.name === path.basename(workspaceFolder)
     );
-
-    return vscode.debug.startDebugging(currentFolder, config);
+    return await retry(
+      async () => {
+        const result = await vscode.debug.startDebugging(currentFolder, config);
+        assert.ok(
+          result,
+          "The attempt to connect to the remote debug port timed out."
+        );
+      },
+      {
+        randomize: false,
+        retries: 5,
+      }
+    );
   }
   public isDebuggerInstalled() {
     if (
