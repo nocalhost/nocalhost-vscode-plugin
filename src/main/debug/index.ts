@@ -21,7 +21,7 @@ export async function checkRequiredCommand(
     kubeConfigPath,
   });
 
-  const requiredCommand = ["ps", "pkill", "awk"];
+  const requiredCommand = ["ps", "pkill", "awk", "lsof"];
 
   return Promise.allSettled(
     requiredCommand.map(
@@ -35,7 +35,7 @@ export async function checkRequiredCommand(
     assert.strictEqual(
       results.filter((item) => item.status === "rejected").length,
       0,
-      "The container depends on ps, pkill, awk, please check"
+      "The container depends on ps, pkill, awk, lsof, please check"
     );
   });
 }
@@ -83,11 +83,11 @@ async function killCommandProcess(
     args: [
       podName,
       `-c nocalhost-dev`,
-      `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print \\$2}'"`,
+      `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print $2}'"`,
     ],
   }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
-  assert.strictEqual(0, code, "find command error");
+  assert.strictEqual(0, code, "kill command error");
 
   if (stdout) {
     const { code } = (await exec({
@@ -114,7 +114,7 @@ async function killPortProcess(
     args: [
       podName,
       `-c nocalhost-dev`,
-      `-- bash -c "lsof -i:${remoteDebugPort}|awk 'NR == 1 {next} {print \\$2}'"`,
+      `-- bash -c "lsof -i:${remoteDebugPort}|awk 'NR == 1 {next} {print $2}'"`,
     ],
   }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
