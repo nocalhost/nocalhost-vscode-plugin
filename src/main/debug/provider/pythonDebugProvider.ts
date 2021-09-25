@@ -1,23 +1,26 @@
-import { IDebugProvider } from "./iDebugProvider";
+import { DebugConfiguration } from "vscode";
+import { IDebugProvider } from "./";
 
-export class PythonDebugProvider extends IDebugProvider {
-  name = "python";
-  requireExtensions = ["ms-python.python"];
-
-  async startDebug(
-    workspaceFolder: string,
-    sessionName: string,
+export class PythonDebugProvider implements IDebugProvider {
+  name: string;
+  requireExtensions: string[];
+  constructor() {
+    this.name = "python";
+    this.requireExtensions = ["ms-python.python"];
+  }
+  async getDebugConfiguration(
+    name: string,
     port: number,
-    workDir: string
-  ): Promise<boolean> {
-    const debugConfiguration = {
-      name: sessionName,
+    remoteRoot: string
+  ): Promise<DebugConfiguration> {
+    return {
+      name,
       type: "python",
       request: "attach",
       pathMappings: [
         {
           localRoot: "${workspaceFolder}",
-          remoteRoot: workDir || "/home/nocalhost-dev/",
+          remoteRoot,
         },
       ],
       connect: {
@@ -25,7 +28,5 @@ export class PythonDebugProvider extends IDebugProvider {
         host: "127.0.0.1",
       },
     };
-
-    return super.startDebugging(workspaceFolder, debugConfiguration);
   }
 }

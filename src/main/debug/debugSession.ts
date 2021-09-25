@@ -4,7 +4,11 @@ import * as assert from "assert";
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
 import { ContainerConfig } from "../service/configService";
-import { IDebugProvider } from "./provider/iDebugProvider";
+import {
+  checkDebuggerInstalled,
+  IDebugProvider,
+  startDebugging,
+} from "./provider";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import {
@@ -31,7 +35,7 @@ export class DebugSession {
       return;
     }
 
-    const isInstalled = debugProvider.isDebuggerInstalled();
+    const isInstalled = checkDebuggerInstalled(debugProvider);
     if (!isInstalled) {
       return;
     }
@@ -84,10 +88,7 @@ export class DebugSession {
       ],
     }).promise;
 
-    const cwd = workspaceFolder.uri.fsPath;
-    const workDir = container.dev.workDir || "/home/nocalhost-dev";
-
-    const terminal = await this.enterContainer();
+    await this.enterContainer();
 
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
@@ -109,11 +110,13 @@ export class DebugSession {
       this.disposable.unshift(liveReload);
     }
 
-    const success = await debugProvider.startDebug(
-      cwd,
-      debugSessionName,
-      port,
-      workDir
+    const success = await startDebugging(
+      workspaceFolder.uri.fsPath,
+      await debugProvider.getDebugConfiguration(
+        debugSessionName,
+        port,
+        container.dev.workDir ?? "/home/nocalhost-dev"
+      )
     );
 
     if (!success) {
@@ -160,7 +163,8 @@ export class DebugSession {
       ],
     });
 
-    const name = "debug:" + `${node.getAppName()}-${node.name}`;
+    const name =
+      "$(debug-console-view-icon)" + `${node.getAppName()}-${node.name}`;
 
     const terminal = host.invokeInNewTerminal(command.getCommand(), name);
 

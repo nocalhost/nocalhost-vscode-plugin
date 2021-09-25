@@ -145,10 +145,8 @@ export async function killContainerProcess(
     kubeConfigPath: node.getKubeConfigPath(),
   });
 
-  return Promise.all([
-    killCommandProcess(container, command, podName),
-    killPortProcess(container, command, podName),
-  ]);
+  await killCommandProcess(container, command, podName);
+  await killPortProcess(container, command, podName);
 }
 
 export async function waitForSync(node: ControllerResourceNode) {

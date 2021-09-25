@@ -1,40 +1,43 @@
 import Axios from "axios";
+import { DebugConfiguration } from "vscode";
 const retry = require("async-retry");
 
-import { IDebugProvider } from "./iDebugProvider";
+import { IDebugProvider } from "./";
 
-export class NodeDebugProvider extends IDebugProvider {
-  name: "node";
-  requireExtensions: [];
+export class NodeDebugProvider implements IDebugProvider {
+  name: string;
+  requireExtensions: string[];
 
-  async startDebug(
-    workspaceFolder: string,
-    sessionName: string,
+  constructor() {
+    this.name = "node";
+    this.requireExtensions = [];
+  }
+
+  async getDebugConfiguration(
+    name: string,
     port: number,
-    workDir: string
-  ): Promise<boolean> {
+    remoteRoot: string
+  ): Promise<DebugConfiguration> {
     //https://github.dev/microsoft/vscode-js-debug/blob/a570239f82641de25583ccdaadf9c0903c1a6a78/src/targets/node/restartPolicy.ts
 
     await this.waitForDebug(port);
 
-    const debugConfiguration = {
+    return {
       type: "node",
       request: "attach",
-      name: sessionName,
+      name,
       hostName: "localhost",
       skipFiles: ["<node_internals>/**/*.js"],
       port,
       sourceMaps: true,
       localRoot: "${workspaceRoot}",
-      remoteRoot: workDir || "/home/nocalhost-dev/",
+      remoteRoot,
       //nodemon
       // restart: {
       //   delay: 500,
       //   maxAttempts: 10,
       // },
     };
-
-    return super.startDebugging(workspaceFolder, debugConfiguration);
   }
 
   async waitForDebug(port: number) {

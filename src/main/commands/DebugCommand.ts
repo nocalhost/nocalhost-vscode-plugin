@@ -10,7 +10,6 @@ import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { ContainerConfig } from "../service/configService";
-
 import {
   chooseDebugProvider,
   Language,

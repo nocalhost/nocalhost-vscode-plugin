@@ -1,35 +1,37 @@
 import * as assert from "assert";
 import { Client } from "json-rpc2";
+import { DebugConfiguration } from "vscode";
 const retry = require("async-retry");
 
-import { IDebugProvider } from "./iDebugProvider";
+import { IDebugProvider } from "./";
 
-export class GoDebugProvider extends IDebugProvider {
-  name = "golang";
-  requireExtensions = ["golang.go"];
-
-  async startDebug(
-    workspaceFolder: string,
-    sessionName: string,
+export class GoDebugProvider implements IDebugProvider {
+  name: string;
+  requireExtensions: string[];
+  constructor() {
+    this.name = "golang";
+    this.requireExtensions = ["golang.go"];
+  }
+  async getDebugConfiguration(
+    name: string,
     port: number,
-    workDir: string
-  ): Promise<boolean> {
+    remoteRoot: string
+  ): Promise<DebugConfiguration> {
     await this.waitForDebug(port);
 
-    const debugConfiguration = {
-      name: sessionName,
+    return {
+      name,
       type: "go",
       request: "attach",
       mode: "remote",
-      remotePath: workDir || "/home/nocalhost-dev/",
+      remotePath: remoteRoot,
       port,
       host: "127.0.0.1",
       // trace: "verbose", // check debug step
       // NOT SUPPORT CWD, will occur error
     };
-
-    return super.startDebugging(workspaceFolder, debugConfiguration);
   }
+
   async connectClient(client: Client) {
     return new Promise((res, rej) => {
       setTimeout(() => rej(new Error("connect client timeout")), 3 * 1000);

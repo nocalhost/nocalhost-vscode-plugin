@@ -1,28 +1,29 @@
 import * as vscode from "vscode";
 
-import { IDebugProvider } from "./iDebugProvider";
+import { IDebugProvider } from "./";
 
-export class JavaDebugProvider extends IDebugProvider {
-  name: "java";
-  requireExtensions: ["vscjava.vscode-java-debug", "redhat.java"];
+export class JavaDebugProvider implements IDebugProvider {
+  name: string;
+  requireExtensions: string[];
+  constructor() {
+    this.name = "java";
+    this.requireExtensions = ["vscjava.vscode-java-debug", "redhat.java"];
+  }
 
-  async startDebug(
-    workspaceFolder: string,
-    sessionName: string,
+  async getDebugConfiguration(
+    name: string,
     port: number,
-    workDir: string
-  ): Promise<boolean> {
-    const debugConfiguration: vscode.DebugConfiguration = {
+    remotePath: string
+  ): Promise<vscode.DebugConfiguration> {
+    return {
       type: "java",
-      name: sessionName,
-      projectName: sessionName,
-      remotePath: workDir || "/home/nocalhost-dev/",
+      name,
+      projectName: name,
+      remotePath,
       localRoot: "${workspaceRoot}",
       request: "attach",
       hostName: "localhost",
       port,
     };
-
-    return super.startDebugging(workspaceFolder, debugConfiguration);
   }
 }
