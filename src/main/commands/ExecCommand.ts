@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { ExecOutputReturnValue } from "shelljs";
 
 import ICommand from "./ICommand";
 import { EXEC } from "./constants";
@@ -6,10 +7,14 @@ import registerCommand from "./register";
 import host from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as shell from "../ctl/shell";
-import { getPodNames, NhctlCommand, getContainerNames } from "../ctl/nhctl";
+import {
+  getPodNames,
+  NhctlCommand,
+  getContainerNames,
+  devTerminal,
+} from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
-import { ExecOutputReturnValue } from "shelljs";
 
 export default class ExecCommand implements ICommand {
   command: string = EXEC;
@@ -42,7 +47,7 @@ export default class ExecCommand implements ICommand {
         container = "nocalhost-dev";
         pod = "";
       }
-      const terminal = await shell.openDevSpaceExec(
+      const terminal = await devTerminal(
         node.getAppName(),
         node.name,
         node.resourceType,
@@ -117,24 +122,19 @@ export default class ExecCommand implements ICommand {
       containerName,
       kubeConfigPath
     );
-    // const terminalCommands = new Array<string>();
-    // terminalCommands.push("exec");
-    // terminalCommands.push("-it", podName);
-    // terminalCommands.push("-c", containerName);
-    // terminalCommands.push("--kubeconfig", kubeConfigPath);
-    // terminalCommands.push("--", shell);
-    // const shellPath = "kubectl";
-    const args = NhctlCommand.exec({
+
+    const shellArgs = NhctlCommand.exec({
       kubeConfigPath: kubeConfigPath,
     })
       .addArgument("-it", podName)
       .addArgument("-c", containerName)
       .addArgumentTheTail(`-- ${shell}`).args;
-    const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      args,
-      NhctlCommand.nhctlPath,
-      podName
-    );
+
+    const terminalDisposed = host.createTerminal({
+      shellPath: NhctlCommand.nhctlPath,
+      name: podName,
+      shellArgs,
+    });
     terminalDisposed.show();
     return terminalDisposed;
   }

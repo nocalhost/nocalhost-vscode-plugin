@@ -154,25 +154,8 @@ export default class PortForwardCommand implements ICommand {
           terminalCommands.unshift(shellPath);
           host.showInformationMessage("Please input your password");
         } else {
-          // const username = await host.showInputBox({placeHolder: "Please input a super administrator account"});
-          // if (!username) {
-          //   return;
-          // }
-          // const command = `"${shellPath} ${terminalCommands.join(" ")}"`;
-          // terminalCommands = [`/user:${username}`, command];
         }
       }
-      // const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      //   nhctlCommand.args,
-      //   nhctl.NhctlCommand.nhctlPath,
-      //   "nhctl"
-      // );
-      // const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      //   terminalCommands,
-      //   this.getShellPath(sudo, shellPath),
-      //   "kubectl"
-      // );
-      // terminalDisposed.show();
       const ports = portMap.split(",").filter((str) => {
         let reg = /([0-9]+)?:[0-9]+/g;
         if (reg.exec(str)) {

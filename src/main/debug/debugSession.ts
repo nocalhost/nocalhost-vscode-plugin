@@ -163,10 +163,15 @@ export class DebugSession {
       ],
     });
 
-    const name =
-      "$(debug-console-view-icon)" + `${node.getAppName()}-${node.name}`;
+    const name = `${node.getAppName()}-${node.name}`;
 
-    const terminal = host.invokeInNewTerminal(command.getCommand(), name);
+    const terminal = host.createTerminal({
+      name,
+      iconPath: { id: "debug-console" },
+    });
+    terminal.sendText(command.getCommand());
+    terminal.sendText("clear");
+    terminal.show();
 
     this.disposable = [
       vscode.window.onDidCloseTerminal(async (e) => {

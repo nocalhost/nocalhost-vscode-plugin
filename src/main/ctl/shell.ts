@@ -1,49 +1,11 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import * as path from "path";
 import * as shell from "shelljs";
 import { Event } from "vscode";
 import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
 
 import host from "../host";
-import { NH_BIN } from "../constants";
 import logger from "../utils/logger";
-
-export async function openDevSpaceExec(
-  appName: string,
-  workloadName: string,
-  workloadType: string,
-  container: string | null,
-  kubeConfigPath: string,
-  namespace: string,
-  pod: string | null
-) {
-  const terminalCommands = ["dev", "terminal", appName];
-  terminalCommands.push("-d", workloadName);
-  terminalCommands.push("-t", workloadType);
-  if (pod) {
-    terminalCommands.push("--pod", pod);
-  }
-  if (container) {
-    terminalCommands.push("--container", container);
-  }
-  terminalCommands.push("--kubeconfig", kubeConfigPath);
-  terminalCommands.push("-n", namespace);
-  const nhctlPath = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
-  const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-    terminalCommands,
-    nhctlPath,
-    workloadName
-  );
-  terminalDisposed.show();
-
-  host.log("", true);
-
-  return terminalDisposed;
-}
 
 function showGlobalMsg(str: string) {
   if (str.indexOf("[WARNING]") > -1) {

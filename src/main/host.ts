@@ -19,8 +19,6 @@ export class Host implements vscode.Disposable {
     vscode.StatusBarAlignment.Left,
     100
   );
-  private newTerminal!: vscode.Terminal | null;
-
   public bookinfoTimeoutId: NodeJS.Timeout | null = null; // bookinfo
 
   // private debugDisposesMap = new Map<string, { dispose: () => any }>();
@@ -375,23 +373,10 @@ export class Host implements vscode.Disposable {
     return this.outputChannel;
   }
 
-  invokeInNewTerminal(command: string, name?: string) {
-    this.newTerminal = vscode.window.createTerminal(name);
-    this.newTerminal.sendText(command);
-    this.newTerminal.show();
-    return this.newTerminal;
-  }
-
-  invokeInNewTerminalSpecialShell(
-    commands: string[],
-    shellPath: string,
-    name: string
+  createTerminal(
+    options: vscode.TerminalOptions & { iconPath?: { id: string } }
   ) {
-    return vscode.window.createTerminal({
-      name,
-      shellArgs: commands,
-      shellPath,
-    });
+    return vscode.window.createTerminal(options as vscode.TerminalOptions);
   }
 
   log(msg: string, line?: boolean) {
@@ -406,9 +391,6 @@ export class Host implements vscode.Disposable {
     this.statusBar.dispose();
     this.outputChannel.dispose();
     this.disposeBookInfo();
-    if (this.newTerminal) {
-      this.newTerminal.dispose();
-    }
 
     this.devspaceDisposesMap.forEach((m, key) => {
       this.disposeDevspace(key);

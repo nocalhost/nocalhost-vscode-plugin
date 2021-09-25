@@ -1506,3 +1506,39 @@ export async function kubeconfig(
 
   return result;
 }
+
+export async function devTerminal(
+  appName: string,
+  workloadName: string,
+  workloadType: string,
+  container: string | null,
+  kubeConfigPath: string,
+  namespace: string,
+  pod: string | null
+) {
+  const shellArgs = ["dev", "terminal", appName];
+
+  shellArgs.push("-d", workloadName);
+  shellArgs.push("-t", workloadType);
+  shellArgs.push("--kubeconfig", kubeConfigPath);
+  shellArgs.push("-n", namespace);
+
+  if (pod) {
+    shellArgs.push("--pod", pod);
+  }
+  if (container) {
+    shellArgs.push("--container", container);
+  }
+
+  const terminal = host.createTerminal({
+    shellPath: NhctlCommand.nhctlPath,
+    shellArgs,
+    name: `${appName}-${workloadName}`,
+    iconPath: {
+      id: "vm-connect",
+    },
+  });
+  terminal.show();
+
+  return terminal;
+}

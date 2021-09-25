@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 import * as os from "os";
+import * as nls from "../../../package.nls.json";
+
 import { INhCtlGetResult, IDescribeConfig } from "../domain";
 import ICommand from "./ICommand";
-import { NhctlCommand } from "./../ctl/nhctl";
 import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import { get as _get } from "lodash";
-import { openDevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
   TMP_CONTAINER,
@@ -26,7 +26,6 @@ import * as path from "path";
 import git from "../ctl/git";
 import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
-import * as nls from "../../../package.nls.json";
 import { replaceSpacePath } from "../utils/fileUtil";
 import { BaseNocalhostNode, DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
@@ -71,7 +70,7 @@ export default class StartDevModeCommand implements ICommand {
 
     this.node = node;
 
-    await NhctlCommand.authCheck({
+    await nhctl.NhctlCommand.authCheck({
       base: "dev",
       args: ["start", node.getAppName(), "-t" + node.resourceType, node.name],
       kubeConfigPath: node.getKubeConfigPath(),
@@ -82,7 +81,7 @@ export default class StartDevModeCommand implements ICommand {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
     host.log("[start dev] Initializing..", true);
-    const resource: INhCtlGetResult = await NhctlCommand.get({
+    const resource: INhCtlGetResult = await nhctl.NhctlCommand.get({
       kubeConfigPath: node.getKubeConfigPath(),
       namespace: node.getNameSpace(),
     })
@@ -473,7 +472,7 @@ export default class StartDevModeCommand implements ICommand {
       await vscode.commands.executeCommand("Nocalhost.refresh", parent);
 
       // await vscode.commands.executeCommand(EXEC, node);
-      const terminal = await openDevSpaceExec(
+      const terminal = await nhctl.devTerminal(
         node.getAppName(),
         node.name,
         node.resourceType,

@@ -98,9 +98,15 @@ export default class RunCommand implements ICommand {
 
     const resourceNode = node as KubernetesResourceNode;
 
-    const name = "run:" + `${node.getAppName()}-${node.name}`;
+    const name = `${node.getAppName()}-${node.name}`;
 
-    host.invokeInNewTerminal(command.getCommand(), name);
+    const terminal = vscode.window.createTerminal({
+      name,
+      iconPath: { id: "vm-running" },
+    } as vscode.TerminalOptions);
+    terminal.sendText(command.getCommand());
+    terminal.sendText("clear");
+    terminal.show();
 
     this.disposable.push(
       vscode.window.onDidCloseTerminal(async (e) => {
