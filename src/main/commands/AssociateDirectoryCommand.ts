@@ -9,6 +9,7 @@ import host from "../host";
 import { associate, getServiceConfig, NhctlCommand } from "../ctl/nhctl";
 import { getContainer } from "../utils/getContainer";
 import { INhCtlGetResult } from "../domain";
+import SyncServiceCommand from "./SyncServiceCommand";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
   command: string = ASSOCIATE_LOCAL_DIRECTORY;
@@ -72,6 +73,11 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
         workloadName,
         containerName
       );
+
+      if (host.getCurrentRootPath() === selectUri[0].fsPath) {
+        SyncServiceCommand.checkSync();
+      }
+
       if (container) {
         vscode.commands.executeCommand("vscode.openFolder", selectUri[0], true);
       } else {
