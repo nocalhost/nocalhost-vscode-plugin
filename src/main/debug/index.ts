@@ -29,6 +29,7 @@ export async function checkRequiredCommand(
         exec({
           command: command.getCommand(),
           args: [podName, `-c nocalhost-dev`, `-- bash -c "which ${cmd}"`],
+          output: false,
         }).promise
     )
   ).then((results) => {
@@ -133,7 +134,7 @@ async function killPortProcess(
     assert.strictEqual(0, code, "kill port error");
   }
 }
-export async function checkRemoteDebugPort(
+export async function waitForRemoteDebugPortReady(
   container: ContainerConfig,
   node: ControllerResourceNode,
   podName: string
@@ -152,6 +153,7 @@ export async function checkRemoteDebugPort(
       `-c nocalhost-dev`,
       `-- bash -c "nc -vz 127.0.0.1 ${remoteDebugPort}"`,
     ],
+    output: false,
   }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
   assert.strictEqual(

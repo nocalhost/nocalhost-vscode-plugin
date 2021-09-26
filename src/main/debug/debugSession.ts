@@ -1,24 +1,19 @@
 import * as vscode from "vscode";
 import * as assert from "assert";
-const retry = require("async-retry");
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
 import { ContainerConfig } from "../service/configService";
-import {
-  checkDebuggerInstalled,
-  IDebugProvider,
-  startDebugging,
-} from "./provider";
+import { checkDebuggerInstalled } from "./provider";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import {
-  checkRemoteDebugPort,
   checkRequiredCommand,
   getContainer,
   killContainerProcess,
 } from "./index";
 import { exec } from "../ctl/shell";
+import { IDebugProvider } from "./provider/IDebugProvider";
 
 export class DebugSession {
   disposable: Array<{ dispose(): any }> = [];
@@ -92,11 +87,6 @@ export class DebugSession {
 
     await this.createTerminal(debugProvider);
 
-    await retry(() => checkRemoteDebugPort(container, node, this.podName), {
-      randomize: false,
-      retries: 6,
-    });
-
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
     if (container.dev.hotReload === true) {
@@ -117,13 +107,12 @@ export class DebugSession {
       this.disposable.unshift(liveReload);
     }
 
-    const success = await startDebugging(
+    const success = await debugProvider.startDebugging(
       workspaceFolder.uri.fsPath,
-      await debugProvider.getDebugConfiguration(
-        debugSessionName,
-        port,
-        container.dev.workDir ?? "/home/nocalhost-dev"
-      )
+      debugSessionName,
+      container,
+      node,
+      this.podName
     );
 
     if (!success) {

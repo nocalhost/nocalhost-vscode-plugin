@@ -3,22 +3,24 @@ import { Client } from "json-rpc2";
 import { DebugConfiguration } from "vscode";
 const retry = require("async-retry");
 
-import { IDebugProvider } from "./";
+import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
+import { ContainerConfig } from "../../service/configService";
+import { IDebugProvider } from "./IDebugProvider";
 
-export class GoDebugProvider implements IDebugProvider {
+export class GoDebugProvider extends IDebugProvider {
   name: string;
   requireExtensions: string[];
   constructor() {
+    super();
     this.name = "Golang";
     this.requireExtensions = ["golang.go"];
   }
-  async getDebugConfiguration(
+
+  getDebugConfiguration(
     name: string,
     port: number,
     remoteRoot: string
-  ): Promise<DebugConfiguration> {
-    // await this.waitForDebug(port);
-
+  ): DebugConfiguration {
     return {
       name,
       type: "go",
@@ -29,10 +31,33 @@ export class GoDebugProvider implements IDebugProvider {
       host: "127.0.0.1",
     };
   }
+  async startDebugging(
+    workspaceFolder: string,
+    debugSessionName: string,
+    container: ContainerConfig,
+    node: ControllerResourceNode,
+    podName: string
+  ): Promise<boolean> {
+    await this.waitForReady(container.dev.debug.remoteDebugPort);
+
+    return super.startDebugging(
+      workspaceFolder,
+      debugSessionName,
+      container,
+      node,
+      podName
+    );
+  }
 
   async connectClient(client: Client) {
     return new Promise((res, rej) => {
-      setTimeout(() => rej(new Error("connect client timeout")), 3 * 1000);
+      setTimeout(() => {
+        rej(
+          new Error(
+            "The attempt to connect to the remote debug port timed out."
+          )
+        );
+      }, 3 * 1000);
 
       client.connectSocket((err, conn) => {
         if (err) {
@@ -48,7 +73,7 @@ export class GoDebugProvider implements IDebugProvider {
       });
     });
   }
-  async waitForDebug(port: number) {
+  async waitForReady(port: number) {
     const client = Client.$create(port, "127.0.0.1");
 
     await retry(

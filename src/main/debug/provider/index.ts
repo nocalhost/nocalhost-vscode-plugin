@@ -1,13 +1,10 @@
-import * as assert from "assert";
-import * as vscode from "vscode";
-import * as path from "path";
-const retry = require("async-retry");
+import { commands, extensions, ProgressLocation, window } from "vscode";
 
 import { JavaDebugProvider } from "./javaDebugProvider";
 import { NodeDebugProvider } from "./nodeDebugProvider";
 import { GoDebugProvider } from "./goDebugProvider";
 import { PythonDebugProvider } from "./pythonDebugProvider";
-import host from "../../host";
+import { IDebugProvider } from "./IDebugProvider";
 
 const support = {
   node: NodeDebugProvider,
@@ -22,22 +19,14 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
   const supportType = Object.keys(support) as Array<Language>;
 
   if (!type) {
-    type = (await vscode.window.showQuickPick(supportType)) as Language;
+    type = (await window.showQuickPick(supportType)) as Language;
   }
 
   let debugProvider = support[type];
 
   return new debugProvider();
 }
-async function startDebugging(
-  workspaceFolder: string,
-  config: vscode.DebugConfiguration
-): Promise<boolean> {
-  const currentFolder = (vscode.workspace.workspaceFolders || []).find(
-    (folder) => folder.name === path.basename(workspaceFolder)
-  );
-  return await vscode.debug.startDebugging(currentFolder, config);
-}
+
 function checkDebuggerInstalled(debugProvider: IDebugProvider) {
   const { requireExtensions, name } = debugProvider;
 
@@ -51,7 +40,7 @@ function checkDebuggerInstalled(debugProvider: IDebugProvider) {
 
 function existExtensions(extensionArray: string[]) {
   return extensionArray.every((extensionId) => {
-    const extension = vscode.extensions.getExtension(extensionId);
+    const extension = extensions.getExtension(extensionId);
 
     if (extension && !extension.isActive) {
       extension.activate();
@@ -64,7 +53,7 @@ function existExtensions(extensionArray: string[]) {
  * install
  */
 async function guideToInstallExtension(name: string, extensionArray: string[]) {
-  let answer = await vscode.window.showWarningMessage(
+  let answer = await window.showWarningMessage(
     `Debugger Support for ${name} require. Please install and enable it.`,
     "Install"
   );
@@ -73,15 +62,15 @@ async function guideToInstallExtension(name: string, extensionArray: string[]) {
     return;
   }
 
-  await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification },
+  await window.withProgress(
+    { location: ProgressLocation.Notification },
     async (p) => {
       p.report({
         message: `Installing Debugger Support for ${name} ...`,
       });
 
       for (const id of extensionArray) {
-        await vscode.commands.executeCommand(
+        await commands.executeCommand(
           "workbench.extensions.installExtension",
           id
         );
@@ -90,29 +79,13 @@ async function guideToInstallExtension(name: string, extensionArray: string[]) {
   );
 
   const RELOAD = "Reload Window";
-  const choice = await vscode.window.showInformationMessage(
+  const choice = await window.showInformationMessage(
     `Please reload window to activate Debugger Support for ${name}.`,
     RELOAD
   );
   if (choice === RELOAD) {
-    await vscode.commands.executeCommand("workbench.action.reloadWindow");
+    await commands.executeCommand("workbench.action.reloadWindow");
   }
 }
 
-interface IDebugProvider {
-  name: string;
-  requireExtensions: Array<string>;
-  getDebugConfiguration(
-    name: string,
-    port: number,
-    remoteRoot: string
-  ): Promise<vscode.DebugConfiguration>;
-}
-
-export {
-  IDebugProvider,
-  chooseDebugProvider,
-  Language,
-  startDebugging,
-  checkDebuggerInstalled,
-};
+export { chooseDebugProvider, Language, checkDebuggerInstalled };

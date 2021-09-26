@@ -119,9 +119,9 @@ export function createProcess(param: ExecParam) {
       if (code === 0) {
         res({ code, stdout, stderr });
       } else {
-        const msg = `\n[cmd]: ${command} \n[code]: ${code} \n[stdout]: ${stdout} \n[error]: ${stderr}`;
+        const msg = `\n[cmd]: ${command} \n[code]: ${code} \n[stdout]: ${stdout} \n[stderr]: ${stderr}`;
 
-        host.log(msg, true);
+        err && host.log(msg, true);
         logger.log(msg);
 
         if ("SIGTERM" === signal) {

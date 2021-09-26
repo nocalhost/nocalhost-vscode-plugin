@@ -10,13 +10,10 @@ import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { ContainerConfig } from "../service/configService";
-import {
-  chooseDebugProvider,
-  Language,
-  IDebugProvider,
-} from "../debug/provider";
+import { chooseDebugProvider, Language } from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { getContainer, waitForSync } from "../debug";
+import { IDebugProvider } from "../debug/provider/IDebugProvider";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
