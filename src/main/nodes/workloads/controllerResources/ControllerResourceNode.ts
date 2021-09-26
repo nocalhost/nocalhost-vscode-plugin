@@ -75,14 +75,6 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
     return false;
   }
-  public async isDeveloping() {
-    if (this.svcProfile && this.svcProfile.developing) {
-      return true;
-    }
-
-    return false;
-  }
-
   public async getIconAndLabelByStatus(
     status: string
   ): Promise<[vscode.Uri, string]> {
@@ -206,8 +198,14 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     if (refresh) {
       await this.refreshSvcProfile();
     }
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
+
+    if (
+      this.svcProfile?.develop_status &&
+      this.svcProfile?.develop_status !== "NONE"
+    ) {
+      return this.svcProfile.develop_status === "STARTED"
+        ? DeploymentStatus.developing
+        : DeploymentStatus.starting;
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;
