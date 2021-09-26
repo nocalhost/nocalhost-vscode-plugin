@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { uniq } from "lodash";
 import { ExecOutputReturnValue } from "shelljs";
+const isWindows = require("is-windows");
 const retry = require("async-retry");
 
 import { SyncMsg } from "../commands/SyncServiceCommand";
@@ -10,6 +11,13 @@ import { exec } from "../ctl/shell";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../service/configService";
+
+function getBackslash() {
+  if (isWindows()) {
+    return "";
+  }
+  return "\\";
+}
 
 export async function checkRequiredCommand(
   podName: string,
@@ -61,6 +69,7 @@ async function closeTerminals() {
     }
   );
 }
+
 async function killCommandProcess(
   container: ContainerConfig,
   command: NhctlCommand,
@@ -83,7 +92,7 @@ async function killCommandProcess(
     args: [
       podName,
       `-c nocalhost-dev`,
-      `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print \\$2}'"`,
+      `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print ${getBackslash()}$2}'"`,
     ],
   }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
@@ -115,7 +124,7 @@ async function killPortProcess(
     args: [
       podName,
       `-c nocalhost-dev`,
-      `-- bash -c "lsof -i:${remoteDebugPort}|awk 'NR == 1 {next} {print \\$2}'"`,
+      `-- bash -c "lsof -i:${remoteDebugPort}|awk 'NR == 1 {next} {print ${getBackslash()}$2}'"`,
     ],
   }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
