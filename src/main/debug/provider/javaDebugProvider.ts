@@ -20,6 +20,7 @@ export class JavaDebugProvider extends IDebugProvider {
     port: number,
     remotePath: string
   ): vscode.DebugConfiguration {
+    // https://code.visualstudio.com/docs/java/java-debugging
     return {
       type: "java",
       name,

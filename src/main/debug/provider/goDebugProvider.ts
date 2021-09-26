@@ -21,6 +21,7 @@ export class GoDebugProvider extends IDebugProvider {
     port: number,
     remoteRoot: string
   ): DebugConfiguration {
+    // https://github.com/golang/vscode-go/blob/master/docs/debugging.md
     return {
       name,
       type: "go",
