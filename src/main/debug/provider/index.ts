@@ -36,21 +36,7 @@ async function startDebugging(
   const currentFolder = (vscode.workspace.workspaceFolders || []).find(
     (folder) => folder.name === path.basename(workspaceFolder)
   );
-  return await retry(
-    async () => {
-      const result = await vscode.debug.startDebugging(currentFolder, config);
-      assert.ok(
-        result,
-        "The attempt to connect to the remote debug port timed out."
-      );
-
-      return result;
-    },
-    {
-      randomize: false,
-      retries: 5,
-    }
-  );
+  return await vscode.debug.startDebugging(currentFolder, config);
 }
 function checkDebuggerInstalled(debugProvider: IDebugProvider) {
   const { requireExtensions, name } = debugProvider;

@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as assert from "assert";
+const retry = require("async-retry");
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
 import host from "../host";
@@ -12,6 +13,7 @@ import {
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import {
+  checkRemoteDebugPort,
   checkRequiredCommand,
   getContainer,
   killContainerProcess,
@@ -88,7 +90,12 @@ export class DebugSession {
       ],
     }).promise;
 
-    await this.enterContainer();
+    await this.createTerminal(debugProvider);
+
+    await retry(() => checkRemoteDebugPort(container, node, this.podName), {
+      randomize: false,
+      retries: 6,
+    });
 
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
@@ -145,7 +152,7 @@ export class DebugSession {
     );
   }
 
-  async enterContainer() {
+  async createTerminal(debugProvider: IDebugProvider) {
     const { container, node, podName } = this;
 
     await killContainerProcess(container, node, podName);
@@ -163,14 +170,13 @@ export class DebugSession {
       ],
     });
 
-    const name = `${node.getAppName()}-${node.name}`;
+    const name = `${debugProvider.name} Process Console`;
 
     const terminal = host.createTerminal({
       name,
-      iconPath: { id: "debug-console" },
+      iconPath: { id: "debug" },
     });
     terminal.sendText(command.getCommand());
-    terminal.sendText("clear");
     terminal.show();
 
     this.disposable = [

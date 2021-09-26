@@ -9,7 +9,7 @@ export class GoDebugProvider implements IDebugProvider {
   name: string;
   requireExtensions: string[];
   constructor() {
-    this.name = "golang";
+    this.name = "Golang";
     this.requireExtensions = ["golang.go"];
   }
   async getDebugConfiguration(
@@ -17,7 +17,7 @@ export class GoDebugProvider implements IDebugProvider {
     port: number,
     remoteRoot: string
   ): Promise<DebugConfiguration> {
-    await this.waitForDebug(port);
+    // await this.waitForDebug(port);
 
     return {
       name,
@@ -27,8 +27,6 @@ export class GoDebugProvider implements IDebugProvider {
       remotePath: remoteRoot,
       port,
       host: "127.0.0.1",
-      // trace: "verbose", // check debug step
-      // NOT SUPPORT CWD, will occur error
     };
   }
 

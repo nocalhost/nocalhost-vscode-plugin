@@ -9,7 +9,7 @@ export class NodeDebugProvider implements IDebugProvider {
   requireExtensions: string[];
 
   constructor() {
-    this.name = "node";
+    this.name = "Node";
     this.requireExtensions = [];
   }
 

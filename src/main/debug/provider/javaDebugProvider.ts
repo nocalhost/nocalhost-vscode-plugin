@@ -6,7 +6,7 @@ export class JavaDebugProvider implements IDebugProvider {
   name: string;
   requireExtensions: string[];
   constructor() {
-    this.name = "java";
+    this.name = "Java";
     this.requireExtensions = ["vscjava.vscode-java-debug", "redhat.java"];
   }
 
@@ -18,9 +18,6 @@ export class JavaDebugProvider implements IDebugProvider {
     return {
       type: "java",
       name,
-      projectName: name,
-      remotePath,
-      localRoot: "${workspaceRoot}",
       request: "attach",
       hostName: "localhost",
       port,

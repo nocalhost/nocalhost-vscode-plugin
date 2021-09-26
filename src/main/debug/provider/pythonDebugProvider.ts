@@ -5,7 +5,7 @@ export class PythonDebugProvider implements IDebugProvider {
   name: string;
   requireExtensions: string[];
   constructor() {
-    this.name = "python";
+    this.name = "Python";
     this.requireExtensions = ["ms-python.python"];
   }
   async getDebugConfiguration(

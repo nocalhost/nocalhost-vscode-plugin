@@ -21,7 +21,7 @@ export async function checkRequiredCommand(
     kubeConfigPath,
   });
 
-  const requiredCommand = ["ps", "pkill", "awk", "lsof"];
+  const requiredCommand = ["ps", "pkill", "awk", "lsof", "nc"];
 
   return Promise.allSettled(
     requiredCommand.map(
@@ -39,9 +39,8 @@ export async function checkRequiredCommand(
     );
   });
 }
-async function closeTerminals(node: ControllerResourceNode) {
-  let condition = (t: vscode.Terminal) =>
-    t.name.endsWith(`${node.getAppName()}-${node.name}`);
+async function closeTerminals() {
+  let condition = (t: vscode.Terminal) => t.name.endsWith(`Process Console`);
 
   const terminals = vscode.window.terminals.filter(condition);
   if (terminals.length === 0) {
@@ -83,7 +82,7 @@ async function killCommandProcess(
     args: [
       podName,
       `-c nocalhost-dev`,
-      `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print $2}'"`,
+      `-- bash -c "ps aux| ${grepStr}|grep -v grep|awk '{print \\$2}'"`,
     ],
   }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
@@ -102,6 +101,7 @@ async function killCommandProcess(
     assert.strictEqual(0, code, "kill command error");
   }
 }
+
 async function killPortProcess(
   container: ContainerConfig,
   command: NhctlCommand,
@@ -114,7 +114,7 @@ async function killPortProcess(
     args: [
       podName,
       `-c nocalhost-dev`,
-      `-- bash -c "lsof -i:${remoteDebugPort}|awk 'NR == 1 {next} {print $2}'"`,
+      `-- bash -c "lsof -i:${remoteDebugPort}|awk 'NR == 1 {next} {print \\$2}'"`,
     ],
   }).promise.catch((err) => err)) as ExecOutputReturnValue;
 
@@ -133,14 +133,42 @@ async function killPortProcess(
     assert.strictEqual(0, code, "kill port error");
   }
 }
+export async function checkRemoteDebugPort(
+  container: ContainerConfig,
+  node: ControllerResourceNode,
+  podName: string
+) {
+  const { remoteDebugPort } = container.dev.debug;
+
+  const command = NhctlCommand.exec({
+    namespace: node.getNameSpace(),
+    kubeConfigPath: node.getKubeConfigPath(),
+  }).getCommand();
+
+  const { code } = (await exec({
+    command,
+    args: [
+      podName,
+      `-c nocalhost-dev`,
+      `-- bash -c "nc -vz 127.0.0.1 ${remoteDebugPort}"`,
+    ],
+  }).promise.catch((err) => err)) as ExecOutputReturnValue;
+
+  assert.strictEqual(
+    0,
+    code,
+    "The attempt to connect to the remote debug port timed out."
+  );
+}
+
 export async function killContainerProcess(
   container: ContainerConfig,
   node: ControllerResourceNode,
   podName: string
 ) {
-  await closeTerminals(node);
+  await closeTerminals();
 
-  const command = await NhctlCommand.exec({
+  const command = NhctlCommand.exec({
     namespace: node.getNameSpace(),
     kubeConfigPath: node.getKubeConfigPath(),
   });

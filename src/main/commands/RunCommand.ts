@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
 import * as assert from "assert";
+import { capitalCase } from "change-case";
 const retry = require("async-retry");
 
 import ICommand from "./ICommand";
@@ -98,14 +99,13 @@ export default class RunCommand implements ICommand {
 
     const resourceNode = node as KubernetesResourceNode;
 
-    const name = `${node.getAppName()}-${node.name}`;
+    const name = `${capitalCase(node.name)} Process Console`;
 
-    const terminal = vscode.window.createTerminal({
+    const terminal = host.createTerminal({
       name,
       iconPath: { id: "vm-running" },
-    } as vscode.TerminalOptions);
+    });
     terminal.sendText(command.getCommand());
-    terminal.sendText("clear");
     terminal.show();
 
     this.disposable.push(
