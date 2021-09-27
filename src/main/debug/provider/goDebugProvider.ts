@@ -87,7 +87,7 @@ export class GoDebugProvider extends IDebugProvider {
       },
       {
         randomize: false,
-        retries: 3,
+        retries: 6,
       }
     );
   }
