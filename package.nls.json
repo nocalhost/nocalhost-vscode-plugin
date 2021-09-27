@@ -40,5 +40,6 @@
   "upgradeApp": "Upgrade Application",
   "nocalhostProfile": "Nocalhost Profile",
   "viewDevConfig": "View Dev Configs",
-  "resetPod": "Reset Pod"
+  "resetPod": "Reset Pod",
+  "startCopyDevMode": "Start DevMode(Copy Workload)"
 }
