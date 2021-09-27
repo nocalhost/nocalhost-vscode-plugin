@@ -84,7 +84,7 @@ export default class RunCommand implements ICommand {
 
     assert.strictEqual(podNames.length, 1, "not found pod");
 
-    await killContainerProcess(container, node, podNames[0]);
+    // await killContainerProcess(container, node, podNames[0]);
 
     const command = await NhctlCommand.exec({
       namespace: node.getNameSpace(),
@@ -114,7 +114,7 @@ export default class RunCommand implements ICommand {
           this.disposable.forEach((d) => d.dispose());
           this.disposable.length = 0;
 
-          await killContainerProcess(container, node, podNames[0]);
+          // await killContainerProcess(container, node, podNames[0]);
         }
       })
     );

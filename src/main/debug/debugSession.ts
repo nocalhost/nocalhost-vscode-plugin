@@ -7,11 +7,7 @@ import { ContainerConfig } from "../service/configService";
 import { checkDebuggerInstalled } from "./provider";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import {
-  checkRequiredCommand,
-  getContainer,
-  killContainerProcess,
-} from "./index";
+import { getContainer } from "./index";
 import { exec } from "../ctl/shell";
 import { IDebugProvider } from "./provider/IDebugProvider";
 
@@ -54,19 +50,10 @@ export class DebugSession {
 
     this.podName = podNames[0];
 
-    await checkRequiredCommand(
-      podNames[0],
-      node.getNameSpace(),
-      node.getKubeConfigPath()
-    );
-
     await this.startDebug(debugProvider, workspaceFolder);
   }
 
-  async startDebug(
-    debugProvider: IDebugProvider,
-    workspaceFolder: vscode.WorkspaceFolder
-  ) {
+  async portForward(command: "end" | "start") {
     const { container, node } = this;
     const port =
       (container.dev.debug && container.dev.debug.remoteDebugPort) || 9229;
@@ -75,7 +62,7 @@ export class DebugSession {
       command: NhctlCommand.nhctlPath,
       args: [
         "port-forward",
-        "start",
+        command,
         node.getAppName(),
         `-d ${node.name}`,
         `-t ${node.resourceType}`,
@@ -85,9 +72,63 @@ export class DebugSession {
       ],
     }).promise;
 
-    await this.createTerminal(debugProvider);
+    if (command === "start") {
+      this.disposable.push({
+        dispose: () => {
+          this.portForward("end");
+        },
+      });
+    }
+  }
+
+  async startDebug(
+    debugProvider: IDebugProvider,
+    workspaceFolder: vscode.WorkspaceFolder
+  ) {
+    const { container, node } = this;
+
+    await this.portForward("start");
+
+    const terminal = await this.createTerminal(debugProvider);
 
     const debugSessionName = `${node.getAppName()}-${node.name}`;
+
+    const success = await debugProvider.startDebugging(
+      workspaceFolder.uri.fsPath,
+      debugSessionName,
+      container,
+      node,
+      this.podName
+    );
+
+    if (!success) {
+      this.dispose();
+    } else {
+      this.disposable.push(
+        vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
+          if (debugSession.name === debugSessionName) {
+            terminal.sendText("\x03");
+
+            if (this.isReload) {
+              await debugProvider.startDebugging(
+                workspaceFolder.uri.fsPath,
+                debugSessionName,
+                container,
+                node,
+                this.podName
+              );
+
+              this.isReload = false;
+            } else {
+              this.dispose();
+            }
+          }
+        })
+      );
+    }
+  }
+  liveReload() {
+    const { container, node } = this;
 
     if (container.dev.hotReload === true) {
       const liveReload = new LiveReload(
@@ -104,47 +145,11 @@ export class DebugSession {
         }
       );
 
-      this.disposable.unshift(liveReload);
+      this.disposable.push(liveReload);
     }
-
-    const success = await debugProvider.startDebugging(
-      workspaceFolder.uri.fsPath,
-      debugSessionName,
-      container,
-      node,
-      this.podName
-    );
-
-    if (!success) {
-      this.dispose();
-      return;
-    }
-    this.disposable.push(
-      vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
-        if (debugSession.name === debugSessionName) {
-          await killContainerProcess(container, node, this.podName);
-
-          if (this.isReload) {
-            const debugSession = new DebugSession();
-
-            host.withProgress({ title: "Waiting for reload ..." }, async () => {
-              await debugSession.launch(
-                workspaceFolder,
-                debugProvider,
-                this.node,
-                this.container
-              );
-            });
-          }
-        }
-      })
-    );
   }
-
   async createTerminal(debugProvider: IDebugProvider) {
     const { container, node, podName } = this;
-
-    await killContainerProcess(container, node, podName);
 
     const debugCommand = (container.dev.command?.debug ?? []).join(" ");
 
@@ -168,16 +173,19 @@ export class DebugSession {
     terminal.sendText(command.getCommand());
     terminal.show();
 
-    this.disposable = [
+    this.disposable.push(
       vscode.window.onDidCloseTerminal(async (e) => {
         if (e.name === name) {
-          this.dispose();
+          if (vscode.debug.activeDebugSession) {
+            await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
+          }
         }
-      }),
-    ];
+      })
+    );
 
     return terminal;
   }
+
   async dispose() {
     this.disposable.forEach((d) => d.dispose());
     this.disposable.length = 0;
