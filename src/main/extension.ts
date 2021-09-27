@@ -1,10 +1,8 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { has } from "lodash";
-import { ExecOutputReturnValue } from "shelljs";
 
 import { PLUGIN_TEMP_DIR } from "./constants";
+// The module 'vscode' contains the VS Code extensibility API
+// Import the module and reference it with the alias vscode in your code below
 import NocalhostAppProvider from "./appProvider";
 import {
   BASE_URL,
@@ -52,6 +50,7 @@ import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
 import * as nls from "vscode-nls";
 import SyncServiceCommand from "./commands/SyncServiceCommand";
+import { ShellExecError } from "./ctl/shell";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -322,7 +321,7 @@ process.on("disconnect", function () {
   logger.error("exit vscode process");
 });
 process.on("uncaughtException", (error) => {
-  logger.error(`[uncatch exception] ${error.message} ${error.stack}`);
+  logger.error(`[uncaught exception] ${error.message} ${error.stack}`);
   if (error.message === "read ENOTCONN") {
     return;
   }
@@ -334,40 +333,41 @@ process.on("uncaughtException", (error) => {
   vscode.window.showErrorMessage(error.message);
 });
 
-process.on(
-  "unhandledRejection",
-  (error: string | Error | ExecOutputReturnValue | any) => {
-    if (error === undefined || error === "ignore") {
+process.on("unhandledRejection", (error?: string | Error | any) => {
+  if (error === undefined) {
+    return;
+  }
+
+  function isIgnoreError(message: string) {
+    if (
+      message === "read ENOTCONN" ||
+      message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
+    ) {
+      return true;
+    }
+  }
+
+  if (error instanceof Error || error instanceof ShellExecError) {
+    if (
+      !process.argv.includes("--type=extensionHost") &&
+      error.stack &&
+      !error.stack.includes("nocalhost.nocalhost")
+    ) {
       return;
     }
 
-    function isIgnoreError(message: string) {
-      if (
-        message === "read ENOTCONN" ||
-        message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
-      ) {
-        return true;
-      }
+    const { message } = error;
+
+    if (!isIgnoreError(message)) {
+      vscode.window.showErrorMessage(message);
     }
+  } else if (error.source === "api" && error.error && error.error.code) {
+    const { message } = error.error;
 
-    if (error instanceof Error) {
-      logger.error(
-        `[unhandledRejection] ${(error && error.message) || error} ${
-          error && error.stack
-        }`
-      );
-      const { message } = error;
-
-      if (!isIgnoreError(message)) {
-        vscode.window.showErrorMessage(message);
-      }
-    } else if (error.source === "api" && error.error && error.error.code) {
-      const { message } = error.error;
-
-      if (message && !isIgnoreError(message)) {
-        vscode.window.showErrorMessage(message);
-      }
-    } else if (has(error, ["code", "stdout", "stderr"])) {
+    if (message && !isIgnoreError(message)) {
+      vscode.window.showErrorMessage(message);
     }
   }
-);
+
+  logger.error(`[unhandledRejection]`, error);
+});

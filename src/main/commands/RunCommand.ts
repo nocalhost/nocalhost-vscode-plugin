@@ -14,7 +14,7 @@ import { getRunningPodNames, NhctlCommand } from "../ctl/nhctl";
 import { LiveReload } from "../debug/liveReload";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { getContainer, killContainerProcess, waitForSync } from "../debug";
+import { getContainer, waitForSync } from "../debug";
 
 export interface ExecCommandParam {
   appName: string;

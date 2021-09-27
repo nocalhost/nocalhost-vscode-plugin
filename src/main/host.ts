@@ -328,7 +328,7 @@ export class Host implements vscode.Disposable {
     const result = await vscode.window.showQuickPick(items, options, token);
 
     if (!result) {
-      return Promise.reject("ignore");
+      return Promise.reject();
     }
     return Promise.resolve(result);
   }

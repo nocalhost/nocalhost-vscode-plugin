@@ -74,7 +74,7 @@ export interface ExecParam {
 
 type OutPut = boolean | { err: boolean; out: boolean };
 
-function getOutput(output: OutPut = { err: true, out: false }) {
+function getOutput(output: OutPut = false) {
   if (typeof output === "boolean") {
     return {
       err: output,
@@ -82,6 +82,22 @@ function getOutput(output: OutPut = { err: true, out: false }) {
     };
   }
   return output;
+}
+
+export class ShellExecError extends Error {
+  stdout?: string;
+  stderr?: string;
+  code?: number;
+
+  constructor(result: ExecOutputReturnValue & Pick<ExecParam, "command">) {
+    const { command, stdout, stderr, code } = result;
+
+    super(`execute command fail:${command}`);
+
+    this.stderr = stderr;
+    this.stdout = stdout;
+    this.code = code;
+  }
 }
 
 export function createProcess(param: ExecParam) {
@@ -119,17 +135,19 @@ export function createProcess(param: ExecParam) {
       if (code === 0) {
         res({ code, stdout, stderr });
       } else {
-        const msg = `\n[cmd]: ${command} \n[code]: ${code} \n[stdout]: ${stdout} \n[stderr]: ${stderr}`;
-
-        err && host.log(msg, true);
-        logger.log(msg);
-
         if ("SIGTERM" === signal) {
-          rej(new Error(`${command} ${stderr}`));
+          rej();
           return;
         }
 
-        rej({ code, stdout, stderr });
+        const error = new ShellExecError({ code, stdout, stderr, command });
+        logger.error(error);
+
+        if (!err) {
+          host.log(`\n[cmd] ${command}\n stderr:${stderr}`);
+        }
+
+        rej(error);
       }
     });
   });

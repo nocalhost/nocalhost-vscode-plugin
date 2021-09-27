@@ -2,10 +2,8 @@ import * as vscode from "vscode";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import { JOB } from "../../../nodeContants";
 import logger from "../../../../utils/logger";
-import * as nhctl from "../../../../ctl/nhctl";
 import state from "../../../../state";
 import { DeploymentStatus } from "../../../types/nodeType";
-import { Status, Resource, ResourceStatus } from "../../../types/resourceType";
 import { IResourceStatus } from "../../../../domain";
 
 export class Job extends ControllerResourceNode {
@@ -49,8 +47,10 @@ export class Job extends ControllerResourceNode {
     if (refresh) {
       await this.refreshSvcProfile();
     }
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
+    if (this.svcProfile?.develop_status !== "NONE") {
+      return this.svcProfile.develop_status === "STARTING"
+        ? DeploymentStatus.developing
+        : DeploymentStatus.running;
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;
