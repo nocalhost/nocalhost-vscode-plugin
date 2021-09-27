@@ -33,10 +33,20 @@ export async function checkRequiredCommand(
         }).promise
     )
   ).then((results) => {
+    const notFond = results
+      .map((item, index) => {
+        return {
+          command: requiredCommand[index],
+          status: item.status === "rejected",
+        };
+      })
+      .filter((item) => item.status)
+      .map((item) => item.command);
+
     assert.strictEqual(
-      results.filter((item) => item.status === "rejected").length,
+      notFond.length,
       0,
-      "The container depends on ps, pkill, awk, lsof, please check"
+      `The container depends on ${notFond.join(",")} check`
     );
   });
 }
