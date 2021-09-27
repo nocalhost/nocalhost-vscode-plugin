@@ -16,7 +16,10 @@ export default class EndDevModeCommand implements ICommand {
     this.context = context;
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
-  async execCommand(node: ControllerResourceNode) {
+  async execCommand(
+    node: ControllerResourceNode,
+    mode: "replace" | "copy" = "replace"
+  ) {
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;

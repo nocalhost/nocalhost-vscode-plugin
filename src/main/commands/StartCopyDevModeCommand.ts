@@ -10,7 +10,7 @@ export default class StartCopyDevModeCommand implements ICommand {
   context: vscode.ExtensionContext;
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
-    registerCommand(context, this.command, true, this.execCommand.bind(this));
+    registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
 
   async execCommand(node: ControllerNodeApi) {

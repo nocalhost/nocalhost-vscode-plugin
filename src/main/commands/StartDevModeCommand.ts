@@ -61,7 +61,10 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   private node: ControllerNodeApi;
-  async execCommand(node: ControllerNodeApi) {
+  async execCommand(
+    node: ControllerNodeApi,
+    mode: "replace" | "copy" = "replace"
+  ) {
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
@@ -175,7 +178,7 @@ export default class StartDevModeCommand implements ICommand {
       destDir === true ||
       (destDir && destDir === host.getCurrentRootPath())
     ) {
-      await this.startDevMode(host, appName, node, containerName);
+      await this.startDevMode(host, appName, node, containerName, mode);
     } else if (destDir) {
       this.saveAndOpenFolder(appName, node, destDir, containerName);
       messageBus.emit("devstart", {
@@ -415,7 +418,8 @@ export default class StartDevModeCommand implements ICommand {
     host: Host,
     appName: string,
     node: ControllerNodeApi,
-    containerName: string
+    containerName: string,
+    mode: "replace" | "copy"
   ) {
     const currentUri = host.getCurrentRootPath() || os.homedir();
 
@@ -423,7 +427,7 @@ export default class StartDevModeCommand implements ICommand {
       await node.setStatus(DeploymentStatus.starting);
       host.getOutputChannel().show(true);
 
-      host.log("dev start ...", true);
+      host.log(`dev[${mode}] start ...`, true);
       let dirs: Array<string> | string = new Array<string>();
       let isOld = false;
       dirs = host.formalizePath(currentUri);

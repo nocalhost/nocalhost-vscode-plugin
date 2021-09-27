@@ -177,6 +177,11 @@
           "group": "inline@0"
         },
         {
+          "command": "Nocalhost.endCopyDevMode",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-developing/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.editServiceConfig",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-info/i",
           "group": "inline@1"
@@ -398,6 +403,11 @@
       {
         "command": "Nocalhost.startCopyDevMode",
         "title": "%startCopyDevMode%",
+        "icon": "images/icon/dev_copy.svg"
+      },
+      {
+        "command": "Nocalhost.endCopyDevMode",
+        "title": "%endCopyDevMode%",
         "icon": "images/icon/dev_copy.svg"
       },
       {
