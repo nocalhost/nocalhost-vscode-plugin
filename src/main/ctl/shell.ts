@@ -180,6 +180,10 @@ export function createProcess(param: ExecParam) {
         const error = new ShellExecError({ code, stdout, stderr, command });
         logger.error(error);
 
+        if (!err) {
+          host.log(`\n[cmd] ${command}\n stderr:${stderr}`);
+        }
+
         rej(error);
       }
     });
