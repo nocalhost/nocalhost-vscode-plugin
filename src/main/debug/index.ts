@@ -58,7 +58,7 @@ export async function checkRequiredCommand(
     );
   });
 }
-async function closeTerminals() {
+export async function closeTerminals() {
   let condition = (t: vscode.Terminal) => t.name.endsWith(`Process Console`);
 
   const terminals = vscode.window.terminals.filter(condition);

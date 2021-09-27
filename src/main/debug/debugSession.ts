@@ -7,7 +7,7 @@ import { ContainerConfig } from "../service/configService";
 import { checkDebuggerInstalled } from "./provider";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { getContainer } from "./index";
+import { closeTerminals, getContainer } from "./index";
 import { exec } from "../ctl/shell";
 import { IDebugProvider } from "./provider/IDebugProvider";
 

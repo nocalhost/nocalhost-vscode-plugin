@@ -2,13 +2,13 @@ import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
 import * as assert from "assert";
 import { capitalCase } from "change-case";
+import { validate } from "json-schema";
 const retry = require("async-retry");
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import { validate } from "json-schema";
 import { ContainerConfig } from "../service/configService";
 import { getRunningPodNames, NhctlCommand } from "../ctl/nhctl";
 import { LiveReload } from "../debug/liveReload";
@@ -84,8 +84,6 @@ export default class RunCommand implements ICommand {
 
     assert.strictEqual(podNames.length, 1, "not found pod");
 
-    // await killContainerProcess(container, node, podNames[0]);
-
     const command = await NhctlCommand.exec({
       namespace: node.getNameSpace(),
       kubeConfigPath: node.getKubeConfigPath(),
@@ -111,10 +109,10 @@ export default class RunCommand implements ICommand {
     this.disposable.push(
       vscode.window.onDidCloseTerminal(async (e) => {
         if (e.name === name) {
+          terminal.sendText("\x03");
+
           this.disposable.forEach((d) => d.dispose());
           this.disposable.length = 0;
-
-          // await killContainerProcess(container, node, podNames[0]);
         }
       })
     );
