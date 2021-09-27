@@ -86,8 +86,8 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   get namespace() {
-    const devspace = this.parent as DevSpaceNode;
-    return devspace.info.namespace;
+    const devSpace = this.parent as DevSpaceNode;
+    return devSpace.info.namespace;
   }
 
   public async getApplicationInfo() {
@@ -117,16 +117,16 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   public async freshNocalhostConfig() {
-    this.nocalhostConfig = await ConfigService.getAppConfig(
+    this.nocalhostConfig = (await ConfigService.getAppConfig(
       this.getKubeConfigPath(),
       this.namespace,
       this.name
-    );
+    )) as NocalhostConfig | undefined;
     return this.nocalhostConfig;
   }
 
   private updateIcon(treeItem: vscode.TreeItem) {
-    if (this.unInstalling() || this.installing() || this.upgradeing()) {
+    if (this.unInstalling() || this.installing() || this.upgrading()) {
       return (treeItem.iconPath = resolveVSCodeUri("loading.gif"));
     }
     if (this.installed()) {
@@ -154,8 +154,8 @@ export class AppNode extends NocalhostFolderNode {
       treeItem.contextValue = `${treeItem.contextValue}-helm`;
     }
 
-    const devspace = this.getParent() as DevSpaceNode;
-    if (devspace.clusterSource === ClusterSource.server) {
+    const devSpace = this.getParent() as DevSpaceNode;
+    if (devSpace.clusterSource === ClusterSource.server) {
       treeItem.contextValue = `${treeItem.contextValue}-server`;
     }
 
@@ -167,8 +167,8 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   public getKubeConfigPath() {
-    const devspace = this.getParent() as DevSpaceNode;
-    return devspace.getKubeConfigPath();
+    const devSpace = this.getParent() as DevSpaceNode;
+    return devSpace.getKubeConfigPath();
   }
 
   public getHelmHNConfigPath() {
@@ -225,7 +225,7 @@ export class AppNode extends NocalhostFolderNode {
     return !!state.getAppState(this.getNodeStateId(), "uninstalling");
   }
 
-  upgradeing(): boolean {
+  upgrading(): boolean {
     return !!state.getAppState(this.getNodeStateId(), "upgrading");
   }
 

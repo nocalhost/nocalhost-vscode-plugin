@@ -3,8 +3,6 @@ import state from "../../../../state";
 import { CRON_JOB } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import { DeploymentStatus } from "../../../types/nodeType";
-import * as nhctl from "../../../../ctl/nhctl";
-import { Resource, ResourceStatus, Status } from "../../../types/resourceType";
 import logger from "../../../../utils/logger";
 
 export class CronJob extends ControllerResourceNode {
@@ -44,8 +42,10 @@ export class CronJob extends ControllerResourceNode {
       await this.refreshSvcProfile();
     }
 
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
+    if (this.svcProfile?.develop_status !== "NONE") {
+      return this.svcProfile.develop_status === "STARTING"
+        ? DeploymentStatus.developing
+        : DeploymentStatus.running;
     }
 
     return "running";

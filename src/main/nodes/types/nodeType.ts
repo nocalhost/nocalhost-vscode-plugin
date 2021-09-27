@@ -1,6 +1,4 @@
-import AccountClusterService, {
-  AccountClusterNode,
-} from "./../../clusters/AccountCluster";
+import AccountClusterService from "./../../clusters/AccountCluster";
 import * as vscode from "vscode";
 
 export interface AppInfo {
@@ -36,6 +34,7 @@ export interface SvcProfile {
   cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;
+  develop_status: "NONE" | "STARTING" | "STARTED";
   portForwarded: boolean;
   associate: string;
   syncing: boolean;
