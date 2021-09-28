@@ -14,7 +14,7 @@ import { getRunningPodNames, NhctlCommand } from "../ctl/nhctl";
 import { LiveReload } from "../debug/liveReload";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { getContainer, waitForSync } from "../debug";
+import { closeTerminals, getContainer, waitForSync } from "../debug";
 
 export interface ExecCommandParam {
   appName: string;
@@ -96,6 +96,8 @@ export default class RunCommand implements ICommand {
     });
 
     const resourceNode = node as KubernetesResourceNode;
+
+    await closeTerminals();
 
     const name = `${capitalCase(node.name)} Process Console`;
 
