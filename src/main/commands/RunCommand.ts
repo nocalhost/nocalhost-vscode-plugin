@@ -10,7 +10,6 @@ import { RUN, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { ContainerConfig } from "../service/configService";
-import { getRunningPodNames, NhctlCommand } from "../ctl/nhctl";
 import { LiveReload } from "../debug/liveReload";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
@@ -74,40 +73,30 @@ export default class RunCommand implements ICommand {
   async startRun() {
     const { container, node } = this;
 
-    const runCommand = (container.dev.command?.run ?? []).join(" ");
-
-    const podNames = await getRunningPodNames({
-      name: node.name,
-      kind: node.resourceType,
-      namespace: node.getNameSpace(),
-      kubeConfigPath: node.getKubeConfigPath(),
-    });
-
-    assert.strictEqual(podNames.length, 1, "not found pod");
-
-    const command = await NhctlCommand.exec({
-      namespace: node.getNameSpace(),
-      kubeConfigPath: node.getKubeConfigPath(),
-      args: [
-        podNames[0],
-        "-i",
-        `-c nocalhost-dev`,
-        `-- bash -c "${runCommand}"`,
-      ],
-    });
-
     const resourceNode = node as KubernetesResourceNode;
 
     await closeTerminals();
 
     const name = `${capitalCase(node.name)} Process Console`;
 
+    const command = (container.dev.command?.run ?? []).join(" ");
+
+    const args = [
+      "dev",
+      "terminal",
+      node.getAppName(),
+      `-d ${node.name}`,
+      `-t ${resourceNode.resourceType}`,
+      `-n ${node.getNameSpace()}`,
+      `--kubeconfig ${node.getKubeConfigPath()}`,
+      `-c nocalhost-dev`,
+    ];
     const terminal = await createRemoteTerminal(
       {
         name,
         iconPath: { id: "vm-running" },
       },
-      { command: command.getCommand() }
+      { args, command }
     );
     terminal.show();
 

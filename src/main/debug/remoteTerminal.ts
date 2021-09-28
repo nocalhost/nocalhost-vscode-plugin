@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import host from "../host";
+import { NhctlCommand } from "../ctl/nhctl";
 
 function sendText(text: string) {
   text = text.replace(/\n/g, "\r\n");
@@ -16,7 +17,7 @@ export async function createRemoteTerminal(
   },
   spawnOptions: {
     command: string;
-    args?: ReadonlyArray<string>;
+    args: ReadonlyArray<string>;
     close?: (code: number, signal: string) => void;
   },
   ptyOptions?: {
@@ -41,6 +42,7 @@ export async function createRemoteTerminal(
     close() {
       if (!proc.killed) {
         proc.stdin.write("\x03");
+        proc.kill();
       }
 
       if (ptyOptions?.close) {
@@ -51,15 +53,13 @@ export async function createRemoteTerminal(
       proc.stdin.write(data);
     },
   };
-  const npty = (await import("node-pty")).spawn(
-    "bash",
-    [spawnOptions.command],
-    {}
-  );
   const create = () => {
-    const { command, args, close } = spawnOptions;
+    const { args, command, close } = spawnOptions;
 
-    proc = spawn(command, args, { shell: true });
+    proc = spawn(NhctlCommand.nhctlPath, args, { shell: true });
+    setTimeout(() => {
+      proc.stdin.write(command + "\n");
+    }, 250);
 
     proc.stdout.on("data", (data: Buffer) => {
       const str = data.toString();

@@ -169,7 +169,7 @@ export class DebugSession {
         name,
         iconPath: { id: "debug" },
       },
-      { command: command.getCommand() }
+      { args: [], command: "" }
     );
     terminal.show();
 
