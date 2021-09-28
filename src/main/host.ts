@@ -1,5 +1,10 @@
 import * as vscode from "vscode";
-import { CancellationToken, Progress, QuickPickOptions } from "vscode";
+import {
+  CancellationToken,
+  ExtensionTerminalOptions,
+  Progress,
+  QuickPickOptions,
+} from "vscode";
 import * as shell from "./ctl/shell";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
@@ -374,9 +379,11 @@ export class Host implements vscode.Disposable {
   }
 
   createTerminal(
-    options: vscode.TerminalOptions & { iconPath?: { id: string } }
+    options: (vscode.TerminalOptions | ExtensionTerminalOptions) & {
+      iconPath?: { id: string };
+    }
   ) {
-    return vscode.window.createTerminal(options as vscode.TerminalOptions);
+    return vscode.window.createTerminal(options);
   }
 
   log(msg: string, line?: boolean) {

@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as assert from "assert";
 
 import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
-import host from "../host";
 import { ContainerConfig } from "../service/configService";
 import { checkDebuggerInstalled } from "./provider";
 import { LiveReload } from "../debug/liveReload";
@@ -10,6 +9,7 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 import { closeTerminals, getContainer } from "./index";
 import { exec } from "../ctl/shell";
 import { IDebugProvider } from "./provider/IDebugProvider";
+import { createRemoteTerminal } from "./remoteTerminal";
 
 export class DebugSession {
   disposable: Array<{ dispose(): any }> = [];
@@ -159,21 +159,18 @@ export class DebugSession {
     const command = await NhctlCommand.exec({
       namespace: node.getNameSpace(),
       kubeConfigPath: node.getKubeConfigPath(),
-      args: [
-        podName,
-        "-it",
-        `-c nocalhost-dev`,
-        `-- bash -c "${debugCommand}"`,
-      ],
+      args: [podName, "-i", `-c nocalhost-dev`, `-- bash -c "${debugCommand}"`],
     });
 
     const name = `${debugProvider.name} Process Console`;
 
-    const terminal = host.createTerminal({
-      name,
-      iconPath: { id: "debug" },
-    });
-    terminal.sendText(command.getCommand());
+    const terminal = await createRemoteTerminal(
+      {
+        name,
+        iconPath: { id: "debug" },
+      },
+      { command: command.getCommand() }
+    );
     terminal.show();
 
     this.disposable.push(

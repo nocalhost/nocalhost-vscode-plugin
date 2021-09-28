@@ -15,6 +15,7 @@ import { LiveReload } from "../debug/liveReload";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { closeTerminals, getContainer, waitForSync } from "../debug";
+import { createRemoteTerminal } from "../debug/remoteTerminal";
 
 export interface ExecCommandParam {
   appName: string;
@@ -89,7 +90,7 @@ export default class RunCommand implements ICommand {
       kubeConfigPath: node.getKubeConfigPath(),
       args: [
         podNames[0],
-        "-it",
+        "-i",
         `-c nocalhost-dev`,
         `-- bash -c "${runCommand}"`,
       ],
@@ -101,18 +102,18 @@ export default class RunCommand implements ICommand {
 
     const name = `${capitalCase(node.name)} Process Console`;
 
-    const terminal = host.createTerminal({
-      name,
-      iconPath: { id: "vm-running" },
-    });
-    terminal.sendText(command.getCommand());
+    const terminal = await createRemoteTerminal(
+      {
+        name,
+        iconPath: { id: "vm-running" },
+      },
+      { command: command.getCommand() }
+    );
     terminal.show();
 
     this.disposable.push(
       vscode.window.onDidCloseTerminal(async (e) => {
         if (e.name === name) {
-          terminal.sendText("\x03");
-
           this.disposable.forEach((d) => d.dispose());
           this.disposable.length = 0;
         }
