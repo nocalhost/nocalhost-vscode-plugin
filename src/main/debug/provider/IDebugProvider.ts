@@ -14,6 +14,10 @@ export abstract class IDebugProvider {
     remoteRoot: string
   ): DebugConfiguration;
 
+  async waitStopDebug() {
+    return Promise.resolve();
+  }
+
   async startDebugging(
     workspaceFolder: string,
     debugSessionName: string,

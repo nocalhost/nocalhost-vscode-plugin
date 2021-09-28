@@ -74,8 +74,8 @@ export class DebugSession {
 
     if (command === "start") {
       this.disposable.push({
-        dispose: () => {
-          this.portForward("end");
+        dispose: async () => {
+          await this.portForward("end");
         },
       });
     }
@@ -107,6 +107,8 @@ export class DebugSession {
       this.disposable.push(
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
           if (debugSession.name === debugSessionName) {
+            await debugProvider.waitStopDebug();
+
             terminal.sendText("\x03");
 
             if (this.isReload) {
@@ -149,8 +151,9 @@ export class DebugSession {
     }
   }
   async createTerminal(debugProvider: IDebugProvider) {
-    const { container, node, podName } = this;
+    await closeTerminals();
 
+    const { container, node, podName } = this;
     const debugCommand = (container.dev.command?.debug ?? []).join(" ");
 
     const command = await NhctlCommand.exec({
