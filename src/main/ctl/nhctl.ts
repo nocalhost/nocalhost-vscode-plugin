@@ -701,6 +701,7 @@ export async function devStart(
     isOld: boolean;
     dirs: string | Array<string>;
   },
+  mode: "copy" | "replace",
   container?: string,
   storageClass?: string,
   devStartAppendCommand?: string
@@ -722,7 +723,9 @@ export async function devStart(
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} --without-terminal  ${options} ${
+    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} ${
+      mode === "copy" ? "-m duplicate" : ""
+    } --without-terminal  ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
     }`
   );

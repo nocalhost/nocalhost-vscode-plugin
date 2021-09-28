@@ -445,6 +445,7 @@ export default class StartDevModeCommand implements ICommand {
           isOld: isOld,
           dirs: dirs,
         },
+        mode,
         containerName,
         node.getStorageClass(),
         node.getDevStartAppendCommand()

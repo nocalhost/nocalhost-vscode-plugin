@@ -45,7 +45,6 @@ import OpenProjectCommand from "./OpenProjectCommand";
 import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
-import EndCopyDevModeCommand from "./EndCopyDevModeCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -105,5 +104,4 @@ export default function initCommands(
 
   new ResetPluginCommand(context);
   new StartCopyDevModeCommand(context);
-  new EndCopyDevModeCommand(context);
 }

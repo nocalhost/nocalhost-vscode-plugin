@@ -41,6 +41,5 @@
   "nocalhostProfile": "Nocalhost Profile",
   "viewDevConfig": "View Dev Configs",
   "resetPod": "Reset Pod",
-  "startCopyDevMode": "Start DevMode(Copy Workload)",
-  "endCopyDevMode": "End DevMode(Copy Workload)"
+  "startCopyDevMode": "Start DevMode(Copy Workload)"
 }

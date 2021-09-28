@@ -168,7 +168,7 @@
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!developing)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet)-dev-(info|warn)-(?!developing)/i",
           "group": "navigation"
         },
         {
@@ -177,7 +177,7 @@
           "group": "inline@0"
         },
         {
-          "command": "Nocalhost.endCopyDevMode",
+          "command": "Nocalhost.endDevMode",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-developing/i",
           "group": "navigation"
         },
@@ -403,11 +403,6 @@
       {
         "command": "Nocalhost.startCopyDevMode",
         "title": "%startCopyDevMode%",
-        "icon": "images/icon/dev_copy.svg"
-      },
-      {
-        "command": "Nocalhost.endCopyDevMode",
-        "title": "%endCopyDevMode%",
         "icon": "images/icon/dev_copy.svg"
       },
       {

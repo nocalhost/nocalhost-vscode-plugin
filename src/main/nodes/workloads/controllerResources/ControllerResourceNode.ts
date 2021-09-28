@@ -98,9 +98,14 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
         break;
       case "developing":
+      case "localDeveloping":
         const possess = this.svcProfile.possess;
         iconPath = resolveVSCodeUri(
-          possess === false ? "dev_other.svg" : "dev_start.svg"
+          possess === false
+            ? "dev_other.svg"
+            : status === "localDeveloping"
+            ? "dev_copy.svg"
+            : "dev_start.svg"
         );
         const container = await this.getContainer();
         if (container) {
@@ -206,6 +211,11 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     if (refresh) {
       await this.refreshSvcProfile();
     }
+
+    if (this.svcProfile && this.svcProfile.localDeveloping) {
+      return DeploymentStatus.localDeveloping;
+    }
+
     if (this.svcProfile && this.svcProfile.developing) {
       return DeploymentStatus.developing;
     }
