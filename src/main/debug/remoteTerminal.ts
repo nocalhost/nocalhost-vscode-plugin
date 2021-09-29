@@ -17,7 +17,7 @@ export async function createRemoteTerminal(
     close?: (code: number, signal: string) => void;
   },
   ptyOptions?: {
-    open: (Emitter: vscode.EventEmitter<string>) => void;
+    open: (write: vscode.EventEmitter<string>) => void;
     close?: Function;
   }
 ) {
@@ -31,38 +31,7 @@ export async function createRemoteTerminal(
 
   const writeEmitter = new vscode.EventEmitter<string>();
 
-  const pty: vscode.Pseudoterminal = {
-    onDidWrite: writeEmitter.event,
-    open() {
-      create();
-
-      if (ptyOptions?.open) {
-        ptyOptions.open(writeEmitter);
-      }
-    },
-    close() {
-      if (!proc.killed) {
-        proc.stdin.write("\x03");
-        proc.stdin.write("exit");
-        proc.kill();
-      }
-
-      if (ptyOptions?.close) {
-        ptyOptions.close(writeEmitter);
-      }
-    },
-    handleInput(data: string) {
-      proc.stdin.write(data);
-    },
-  };
-
-  const send = (text: string) => {
-    text = text.replace(/\n/g, "\r\n");
-
-    writeEmitter.fire(text);
-  };
-
-  const create = () => {
+  const open = () => {
     const { node, close } = spawnOptions;
 
     const args = [
@@ -97,6 +66,30 @@ export async function createRemoteTerminal(
 
       writeEmitter.fire("\n\n\x1b[1;31mterminal close\x1b[37m\r\n");
     });
+  };
+
+  const pty: vscode.Pseudoterminal = {
+    onDidWrite: writeEmitter.event,
+    open,
+    close() {
+      if (!proc.killed) {
+        proc.stdin.write("\x03");
+        proc.kill();
+      }
+
+      if (ptyOptions?.close) {
+        ptyOptions.close(writeEmitter);
+      }
+    },
+    handleInput(data: string) {
+      proc.stdin.write(data);
+    },
+  };
+
+  const send = (text: string) => {
+    text = text.replace(/\n/g, "\r\n");
+
+    writeEmitter.fire(text);
   };
 
   terminal = host.createTerminal({

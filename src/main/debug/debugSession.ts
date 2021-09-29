@@ -144,7 +144,12 @@ export class DebugSession {
         name,
         iconPath: { id: "debug" },
       },
-      { commands: debug, node }
+      { commands: debug, node },
+      {
+        open(write) {
+          write.fire("debug run:");
+        },
+      }
     );
     terminal.show();
 
