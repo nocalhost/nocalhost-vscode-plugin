@@ -91,8 +91,13 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         break;
       case "developing":
         const possess = this.svcProfile.possess;
+        const devModeType = this.svcProfile.devModeType;
         iconPath = resolveVSCodeUri(
-          possess === false ? "dev_other.svg" : "dev_start.svg"
+          devModeType === "duplicate"
+            ? "dev_copy.svg"
+            : possess === false
+            ? "dev_other.svg"
+            : "dev_start.svg"
         );
         const container = await this.getContainer();
         if (container) {

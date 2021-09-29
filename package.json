@@ -168,12 +168,12 @@
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet)-dev-(info|warn)-(?!developing)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!developing)/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-developing/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(.+?)-developing/i",
           "group": "inline@0"
         },
         {

@@ -41,9 +41,15 @@ export class Pod extends ControllerResourceNode {
       await this.refreshSvcProfile();
     }
     const resource = this.resource;
-    if (this.svcProfile && this.svcProfile.developing) {
+    if (
+      this.svcProfile &&
+      this.svcProfile.develop_status &&
+      this.svcProfile.develop_status !== "NONE"
+    ) {
       return [
-        DeploymentStatus.developing,
+        this.svcProfile.develop_status === "STARTING"
+          ? DeploymentStatus.developing
+          : DeploymentStatus.running,
         !resource?.metadata?.ownerReferences,
       ];
     }
