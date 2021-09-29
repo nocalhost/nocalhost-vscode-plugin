@@ -51,6 +51,8 @@ export class Job extends ControllerResourceNode {
       return this.svcProfile.develop_status === "STARTING"
         ? DeploymentStatus.developing
         : DeploymentStatus.running;
+    } else if (this.svcProfile?.developing) {
+      return DeploymentStatus.developing;
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;

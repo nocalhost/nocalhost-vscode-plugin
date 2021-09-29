@@ -90,14 +90,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
         break;
       case "developing":
-      case DeploymentStatus.duplicateDevMode:
         const possess = this.svcProfile.possess;
         iconPath = resolveVSCodeUri(
-          possess === false
-            ? "dev_other.svg"
-            : status === DeploymentStatus.duplicateDevMode
-            ? "dev_copy.svg"
-            : "dev_start.svg"
+          possess === false ? "dev_other.svg" : "dev_start.svg"
         );
         const container = await this.getContainer();
         if (container) {
@@ -211,6 +206,8 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
       return this.svcProfile.develop_status === "STARTED"
         ? DeploymentStatus.developing
         : DeploymentStatus.starting;
+    } else if (this.svcProfile?.developing) {
+      return DeploymentStatus.developing;
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;
