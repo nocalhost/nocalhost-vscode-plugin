@@ -14,6 +14,7 @@ import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { RemoteTerminal } from "../debug/remoteTerminal";
+import { NhctlCommand } from "../ctl/nhctl";
 
 export interface ExecCommandParam {
   appName: string;
@@ -28,6 +29,7 @@ export default class RunCommand implements ICommand {
   command: string = RUN;
   node: ControllerResourceNode;
   container: ContainerConfig;
+  isReload: boolean;
 
   disposable: Array<{ dispose(): any }> = [];
 
@@ -65,39 +67,53 @@ export default class RunCommand implements ICommand {
       });
 
       acton.report({ message: "Waiting for running ..." });
-      await this.startRun();
+
+      const name = `${capitalCase(node.name)} Process Console`;
+
+      await this.startRun(name);
+
+      this.disposable.push(
+        vscode.window.onDidCloseTerminal(async (e) => {
+          if (e.name === name) {
+            this.disposable.forEach((d) => d.dispose());
+            this.disposable.length = 0;
+          }
+        })
+      );
     });
   }
 
-  async startRun() {
+  async startRun(name: string) {
     const { container, node } = this;
 
     await closeTerminals();
 
-    const name = `${capitalCase(node.name)} Process Console`;
-
     const { run } = container.dev.command;
+    const command = NhctlCommand.exec({
+      app: node.getAppName(),
+      name: node.name,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+      resourceType: node.resourceType,
+      commands: run,
+    }).getCommand();
 
     const terminal = await RemoteTerminal.create({
       terminal: {
         name,
         iconPath: { id: "vm-running" },
       },
-      spawn: { command: "" },
+      spawn: { command },
     });
+
     terminal.show();
 
-    this.disposable.push(
-      vscode.window.onDidCloseTerminal(async (e) => {
-        if (e.name === name) {
-          this.disposable.forEach((d) => d.dispose());
-          this.disposable.length = 0;
-        }
-      })
-    );
-
     if (this.container.dev.hotReload === true) {
-      this.disposable.unshift(new LiveReload(node, this.startRun.bind(this)));
+      this.disposable.push(
+        new LiveReload(node, () => {
+          return this.startRun(name);
+        })
+      );
     }
   }
 

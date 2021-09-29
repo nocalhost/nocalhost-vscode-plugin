@@ -111,6 +111,7 @@ export class DebugSession {
           ) {
             await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
           }
+          this.isReload = false;
         }),
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
           if (debugSession.name === debugSessionName) {
@@ -122,8 +123,6 @@ export class DebugSession {
               if (!this.isReload || !(await startDebugging())) {
                 this.dispose();
               }
-
-              this.isReload = false;
             }, 600);
           }
         })
