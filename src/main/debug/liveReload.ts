@@ -5,13 +5,13 @@ import {
   TextDocumentSaveReason,
   TextDocumentWillSaveEvent,
   workspace,
-  debug,
 } from "vscode";
 import kill = require("tree-kill");
 
 import { Sync, SyncMsg } from "../commands/SyncServiceCommand";
 import { NhctlCommand } from "../ctl/nhctl";
 import host from "../host";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export class LiveReload {
   private disposable: Disposable[];
@@ -19,8 +19,15 @@ export class LiveReload {
   private changeCallback: Function;
   private isChange: boolean = false;
 
-  constructor(req: Sync, changeCallback: Function) {
-    this.req = req;
+  constructor(node: ControllerResourceNode, changeCallback: Function) {
+    this.req = {
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+      resourceType: node.resourceType,
+      app: node.getAppName(),
+      service: node.name,
+    };
+
     this.changeCallback = changeCallback;
     this.disposable = [
       workspace.onWillSaveTextDocument(this.onDidSaveTextDocument.bind(this)),

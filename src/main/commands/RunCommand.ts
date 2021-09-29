@@ -11,7 +11,6 @@ import registerCommand from "./register";
 import host from "../host";
 import { ContainerConfig } from "../service/configService";
 import { LiveReload } from "../debug/liveReload";
-import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { createRemoteTerminal } from "../debug/remoteTerminal";
@@ -73,30 +72,19 @@ export default class RunCommand implements ICommand {
   async startRun() {
     const { container, node } = this;
 
-    const resourceNode = node as KubernetesResourceNode;
-
     await closeTerminals();
 
     const name = `${capitalCase(node.name)} Process Console`;
 
-    const command = (container.dev.command?.run ?? []).join(" ");
+    const command = container.dev.command?.run.join(" ");
+    const shell = container.dev.shell ?? "sh";
 
-    const args = [
-      "dev",
-      "terminal",
-      node.getAppName(),
-      `-d ${node.name}`,
-      `-t ${resourceNode.resourceType}`,
-      `-n ${node.getNameSpace()}`,
-      `--kubeconfig ${node.getKubeConfigPath()}`,
-      `-c nocalhost-dev`,
-    ];
     const terminal = await createRemoteTerminal(
       {
         name,
         iconPath: { id: "vm-running" },
       },
-      { args, command }
+      { command, node, shell }
     );
     terminal.show();
 
@@ -110,18 +98,7 @@ export default class RunCommand implements ICommand {
     );
 
     if (this.container.dev.hotReload === true) {
-      const liveReload = new LiveReload(
-        {
-          namespace: node.getNameSpace(),
-          kubeConfigPath: node.getKubeConfigPath(),
-          resourceType: resourceNode.resourceType,
-          app: node.getAppName(),
-          service: resourceNode.name,
-        },
-        this.startRun.bind(this)
-      );
-
-      this.disposable.unshift(liveReload);
+      this.disposable.unshift(new LiveReload(node, this.startRun.bind(this)));
     }
   }
 
@@ -158,7 +135,7 @@ export default class RunCommand implements ICommand {
     assert.strictEqual(
       valid.errors.length,
       0,
-      `please check config.\n${valid.errors
+      `Please check config.\n${valid.errors
         .map((e) => `${e.property}:${e.message}`)
         .join("\n")}`
     );

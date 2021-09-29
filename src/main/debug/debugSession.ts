@@ -53,10 +53,9 @@ export class DebugSession {
     await this.startDebug(debugProvider, workspaceFolder);
   }
 
-  async portForward(command: "end" | "start") {
+  async portForward(command: "end" | "start", localPort?: number) {
     const { container, node } = this;
-    const port =
-      (container.dev.debug && container.dev.debug.remoteDebugPort) || 9229;
+    const { remoteDebugPort } = container.dev.debug;
 
     await exec({
       command: NhctlCommand.nhctlPath,
@@ -66,7 +65,7 @@ export class DebugSession {
         node.getAppName(),
         `-d ${node.name}`,
         `-t ${node.resourceType}`,
-        `-p ${port}:${port}`,
+        `-p ${remoteDebugPort}:${remoteDebugPort}`,
         `-n ${node.getNameSpace()}`,
         `--kubeconfig ${node.getKubeConfigPath()}`,
       ],
@@ -75,7 +74,7 @@ export class DebugSession {
     if (command === "start") {
       this.disposable.push({
         dispose: async () => {
-          await this.portForward("end");
+          await this.portForward("end", remoteDebugPort);
         },
       });
     }
@@ -133,19 +132,10 @@ export class DebugSession {
     const { container, node } = this;
 
     if (container.dev.hotReload === true) {
-      const liveReload = new LiveReload(
-        {
-          namespace: node.getNameSpace(),
-          kubeConfigPath: node.getKubeConfigPath(),
-          resourceType: node.resourceType,
-          app: node.getAppName(),
-          service: node.name,
-        },
-        async () => {
-          this.isReload = true;
-          await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
-        }
-      );
+      const liveReload = new LiveReload(node, async () => {
+        this.isReload = true;
+        await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
+      });
 
       this.disposable.push(liveReload);
     }
@@ -154,13 +144,7 @@ export class DebugSession {
     await closeTerminals();
 
     const { container, node, podName } = this;
-    const debugCommand = (container.dev.command?.debug ?? []).join(" ");
-
-    const command = await NhctlCommand.exec({
-      namespace: node.getNameSpace(),
-      kubeConfigPath: node.getKubeConfigPath(),
-      args: [podName, "-i", `-c nocalhost-dev`, `-- bash -c "${debugCommand}"`],
-    });
+    const command = container.dev.command?.debug.join(" ");
 
     const name = `${debugProvider.name} Process Console`;
 
@@ -169,7 +153,7 @@ export class DebugSession {
         name,
         iconPath: { id: "debug" },
       },
-      { args: [], command: "" }
+      { command, node }
     );
     terminal.show();
 

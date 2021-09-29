@@ -3,12 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import host from "../host";
 import { NhctlCommand } from "../ctl/nhctl";
-
-function sendText(text: string) {
-  text = text.replace(/\n/g, "\r\n");
-
-  return text;
-}
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export async function createRemoteTerminal(
   terminalOptions: {
@@ -17,7 +12,8 @@ export async function createRemoteTerminal(
   },
   spawnOptions: {
     command: string;
-    args: ReadonlyArray<string>;
+    shell?: string;
+    node: ControllerResourceNode;
     close?: (code: number, signal: string) => void;
   },
   ptyOptions?: {
@@ -42,6 +38,7 @@ export async function createRemoteTerminal(
     close() {
       if (!proc.killed) {
         proc.stdin.write("\x03");
+        proc.stdin.write("exit");
         proc.kill();
       }
 
@@ -53,24 +50,50 @@ export async function createRemoteTerminal(
       proc.stdin.write(data);
     },
   };
-  const create = () => {
-    const { args, command, close } = spawnOptions;
 
-    proc = spawn(NhctlCommand.nhctlPath, args, { shell: true });
-    setTimeout(() => {
-      proc.stdin.write(command + "\n");
-    }, 250);
+  let isRead = false;
+  const send = (text: string) => {
+    text = text.replace(/\n/g, "\r\n");
+
+    if (!isRead) {
+      proc.stdin.write(spawnOptions.command + "\n");
+      isRead = true;
+    }
+
+    writeEmitter.fire(text);
+  };
+
+  const create = () => {
+    const { node, close, shell } = spawnOptions;
+
+    proc = spawn(
+      NhctlCommand.nhctlPath,
+      [
+        "dev",
+        "terminal",
+        node.getAppName(),
+        `-d ${node.name}`,
+        `-t ${node.resourceType}`,
+        `-n ${node.getNameSpace()}`,
+        `--kubeconfig ${node.getKubeConfigPath()}`,
+        `-c nocalhost-dev`,
+        `--shell ${shell}`,
+      ],
+      {
+        shell: true,
+      }
+    );
 
     proc.stdout.on("data", (data: Buffer) => {
       const str = data.toString();
 
-      writeEmitter.fire(sendText(str));
+      send(str);
     });
 
     proc.stderr.on("data", function (data: Buffer) {
       const str = data.toString();
 
-      writeEmitter.fire(sendText(str));
+      send(str);
     });
     proc.on("close", (code, signal) => {
       close && close(code, signal);
