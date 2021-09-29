@@ -20,11 +20,6 @@ export class DebugSession {
     if (!workspaceFolder) {
       return;
     }
-    // if enter dev mode
-    if (!node.isDeveloping) {
-      host.showWarnMessage("Not in DevMode");
-      return;
-    }
     const isInstalled = await debugProvider.isDebuggerInstalled();
     if (!isInstalled) {
       host.showInformationMessage("Please install golang extension.");

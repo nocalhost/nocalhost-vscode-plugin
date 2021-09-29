@@ -35,6 +35,7 @@ import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
 import { existsSync } from "fs";
 import { getContainer } from "../utils/getContainer";
+import SyncServiceCommand from "./SyncServiceCommand";
 
 export interface ControllerNodeApi {
   name: string;
@@ -409,6 +410,10 @@ export default class StartDevModeCommand implements ICommand {
         node.name,
         containerName
       );
+
+      if (host.getCurrentRootPath() === destDir) {
+        SyncServiceCommand.checkSync();
+      }
     }
 
     return destDir;
