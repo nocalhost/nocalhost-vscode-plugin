@@ -48,7 +48,7 @@ export class NodeDebugProvider extends IDebugProvider {
     port: number,
     node: ControllerResourceNode
   ): Promise<boolean> {
-    await this.waitForReady(container.dev.debug.remoteDebugPort);
+    await this.waitForReady(port);
 
     return super.startDebugging(
       workspaceFolder,
