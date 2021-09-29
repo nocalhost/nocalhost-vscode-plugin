@@ -340,8 +340,9 @@ process.on("unhandledRejection", (error?: string | Error | any) => {
 
   function isIgnoreError(message: string) {
     if (
-      message === "read ENOTCONN" ||
-      message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
+      message &&
+      (message === "read ENOTCONN" ||
+        message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER"))
     ) {
       return true;
     }

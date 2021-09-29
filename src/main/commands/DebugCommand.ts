@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
 import * as assert from "assert";
 import { validate } from "json-schema";
-const retry = require("async-retry");
+import * as AsyncRetry from "async-retry";
 
 import ICommand from "./ICommand";
 import { DEBUG, START_DEV_MODE } from "./constants";
@@ -43,18 +43,30 @@ export default class DebugCommand implements ICommand {
       }
     }
 
-    await host.withProgress({}, async (acton) => {
-      acton.report({ message: "Waiting for sync file ..." });
+    await host.withProgress(
+      { title: "Waiting for sync file ...", cancellable: true },
+      async (_, token) => {
+        token.onCancellationRequested(() => {
+          throw new Error("Cancel waiting");
+        });
 
-      await retry(waitForSync.bind(null, node), {
-        randomize: false,
-        retries: 3,
-      });
+        await AsyncRetry(
+          (bail) => {
+            if (token.isCancellationRequested) {
+              bail(new Error());
+              return;
+            }
+            waitForSync(node);
+          },
+          {
+            randomize: false,
+            retries: 3,
+          }
+        );
 
-      acton.report({ message: "Waiting for debugging ..." });
-
-      await this.startDebugging(node);
-    });
+        this.startDebugging(node);
+      }
+    );
   }
 
   validateDebugConfig(config: ContainerConfig) {

@@ -3,7 +3,7 @@ import * as JsonSchema from "json-schema";
 import * as assert from "assert";
 import { capitalCase } from "change-case";
 import { validate } from "json-schema";
-const retry = require("async-retry");
+import * as AsyncRetry from "async-retry";
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
@@ -29,7 +29,8 @@ export default class RunCommand implements ICommand {
   command: string = RUN;
   node: ControllerResourceNode;
   container: ContainerConfig;
-  isReload: boolean;
+  isReload: boolean = false;
+  terminal: RemoteTerminal;
 
   disposable: Array<{ dispose(): any }> = [];
 
@@ -58,13 +59,26 @@ export default class RunCommand implements ICommand {
       }
     }
 
-    await host.withProgress({}, async (acton) => {
+    await host.withProgress({ cancellable: true }, async (acton, token) => {
       acton.report({ message: "Waiting for sync file ..." });
 
-      await retry(waitForSync.bind(null, node), {
-        randomize: false,
-        retries: 3,
+      token.onCancellationRequested(() => {
+        throw new Error("Cancel waiting");
       });
+
+      await AsyncRetry(
+        (bail) => {
+          if (token.isCancellationRequested) {
+            bail(new Error());
+            return;
+          }
+          waitForSync(node);
+        },
+        {
+          randomize: false,
+          retries: 3,
+        }
+      );
 
       acton.report({ message: "Waiting for running ..." });
 
@@ -75,8 +89,14 @@ export default class RunCommand implements ICommand {
       this.disposable.push(
         vscode.window.onDidCloseTerminal(async (e) => {
           if (e.name === name) {
-            this.disposable.forEach((d) => d.dispose());
-            this.disposable.length = 0;
+            this.terminal.sendCtrlC();
+
+            setTimeout(() => {
+              if (!this.isReload) {
+                this.disposable.forEach((d) => d.dispose());
+                this.disposable.length = 0;
+              }
+            }, 600);
           }
         })
       );
@@ -84,11 +104,28 @@ export default class RunCommand implements ICommand {
   }
 
   async startRun(name: string) {
+    const { node } = this;
+
+    await this.createRunTerminal(name);
+
+    if (this.container.dev.hotReload === true) {
+      const liveReload = new LiveReload(node, async () => {
+        this.isReload = true;
+        await this.createRunTerminal(name);
+
+        this.isReload = false;
+      });
+
+      this.disposable.push(liveReload);
+    }
+  }
+
+  async createRunTerminal(name: string) {
     const { container, node } = this;
+    const { run } = container.dev.command;
 
     await closeTerminals();
 
-    const { run } = container.dev.command;
     const command = NhctlCommand.exec({
       app: node.getAppName(),
       name: node.name,
@@ -105,18 +142,12 @@ export default class RunCommand implements ICommand {
       },
       spawn: { command },
     });
-
     terminal.show();
 
-    if (this.container.dev.hotReload === true) {
-      this.disposable.push(
-        new LiveReload(node, () => {
-          return this.startRun(name);
-        })
-      );
-    }
-  }
+    this.terminal = terminal;
 
+    this.disposable.push(this.terminal);
+  }
   validateRunConfig(config: ContainerConfig) {
     const schema: JsonSchema.JSONSchema6 = {
       $schema: "http://json-schema.org/schema#",

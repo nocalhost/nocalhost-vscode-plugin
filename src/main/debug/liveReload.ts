@@ -19,6 +19,9 @@ export class LiveReload {
   private disposable: Disposable[];
   private req: Sync;
 
+  private reject: Function | null;
+  private resolve: Function | null;
+
   constructor(node: ControllerResourceNode, callback: () => Promise<void>) {
     this.req = {
       namespace: node.getNameSpace(),
@@ -35,7 +38,7 @@ export class LiveReload {
       ),
     ];
 
-    this.createProcess(callback);
+    this.startwatch(callback);
   }
   private onDidChangeTextDocument(event: TextDocumentChangeEvent) {
     this.isChange = true;
@@ -47,10 +50,33 @@ export class LiveReload {
       }
       this.isChange = false;
       this.isSave = true;
+
+      this.watiSyncFile();
     }
   }
 
-  private createProcess(callback: () => Promise<void>) {
+  private async watiSyncFile() {
+    await host.withProgress(
+      { title: "Waiting for sync file ...", cancellable: true },
+      async (_, token) => {
+        return new Promise((resolve, reject) => {
+          this.reject = reject;
+          this.resolve = resolve;
+
+          token.onCancellationRequested(() => {
+            this.reject(new Error("Cancel restart"));
+          });
+        }).finally(() => {
+          this.reject = null;
+          this.resolve = null;
+
+          this.isSave = false;
+        });
+      }
+    );
+  }
+
+  private startwatch(callback: () => Promise<void>) {
     const nhctlCmd = new NhctlCommand("sync-status", {
       kubeConfigPath: this.req.kubeConfigPath,
       namespace: this.req.namespace,
@@ -78,8 +104,9 @@ export class LiveReload {
         let syncMsg = JSON.parse(str) as SyncMsg;
 
         if (syncMsg.status === "idle" && this.isSave) {
-          this.isSave = true;
-          await this.reload(callback);
+          await callback();
+
+          this.resolve();
         }
       }
     });
@@ -91,7 +118,8 @@ export class LiveReload {
     });
     proc.on("close", (code: number, signal: NodeJS.Signals) => {
       if (code !== null && code !== 0) {
-        throw new ShellExecError({ stderr, stdout, code, command });
+        this.reject &&
+          this.reject(new ShellExecError({ stderr, stdout, code, command }));
       }
     });
 
@@ -104,11 +132,6 @@ export class LiveReload {
     this.disposable.push({ dispose });
   }
 
-  async reload(callback: () => Promise<void>) {
-    host.withProgress({ title: "Waiting for sync file ..." }, async () => {
-      await callback();
-    });
-  }
   dispose() {
     this.disposable.forEach((item) => item.dispose());
     this.disposable.length = 0;

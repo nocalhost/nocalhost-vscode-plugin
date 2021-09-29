@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import host from "../host";
-
+type SpawnClose = (code: number, signal: NodeJS.Signals) => void;
 type RemoteTerminalType = {
   terminal: {
     name: string;
@@ -10,19 +10,17 @@ type RemoteTerminalType = {
   };
   spawn: {
     command: string;
-    close?: (code: number, signal: string) => void;
-  };
-  pty?: {
-    open: (write: vscode.EventEmitter<string>) => void;
-    close?: Function;
+    close?: SpawnClose;
   };
 };
 export class RemoteTerminal implements vscode.Terminal {
   private options: RemoteTerminalType;
 
-  private writeEmitter = new vscode.EventEmitter<string>();
-  private terminal: vscode.Terminal;
-  private proc: ChildProcessWithoutNullStreams;
+  private writeEmitter: vscode.EventEmitter<string> | null = new vscode.EventEmitter<string>();
+  private terminal: vscode.Terminal | null;
+  private proc: ChildProcessWithoutNullStreams | null;
+
+  private exitCallback: Function | null;
 
   constructor(options: RemoteTerminalType) {
     this.options = options;
@@ -49,19 +47,15 @@ export class RemoteTerminal implements vscode.Terminal {
   private createTerminal() {
     const pty: vscode.Pseudoterminal = {
       onDidWrite: this.writeEmitter.event,
-      open: this.createProc.bind(this),
+      open: () => this.createProc(),
       close: () => {
         if (!this.proc.killed) {
-          this.proc.stdin.write("\x03");
-          this.proc.kill();
-        }
-
-        if (this.options.pty?.close) {
-          this.options.pty?.close(this.writeEmitter);
+          this.proc?.stdin.write("\x03");
+          this.proc?.kill();
         }
       },
       handleInput: (data: string) => {
-        this.proc.stdin.write(data);
+        this.proc?.stdin.write(data);
       },
     };
 
@@ -91,8 +85,11 @@ export class RemoteTerminal implements vscode.Terminal {
     proc.on("close", (code, signal) => {
       close && close(code, signal);
 
-      this.writeEmitter.fire("\n\n\x1b[1;31mterminal close\x1b[37m\r\n");
-      this.writeEmitter.dispose();
+      if (this.exitCallback) {
+        this.exitCallback();
+      }
+
+      this.send("\n\n\x1b[1;31mterminal close\x1b[37m\r\n");
     });
 
     this.proc = proc;
@@ -101,11 +98,13 @@ export class RemoteTerminal implements vscode.Terminal {
   private send(text: string) {
     text = text.replace(/\n/g, "\r\n");
 
-    this.writeEmitter.fire(text);
+    this.writeEmitter?.fire(text);
   }
 
   sendText(text: string, addNewLine?: boolean): void {
-    this.terminal.sendText(text, addNewLine);
+    if (this.terminal) {
+      this.terminal?.sendText(text, addNewLine);
+    }
   }
   show(preserveFocus?: boolean): void {
     this.terminal.show(preserveFocus);
@@ -113,75 +112,39 @@ export class RemoteTerminal implements vscode.Terminal {
   hide(): void {
     this.terminal.hide();
   }
-  dispose(): void {
-    if (!this.proc.killed) {
-      this.proc.kill();
+  async sendCtrlC() {
+    if (this.proc.exitCode !== null) {
+      return Promise.resolve();
     }
 
-    this.writeEmitter.dispose();
-    this.terminal.dispose();
+    this.sendText("\x03");
+
+    await new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error("close terminal timeout"));
+      }, 10_000);
+
+      this.exitCallback = resolve;
+    }).finally(() => {
+      this.exitCallback = null;
+    });
   }
-}
+  async restart() {
+    await this.sendCtrlC();
+    this.createProc();
 
-export async function createRemoteTerminal(options: RemoteTerminalType) {
-  let proc: ChildProcessWithoutNullStreams;
-  let terminal: vscode.Terminal;
+    return true;
+  }
+  dispose(): void {
+    if (this.proc && this.proc.exitCode !== null) {
+      this.proc.kill();
+      this.proc = null;
+    }
 
-  const writeEmitter = new vscode.EventEmitter<string>();
+    this.writeEmitter?.dispose();
+    this.writeEmitter = null;
 
-  const open = () => {
-    const { close, command } = options.spawn;
-
-    proc = spawn(command, [], {
-      shell: true,
-    });
-
-    proc.stdout.on("data", (data: Buffer) => {
-      const str = data.toString();
-
-      send(str);
-    });
-
-    proc.stderr.on("data", function (data: Buffer) {
-      const str = data.toString();
-
-      send(str);
-    });
-    proc.on("close", (code, signal) => {
-      close && close(code, signal);
-
-      writeEmitter.fire("\n\n\x1b[1;31mterminal close\x1b[37m\r\n");
-    });
-  };
-
-  const pty: vscode.Pseudoterminal = {
-    onDidWrite: writeEmitter.event,
-    open,
-    close() {
-      if (!proc.killed) {
-        proc.stdin.write("\x03");
-        proc.kill();
-      }
-
-      if (options.pty?.close) {
-        options.pty.close(writeEmitter);
-      }
-    },
-    handleInput(data: string) {
-      proc.stdin.write(data);
-    },
-  };
-
-  const send = (text: string) => {
-    text = text.replace(/\n/g, "\r\n");
-
-    writeEmitter.fire(text);
-  };
-
-  terminal = host.createTerminal({
-    ...options.terminal,
-    pty,
-  });
-
-  return terminal;
+    this.terminal?.dispose();
+    this.terminal = null;
+  }
 }
