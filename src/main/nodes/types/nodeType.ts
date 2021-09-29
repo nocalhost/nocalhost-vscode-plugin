@@ -36,7 +36,7 @@ export interface SvcProfile {
   cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;
-  localDeveloping: boolean;
+  duplicateDevMode: boolean;
   portForwarded: boolean;
   associate: string;
   syncing: boolean;
@@ -82,5 +82,5 @@ export enum DeploymentStatus {
   developing = "developing",
   starting = "starting",
   unknown = "unknown",
-  localDeveloping = "localDeveloping",
+  duplicateDevMode = "duplicateDevMode",
 }
