@@ -33,28 +33,15 @@ export class PhpDebugProvider extends IDebugProvider {
     workspaceFolder: string,
     debugSessionName: string,
     container: ContainerConfig,
-    node: ControllerResourceNode,
-    podName: string
+    port: number,
+    node: ControllerResourceNode
   ): Promise<boolean> {
-    await this.waitForReady(container, node, podName);
-
     return super.startDebugging(
       workspaceFolder,
       debugSessionName,
       container,
-      node,
-      podName
+      port,
+      node
     );
-  }
-
-  async waitForReady(
-    container: ContainerConfig,
-    node: ControllerResourceNode,
-    podName: string
-  ) {
-    await retry(() => waitForRemoteDebugPortReady(container, node, podName), {
-      randomize: false,
-      retries: 6,
-    });
   }
 }

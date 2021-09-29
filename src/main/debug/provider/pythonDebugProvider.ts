@@ -40,8 +40,8 @@ export class PythonDebugProvider extends IDebugProvider {
     workspaceFolder: string,
     debugSessionName: string,
     container: ContainerConfig,
-    node: ControllerResourceNode,
-    podName: string
+    port: number,
+    node: ControllerResourceNode
   ): Promise<boolean> {
     return await retry(
       async () => {
@@ -49,8 +49,8 @@ export class PythonDebugProvider extends IDebugProvider {
           workspaceFolder,
           debugSessionName,
           container,
-          node,
-          podName
+          port,
+          node
         );
         assert.ok(
           result,

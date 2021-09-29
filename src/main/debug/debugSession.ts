@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import * as assert from "assert";
+import * as getPort from "get-port";
 
-import { NhctlCommand, getRunningPodNames } from "./../ctl/nhctl";
+import { NhctlCommand } from "./../ctl/nhctl";
 import { ContainerConfig } from "../service/configService";
 import { checkDebuggerInstalled } from "./provider";
 import { LiveReload } from "../debug/liveReload";
@@ -15,7 +15,6 @@ export class DebugSession {
   disposable: Array<{ dispose(): any }> = [];
   container: ContainerConfig;
   node: ControllerResourceNode;
-  podName: string;
   isReload: boolean;
 
   public async launch(
@@ -39,23 +38,13 @@ export class DebugSession {
     this.container = container;
     this.node = node;
 
-    const podNames = await getRunningPodNames({
-      name: node.name,
-      kind: node.resourceType,
-      namespace: node.getNameSpace(),
-      kubeConfigPath: node.getKubeConfigPath(),
-    });
-
-    assert.strictEqual(podNames.length, 1, "not found pod");
-
-    this.podName = podNames[0];
-
     await this.startDebug(debugProvider, workspaceFolder);
   }
 
   async portForward(command: "end" | "start", localPort?: number) {
     const { container, node } = this;
     const { remoteDebugPort } = container.dev.debug;
+    const port = localPort ?? (await getPort());
 
     await exec({
       command: NhctlCommand.nhctlPath,
@@ -65,7 +54,7 @@ export class DebugSession {
         node.getAppName(),
         `-d ${node.name}`,
         `-t ${node.resourceType}`,
-        `-p ${remoteDebugPort}:${remoteDebugPort}`,
+        `-p ${port}:${remoteDebugPort}`,
         `-n ${node.getNameSpace()}`,
         `--kubeconfig ${node.getKubeConfigPath()}`,
       ],
@@ -74,10 +63,12 @@ export class DebugSession {
     if (command === "start") {
       this.disposable.push({
         dispose: async () => {
-          await this.portForward("end", remoteDebugPort);
+          await this.portForward("end", port);
         },
       });
     }
+
+    return port;
   }
 
   async startDebug(
@@ -86,7 +77,7 @@ export class DebugSession {
   ) {
     const { container, node } = this;
 
-    await this.portForward("start");
+    const port = await this.portForward("start");
 
     const terminal = await this.createTerminal(debugProvider);
 
@@ -96,8 +87,8 @@ export class DebugSession {
       workspaceFolder.uri.fsPath,
       debugSessionName,
       container,
-      node,
-      this.podName
+      port,
+      node
     );
 
     if (!success) {
@@ -115,8 +106,8 @@ export class DebugSession {
                 workspaceFolder.uri.fsPath,
                 debugSessionName,
                 container,
-                node,
-                this.podName
+                port,
+                node
               );
 
               this.isReload = false;
@@ -143,8 +134,8 @@ export class DebugSession {
   async createTerminal(debugProvider: IDebugProvider) {
     await closeTerminals();
 
-    const { container, node, podName } = this;
-    const command = container.dev.command?.debug.join(" ");
+    const { container, node } = this;
+    const { debug } = container.dev.command;
 
     const name = `${debugProvider.name} Process Console`;
 
@@ -153,7 +144,7 @@ export class DebugSession {
         name,
         iconPath: { id: "debug" },
       },
-      { command, node }
+      { commands: debug, node }
     );
     terminal.show();
 

@@ -22,8 +22,8 @@ export abstract class IDebugProvider {
     workspaceFolder: string,
     debugSessionName: string,
     container: ContainerConfig,
-    node: ControllerResourceNode,
-    podName: string
+    port: number,
+    node: ControllerResourceNode
   ): Promise<boolean> {
     const currentFolder = (workspace.workspaceFolders || []).find(
       (folder) => folder.name === basename(workspaceFolder)
@@ -33,7 +33,7 @@ export abstract class IDebugProvider {
       currentFolder,
       this.getDebugConfiguration(
         debugSessionName,
-        container.dev.debug.remoteDebugPort,
+        port,
         container.dev.workDir ?? "/home/nocalhost-dev"
       )
     );

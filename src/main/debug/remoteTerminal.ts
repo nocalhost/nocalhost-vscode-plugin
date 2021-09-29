@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as assert from "assert";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import host from "../host";
@@ -11,8 +12,7 @@ export async function createRemoteTerminal(
     iconPath?: { id: string };
   },
   spawnOptions: {
-    command: string;
-    shell?: string;
+    commands: string[];
     node: ControllerResourceNode;
     close?: (code: number, signal: string) => void;
   },
@@ -21,6 +21,11 @@ export async function createRemoteTerminal(
     close?: Function;
   }
 ) {
+  assert(
+    spawnOptions.commands.length > 0,
+    "spawnOptions commands is not empty"
+  );
+
   let proc: ChildProcessWithoutNullStreams;
   let terminal: vscode.Terminal;
 
@@ -51,38 +56,30 @@ export async function createRemoteTerminal(
     },
   };
 
-  let isRead = false;
   const send = (text: string) => {
     text = text.replace(/\n/g, "\r\n");
-
-    if (!isRead) {
-      proc.stdin.write(spawnOptions.command + "\n");
-      isRead = true;
-    }
 
     writeEmitter.fire(text);
   };
 
   const create = () => {
-    const { node, close, shell } = spawnOptions;
+    const { node, close } = spawnOptions;
 
-    proc = spawn(
-      NhctlCommand.nhctlPath,
-      [
-        "dev",
-        "terminal",
-        node.getAppName(),
-        `-d ${node.name}`,
-        `-t ${node.resourceType}`,
-        `-n ${node.getNameSpace()}`,
-        `--kubeconfig ${node.getKubeConfigPath()}`,
-        `-c nocalhost-dev`,
-        `--shell ${shell}`,
-      ],
-      {
-        shell: true,
-      }
-    );
+    const args = [
+      "exec",
+      node.getAppName(),
+      `-d ${node.name}`,
+      `-t ${node.resourceType}`,
+      `-n ${node.getNameSpace()}`,
+      `--kubeconfig ${node.getKubeConfigPath()}`,
+      `--container nocalhost-dev`,
+    ];
+
+    spawnOptions.commands.forEach((command) => args.push(`-c ${command}`));
+
+    proc = spawn(NhctlCommand.nhctlPath, args, {
+      shell: true,
+    });
 
     proc.stdout.on("data", (data: Buffer) => {
       const str = data.toString();

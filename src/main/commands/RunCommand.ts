@@ -76,15 +76,14 @@ export default class RunCommand implements ICommand {
 
     const name = `${capitalCase(node.name)} Process Console`;
 
-    const command = container.dev.command?.run.join(" ");
-    const shell = container.dev.shell ?? "sh";
+    const { run } = container.dev.command;
 
     const terminal = await createRemoteTerminal(
       {
         name,
         iconPath: { id: "vm-running" },
       },
-      { command, node, shell }
+      { commands: run, node }
     );
     terminal.show();
 

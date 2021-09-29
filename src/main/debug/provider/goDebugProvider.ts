@@ -40,17 +40,17 @@ export class GoDebugProvider extends IDebugProvider {
     workspaceFolder: string,
     debugSessionName: string,
     container: ContainerConfig,
-    node: ControllerResourceNode,
-    podName: string
+    port: number,
+    node: ControllerResourceNode
   ): Promise<boolean> {
-    await this.waitForReady(container.dev.debug.remoteDebugPort);
+    await this.waitForReady(port);
 
     return super.startDebugging(
       workspaceFolder,
       debugSessionName,
       container,
-      node,
-      podName
+      port,
+      node
     );
   }
   async waitStopDebug() {
