@@ -13,7 +13,7 @@ import { ContainerConfig } from "../service/configService";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { closeTerminals, getContainer, waitForSync } from "../debug";
-import { createRemoteTerminal } from "../debug/remoteTerminal";
+import { RemoteTerminal } from "../debug/remoteTerminal";
 
 export interface ExecCommandParam {
   appName: string;
@@ -78,13 +78,13 @@ export default class RunCommand implements ICommand {
 
     const { run } = container.dev.command;
 
-    const terminal = await createRemoteTerminal(
-      {
+    const terminal = await RemoteTerminal.create({
+      terminal: {
         name,
         iconPath: { id: "vm-running" },
       },
-      { commands: run, node }
-    );
+      spawn: { command: "" },
+    });
     terminal.show();
 
     this.disposable.push(

@@ -31,6 +31,7 @@ import { IPvc } from "../domain";
 import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export interface InstalledAppInfo {
   name: string;
@@ -73,10 +74,38 @@ export class NhctlCommand {
 
     return command;
   }
-  static exec(baseParams?: IBaseCommand<{ args?: string[] }>) {
+  static kExec(baseParams?: IBaseCommand<{ args?: string[] }>) {
     const command = NhctlCommand.create("k exec", baseParams);
     command.args = baseParams.args ?? [];
 
+    return command;
+  }
+
+  static exec(
+    params: IBaseCommand<{
+      args?: string[];
+      app: string;
+      name: string;
+      resourceType: string;
+      container?: string;
+      commands: string[];
+    }>
+  ) {
+    let { args, app, name, resourceType, container, commands } = params;
+
+    const command = NhctlCommand.create("exec", params);
+
+    args = args ?? [];
+    commands.forEach((command) => args.unshift(`-c ${command}`));
+
+    args.unshift(
+      app,
+      `-d ${name}`,
+      `-t ${resourceType}`,
+      `--container ${container ?? "nocalhost-dev"}`
+    );
+
+    command.args = args;
     return command;
   }
   static logs(baseParams?: IBaseCommand<unknown>) {

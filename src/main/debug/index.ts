@@ -24,7 +24,7 @@ export async function checkRequiredCommand(
   namespace: string,
   kubeConfigPath: string
 ) {
-  const command = await NhctlCommand.exec({
+  const command = await NhctlCommand.kExec({
     namespace,
     kubeConfigPath,
   });
@@ -160,7 +160,7 @@ export async function waitForRemoteDebugPortReady(
 ) {
   const { remoteDebugPort } = container.dev.debug;
 
-  const command = NhctlCommand.exec({
+  const command = NhctlCommand.kExec({
     namespace: node.getNameSpace(),
     kubeConfigPath: node.getKubeConfigPath(),
   }).getCommand();
@@ -189,7 +189,7 @@ export async function killContainerProcess(
 ) {
   await closeTerminals();
 
-  const command = NhctlCommand.exec({
+  const command = NhctlCommand.kExec({
     namespace: node.getNameSpace(),
     kubeConfigPath: node.getKubeConfigPath(),
   });

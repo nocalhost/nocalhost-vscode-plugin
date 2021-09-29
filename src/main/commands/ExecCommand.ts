@@ -86,7 +86,7 @@ export default class ExecCommand implements ICommand {
     for (let i = 0; i < ExecCommand.defaultShells.length; i++) {
       let notExist = false;
 
-      const command = NhctlCommand.exec({
+      const command = NhctlCommand.kExec({
         kubeConfigPath,
       })
         .addArgument(podName)
@@ -123,7 +123,7 @@ export default class ExecCommand implements ICommand {
       kubeConfigPath
     );
 
-    const shellArgs = NhctlCommand.exec({
+    const shellArgs = NhctlCommand.kExec({
       kubeConfigPath: kubeConfigPath,
     })
       .addArgument("-it", podName)

@@ -9,13 +9,14 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 import { closeTerminals, getContainer } from "./index";
 import { exec } from "../ctl/shell";
 import { IDebugProvider } from "./provider/IDebugProvider";
-import { createRemoteTerminal } from "./remoteTerminal";
+import { RemoteTerminal } from "./remoteTerminal";
 
 export class DebugSession {
   disposable: Array<{ dispose(): any }> = [];
   container: ContainerConfig;
   node: ControllerResourceNode;
   isReload: boolean;
+  terminal: RemoteTerminal;
 
   public async launch(
     workspaceFolder: vscode.WorkspaceFolder,
@@ -79,41 +80,51 @@ export class DebugSession {
 
     const port = await this.portForward("start");
 
-    const terminal = await this.createTerminal(debugProvider);
-
+    const terminalName = `${debugProvider.name} Process Console`;
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
-    const success = await debugProvider.startDebugging(
-      workspaceFolder.uri.fsPath,
-      debugSessionName,
-      container,
-      port,
-      node
-    );
+    const startDebugging = async () => {
+      await this.generateDebugTerminal(terminalName);
+
+      return await debugProvider.startDebugging(
+        workspaceFolder.uri.fsPath,
+        debugSessionName,
+        container,
+        port,
+        node
+      );
+    };
+
+    const success = await startDebugging();
 
     if (!success) {
       this.dispose();
     } else {
+      this.liveReload();
+
       this.disposable.push(
+        vscode.window.onDidCloseTerminal(async (e) => {
+          if (
+            !this.isReload &&
+            e.name === terminalName &&
+            vscode.debug.activeDebugSession
+          ) {
+            await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
+          }
+        }),
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
           if (debugSession.name === debugSessionName) {
             await debugProvider.waitStopDebug();
 
-            terminal.sendText("\x03");
+            this.terminal.sendText("\x03");
 
-            if (this.isReload) {
-              await debugProvider.startDebugging(
-                workspaceFolder.uri.fsPath,
-                debugSessionName,
-                container,
-                port,
-                node
-              );
+            setTimeout(async () => {
+              if (!this.isReload || !(await startDebugging())) {
+                this.dispose();
+              }
 
               this.isReload = false;
-            } else {
-              this.dispose();
-            }
+            }, 600);
           }
         })
       );
@@ -121,49 +132,43 @@ export class DebugSession {
   }
   liveReload() {
     const { container, node } = this;
-
     if (container.dev.hotReload === true) {
       const liveReload = new LiveReload(node, async () => {
         this.isReload = true;
+
         await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
       });
 
       this.disposable.push(liveReload);
     }
   }
-  async createTerminal(debugProvider: IDebugProvider) {
-    await closeTerminals();
-
+  async generateDebugTerminal(name: string) {
     const { container, node } = this;
     const { debug } = container.dev.command;
 
-    const name = `${debugProvider.name} Process Console`;
+    await closeTerminals();
 
-    const terminal = await createRemoteTerminal(
-      {
+    const command = NhctlCommand.exec({
+      app: node.getAppName(),
+      name: node.name,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+      resourceType: node.resourceType,
+      commands: debug,
+    }).getCommand();
+
+    const terminal = await RemoteTerminal.create({
+      terminal: {
         name,
         iconPath: { id: "debug" },
       },
-      { commands: debug, node },
-      {
-        open(write) {
-          write.fire("debug run:");
-        },
-      }
-    );
+      spawn: { command },
+    });
     terminal.show();
 
-    this.disposable.push(
-      vscode.window.onDidCloseTerminal(async (e) => {
-        if (e.name === name) {
-          if (vscode.debug.activeDebugSession) {
-            await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
-          }
-        }
-      })
-    );
+    this.terminal = terminal;
 
-    return terminal;
+    this.disposable.push(this.terminal);
   }
 
   async dispose() {
