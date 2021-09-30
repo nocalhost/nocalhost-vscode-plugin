@@ -20,6 +20,8 @@ export async function getContainer(info: IK8sResource) {
     containers = _get(info, "spec.jobTemplate.spec.template.spec.containers");
   }
 
+  // nhctl get container
+
   const containerNames = (containers || [])
     .map(({ name }) => name)
     .filter(Boolean);

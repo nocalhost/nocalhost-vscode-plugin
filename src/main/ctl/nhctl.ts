@@ -1513,3 +1513,15 @@ export async function kubeconfig(
 
   return result;
 }
+
+import { ControllerNodeApi } from "../commands/StartDevModeCommand";
+export async function getContainers(node: ControllerNodeApi) {
+  const result = await NhctlCommand.create(
+    `dev containers ${node.getAppName()} -d ${
+      node.name
+    } -t ${node.resourceType.toLocaleLowerCase()} -n ${node.getNameSpace()} --kubeconfig ${node.getKubeConfigPath()}`
+  )
+    .toJson()
+    .exec();
+  return result;
+}

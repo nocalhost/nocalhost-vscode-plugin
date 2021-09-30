@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as os from "os";
 import { INhCtlGetResult, IDescribeConfig } from "../domain";
 import ICommand from "./ICommand";
-import { NhctlCommand } from "./../ctl/nhctl";
+import { NhctlCommand, getContainers } from "./../ctl/nhctl";
 import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
 import { get as _get } from "lodash";
@@ -84,6 +84,7 @@ export default class StartDevModeCommand implements ICommand {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
     host.log("[start dev] Initializing..", true);
+
     const resource: INhCtlGetResult = await NhctlCommand.get({
       kubeConfigPath: node.getKubeConfigPath(),
       namespace: node.getNameSpace(),
@@ -95,10 +96,15 @@ export default class StartDevModeCommand implements ICommand {
 
     const description: IDescribeConfig =
       resource.description || Object.create(null);
-    const containerName =
-      (await node.getContainer()) || (await getContainer(resource.info));
-    if (!containerName) {
-      return;
+
+    const containers = await getContainers(node);
+    if (!containers || containers.length === 0) {
+      vscode.window.showErrorMessage("No container available");
+    }
+    let containerName = containers[0];
+
+    if (containers.length > 1) {
+      containerName = await host.showQuickPick(containers);
     }
 
     host.log(`[start dev] Container: ${containerName}`, true);

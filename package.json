@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.73",
+  "version": "0.5.10",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -168,18 +168,13 @@
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!developing)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self))/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.endDevMode",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(.+?)-developing/i",
           "group": "inline@0"
-        },
-        {
-          "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-developing/i",
-          "group": "navigation"
         },
         {
           "command": "Nocalhost.editServiceConfig",
