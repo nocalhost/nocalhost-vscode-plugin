@@ -12,7 +12,7 @@ import { DebugSession } from "../debug/debugSession";
 import { ContainerConfig } from "../service/configService";
 import { chooseDebugProvider, Language } from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { getContainer, waitForSync } from "../debug";
+import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
 
 export default class DebugCommand implements ICommand {
@@ -51,12 +51,12 @@ export default class DebugCommand implements ICommand {
         });
 
         await AsyncRetry(
-          (bail) => {
+          async (bail) => {
             if (token.isCancellationRequested) {
               bail(new Error());
               return;
             }
-            waitForSync(node);
+            await waitForSync(node);
           },
           {
             randomize: false,
@@ -118,6 +118,8 @@ export default class DebugCommand implements ICommand {
 
   async startDebugging(node: ControllerResourceNode) {
     const debugSession = new DebugSession();
+
+    await closeTerminals();
 
     const workspaceFolder = await host.showWorkspaceFolderPick();
 

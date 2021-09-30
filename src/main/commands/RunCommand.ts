@@ -67,12 +67,12 @@ export default class RunCommand implements ICommand {
       });
 
       await AsyncRetry(
-        (bail) => {
+        async (bail) => {
           if (token.isCancellationRequested) {
             bail(new Error());
             return;
           }
-          waitForSync(node);
+          await waitForSync(node);
         },
         {
           randomize: false,
@@ -88,15 +88,11 @@ export default class RunCommand implements ICommand {
 
       this.disposable.push(
         vscode.window.onDidCloseTerminal(async (e) => {
-          if (e.name === name) {
-            this.terminal.sendCtrlC();
+          if ((await e.processId) === (await this.terminal.processId)) {
+            await this.terminal.sendCtrlC();
 
-            setTimeout(() => {
-              if (!this.isReload) {
-                this.disposable.forEach((d) => d.dispose());
-                this.disposable.length = 0;
-              }
-            }, 600);
+            this.disposable.forEach((d) => d.dispose());
+            this.disposable.length = 0;
           }
         })
       );
@@ -106,12 +102,15 @@ export default class RunCommand implements ICommand {
   async startRun(name: string) {
     const { node } = this;
 
+    await closeTerminals();
+
     await this.createRunTerminal(name);
 
     if (this.container.dev.hotReload === true) {
       const liveReload = new LiveReload(node, async () => {
         this.isReload = true;
-        await this.createRunTerminal(name);
+
+        await this.terminal.restart();
 
         this.isReload = false;
       });
@@ -123,8 +122,6 @@ export default class RunCommand implements ICommand {
   async createRunTerminal(name: string) {
     const { container, node } = this;
     const { run } = container.dev.command;
-
-    await closeTerminals();
 
     const command = NhctlCommand.exec({
       app: node.getAppName(),

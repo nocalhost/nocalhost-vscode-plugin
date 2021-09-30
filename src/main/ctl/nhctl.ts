@@ -96,7 +96,7 @@ export class NhctlCommand {
     const command = NhctlCommand.create("exec", params);
 
     args = args ?? [];
-    commands.forEach((command) => args.unshift(`-c ${command}`));
+    commands.forEach((command) => args.push(`-c ${command}`));
 
     args.unshift(
       app,
@@ -1266,7 +1266,7 @@ export async function getSyncStatus(
 
   const command = nhctlCommand(kubeConfigPath, namespace, baseCommand);
 
-  const r = await exec({ command, args }).promise.catch((e) => {
+  const r = await exec({ command, args }).promise.catch(() => {
     return { code: 0, stdout: "", stderr: "" };
   });
 

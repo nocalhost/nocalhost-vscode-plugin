@@ -105,6 +105,8 @@ export function createProcess(param: ExecParam) {
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
 
+  logger.info(`[cmd] ${command}`);
+
   const proc = spawn(command, [], { shell: true, env });
 
   const { err, out } = getOutput(output);
@@ -164,8 +166,6 @@ export function exec(
   const { command, timeout } = param;
   const startTime = Date.now();
   const { proc, promise } = createProcess(param);
-
-  logger.info(`[cmd] ${command}`);
 
   startTimeout({ timeout, proc, command });
 

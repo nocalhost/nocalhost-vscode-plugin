@@ -1,5 +1,10 @@
 import { basename } from "path";
-import { debug, DebugConfiguration, workspace } from "vscode";
+import {
+  CancellationTokenSource,
+  debug,
+  DebugConfiguration,
+  workspace,
+} from "vscode";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
@@ -23,11 +28,16 @@ export abstract class IDebugProvider {
     debugSessionName: string,
     container: ContainerConfig,
     port: number,
-    node: ControllerResourceNode
+    node: ControllerResourceNode,
+    cancellationToken?: CancellationTokenSource
   ): Promise<boolean> {
     const currentFolder = (workspace.workspaceFolders || []).find(
       (folder) => folder.name === basename(workspaceFolder)
     );
+
+    if (cancellationToken.token.isCancellationRequested) {
+      return;
+    }
 
     return await debug.startDebugging(
       currentFolder,

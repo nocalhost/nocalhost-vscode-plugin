@@ -1,12 +1,12 @@
 import * as assert from "assert";
 import { Client, RPCConnection } from "json-rpc2";
-import { DebugConfiguration } from "vscode";
-import host from "../../host";
-const retry = require("async-retry");
+import { CancellationTokenSource, DebugConfiguration } from "vscode";
+import * as AsyncRetry from "async-retry";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
 import logger from "../../utils/logger";
+import host from "../../host";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class GoDebugProvider extends IDebugProvider {
@@ -41,16 +41,18 @@ export class GoDebugProvider extends IDebugProvider {
     debugSessionName: string,
     container: ContainerConfig,
     port: number,
-    node: ControllerResourceNode
+    node: ControllerResourceNode,
+    cancellationToken: CancellationTokenSource
   ): Promise<boolean> {
-    await this.waitForReady(port);
+    await this.waitForReady(port, cancellationToken);
 
     return super.startDebugging(
       workspaceFolder,
       debugSessionName,
       container,
       port,
-      node
+      node,
+      cancellationToken
     );
   }
   async waitStopDebug() {
@@ -92,11 +94,15 @@ export class GoDebugProvider extends IDebugProvider {
     });
   }
 
-  async waitForReady(port: number) {
+  async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
     this.client = Client.$create(port, "127.0.0.1");
 
-    await retry(
-      async () => {
+    await AsyncRetry(
+      async (bail) => {
+        if (cancellationToken.token.isCancellationRequested) {
+          bail(new Error());
+          return;
+        }
         this.connection = await this.connectClient();
         try {
           const result = await this.callPromise("GetVersion", [], 3);

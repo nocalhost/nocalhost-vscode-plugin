@@ -6,10 +6,11 @@ import { ContainerConfig } from "../service/configService";
 import { checkDebuggerInstalled } from "./provider";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { closeTerminals, getContainer } from "./index";
+import { DebugCancellationTokenSource, getContainer } from "./index";
 import { exec } from "../ctl/shell";
 import { IDebugProvider } from "./provider/IDebugProvider";
 import { RemoteTerminal } from "./remoteTerminal";
+import host from "../host";
 
 export class DebugSession {
   disposable: Array<{ dispose(): any }> = [];
@@ -17,6 +18,7 @@ export class DebugSession {
   node: ControllerResourceNode;
   isReload: boolean = false;
   terminal: RemoteTerminal;
+  cancellationToken: DebugCancellationTokenSource;
 
   public async launch(
     workspaceFolder: vscode.WorkspaceFolder,
@@ -83,29 +85,48 @@ export class DebugSession {
     const terminalName = `${debugProvider.name} Process Console`;
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
+    this.generateCancellationToken();
     await this.createDebugTerminal(terminalName);
 
     const startDebugging = async () => {
-      return await debugProvider.startDebugging(
-        workspaceFolder.uri.fsPath,
-        debugSessionName,
-        container,
-        port,
-        node
+      return await host.withProgress(
+        {
+          title: "Attempt to connect to the remote debug...",
+          cancellable: true,
+        },
+        async (_, token) => {
+          token.onCancellationRequested(() => {
+            host.showWarnMessage("Cancel remote debugging");
+
+            this.cancellationToken.cancelByReason("cancel");
+          });
+
+          const success = await debugProvider.startDebugging(
+            workspaceFolder.uri.fsPath,
+            debugSessionName,
+            container,
+            port,
+            node,
+            this.cancellationToken
+          );
+
+          return success;
+        }
       );
     };
-
     const success = await startDebugging();
+    this.cancellationToken.dispose();
+    this.cancellationToken = null;
 
     if (!success) {
       this.dispose();
     } else {
-      this.liveReload(startDebugging);
+      this.liveReload();
 
       this.disposable.push(
         vscode.window.onDidCloseTerminal(async (e) => {
           if (
-            e.name === terminalName &&
+            (await e.processId) === (await this.terminal.processId) &&
             vscode.debug.activeDebugSession &&
             !this.isReload
           ) {
@@ -113,31 +134,46 @@ export class DebugSession {
           }
         }),
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
-          if (debugSession.name === debugSessionName && !this.isReload) {
-            await debugProvider.waitStopDebug();
+          if (debugSession.name === debugSessionName) {
+            if (this.isReload) {
+              this.generateCancellationToken();
 
-            await this.terminal.sendCtrlC();
+              if (!(await startDebugging())) {
+                this.dispose();
+              }
 
-            this.dispose();
+              this.cancellationToken.dispose();
+              this.cancellationToken = null;
+
+              this.isReload = false;
+            } else {
+              await debugProvider.waitStopDebug();
+              await this.terminal.sendCtrlC();
+
+              this.dispose();
+            }
           }
         })
       );
     }
   }
-  liveReload(startDebugging: () => Promise<boolean>) {
+  liveReload() {
     const { container, node } = this;
     if (container.dev.hotReload === true) {
       const liveReload = new LiveReload(node, async () => {
         this.isReload = true;
-
-        if ((await this.terminal.restart()) && !(await startDebugging())) {
-          this.dispose();
-        }
-        this.isReload = false;
+        await this.terminal.restart();
       });
 
       this.disposable.push(liveReload);
     }
+  }
+  generateCancellationToken() {
+    if (this.cancellationToken) {
+      this.cancellationToken.dispose();
+    }
+
+    this.cancellationToken = new DebugCancellationTokenSource();
   }
   async createDebugTerminal(name: string) {
     const { container, node } = this;
@@ -157,7 +193,15 @@ export class DebugSession {
         name,
         iconPath: { id: "debug" },
       },
-      spawn: { command },
+      spawn: {
+        command,
+        close: (code: number, signal: NodeJS.Signals) => {
+          if (this.cancellationToken && code !== 0 && !this.isReload) {
+            this.cancellationToken.cancelByReason("failed");
+            host.showErrorMessage("Failed to start debug");
+          }
+        },
+      },
     });
 
     terminal.show();

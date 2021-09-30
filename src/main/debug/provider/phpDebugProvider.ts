@@ -4,8 +4,6 @@ const retry = require("async-retry");
 import { IDebugProvider } from "./IDebugProvider";
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
-import { waitForRemoteDebugPortReady } from "..";
-
 export class PhpDebugProvider extends IDebugProvider {
   name: string;
   requireExtensions: string[];

@@ -1,6 +1,7 @@
 import { spawn } from "child_process";
 import {
   Disposable,
+  Progress,
   TextDocumentChangeEvent,
   TextDocumentSaveReason,
   TextDocumentWillSaveEvent,
@@ -38,7 +39,7 @@ export class LiveReload {
       ),
     ];
 
-    this.startwatch(callback);
+    this.startWatch(callback);
   }
   private onDidChangeTextDocument(event: TextDocumentChangeEvent) {
     this.isChange = true;
@@ -51,11 +52,11 @@ export class LiveReload {
       this.isChange = false;
       this.isSave = true;
 
-      this.watiSyncFile();
+      this.waitSyncFile();
     }
   }
 
-  private async watiSyncFile() {
+  private async waitSyncFile() {
     await host.withProgress(
       { title: "Waiting for sync file ...", cancellable: true },
       async (_, token) => {
@@ -76,7 +77,7 @@ export class LiveReload {
     );
   }
 
-  private startwatch(callback: () => Promise<void>) {
+  private startWatch(callback: () => Promise<void>) {
     const nhctlCmd = new NhctlCommand("sync-status", {
       kubeConfigPath: this.req.kubeConfigPath,
       namespace: this.req.namespace,
@@ -100,13 +101,13 @@ export class LiveReload {
       const str = data.toString();
       stdout += str;
 
-      if (str) {
+      if (str && this.isSave) {
         let syncMsg = JSON.parse(str) as SyncMsg;
 
         if (syncMsg.status === "idle" && this.isSave) {
-          await callback();
-
           this.resolve();
+
+          await callback();
         }
       }
     });

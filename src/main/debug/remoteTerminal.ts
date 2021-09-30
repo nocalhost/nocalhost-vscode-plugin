@@ -13,6 +13,11 @@ type RemoteTerminalType = {
     close?: SpawnClose;
   };
 };
+
+const ANSI_COLOR_BLUE = "\x1b[34m";
+const ANSI_COLOR_RED = "\x1b[31m";
+const ANSI_COLOR_RESET = "\x1b[0m";
+
 export class RemoteTerminal implements vscode.Terminal {
   private options: RemoteTerminalType;
 
@@ -48,10 +53,12 @@ export class RemoteTerminal implements vscode.Terminal {
     const pty: vscode.Pseudoterminal = {
       onDidWrite: this.writeEmitter.event,
       open: () => this.createProc(),
-      close: () => {
-        if (!this.proc.killed) {
-          this.proc?.stdin.write("\x03");
+      close: async () => {
+        if (this.proc) {
+          await this.sendCtrlC();
+
           this.proc?.kill();
+          this.proc = null;
         }
       },
       handleInput: (data: string) => {
@@ -89,7 +96,9 @@ export class RemoteTerminal implements vscode.Terminal {
         this.exitCallback();
       }
 
-      this.send("\n\n\x1b[1;31mterminal close\x1b[37m\r\n");
+      this.send(`\n\n${ANSI_COLOR_RED}terminal close${ANSI_COLOR_RESET}\r\n`);
+
+      this.proc = null;
     });
 
     this.proc = proc;
@@ -113,16 +122,14 @@ export class RemoteTerminal implements vscode.Terminal {
     this.terminal.hide();
   }
   async sendCtrlC() {
-    if (this.proc.exitCode !== null) {
+    if (this.proc === null) {
       return Promise.resolve();
     }
 
-    this.sendText("\x03");
+    this.proc.stdin.write("\x03");
 
-    await new Promise((resolve, reject) => {
-      setTimeout(() => {
-        reject(new Error("close terminal timeout"));
-      }, 10_000);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3_000);
 
       this.exitCallback = resolve;
     }).finally(() => {
@@ -131,6 +138,10 @@ export class RemoteTerminal implements vscode.Terminal {
   }
   async restart() {
     await this.sendCtrlC();
+
+    this.send("\x1b[H\x1b[2J");
+    this.send(`\n\n${ANSI_COLOR_BLUE}restart${ANSI_COLOR_RESET}\r\n\n`);
+
     this.createProc();
 
     return true;
@@ -143,8 +154,5 @@ export class RemoteTerminal implements vscode.Terminal {
 
     this.writeEmitter?.dispose();
     this.writeEmitter = null;
-
-    this.terminal?.dispose();
-    this.terminal = null;
   }
 }
