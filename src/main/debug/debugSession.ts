@@ -148,12 +148,12 @@ export class DebugSession {
                 this.dispose();
               }
 
+              this.cancellationToken.dispose();
+              this.cancellationToken = null;
               this.isReload = false;
             } else {
               this.dispose();
             }
-            this.cancellationToken.dispose();
-            this.cancellationToken = null;
           }
         })
       );
