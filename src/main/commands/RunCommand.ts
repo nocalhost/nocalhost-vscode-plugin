@@ -3,7 +3,6 @@ import * as JsonSchema from "json-schema";
 import * as assert from "assert";
 import { capitalCase } from "change-case";
 import { validate } from "json-schema";
-import * as AsyncRetry from "async-retry";
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
@@ -59,44 +58,11 @@ export default class RunCommand implements ICommand {
       }
     }
 
-    await host.withProgress({ cancellable: true }, async (acton, token) => {
-      acton.report({ message: "Waiting for sync file ..." });
+    await waitForSync(node);
 
-      token.onCancellationRequested(() => {
-        throw new Error("Cancel waiting");
-      });
+    const name = `${capitalCase(node.name)} Process Console`;
 
-      await AsyncRetry(
-        async (bail) => {
-          if (token.isCancellationRequested) {
-            bail(new Error());
-            return;
-          }
-          await waitForSync(node);
-        },
-        {
-          randomize: false,
-          retries: 3,
-        }
-      );
-
-      acton.report({ message: "Waiting for running ..." });
-
-      const name = `${capitalCase(node.name)} Process Console`;
-
-      await this.startRun(name);
-
-      this.disposable.push(
-        vscode.window.onDidCloseTerminal(async (e) => {
-          if ((await e.processId) === (await this.terminal.processId)) {
-            await this.terminal.sendCtrlC();
-
-            this.disposable.forEach((d) => d.dispose());
-            this.disposable.length = 0;
-          }
-        })
-      );
-    });
+    await this.startRun(name);
   }
 
   async startRun(name: string) {
@@ -117,6 +83,17 @@ export default class RunCommand implements ICommand {
 
       this.disposable.push(liveReload);
     }
+
+    this.disposable.push(
+      vscode.window.onDidCloseTerminal(async (e) => {
+        if ((await e.processId) === (await this.terminal.processId)) {
+          await this.terminal.sendCtrlC();
+
+          this.disposable.forEach((d) => d.dispose());
+          this.disposable.length = 0;
+        }
+      })
+    );
   }
 
   async createRunTerminal(name: string) {

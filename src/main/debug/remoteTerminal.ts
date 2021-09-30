@@ -26,7 +26,6 @@ export class RemoteTerminal implements vscode.Terminal {
   private proc: ChildProcessWithoutNullStreams | null;
 
   private exitCallback: Function | null;
-
   constructor(options: RemoteTerminalType) {
     this.options = options;
 
@@ -126,21 +125,15 @@ export class RemoteTerminal implements vscode.Terminal {
       return Promise.resolve();
     }
 
-    this.proc.stdin.write("\x03");
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3_000);
+    await new Promise<void>((resolve) => {
+      this.proc.stdin.write("\x03");
 
       this.exitCallback = resolve;
-    }).finally(() => {
-      this.exitCallback = null;
     });
   }
   async restart() {
-    await this.sendCtrlC();
-
     this.send("\x1b[H\x1b[2J");
-    this.send(`\n\n${ANSI_COLOR_BLUE}restart${ANSI_COLOR_RESET}\r\n\n`);
+    this.send(`\n${ANSI_COLOR_BLUE}restart${ANSI_COLOR_RESET}\r\n`);
 
     this.createProc();
 

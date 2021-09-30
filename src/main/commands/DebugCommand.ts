@@ -43,30 +43,9 @@ export default class DebugCommand implements ICommand {
       }
     }
 
-    await host.withProgress(
-      { title: "Waiting for sync file ...", cancellable: true },
-      async (_, token) => {
-        token.onCancellationRequested(() => {
-          throw new Error("Cancel waiting");
-        });
+    await waitForSync(node);
 
-        await AsyncRetry(
-          async (bail) => {
-            if (token.isCancellationRequested) {
-              bail(new Error());
-              return;
-            }
-            await waitForSync(node);
-          },
-          {
-            randomize: false,
-            retries: 3,
-          }
-        );
-
-        this.startDebugging(node);
-      }
-    );
+    this.startDebugging(node);
   }
 
   validateDebugConfig(config: ContainerConfig) {

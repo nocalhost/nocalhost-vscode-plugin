@@ -135,23 +135,25 @@ export class DebugSession {
         }),
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
           if (debugSession.name === debugSessionName) {
+            await debugProvider.waitStopDebug();
+            await this.terminal.sendCtrlC();
+
             if (this.isReload) {
               this.generateCancellationToken();
 
-              if (!(await startDebugging())) {
+              if (
+                (await this.terminal.restart()) &&
+                !(await startDebugging())
+              ) {
                 this.dispose();
               }
 
-              this.cancellationToken.dispose();
-              this.cancellationToken = null;
-
               this.isReload = false;
             } else {
-              await debugProvider.waitStopDebug();
-              await this.terminal.sendCtrlC();
-
               this.dispose();
             }
+            this.cancellationToken.dispose();
+            this.cancellationToken = null;
           }
         })
       );
@@ -162,7 +164,8 @@ export class DebugSession {
     if (container.dev.hotReload === true) {
       const liveReload = new LiveReload(node, async () => {
         this.isReload = true;
-        await this.terminal.restart();
+
+        vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
       });
 
       this.disposable.push(liveReload);

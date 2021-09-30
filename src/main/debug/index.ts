@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-const retry = require("async-retry");
+import * as AsyncRetry from "async-retry";
 
 import { SyncMsg } from "../commands/SyncServiceCommand";
 import { getSyncStatus } from "../ctl/nhctl";
@@ -19,7 +19,7 @@ export async function closeTerminals() {
 
   terminals.forEach((i) => i.dispose());
 
-  await retry(
+  await AsyncRetry(
     () => {
       const terminal = vscode.window.terminals.find(condition);
       assert(!terminal, "close old terminal error");
@@ -32,20 +32,46 @@ export async function closeTerminals() {
 }
 
 export async function waitForSync(node: ControllerResourceNode) {
-  const str = await getSyncStatus(
-    node.resourceType,
-    node.getKubeConfigPath(),
-    node.getNameSpace(),
-    node.getAppName(),
-    node.name,
-    ["--timeout 600", "--wait"]
+  const sync = async () => {
+    const str = await getSyncStatus(
+      node.resourceType,
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      ["--timeout 600", "--wait"]
+    );
+
+    logger.info("waitForSync", str);
+
+    const syncMsg: SyncMsg = JSON.parse(str);
+
+    assert.strictEqual(syncMsg.status, "idle", "wait for sync timeout");
+  };
+
+  await host.withProgress(
+    { title: "Waiting for sync file ...", cancellable: true },
+    async (_, token) => {
+      token.onCancellationRequested(() => {
+        host.showWarnMessage("Cancel waiting");
+      });
+
+      await AsyncRetry(
+        async (bail) => {
+          await sync();
+
+          if (token.isCancellationRequested) {
+            bail(new Error());
+            return;
+          }
+        },
+        {
+          randomize: false,
+          retries: 3,
+        }
+      );
+    }
   );
-
-  logger.info("waitForSync", str);
-
-  const syncMsg: SyncMsg = JSON.parse(str);
-
-  assert.strictEqual(syncMsg.status, "idle", "wait for sync timeout");
 }
 
 export async function getContainer(node: ControllerResourceNode) {
