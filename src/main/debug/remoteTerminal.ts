@@ -132,8 +132,10 @@ export class RemoteTerminal implements vscode.Terminal {
     });
   }
   async restart() {
+    await this.sendCtrlC();
+
     this.send("\x1b[H\x1b[2J");
-    this.send(`\n${ANSI_COLOR_BLUE}restart${ANSI_COLOR_RESET}\r\n`);
+    this.send(`\n${ANSI_COLOR_BLUE}restart${ANSI_COLOR_RESET}\r\n\n`);
 
     this.createProc();
 

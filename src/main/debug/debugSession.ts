@@ -136,7 +136,6 @@ export class DebugSession {
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
           if (debugSession.name === debugSessionName) {
             await debugProvider.waitStopDebug();
-            await this.terminal.sendCtrlC();
 
             if (this.isReload) {
               this.generateCancellationToken();
@@ -152,6 +151,8 @@ export class DebugSession {
               this.cancellationToken = null;
               this.isReload = false;
             } else {
+              await this.terminal.sendCtrlC();
+
               this.dispose();
             }
           }
