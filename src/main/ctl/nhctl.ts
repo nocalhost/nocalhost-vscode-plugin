@@ -31,6 +31,7 @@ import { IPvc } from "../domain";
 import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
+import { NodeInfo } from "../typings";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1514,12 +1515,10 @@ export async function kubeconfig(
   return result;
 }
 
-import { ControllerNodeApi } from "../commands/StartDevModeCommand";
-export async function getContainers(node: ControllerNodeApi) {
+export async function getContainers(node: NodeInfo): Promise<string[]> {
+  const { appName, name, resourceType, namespace, kubeConfigPath } = node;
   const result = await NhctlCommand.create(
-    `dev containers ${node.getAppName()} -d ${
-      node.name
-    } -t ${node.resourceType.toLocaleLowerCase()} -n ${node.getNameSpace()} --kubeconfig ${node.getKubeConfigPath()}`
+    `dev containers ${appName} -d ${name} -t ${resourceType} -n ${namespace} --kubeconfig ${kubeConfigPath}`
   )
     .toJson()
     .exec();

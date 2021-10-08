@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { IK8sResource } from "../domain";
 import host from "../host";
 import { get as _get } from "lodash";
+import { getContainers } from "../ctl/nhctl";
 
 export async function getContainer(info: IK8sResource) {
   if (!info || !info.kind) {

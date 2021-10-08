@@ -97,7 +97,14 @@ export default class StartDevModeCommand implements ICommand {
     const description: IDescribeConfig =
       resource.description || Object.create(null);
 
-    const containers = await getContainers(node);
+    const containers = await getContainers({
+      appName: node.getAppName(),
+      name: node.name,
+      resourceType: node.resourceType.toLocaleLowerCase(),
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+    });
+
     if (!containers || containers.length === 0) {
       vscode.window.showErrorMessage("No container available");
     }
