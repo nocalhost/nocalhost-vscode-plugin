@@ -12,6 +12,7 @@ import {
   TMP_CONTAINER,
   TMP_DEVSPACE,
   TMP_DEVSTART_APPEND_COMMAND,
+  TMP_DEV_START_IMAGE,
   TMP_ID,
   TMP_KUBECONFIG_PATH,
   TMP_NAMESPACE,
@@ -62,7 +63,9 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   private node: ControllerNodeApi;
-  async execCommand(node: ControllerNodeApi) {
+  async execCommand(...rest: any[]) {
+    let [node, image] = rest as [ControllerNodeApi, string];
+
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
@@ -121,13 +124,49 @@ export default class StartDevModeCommand implements ICommand {
       return;
     }
 
-    // check image
-    let image: string | undefined = await this.getImage(
+    image = await this.getImageName(image, containerName);
+
+    if (!image) {
+      return;
+    }
+
+    await this.saveConfig(
       node.getKubeConfigPath(),
       node.getNameSpace(),
       appName,
       node.name,
       node.resourceType,
+      containerName,
+      "image",
+      image as string
+    );
+    if (
+      destDir === true ||
+      (destDir && destDir === host.getCurrentRootPath())
+    ) {
+      await this.startDevMode(host, appName, node, containerName, image);
+    } else if (destDir) {
+      this.saveAndOpenFolder(appName, node, destDir, containerName, image);
+      messageBus.emit("devstart", {
+        name: appName,
+        destDir,
+        container: containerName,
+      });
+    }
+  }
+
+  private async getImageName(image: string | undefined, containerName: string) {
+    // check image
+    if (image) {
+      return image;
+    }
+
+    image = await this.getImage(
+      this.node.getKubeConfigPath(),
+      this.node.getNameSpace(),
+      this.node.getAppName(),
+      this.node.name,
+      this.node.resourceType,
       containerName
     );
     if (!image) {
@@ -156,42 +195,16 @@ export default class StartDevModeCommand implements ICommand {
         image = await host.showInputBox({
           placeHolder: "Please input your image address",
         });
-        if (!image) {
-          return;
-        }
       }
     }
-
-    await this.saveConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      appName,
-      node.name,
-      node.resourceType,
-      containerName,
-      "image",
-      image as string
-    );
-    if (
-      destDir === true ||
-      (destDir && destDir === host.getCurrentRootPath())
-    ) {
-      await this.startDevMode(host, appName, node, containerName);
-    } else if (destDir) {
-      this.saveAndOpenFolder(appName, node, destDir, containerName);
-      messageBus.emit("devstart", {
-        name: appName,
-        destDir,
-        container: containerName,
-      });
-    }
+    return image;
   }
-
   private saveAndOpenFolder(
     appName: string,
     node: ControllerNodeApi,
     destDir: string,
-    containerName: string
+    containerName: string,
+    image: string
   ) {
     const currentUri = host.getCurrentRootPath();
 
@@ -202,7 +215,8 @@ export default class StartDevModeCommand implements ICommand {
         appName,
         uri.fsPath,
         node as ControllerResourceNode,
-        containerName
+        containerName,
+        image
       );
     }
   }
@@ -420,7 +434,8 @@ export default class StartDevModeCommand implements ICommand {
     host: Host,
     appName: string,
     node: ControllerNodeApi,
-    containerName: string
+    containerName: string,
+    image: string
   ) {
     const currentUri = host.getCurrentRootPath() || os.homedir();
 
@@ -448,7 +463,8 @@ export default class StartDevModeCommand implements ICommand {
         },
         containerName,
         node.getStorageClass(),
-        node.getDevStartAppendCommand()
+        node.getDevStartAppendCommand(),
+        image
       );
       host.log("dev start end", true);
       host.log("", true);
@@ -508,7 +524,8 @@ export default class StartDevModeCommand implements ICommand {
     appName: string,
     workloadPath: string,
     node: ControllerResourceNode,
-    containerName: string
+    containerName: string,
+    image: string
   ) {
     const appNode = node.getAppNode();
     host.setGlobalState(TMP_ID, node.getNodeStateId());
@@ -521,6 +538,7 @@ export default class StartDevModeCommand implements ICommand {
     host.setGlobalState(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     host.setGlobalState(TMP_WORKLOAD_PATH, workloadPath);
     host.setGlobalState(TMP_CONTAINER, containerName);
+    host.setGlobalState(TMP_DEV_START_IMAGE, image);
     const storageClass = node.getStorageClass();
     if (storageClass) {
       host.setGlobalState(TMP_STORAGE_CLASS, storageClass);

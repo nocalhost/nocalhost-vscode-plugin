@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 
-import { PLUGIN_TEMP_DIR, TMP_DEVSTART_IMAGE } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import NocalhostAppProvider from "./appProvider";
 import {
+  PLUGIN_TEMP_DIR,
+  TMP_DEV_START_IMAGE,
   BASE_URL,
   HELM_VALUES_DIR,
   KUBE_CONFIG_DIR,
@@ -214,7 +215,7 @@ function launchDevspace() {
     TMP_DEVSTART_APPEND_COMMAND
   );
   const tmpContainer = host.getGlobalState(TMP_CONTAINER);
-  const tmpImage = host.getGlobalState(TMP_DEVSTART_IMAGE);
+  const tmpImage = host.getGlobalState(TMP_DEV_START_IMAGE);
 
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     host.removeGlobalState(TMP_DEVSPACE);
