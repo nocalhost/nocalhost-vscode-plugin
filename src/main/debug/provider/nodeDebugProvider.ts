@@ -1,6 +1,6 @@
 import Axios from "axios";
-import { DebugConfiguration } from "vscode";
-const retry = require("async-retry");
+import { CancellationTokenSource, DebugConfiguration } from "vscode";
+import * as AsyncRetry from "async-retry";
 
 import { IDebugProvider } from "./IDebugProvider";
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
@@ -46,25 +46,36 @@ export class NodeDebugProvider extends IDebugProvider {
     debugSessionName: string,
     container: ContainerConfig,
     port: number,
-    node: ControllerResourceNode
+    node: ControllerResourceNode,
+    cancellationToken: CancellationTokenSource
   ): Promise<boolean> {
-    await this.waitForReady(port);
+    await this.waitForReady(port, cancellationToken);
 
     return super.startDebugging(
       workspaceFolder,
       debugSessionName,
       container,
       port,
-      node
+      node,
+      cancellationToken
     );
   }
 
-  async waitForReady(port: number) {
+  async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
     try {
-      await retry(() => Axios.get(`http://127.0.0.1:${port}/json`), {
-        randomize: false,
-        retries: 6,
-      });
+      await AsyncRetry(
+        async (bail) => {
+          if (cancellationToken.token.isCancellationRequested) {
+            bail(new Error());
+            return;
+          }
+          return Axios.get(`http://127.0.0.1:${port}/json`);
+        },
+        {
+          randomize: false,
+          retries: 6,
+        }
+      );
     } catch (error) {
       throw new Error(
         "The attempt to connect to the remote debug port timed out."

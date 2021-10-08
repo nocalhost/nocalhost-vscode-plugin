@@ -1,6 +1,6 @@
 import * as assert from "assert";
-import { DebugConfiguration } from "vscode";
-const retry = require("async-retry");
+import { CancellationTokenSource, DebugConfiguration } from "vscode";
+import * as AsyncRetry from "async-retry";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
@@ -41,10 +41,15 @@ export class PythonDebugProvider extends IDebugProvider {
     debugSessionName: string,
     container: ContainerConfig,
     port: number,
-    node: ControllerResourceNode
+    node: ControllerResourceNode,
+    cancellationToken?: CancellationTokenSource
   ): Promise<boolean> {
-    return await retry(
-      async () => {
+    return await AsyncRetry(
+      async (bail) => {
+        if (cancellationToken.token.isCancellationRequested) {
+          bail(new Error());
+          return;
+        }
         const result = await super.startDebugging(
           workspaceFolder,
           debugSessionName,
