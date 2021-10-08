@@ -43,19 +43,16 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       node.resourceType
     );
 
-    const resource: INhCtlGetResult = await NhctlCommand.get({
-      kubeConfigPath: node.getKubeConfigPath(),
-      namespace: node.getNameSpace(),
-    })
-      .addArgumentStrict(node.resourceType, node.name)
-      .addArgument("-a", node.getAppName())
-      .addArgument("-o", "json")
-      .exec();
-
     const containerName =
       container ||
       (await node.getContainer()) ||
-      (await getContainer(resource.info));
+      (await getContainer({
+        appName: node.getAppName(),
+        name: node.name,
+        resourceType: node.resourceType.toLocaleLowerCase(),
+        namespace: node.getNameSpace(),
+        kubeConfigPath: node.getKubeConfigPath(),
+      }));
 
     const currentUri = host.getCurrentRootPath();
 

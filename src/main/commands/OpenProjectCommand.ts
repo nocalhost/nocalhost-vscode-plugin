@@ -31,17 +31,15 @@ export default class OpenProjectCommand implements ICommand {
     const namespace = node.getNameSpace();
     const appName = node.getAppName();
 
-    const resource: INhCtlGetResult = await NhctlCommand.get({
-      kubeConfigPath: node.getKubeConfigPath(),
-      namespace: node.getNameSpace(),
-    })
-      .addArgumentStrict(node.resourceType, node.name)
-      .addArgument("-a", node.getAppName())
-      .addArgument("-o", "json")
-      .exec();
-
     const containerName =
-      (await node.getContainer()) || (await getContainer(resource.info));
+      (await node.getContainer()) ||
+      (await getContainer({
+        appName: node.getAppName(),
+        name: node.name,
+        resourceType: node.resourceType.toLocaleLowerCase(),
+        namespace: node.getNameSpace(),
+        kubeConfigPath: node.getKubeConfigPath(),
+      }));
 
     const profile = await associateInfo(
       kubeConfigPath,
