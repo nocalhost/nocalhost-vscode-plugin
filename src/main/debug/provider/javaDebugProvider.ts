@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
-const retry = require("async-retry");
 
 import { IDebugProvider } from "./IDebugProvider";
-import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
-import { ContainerConfig } from "../../service/configService";
 
 export class JavaDebugProvider extends IDebugProvider {
   name: string;
@@ -27,29 +24,5 @@ export class JavaDebugProvider extends IDebugProvider {
       hostName: "localhost",
       port,
     };
-  }
-  async startDebugging(
-    workspaceFolder: string,
-    debugSessionName: string,
-    container: ContainerConfig,
-    port: number,
-    node: ControllerResourceNode
-  ): Promise<boolean> {
-    await this.waitForReady(container, node);
-
-    return super.startDebugging(
-      workspaceFolder,
-      debugSessionName,
-      container,
-      port,
-      node
-    );
-  }
-
-  async waitForReady(container: ContainerConfig, node: ControllerResourceNode) {
-    // await retry(() => waitForRemoteDebugPortReady(container, node, podName), {
-    //   randomize: false,
-    //   retries: 6,
-    // });
   }
 }

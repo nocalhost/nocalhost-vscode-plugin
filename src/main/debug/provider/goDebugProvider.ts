@@ -1,10 +1,7 @@
 import * as assert from "assert";
 import { Client, RPCConnection } from "json-rpc2";
-import { CancellationTokenSource, DebugConfiguration } from "vscode";
-import * as AsyncRetry from "async-retry";
+import { DebugConfiguration } from "vscode";
 
-import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
-import { ContainerConfig } from "../../service/configService";
 import logger from "../../utils/logger";
 import host from "../../host";
 import { IDebugProvider } from "./IDebugProvider";
@@ -36,26 +33,7 @@ export class GoDebugProvider extends IDebugProvider {
       host: "127.0.0.1",
     };
   }
-  async startDebugging(
-    workspaceFolder: string,
-    debugSessionName: string,
-    container: ContainerConfig,
-    port: number,
-    node: ControllerResourceNode,
-    cancellationToken: CancellationTokenSource
-  ): Promise<boolean> {
-    await this.waitForReady(port, cancellationToken);
-
-    return super.startDebugging(
-      workspaceFolder,
-      debugSessionName,
-      container,
-      port,
-      node,
-      cancellationToken
-    );
-  }
-  async waitStopDebug() {
+  async waitDebuggerStop() {
     try {
       await this.callPromise("Command", [{ name: "halt" }]);
       await this.callPromise("Detach", []);
@@ -94,34 +72,23 @@ export class GoDebugProvider extends IDebugProvider {
     });
   }
 
-  async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
+  async waitDebuggerStart(port: number) {
     this.client = Client.$create(port, "127.0.0.1");
 
-    await AsyncRetry(
-      async (bail) => {
-        if (cancellationToken.token.isCancellationRequested) {
-          bail(new Error());
-          return;
-        }
-        this.connection = await this.connectClient();
-        try {
-          const result = await this.callPromise("GetVersion", [], 3);
+    this.connection = await this.connectClient();
 
-          assert.ok(
-            result,
-            "The attempt to connect to the remote debug port timed out."
-          );
-        } catch (err) {
-          (this.connection as any)["conn"]["end"]();
-          this.connection = null;
+    try {
+      const result = await this.callPromise("GetVersion", [], 3);
 
-          throw err;
-        }
-      },
-      {
-        randomize: false,
-        retries: 6,
-      }
-    );
+      assert.ok(
+        result,
+        "The attempt to connect to the remote debug port timed out."
+      );
+    } catch (err) {
+      (this.connection as any)["conn"]["end"]();
+      this.connection = null;
+
+      throw err;
+    }
   }
 }

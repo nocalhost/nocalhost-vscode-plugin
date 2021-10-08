@@ -5,6 +5,7 @@ import {
   DebugConfiguration,
   workspace,
 } from "vscode";
+import * as AsyncRetry from "async-retry";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
@@ -19,8 +20,29 @@ export abstract class IDebugProvider {
     remoteRoot: string
   ): DebugConfiguration;
 
-  async waitStopDebug() {
+  async waitDebuggerStop() {
     return Promise.resolve();
+  }
+
+  async waitDebuggerStart(port: number): Promise<any> {
+    return Promise.resolve();
+  }
+
+  async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
+    await AsyncRetry(
+      async (bail) => {
+        if (cancellationToken.token.isCancellationRequested) {
+          bail(new Error());
+          return;
+        }
+
+        await this.waitDebuggerStart(port);
+      },
+      {
+        randomize: false,
+        retries: 6,
+      }
+    );
   }
 
   async startDebugging(
@@ -34,6 +56,8 @@ export abstract class IDebugProvider {
     const currentFolder = (workspace.workspaceFolders || []).find(
       (folder) => folder.name === basename(workspaceFolder)
     );
+
+    await this.waitForReady(port, cancellationToken);
 
     if (cancellationToken.token.isCancellationRequested) {
       return;

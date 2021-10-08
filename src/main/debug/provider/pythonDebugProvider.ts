@@ -1,9 +1,6 @@
 import * as assert from "assert";
-import { CancellationTokenSource, DebugConfiguration } from "vscode";
-import * as AsyncRetry from "async-retry";
+import { DebugConfiguration } from "vscode";
 
-import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
-import { ContainerConfig } from "../../service/configService";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class PythonDebugProvider extends IDebugProvider {
@@ -36,38 +33,20 @@ export class PythonDebugProvider extends IDebugProvider {
       },
     };
   }
-  async startDebugging(
-    workspaceFolder: string,
-    debugSessionName: string,
-    container: ContainerConfig,
-    port: number,
-    node: ControllerResourceNode,
-    cancellationToken?: CancellationTokenSource
-  ): Promise<boolean> {
-    return await AsyncRetry(
-      async (bail) => {
-        if (cancellationToken.token.isCancellationRequested) {
-          bail(new Error());
-          return;
-        }
-        const result = await super.startDebugging(
-          workspaceFolder,
-          debugSessionName,
-          container,
-          port,
-          node
-        );
-        assert.ok(
-          result,
-          "The attempt to connect to the remote debug port timed out."
-        );
+  async waitDebuggerStart(port: number): Promise<boolean> {
+    return true;
+    // const result = await super.startDebugging(
+    //   workspaceFolder,
+    //   debugSessionName,
+    //   container,
+    //   port,
+    //   node
+    // );
+    // assert.ok(
+    //   result,
+    //   "The attempt to connect to the remote debug port timed out."
+    // );
 
-        return result;
-      },
-      {
-        randomize: false,
-        retries: 6,
-      }
-    );
+    // return result;
   }
 }

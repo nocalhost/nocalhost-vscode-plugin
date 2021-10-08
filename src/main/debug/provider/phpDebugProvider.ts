@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
-const retry = require("async-retry");
 
 import { IDebugProvider } from "./IDebugProvider";
-import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
-import { ContainerConfig } from "../../service/configService";
 export class PhpDebugProvider extends IDebugProvider {
   name: string;
   requireExtensions: string[];
@@ -26,20 +23,5 @@ export class PhpDebugProvider extends IDebugProvider {
       hostName: "localhost",
       port,
     };
-  }
-  async startDebugging(
-    workspaceFolder: string,
-    debugSessionName: string,
-    container: ContainerConfig,
-    port: number,
-    node: ControllerResourceNode
-  ): Promise<boolean> {
-    return super.startDebugging(
-      workspaceFolder,
-      debugSessionName,
-      container,
-      port,
-      node
-    );
   }
 }
