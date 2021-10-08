@@ -16,13 +16,13 @@ export class Pod extends ControllerResourceNode {
     let treeItem = await super.getTreeItem();
     try {
       const [status, dev] = await this.getStatusPod();
-      const [icon, label] = await this.getIconAndLabelByStatus(status);
+      const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
       const check = await this.checkConfig();
       treeItem.contextValue = `${treeItem.contextValue}-${dev ? "dev-" : ""}${
         check ? "info" : "warn"
-      }-${status}`;
+      }-${status}-${mode}`;
     } catch (e) {
       logger.error("pod getTreeItem");
       logger.error(e);
