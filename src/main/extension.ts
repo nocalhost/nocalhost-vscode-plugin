@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { PLUGIN_TEMP_DIR } from "./constants";
+import { PLUGIN_TEMP_DIR, TMP_DEV_START_COMMAND } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import NocalhostAppProvider from "./appProvider";
@@ -210,6 +210,8 @@ function launchDevspace() {
   const tmpResourceType = host.getGlobalState(TMP_RESOURCE_TYPE);
   const tmpKubeConfigPath = host.getGlobalState(TMP_KUBECONFIG_PATH);
   const tmpStorageClass = host.getGlobalState(TMP_STORAGE_CLASS);
+  const tmpCommand = host.getGlobalState(TMP_DEV_START_COMMAND);
+
   const tmpDevstartAppendCommand = host.getGlobalState(
     TMP_DEVSTART_APPEND_COMMAND
   );
@@ -227,6 +229,7 @@ function launchDevspace() {
     host.removeGlobalState(TMP_ID);
     host.removeGlobalState(TMP_CONTAINER);
     host.removeGlobalState(TMP_STORAGE_CLASS);
+    host.removeGlobalState(TMP_DEV_START_COMMAND);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -269,7 +272,7 @@ function launchDevspace() {
       getSpaceName: () => tmpDevspace,
       getNameSpace: () => tmpNamespace,
     };
-    vscode.commands.executeCommand(START_DEV_MODE, node);
+    vscode.commands.executeCommand(START_DEV_MODE, node, tmpCommand);
   }
 }
 

@@ -6,7 +6,10 @@ import { SyncMsg } from "../commands/SyncServiceCommand";
 import { getSyncStatus } from "../ctl/nhctl";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { ContainerConfig } from "../service/configService";
+import ConfigService, {
+  ContainerConfig,
+  NocalhostServiceConfig,
+} from "../service/configService";
 import logger from "../utils/logger";
 
 export async function closeTerminals() {
@@ -20,9 +23,15 @@ export async function closeTerminals() {
   terminals.forEach((i) => i.dispose());
 
   await AsyncRetry(
-    () => {
+    async () => {
       const terminal = vscode.window.terminals.find(condition);
       assert(!terminal, "close old terminal error");
+
+      if (!terminal) {
+        await new Promise((res) => {
+          setTimeout(res, 1_000);
+        });
+      }
     },
     {
       randomize: false,
@@ -77,7 +86,16 @@ export async function waitForSync(node: ControllerResourceNode) {
 export async function getContainer(node: ControllerResourceNode) {
   let container: ContainerConfig | undefined;
 
-  const serviceConfig = node.nocalhostService;
+  let serviceConfig = node.nocalhostService;
+  if (!serviceConfig) {
+    serviceConfig = (await ConfigService.getAppConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    )) as NocalhostServiceConfig;
+  }
   const containers = (serviceConfig && serviceConfig.containers) || [];
 
   if (containers.length > 1) {

@@ -12,6 +12,7 @@ import {
   TMP_CONTAINER,
   TMP_DEVSPACE,
   TMP_DEVSTART_APPEND_COMMAND,
+  TMP_DEV_START_COMMAND,
   TMP_ID,
   TMP_KUBECONFIG_PATH,
   TMP_NAMESPACE,
@@ -179,7 +180,7 @@ export default class StartDevModeCommand implements ICommand {
     ) {
       return this.startDevMode(host, appName, node, containerName, command);
     } else if (destDir) {
-      this.saveAndOpenFolder(appName, node, destDir, containerName);
+      this.saveAndOpenFolder(appName, node, destDir, containerName, command);
       messageBus.emit("devstart", {
         name: appName,
         destDir,
@@ -192,7 +193,8 @@ export default class StartDevModeCommand implements ICommand {
     appName: string,
     node: ControllerNodeApi,
     destDir: string,
-    containerName: string
+    containerName: string,
+    command: string
   ) {
     const currentUri = host.getCurrentRootPath();
 
@@ -203,7 +205,8 @@ export default class StartDevModeCommand implements ICommand {
         appName,
         uri.fsPath,
         node as ControllerResourceNode,
-        containerName
+        containerName,
+        command
       );
     }
   }
@@ -514,7 +517,8 @@ export default class StartDevModeCommand implements ICommand {
     appName: string,
     workloadPath: string,
     node: ControllerResourceNode,
-    containerName: string
+    containerName: string,
+    command: string
   ) {
     const appNode = node.getAppNode();
     host.setGlobalState(TMP_ID, node.getNodeStateId());
@@ -527,6 +531,8 @@ export default class StartDevModeCommand implements ICommand {
     host.setGlobalState(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     host.setGlobalState(TMP_WORKLOAD_PATH, workloadPath);
     host.setGlobalState(TMP_CONTAINER, containerName);
+    host.setGlobalState(TMP_DEV_START_COMMAND, command);
+
     const storageClass = node.getStorageClass();
     if (storageClass) {
       host.setGlobalState(TMP_STORAGE_CLASS, storageClass);

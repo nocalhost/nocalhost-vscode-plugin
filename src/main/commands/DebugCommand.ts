@@ -34,6 +34,8 @@ export default class DebugCommand implements ICommand {
     this.container = await getContainer(node);
     this.validateDebugConfig(this.container);
 
+    await closeTerminals();
+
     if (!command) {
       const status = await node.getStatus(true);
 
@@ -97,8 +99,6 @@ export default class DebugCommand implements ICommand {
 
   async startDebugging(node: ControllerResourceNode) {
     const debugSession = new DebugSession();
-
-    await closeTerminals();
 
     const workspaceFolder = await host.showWorkspaceFolderPick();
 

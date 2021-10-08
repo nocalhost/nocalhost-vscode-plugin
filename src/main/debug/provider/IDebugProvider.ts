@@ -40,7 +40,8 @@ export abstract class IDebugProvider {
       },
       {
         randomize: false,
-        retries: 6,
+        maxTimeout: 1000,
+        retries: 5 * 60,
       }
     );
   }

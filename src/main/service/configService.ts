@@ -90,9 +90,17 @@ export default class ConfigService {
   static async getAppConfig(
     kubeConfigPath: string,
     namespace: string,
-    appName: string
+    appName: string,
+    workloadName?: string,
+    workloadType?: string
   ) {
-    const configStr = await nhctl.getConfig(kubeConfigPath, namespace, appName);
+    const configStr = await nhctl.getConfig(
+      kubeConfigPath,
+      namespace,
+      appName,
+      workloadName,
+      workloadType
+    );
     try {
       const config = yaml.parse(configStr) as NocalhostConfig;
       return config;
