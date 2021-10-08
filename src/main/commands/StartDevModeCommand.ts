@@ -97,21 +97,28 @@ export default class StartDevModeCommand implements ICommand {
     const description: IDescribeConfig =
       resource.description || Object.create(null);
 
-    const containers = await getContainers({
-      appName: node.getAppName(),
-      name: node.name,
-      resourceType: node.resourceType.toLocaleLowerCase(),
-      namespace: node.getNameSpace(),
-      kubeConfigPath: node.getKubeConfigPath(),
-    });
+    // get container name from storage
 
-    if (!containers || containers.length === 0) {
-      vscode.window.showErrorMessage("No container available");
-    }
-    let containerName = containers[0];
+    let containerName = await node.getContainer();
 
-    if (containers.length > 1) {
-      containerName = await host.showQuickPick(containers);
+    if (!containerName) {
+      const containers = await getContainers({
+        appName: node.getAppName(),
+        name: node.name,
+        resourceType: node.resourceType.toLocaleLowerCase(),
+        namespace: node.getNameSpace(),
+        kubeConfigPath: node.getKubeConfigPath(),
+      });
+
+      if (!containers || containers.length === 0) {
+        vscode.window.showErrorMessage("No container available");
+      }
+
+      containerName = containers[0];
+
+      if (containers.length > 1) {
+        containerName = await host.showQuickPick(containers);
+      }
     }
 
     host.log(`[start dev] Container: ${containerName}`, true);
