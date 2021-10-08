@@ -133,7 +133,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
             kubeConfigPath: null,
             state: {
               code: 201,
-              info: result.reason,
+              info: result.reason?.message,
             },
           };
 

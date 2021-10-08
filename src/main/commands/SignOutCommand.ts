@@ -13,6 +13,7 @@ import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import Bookinfo from "../common/bookinfo";
 import { AccountClusterNode } from "../clusters";
 import { kubeconfig } from "../ctl/nhctl";
+import { LoginInfo } from "../clusters/interface";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -44,19 +45,19 @@ export default class SignOutCommand implements ICommand {
 
     await state.refreshTree();
 
-    this.cleanKubeConfig(node.accountClusterService.accountClusterNode);
+    this.cleanKubeConfig(node.accountClusterService.loginInfo);
   }
 
-  cleanKubeConfig(accountCluster: AccountClusterNode) {
-    const { baseUrl, username } = accountCluster.loginInfo;
-    const KEY = `USER_LINK:${baseUrl}-${username}`;
+  cleanKubeConfig(loginInfo: LoginInfo) {
+    const { baseUrl, username } = loginInfo;
+    const KEY = `USER_LINK:${baseUrl}@${username}`;
 
     const prevData = host.getGlobalState(KEY);
 
     if (prevData) {
       Promise.allSettled(
         (prevData as Array<string>).map((id) => {
-          return new Promise(async (res, rej) => {
+          return new Promise<void>(async (res, rej) => {
             const file = path.resolve(KUBE_CONFIG_DIR, id);
 
             await kubeconfig(file, "remove");

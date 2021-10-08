@@ -35,14 +35,12 @@ export class AccountClusterNode {
 }
 export default class AccountClusterService {
   instance: AxiosInstance;
-  loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
   refreshToken: string;
   lastServiceAccounts: IServiceAccountInfo[];
   isRefreshing: boolean;
-  constructor(loginInfo: LoginInfo) {
-    this.loginInfo = loginInfo;
+  constructor(public loginInfo: LoginInfo) {
     this.isRefreshing = true;
     this.instance = axios.create({
       baseURL: loginInfo.baseUrl,
@@ -118,18 +116,19 @@ export default class AccountClusterService {
     const newRootNodes: IRootNode[] = [];
 
     let serviceAccounts = await accountClusterService.getServiceAccount();
-
-    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
-      logger.error(
-        `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
-      );
-      return [];
-    }
     logger.info(
       `[getServerClusterRootNodes] serviceAccounts length ${
         (serviceAccounts || []).length
       }`
     );
+
+    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
+      const msg = `no cluster found for ${newAccountCluser.loginInfo.baseUrl}@${newAccountCluser.loginInfo.username}`;
+
+      logger.error(msg);
+      throw new Error(msg);
+    }
+
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
     logger.info(
       `[getServerClusterRootNodes] applications length ${
@@ -224,7 +223,7 @@ export default class AccountClusterService {
     configs: Array<string>
   ) {
     const { baseUrl, username } = accountCluser.loginInfo;
-    const KEY = `USER_LINK:${baseUrl}-${username}`;
+    const KEY = `USER_LINK:${baseUrl}@${username}`;
 
     const prevData = host.getGlobalState(KEY);
 
@@ -237,7 +236,7 @@ export default class AccountClusterService {
 
       await Promise.allSettled(
         diff.map((id) => {
-          return new Promise(async (res, rej) => {
+          return new Promise<void>(async (res, rej) => {
             const file = path.resolve(KUBE_CONFIG_DIR, id);
 
             await kubeconfig(file, "remove");
@@ -409,9 +408,11 @@ export default class AccountClusterService {
       }
       return serviceAccount;
     } catch (e) {
-      logger.error(e);
-      console.log(e);
-      return this.lastServiceAccounts || [];
+      logger.error("getServiceAccount", e);
+
+      throw new Error(
+        `failed to get cluster for ${this.loginInfo.baseUrl}@${this.loginInfo.username}`
+      );
     }
   }
 

@@ -30,31 +30,11 @@ export default class SignInCommand implements ICommand {
   }
   async execCommand(info: LoginInfo) {
     host.showProgressing("Logging in ...", async () => {
-      try {
-        const newServerNode = await AccountClusterService.appendClusterByLoginInfo(
-          info
-        );
+      await AccountClusterService.appendClusterByLoginInfo(info);
 
-        if (newServerNode) {
-          const newNodes: IRootNode[] = await AccountClusterService.getServerClusterRootNodes(
-            newServerNode
-          );
-          if (newNodes.length === 0) {
-            vscode.window.showWarningMessage(
-              `No cluster found for ${info.username || "account"}`
-            );
-            return;
-          }
-        }
+      await state.refreshTree();
 
-        await state.refreshTree();
-
-        vscode.window.showInformationMessage("Login successful");
-      } catch (e) {
-        logger.error("[sigin]");
-        logger.error(e);
-        vscode.window.showWarningMessage(e && e.error && e.error.message);
-      }
+      vscode.window.showInformationMessage("Login successful");
     });
   }
 }
