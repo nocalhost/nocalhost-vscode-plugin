@@ -1,16 +1,16 @@
 import * as vscode from "vscode";
 import * as path from "path";
+const isWindows = require("is-windows");
 
 import ICommand from "./ICommand";
 import { COPY_TERMINAL } from "./constants";
 import registerCommand from "./register";
-import host, { Host } from "../host";
+import host from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as shell from "../ctl/shell";
 import { NhctlCommand, getContainerNames, getPodNames } from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
-import { NH_BIN } from "../constants";
 import { ExecOutputReturnValue } from "shelljs";
 
 export default class CopyTerminalCommand implements ICommand {
@@ -45,7 +45,7 @@ export default class CopyTerminalCommand implements ICommand {
         container = result.containerName;
         pod = result.podName;
       }
-      await this.opendevSpaceExec(
+      await this.openDevSpaceExec(
         node.getAppName(),
         node.name,
         node.resourceType,
@@ -62,7 +62,7 @@ export default class CopyTerminalCommand implements ICommand {
 
   private async getDefaultShell(
     podName: string,
-    constainerName: string,
+    containerName: string,
     kubeConfigPath: string
   ) {
     let defaultShell = "sh";
@@ -73,7 +73,7 @@ export default class CopyTerminalCommand implements ICommand {
         kubeConfigPath,
       })
         .addArgument(podName)
-        .addArgumentStrict("-c", constainerName)
+        .addArgumentStrict("-c", containerName)
         .addArgumentTheTail(`-- which ${CopyTerminalCommand.defaultShells[i]}`)
         .getCommand();
 
@@ -94,7 +94,7 @@ export default class CopyTerminalCommand implements ICommand {
     return defaultShell;
   }
 
-  async opendevSpaceExec(
+  async openDevSpaceExec(
     appName: string,
     workloadName: string,
     workloadType: string,
@@ -114,17 +114,20 @@ export default class CopyTerminalCommand implements ICommand {
     if (container) {
       terminalCommands.push("-c", container);
     }
-    const shellPath = path.resolve(
-      NH_BIN,
-      host.isWindow() ? "nhctl.exe" : "nhctl"
-    );
-    host.copyTextToclipboard(`${shellPath} ${terminalCommands.join(" ")}`);
+
+    this.copyCommand(`${NhctlCommand.nhctlPath} ${terminalCommands.join(" ")}`);
+  }
+  private copyCommand(command: string) {
+    if (isWindows()) {
+      command = command.replaceAll(path.sep, "\\\\");
+    }
+
+    host.copyTextToClipboard(command);
 
     host.showInformationMessage(
       "Please open the terminal and paste this command to open new shell."
     );
   }
-
   private async execCore(
     kubeConfigPath: string,
     podName: string,
@@ -136,13 +139,7 @@ export default class CopyTerminalCommand implements ICommand {
       containerName,
       kubeConfigPath
     );
-    // const terminalCommands = new Array<string>();
-    // terminalCommands.push("exec");
-    // terminalCommands.push("-it", podName);
-    // terminalCommands.push("-c", containerName);
-    // terminalCommands.push("--kubeconfig", kubeConfigPath);
-    // terminalCommands.push("--", shell);
-    // const shellPath = "kubectl";
+
     const command = NhctlCommand.exec({
       kubeConfigPath: kubeConfigPath,
       namespace,
@@ -151,11 +148,8 @@ export default class CopyTerminalCommand implements ICommand {
       .addArgument("-c", containerName)
       .addArgumentTheTail(`-- ${shell || ""}`)
       .getCommand();
-    host.copyTextToclipboard(command);
 
-    host.showInformationMessage(
-      "Please open the terminal and paste this command to open new shell."
-    );
+    this.copyCommand(command);
   }
 
   /**
