@@ -23,29 +23,41 @@ export default class PortForwardCommand implements ICommand {
       return;
     }
 
-    let podName: string | undefined;
-    if (node instanceof ControllerResourceNode) {
-      const kind = node.resourceType;
-      const name = node.name;
+    const svcProfile = await nhctl.getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
 
-      const podNameArr = await nhctl.getRunningPodNames({
-        name,
-        kind,
-        namespace: node.getNameSpace(),
-        kubeConfigPath: node.getKubeConfigPath(),
-      });
-      podName = podNameArr[0];
-      if (podNameArr.length > 1) {
-        podName = await vscode.window.showQuickPick(podNameArr);
-      }
-      if (!podName) {
+    let podName: string | undefined;
+    if (svcProfile?.develop_status !== "STARTED") {
+      if (node instanceof ControllerResourceNode) {
+        const kind = node.resourceType;
+        const name = node.name;
+
+        const podNameArr = await nhctl.getRunningPodNames({
+          name,
+          kind,
+          namespace: node.getNameSpace(),
+          kubeConfigPath: node.getKubeConfigPath(),
+        });
+        podName = podNameArr[0];
+        if (podNameArr.length > 1) {
+          podName = await vscode.window.showQuickPick(podNameArr);
+        }
+        if (!podName) {
+          return;
+        }
+      } else if (node instanceof Pod) {
+        podName = node.name;
+      } else {
+        host.showInformationMessage(
+          "Does not support this type at the moment."
+        );
         return;
       }
-    } else if (node instanceof Pod) {
-      podName = node.name;
-    } else {
-      host.showInformationMessage("Does not support this type at the moment.");
-      return;
     }
 
     const reg = /^([1-9][0-9]*)?:?([1-9][0-9]*)$/;
