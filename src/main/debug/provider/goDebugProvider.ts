@@ -38,6 +38,8 @@ export class GoDebugProvider extends IDebugProvider {
     try {
       await this.call("Command", [{ name: "halt" }]);
       await this.call("Detach", []);
+
+      await this.socket.end();
     } catch (err) {
       logger.error("stopDebug error", err);
 
@@ -105,7 +107,7 @@ export class GoDebugProvider extends IDebugProvider {
   async waitDebuggerStart(port: number) {
     await this.connect(port);
 
-    const result = await this.call("GetVersion", [], 3);
+    const result = await this.call("GetVersion", [], 2);
 
     logger.debug("dlv GetVersion", result);
     assert.ok(result);
