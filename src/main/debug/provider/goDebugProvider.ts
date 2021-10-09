@@ -50,15 +50,16 @@ export class GoDebugProvider extends IDebugProvider {
   }
 
   call<T>(command: string, params: any[], timeout = 0): Thenable<T> {
+    const id = v4();
+    const method = `RPCServer.${command}`;
+
     return new Promise<T>((resolve, reject) => {
-      const err = new Error(`Then Call RPCServer ${command} timed out.`);
+      const err = new Error(`Then Call ${method} timed out.`);
       if (timeout) {
         setTimeout(() => {
           reject(err);
         }, timeout * 1000);
       }
-
-      const id = v4();
 
       this.socket.once("data", (data) => {
         const { id: rid, error, result } = JSON.parse(data.toString()) as {
@@ -80,8 +81,8 @@ export class GoDebugProvider extends IDebugProvider {
       this.socket.write(
         JSON.stringify({
           jsonrpc: "2.0",
-          method: `RPCServer.${command}`,
-          params: params,
+          method,
+          params,
           id,
         })
       );
