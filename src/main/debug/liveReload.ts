@@ -1,7 +1,6 @@
 import { spawn } from "child_process";
 import {
   Disposable,
-  Progress,
   TextDocumentChangeEvent,
   TextDocumentSaveReason,
   TextDocumentWillSaveEvent,

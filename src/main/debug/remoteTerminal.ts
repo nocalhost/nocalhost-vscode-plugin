@@ -19,16 +19,12 @@ const ANSI_COLOR_RED = "\x1b[31m";
 const ANSI_COLOR_RESET = "\x1b[0m";
 
 export class RemoteTerminal implements vscode.Terminal {
-  private options: RemoteTerminalType;
-
   private writeEmitter: vscode.EventEmitter<string> | null = new vscode.EventEmitter<string>();
   private terminal: vscode.Terminal | null;
   private proc: ChildProcessWithoutNullStreams | null;
 
   private exitCallback: Function | null;
-  constructor(options: RemoteTerminalType) {
-    this.options = options;
-
+  constructor(private options: RemoteTerminalType) {
     this.createTerminal();
 
     return this;
@@ -61,7 +57,9 @@ export class RemoteTerminal implements vscode.Terminal {
         }
       },
       handleInput: (data: string) => {
-        this.proc?.stdin.write(data);
+        if (this.proc?.stdin.writable) {
+          this.proc?.stdin.write(data);
+        }
       },
     };
 
@@ -129,6 +127,14 @@ export class RemoteTerminal implements vscode.Terminal {
       this.proc.stdin.write("\x03");
 
       this.exitCallback = resolve;
+
+      setTimeout(() => {
+        if (this.proc) {
+          this.proc?.kill();
+        } else {
+          resolve();
+        }
+      }, 3_000);
     });
   }
   async restart() {
