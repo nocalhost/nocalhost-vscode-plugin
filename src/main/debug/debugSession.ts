@@ -91,7 +91,7 @@ export class DebugSession {
     const startDebugging = async () => {
       return await host.withProgress(
         {
-          title: "Attempt to connect to the remote debug...",
+          title: "Attempt to connect to the remote debugger ...",
           cancellable: true,
         },
         async (_, token) => {

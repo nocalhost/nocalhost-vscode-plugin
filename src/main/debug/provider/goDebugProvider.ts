@@ -1,6 +1,7 @@
 import * as assert from "assert";
-import { Client, RPCConnection } from "json-rpc2";
+import * as net from "net";
 import { DebugConfiguration } from "vscode";
+import { v4 } from "uuid";
 
 import logger from "../../utils/logger";
 import host from "../../host";
@@ -9,8 +10,8 @@ import { IDebugProvider } from "./IDebugProvider";
 export class GoDebugProvider extends IDebugProvider {
   name: string;
   requireExtensions: string[];
-  client: Client;
-  connection: RPCConnection;
+  socket: net.Socket;
+
   constructor() {
     super();
     this.name = "Golang";
@@ -35,9 +36,8 @@ export class GoDebugProvider extends IDebugProvider {
   }
   async waitDebuggerStop() {
     try {
-      await this.callPromise("Command", [{ name: "halt" }]);
-      await this.callPromise("Detach", []);
-      (this.connection as any)["conn"]["end"]();
+      await this.call("Command", [{ name: "halt" }]);
+      await this.call("Detach", []);
     } catch (err) {
       logger.error("stopDebug error", err);
 
@@ -46,49 +46,68 @@ export class GoDebugProvider extends IDebugProvider {
       );
     }
   }
-  async connectClient() {
-    return new Promise<RPCConnection>((res, rej) => {
-      this.client.connectSocket((err, conn) => {
-        if (err) {
-          rej(err);
-          return;
-        }
-        res(conn);
-      });
-    });
-  }
 
-  callPromise<T>(command: string, args: any[], timeout = 0): Thenable<T> {
+  call<T>(command: string, params: any[], timeout = 0): Thenable<T> {
     return new Promise<T>((resolve, reject) => {
+      const err = new Error(`Then Call RPCServer ${command} timed out.`);
       if (timeout) {
         setTimeout(() => {
-          reject(new Error(`Then Call RPCServer ${command} timed out.`));
+          reject(err);
         }, timeout * 1000);
       }
 
-      this.connection.call<T>(`RPCServer.${command}`, args, (err, res) => {
-        return err ? reject(err) : resolve(res);
+      const id = v4();
+
+      this.socket.once("data", (data) => {
+        const { id: rid, error, result } = JSON.parse(data.toString()) as {
+          id: string;
+          result: T;
+          error?: string;
+        };
+
+        if (rid === id) {
+          if (error) {
+            reject(new Error(error));
+          } else {
+            resolve(result);
+          }
+        }
       });
+      this.socket.once("error", reject);
+
+      this.socket.write(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          method: `RPCServer.${command}`,
+          params: params,
+          id,
+        })
+      );
     });
   }
-
-  async waitDebuggerStart(port: number) {
-    this.client = Client.$create(port, "127.0.0.1");
-
-    this.connection = await this.connectClient();
-
-    try {
-      const result = await this.callPromise("GetVersion", [], 3);
-
-      assert.ok(
-        result,
-        "The attempt to connect to the remote debug port timed out."
-      );
-    } catch (err) {
-      (this.connection as any)["conn"]["end"]();
-      this.connection = null;
-
-      throw err;
+  private async connect(port: number) {
+    if (this.socket && this.socket.connecting) {
+      return Promise.resolve();
     }
+
+    this.socket = net.connect(port);
+
+    this.socket.on("data", (data) => {
+      console.warn("data", data);
+    });
+
+    return new Promise((res, rej) => {
+      this.socket.once("connect", res);
+      this.socket.once("error", rej);
+      this.socket.once("close", rej);
+    });
+  }
+  async waitDebuggerStart(port: number) {
+    await this.connect(port);
+
+    const result = await this.call("GetVersion", [], 3);
+
+    logger.debug("dlv GetVersion", result);
+    assert.ok(result);
   }
 }

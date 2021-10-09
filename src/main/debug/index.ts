@@ -23,15 +23,9 @@ export async function closeTerminals() {
   terminals.forEach((i) => i.dispose());
 
   await AsyncRetry(
-    async () => {
+    () => {
       const terminal = vscode.window.terminals.find(condition);
       assert(!terminal, "close old terminal error");
-
-      if (!terminal) {
-        await new Promise((res) => {
-          setTimeout(res, 1_000);
-        });
-      }
     },
     {
       randomize: false,

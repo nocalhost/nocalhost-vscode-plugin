@@ -1,4 +1,5 @@
 declare module "json-rpc2" {
+  import { Socket } from "net";
   export interface RPCConnection {
     call<T>(
       command: string,
@@ -6,6 +7,7 @@ declare module "json-rpc2" {
       callback: (err: Error, result: T) => void
     ): void;
     on(handler: "error", callback: (err: Error) => void): void;
+    conn: Socket;
   }
 
   export class Client {

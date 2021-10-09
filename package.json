@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.4.73",
+  "version": "0.5.14",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -28,7 +28,7 @@
   "main": "./dist/extension.js",
   "nhctl": {
     "serverVersion": "0.4.7",
-    "version": "0.5.4"
+    "version": "0.5.9"
   },
   "contributes": {
     "configuration": [
@@ -291,7 +291,7 @@
       },
       {
         "command": "Nocalhost.debug",
-        "title": "Debug"
+        "title": "Remote Debug"
       },
       {
         "command": "Nocalhost.showClusterInfo",
@@ -307,7 +307,7 @@
       },
       {
         "command": "Nocalhost.run",
-        "title": "Run"
+        "title": "Remote Run"
       },
       {
         "command": "Nocalhost.ClustersView",
@@ -478,7 +478,7 @@
     "ts-compile-check": "tsc --noEmit -p build/tsconfig.extension.json",
     "compile": "webpack --devtool nosources-source-map --config ./build/webpack.config.js",
     "watch": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/webpack.config.js",
-    "package": "webpack --mode production --config ./build/webpack.config.js",
+    "package": "webpack --config ./build/webpack.config.js",
     "lint": "eslint src --ext ts",
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
     "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
@@ -590,7 +590,6 @@
     "fs-extra": "^10.0.0",
     "highlight.js": "^10.5.0",
     "i18next": "^20.3.5",
-    "json-rpc2": "^2.0.0",
     "json-schema": "^0.3.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",

@@ -9,6 +9,7 @@ import * as AsyncRetry from "async-retry";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
+import logger from "../../utils/logger";
 
 export abstract class IDebugProvider {
   abstract name: string;
@@ -36,7 +37,15 @@ export abstract class IDebugProvider {
           return;
         }
 
-        await this.waitDebuggerStart(port);
+        try {
+          await this.waitDebuggerStart(port);
+        } catch (error) {
+          logger.error(`waitForReady`, this.name, error);
+
+          throw new Error(
+            "The attempt to connect to the remote debug port timed out."
+          );
+        }
       },
       {
         randomize: false,
