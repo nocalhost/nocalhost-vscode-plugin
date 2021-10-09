@@ -14,6 +14,6 @@ export default class StartCopyDevModeCommand implements ICommand {
   }
 
   async execCommand(node: ControllerNodeApi) {
-    vscode.commands.executeCommand(START_DEV_MODE, node, "copy");
+    vscode.commands.executeCommand(START_DEV_MODE, node, { mode: "copy" });
   }
 }
