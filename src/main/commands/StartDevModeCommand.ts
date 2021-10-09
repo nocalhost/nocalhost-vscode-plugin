@@ -10,6 +10,7 @@ import { openDevSpaceExec } from "../ctl/shell";
 import {
   TMP_APP,
   TMP_CONTAINER,
+  TMP_MODE,
   TMP_DEVSPACE,
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
@@ -102,23 +103,13 @@ export default class StartDevModeCommand implements ICommand {
     let containerName = await node.getContainer();
 
     if (!containerName) {
-      const containers = await getContainers({
+      containerName = await getContainer({
         appName: node.getAppName(),
         name: node.name,
         resourceType: node.resourceType.toLocaleLowerCase(),
         namespace: node.getNameSpace(),
         kubeConfigPath: node.getKubeConfigPath(),
       });
-
-      if (!containers || containers.length === 0) {
-        vscode.window.showErrorMessage("No container available");
-      }
-
-      containerName = containers[0];
-
-      if (containers.length > 1) {
-        containerName = await host.showQuickPick(containers);
-      }
     }
 
     host.log(`[start dev] Container: ${containerName}`, true);
@@ -201,11 +192,12 @@ export default class StartDevModeCommand implements ICommand {
     ) {
       await this.startDevMode(host, appName, node, containerName, mode);
     } else if (destDir) {
-      this.saveAndOpenFolder(appName, node, destDir, containerName);
+      this.saveAndOpenFolder(appName, node, destDir, containerName, mode);
       messageBus.emit("devstart", {
         name: appName,
         destDir,
         container: containerName,
+        mode,
       });
     }
   }
@@ -214,7 +206,8 @@ export default class StartDevModeCommand implements ICommand {
     appName: string,
     node: ControllerNodeApi,
     destDir: string,
-    containerName: string
+    containerName: string,
+    mode: string
   ) {
     const currentUri = host.getCurrentRootPath();
 
@@ -225,7 +218,8 @@ export default class StartDevModeCommand implements ICommand {
         appName,
         uri.fsPath,
         node as ControllerResourceNode,
-        containerName
+        containerName,
+        mode
       );
     }
   }
@@ -533,7 +527,8 @@ export default class StartDevModeCommand implements ICommand {
     appName: string,
     workloadPath: string,
     node: ControllerResourceNode,
-    containerName: string
+    containerName: string,
+    mode: string
   ) {
     const appNode = node.getAppNode();
     host.setGlobalState(TMP_ID, node.getNodeStateId());
@@ -546,6 +541,7 @@ export default class StartDevModeCommand implements ICommand {
     host.setGlobalState(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     host.setGlobalState(TMP_WORKLOAD_PATH, workloadPath);
     host.setGlobalState(TMP_CONTAINER, containerName);
+    host.setGlobalState(TMP_MODE, mode);
     const storageClass = node.getStorageClass();
     if (storageClass) {
       host.setGlobalState(TMP_STORAGE_CLASS, storageClass);

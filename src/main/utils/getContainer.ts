@@ -1,8 +1,4 @@
-import * as vscode from "vscode";
-
-import { IK8sResource } from "../domain";
 import host from "../host";
-import { get as _get } from "lodash";
 import { NodeInfo } from "../typings/";
 import { getContainers } from "../ctl/nhctl";
 

@@ -79,6 +79,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     status: string
   ): Promise<[vscode.Uri, string, string]> {
     const portForwardStatus = await this.getPortForwardStatus();
+    if (!this.svcProfile) {
+      await this.refreshSvcProfile();
+    }
     const devModeType = this.svcProfile?.devModeType || "replace";
     const possess = this.svcProfile?.possess;
 

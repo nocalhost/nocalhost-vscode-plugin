@@ -22,6 +22,7 @@ export default class PortForwardCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
+
     let podName: string | undefined;
     if (node instanceof ControllerResourceNode) {
       const kind = node.resourceType;

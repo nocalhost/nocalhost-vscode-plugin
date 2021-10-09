@@ -22,6 +22,7 @@ import {
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_CONTAINER,
+  TMP_MODE,
   TMP_DEVSPACE,
   TMP_NAMESPACE,
   NH_BIN,
@@ -176,7 +177,7 @@ export async function activate(context: vscode.ExtensionContext) {
         SyncServiceCommand.checkSync();
       }
     } catch (error) {
-      host.log(`${error}, +++++`, true);
+      host.log(`MessageBus install: ${error}`, true);
     }
   });
   await vscode.commands.executeCommand(
@@ -214,6 +215,7 @@ function launchDevspace() {
     TMP_DEVSTART_APPEND_COMMAND
   );
   const tmpContainer = host.getGlobalState(TMP_CONTAINER);
+  const tmpMode = host.getGlobalState(TMP_MODE);
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     host.removeGlobalState(TMP_DEVSPACE);
     host.removeGlobalState(TMP_NAMESPACE);
@@ -269,7 +271,8 @@ function launchDevspace() {
       getSpaceName: () => tmpDevspace,
       getNameSpace: () => tmpNamespace,
     };
-    vscode.commands.executeCommand(START_DEV_MODE, node);
+
+    vscode.commands.executeCommand(START_DEV_MODE, node, tmpMode);
   }
 }
 
