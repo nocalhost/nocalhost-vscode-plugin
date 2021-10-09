@@ -703,7 +703,8 @@ export async function devStart(
   },
   container?: string,
   storageClass?: string,
-  devStartAppendCommand?: string
+  devStartAppendCommand?: string,
+  image?: string
 ) {
   let options = "";
   if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
@@ -724,7 +725,7 @@ export async function devStart(
     namespace,
     `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} --without-terminal  ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
-    }`
+    } ${image ? `-i ${image}` : ""}`
   );
 
   return execWithProgress({
