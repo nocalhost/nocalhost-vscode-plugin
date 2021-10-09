@@ -48,7 +48,7 @@ export class StatefulSet extends ControllerResourceNode {
       await this.refreshSvcProfile();
     }
     if (this.svcProfile?.develop_status !== "NONE") {
-      return this.svcProfile?.develop_status === "STARTING"
+      return this.svcProfile?.develop_status === "STARTED"
         ? DeploymentStatus.developing
         : DeploymentStatus.running;
     } else if (this.svcProfile?.developing) {
