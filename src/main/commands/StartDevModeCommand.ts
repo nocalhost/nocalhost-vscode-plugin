@@ -108,6 +108,9 @@ export default class StartDevModeCommand implements ICommand {
     let containerName = await node.getContainer();
 
     if (!containerName) {
+      // dev mode
+      if (mode === "copy") {
+      }
       containerName = await getContainer({
         appName: node.getAppName(),
         name: node.name,
@@ -641,8 +644,10 @@ export default class StartDevModeCommand implements ICommand {
     let containerName: string | undefined = (await node.getContainer()) || "";
 
     if (!containerName) {
-      const containerNameArr = await nhctl.getContainerNames({
-        podName,
+      const containerNameArr = await getContainers({
+        appName: node.getAppName(),
+        name: node.name,
+        resourceType: node.resourceType,
         kubeConfigPath,
         namespace: node.getNameSpace(),
       });

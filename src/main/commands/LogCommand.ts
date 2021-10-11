@@ -76,8 +76,10 @@ export default class LogCommand implements ICommand {
     } else {
       return result;
     }
-    const containerNameArr = await nhctl.getContainerNames({
-      podName: result.podName,
+    const containerNameArr = await nhctl.getContainers({
+      appName: node.getAppName(),
+      name: node.name,
+      resourceType: node.resourceType,
       kubeConfigPath: node.getKubeConfigPath(),
       namespace: node.getNameSpace(),
     });

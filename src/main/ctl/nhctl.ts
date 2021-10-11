@@ -295,26 +295,6 @@ export async function getRunningPodNames(
   return podNameArr;
 }
 
-export async function getContainerNames(
-  props: IBaseCommand<{
-    podName: string;
-  }>
-) {
-  const podStr = await getLoadResource({
-    ...props,
-    kind: "pods",
-    name: props.podName,
-    outputType: "json",
-  });
-  const pod = JSON.parse(podStr as string) as PodResource;
-
-  const containerNameArr = pod.spec.containers.map((c) => {
-    return c.name;
-  });
-
-  return containerNameArr;
-}
-
 export async function getLoadResource(
   props: IBaseCommand<{
     kind: string;
