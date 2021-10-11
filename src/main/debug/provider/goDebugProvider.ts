@@ -8,15 +8,9 @@ import host from "../../host";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class GoDebugProvider extends IDebugProvider {
-  name: string;
-  requireExtensions: string[];
+  name: string = "Golang";
+  requireExtensions: string[] = ["golang.go"];
   socket: net.Socket;
-
-  constructor() {
-    super();
-    this.name = "Golang";
-    this.requireExtensions = ["golang.go"];
-  }
 
   getDebugConfiguration(
     name: string,
@@ -111,6 +105,6 @@ export class GoDebugProvider extends IDebugProvider {
     const result = await this.call("GetVersion", [], 2);
 
     logger.debug("dlv GetVersion", result);
-    assert.ok(result);
+    assert(result);
   }
 }

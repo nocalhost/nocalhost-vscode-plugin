@@ -3,13 +3,8 @@ import * as vscode from "vscode";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class JavaDebugProvider extends IDebugProvider {
-  name: string;
-  requireExtensions: string[];
-  constructor() {
-    super();
-    this.name = "Java";
-    this.requireExtensions = ["vscjava.vscode-java-debug", "redhat.java"];
-  }
+  name: string = "Java";
+  requireExtensions: string[] = ["vscjava.vscode-java-debug", "redhat.java"];
 
   getDebugConfiguration(
     name: string,

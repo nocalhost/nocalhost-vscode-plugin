@@ -2,13 +2,8 @@ import * as vscode from "vscode";
 
 import { IDebugProvider } from "./IDebugProvider";
 export class PhpDebugProvider extends IDebugProvider {
-  name: string;
-  requireExtensions: string[];
-  constructor() {
-    super();
-    this.name = "Php";
-    this.requireExtensions = ["felixfbecker.php-debug"];
-  }
+  name: string = "Php";
+  requireExtensions: string[] = ["felixfbecker.php-debug"];
 
   getDebugConfiguration(
     name: string,

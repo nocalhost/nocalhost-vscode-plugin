@@ -4,15 +4,8 @@ import { DebugConfiguration } from "vscode";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class NodeDebugProvider extends IDebugProvider {
-  name: string;
-  requireExtensions: string[];
-
-  constructor() {
-    super();
-
-    this.name = "Node";
-    this.requireExtensions = [];
-  }
+  name: string = "Node";
+  requireExtensions: string[] = [];
 
   getDebugConfiguration(
     name: string,
