@@ -1,6 +1,6 @@
 import { commands, extensions, ProgressLocation, window } from "vscode";
 
-import { JavaDebugProvider } from "./javaDebugProvider";
+import { JavaDebugProvider } from "./java";
 import { NodeDebugProvider } from "./nodeDebugProvider";
 import { GoDebugProvider } from "./goDebugProvider";
 import { PythonDebugProvider } from "./pythonDebugProvider";
