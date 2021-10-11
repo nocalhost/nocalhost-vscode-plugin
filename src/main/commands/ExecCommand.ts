@@ -34,35 +34,22 @@ export default class ExecCommand implements ICommand {
     if (!result || !result.containerName || !result.podName) {
       return;
     }
-    if (!(node instanceof Pod)) {
-      const status = await node.getStatus(true);
-      let container = result.containerName;
-      let pod = result.podName;
-      if (status === DeploymentStatus.developing) {
-        container = "nocalhost-dev";
-        pod = "";
-      }
-      const terminal = await shell.openDevSpaceExec(
-        node.getAppName(),
-        node.name,
-        node.resourceType,
-        container,
-        node.getKubeConfigPath(),
-        node.getNameSpace(),
-        pod
-      );
-      host.pushDispose(
-        node.getSpaceName(),
-        node.getAppName(),
-        node.name,
-        terminal
-      );
-      return;
+    // if (!(node instanceof Pod)) {
+    const status = await node.getStatus(true);
+    let container = result.containerName;
+    let pod = result.podName;
+    if (status === DeploymentStatus.developing) {
+      container = "nocalhost-dev";
+      pod = "";
     }
-    const terminal = await this.openExec(
-      node,
-      result.podName,
-      result.containerName
+    const terminal = await shell.openDevSpaceExec(
+      node.getAppName(),
+      node.name,
+      node.resourceType,
+      container,
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      pod
     );
     host.pushDispose(
       node.getSpaceName(),
@@ -70,6 +57,20 @@ export default class ExecCommand implements ICommand {
       node.name,
       terminal
     );
+    // return;
+    // }
+    // Pod
+    // const terminal = await this.openExec(
+    //   node,
+    //   result.podName,
+    //   result.containerName
+    // );
+    // host.pushDispose(
+    //   node.getSpaceName(),
+    //   node.getAppName(),
+    //   node.name,
+    //   terminal
+    // );
   }
 
   private async getDefaultShell(
