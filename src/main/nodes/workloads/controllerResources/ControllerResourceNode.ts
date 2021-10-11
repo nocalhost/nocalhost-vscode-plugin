@@ -109,7 +109,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
         if (portForwardStatus) {
           iconPath = resolveVSCodeUri(
-            possess === false
+            devModeType === "duplicate"
+              ? "dev_copy_forwarding.svg"
+              : possess === false
               ? "dev_port_forwarding_other.svg"
               : "dev_port_forwarding.svg"
           );
