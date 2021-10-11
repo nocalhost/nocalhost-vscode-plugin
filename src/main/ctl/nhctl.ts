@@ -805,7 +805,7 @@ export async function startPortForward(
     namespace,
     `port-forward start ${appName} -d ${workloadName} ${portOptions} ${
       resourceType ? `--type ${resourceType}` : ""
-    } ${pod ? `--pod ${pod}` : ""} --way ${way}`
+    } ${pod ? `--pod ${pod}` : ""}`
   );
 
   const sudo = isSudo(ports);
