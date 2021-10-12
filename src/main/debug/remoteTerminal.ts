@@ -91,6 +91,7 @@ export class RemoteTerminal implements vscode.Terminal {
 
       if (this.exitCallback) {
         this.exitCallback();
+        this.exitCallback = null;
       }
 
       this.send(`\n\n${ANSI_COLOR_RED}terminal close${ANSI_COLOR_RESET}\r\n`);
@@ -129,6 +130,10 @@ export class RemoteTerminal implements vscode.Terminal {
       this.exitCallback = resolve;
 
       setTimeout(() => {
+        if (!this.exitCallback) {
+          return;
+        }
+
         if (this.proc) {
           this.proc?.kill();
         } else {

@@ -1,10 +1,10 @@
 import { spawn } from "child_process";
 import {
   Disposable,
-  TextDocumentChangeEvent,
-  TextDocumentSaveReason,
-  TextDocumentWillSaveEvent,
+  FileSystemWatcher,
   workspace,
+  Uri,
+  RelativePattern,
 } from "vscode";
 
 import { Sync, SyncMsg } from "../commands/SyncServiceCommand";
@@ -14,13 +14,11 @@ import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
 export class LiveReload {
-  private isChange: boolean = false;
-  private isSave: boolean = false;
-  private disposable: Disposable[];
+  private disposable: Disposable[] = [];
+  private watcher: FileSystemWatcher;
   private req: Sync;
 
-  private reject: Function | null;
-  private resolve: Function | null;
+  private isChange: boolean = false;
 
   constructor(node: ControllerResourceNode, callback: () => Promise<void>) {
     this.req = {
@@ -30,50 +28,25 @@ export class LiveReload {
       app: node.getAppName(),
       service: node.name,
     };
-    // var watcher = workspace.createFileSystemWatcher("*.ts");
-    this.disposable = [
-      workspace.onWillSaveTextDocument(this.onDidSaveTextDocument.bind(this)),
-      workspace.onDidChangeTextDocument(
-        this.onDidChangeTextDocument.bind(this)
-      ),
-    ];
+
+    this.watcher = workspace.createFileSystemWatcher(
+      new RelativePattern(host.getCurrentRootPath(), "*.*")
+    );
+    this.watcher.onDidChange(this.waitSyncFile.bind(this));
+    this.watcher.onDidCreate(this.waitSyncFile.bind(this));
+    this.watcher.onDidDelete(this.waitSyncFile.bind(this));
+
+    this.disposable.push(this.watcher);
 
     this.startWatch(callback);
   }
-  private onDidChangeTextDocument(event: TextDocumentChangeEvent) {
-    this.isChange = true;
-  }
-  private onDidSaveTextDocument(event: TextDocumentWillSaveEvent) {
-    if (event.reason === TextDocumentSaveReason.Manual) {
-      if (!this.isChange) {
-        return;
-      }
-      this.isChange = false;
-      this.isSave = true;
 
-      this.waitSyncFile();
+  private waitSyncFile(uri: Uri) {
+    if (uri.path.includes(".vscode") || this.isChange) {
+      return;
     }
-  }
 
-  private async waitSyncFile() {
-    await host.withProgress(
-      { title: "Waiting for sync file ...", cancellable: true },
-      async (_, token) => {
-        return new Promise((resolve, reject) => {
-          this.reject = reject;
-          this.resolve = resolve;
-
-          token.onCancellationRequested(() => {
-            this.reject(new Error("Cancel restart"));
-          });
-        }).finally(() => {
-          this.reject = null;
-          this.resolve = null;
-
-          this.isSave = false;
-        });
-      }
-    );
+    this.isChange = true;
   }
 
   private startWatch(callback: () => Promise<void>) {
@@ -100,11 +73,11 @@ export class LiveReload {
       const str = data.toString();
       stdout += str;
 
-      if (str && this.isSave) {
+      if (str) {
         let syncMsg = JSON.parse(str) as SyncMsg;
 
-        if (syncMsg.status === "idle" && this.isSave) {
-          this.resolve();
+        if (syncMsg.status === "idle" && this.isChange) {
+          this.isChange = false;
 
           await callback();
         }
@@ -118,8 +91,7 @@ export class LiveReload {
     });
     proc.on("close", (code: number, signal: NodeJS.Signals) => {
       if (code !== null && code !== 0) {
-        this.reject &&
-          this.reject(new ShellExecError({ stderr, stdout, code, command }));
+        throw new ShellExecError({ stderr, stdout, code, command });
       }
     });
 
