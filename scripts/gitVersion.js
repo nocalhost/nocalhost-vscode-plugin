@@ -18,7 +18,7 @@ if (Number(PLUGIN_VERSION)) {
   PLUGIN_VERSION = "a" + PLUGIN_VERSION;
 }
 
-const version = `.${PLUGIN_VERSION}.beta`;
+const version = `-beta.${PLUGIN_VERSION}`;
 
 packageJson.version += version;
 packageJson.nhctl.serverVersion = MINIMUNM_VERSION_REQUIREMENT;
