@@ -11,52 +11,69 @@ const HEADER_LINESEPARATOR = /\r?\n/; // allow for non-RFC 2822 conforming line 
 const HEADER_FIELDSEPARATOR = /: */;
 
 interface ProtocolMessage {
-  /**
-   * Sequence number (also known as message ID). For protocol messages of type
-   * 'request' this ID can be used to cancel the request.
-   */
+  /** Sequence number (also known as message ID). For protocol messages of type 'request' this ID can be used to cancel the request. */
   seq: number;
-
-  /**
-   * Message type.
-   * Values: 'request', 'response', 'event', etc.
-   */
-  type: "request" | "response" | "event" | string;
+  /** Message type.
+    Values: 'request', 'response', 'event', etc.
+  */
+  type: "request" | "response" | "event";
 }
 
-interface Response extends ProtocolMessage {
-  /**
-   * Sequence number of the corresponding request.
-   */
-  request_seq: number;
-
-  /**
-   * Outcome of the request.
-   * If true, the request was successful and the 'body' attribute may contain
-   * the result of the request.
-   * If the value is false, the attribute 'message' contains the error in short
-   * form and the 'body' may contain additional information (see
-   * 'ErrorResponse.body.error').
-   */
-  success: boolean;
-
-  /**
-   * The command requested.
-   */
-  command: string;
-}
-interface Request extends ProtocolMessage {
-  type: "request";
-
-  /**
-   * The command to execute.
-   */
-  command: string;
-
-  /**
-   * Object containing arguments for the command.
-   */
+/** A client or debug adapter initiated request. */
+class Request implements ProtocolMessage {
+  type: ProtocolMessage["type"] = "request";
+  constructor(
+    public seq: number,
+    /** The command to execute. */
+    public command: string,
+    /** Object containing arguments for the command. */
+    public argument?: any
+  ) {
+    if (argument && Object.keys(argument).length > 0) {
+      this.arguments = argument;
+    }
+  }
   arguments?: any;
+}
+
+/** A debug adapter initiated event. */
+class Event implements ProtocolMessage {
+  type: ProtocolMessage["type"] = "event";
+  constructor(
+    public seq: number,
+    /**
+     * Type of event.
+     */
+    public event: string,
+    /**
+     * Event-specific information.
+     */
+    public body?: any
+  ) {}
+}
+
+/** Response for a request. */
+interface Response extends ProtocolMessage {
+  // type: 'response';
+  /** Sequence number of the corresponding request. */
+  request_seq: number;
+  /** Outcome of the request.
+    If true, the request was successful and the 'body' attribute may contain the result of the request.
+    If the value is false, the attribute 'message' contains the error in short form and the 'body' may contain additional information (see 'ErrorResponse.body.error').
+  */
+  success: boolean;
+  /** The command requested. */
+  command: string;
+  /** Contains the raw error in short form if 'success' is false.
+    This raw error might be interpreted by the frontend and is not shown in the UI.
+    Some predefined values exist.
+    Values: 
+    'cancelled': request was cancelled.
+    etc.
+  */
+  message?: "cancelled" | string;
+  /** Contains request result if success is true and optional error details if success is false. */
+  body?: any;
 }
 
 export class PythonDebugProvider extends IDebugProvider {
@@ -129,29 +146,30 @@ export class PythonDebugProvider extends IDebugProvider {
 
   sequence = 1;
 
-  private async call<T extends Response>(
+  private async request<T extends Response>(
     command: string,
     args?: { [key: string]: any },
     timeout = 0
   ) {
-    const seq = this.sequence++;
+    const request = new Request(this.sequence++, command, args);
 
-    const request: Request = {
-      command,
-      type: "request",
-      seq,
-    };
-
-    if (args && Object.keys(args).length > 0) {
-      request.arguments = args;
-    }
-
-    return this.request<T>(request, timeout);
+    return this.call<T>(request, timeout);
   }
-
-  private async request<T extends Response>(request: Request, timeout: number) {
-    const { command, seq } = request;
+  private async event<T extends Response>(
+    event: string,
+    body?: any,
+    timeout = 0
+  ) {
+    return this.call<T>(new Event(this.sequence++, event, body), timeout);
+  }
+  private async call<T extends Response>(
+    request: Request | Event,
+    timeout: number
+  ) {
+    const { seq } = request;
     const json = JSON.stringify(request);
+    const command =
+      request instanceof Request ? request.command : request.event;
 
     return new Promise<T>((res, rej) => {
       const err = new Error(`Then Call ${command} timed out.`);
@@ -159,7 +177,7 @@ export class PythonDebugProvider extends IDebugProvider {
         setTimeout(() => rej(err), timeout * 1000);
       }
       const handResponse = (response: Response) => {
-        if (response.command === command && response.request_seq === seq) {
+        if (response.request_seq === seq) {
           res(response as T);
         }
       };
@@ -195,13 +213,25 @@ export class PythonDebugProvider extends IDebugProvider {
   async waitDebuggerStart(port: number) {
     await this.connect(port, 2);
 
-    const result = await this.call("initialize", null, 2);
+    const result = await this.request("debugpySystemInfo", null, 2);
 
     assert(result.success);
 
-    logger.debug("debugpy initialize", result);
+    logger.debug("debugpy debugpySystemInfo", result);
 
     this.socket.end();
     this.socket = null;
   }
+  // async waitDebuggerStop() {
+  //   // await this.connect(port, 2);
+
+  //   let result = await this.event("terminated");
+  //   logger.debug("waitDebuggerStop terminated", result);
+
+  //   result = await this.event("exited");
+  //   logger.debug("waitDebuggerStop exited", result);
+
+  //   this.socket.end();
+  //   this.socket = null;
+  // }
 }
