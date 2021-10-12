@@ -173,7 +173,7 @@
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(.+?)-developing/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-developing/i",
           "group": "inline@0"
         },
         {
