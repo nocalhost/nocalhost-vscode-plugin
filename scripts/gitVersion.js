@@ -6,7 +6,7 @@ const packageJson = JSON.parse(
   fs.readFileSync(packageJsonUri, { encoding: "utf8" })
 );
 
-const {
+let {
   PLUGIN_VERSION,
   NHCTL_VERSION,
   MINIMUNM_VERSION_REQUIREMENT,
@@ -14,7 +14,11 @@ const {
 
 console.log("> update the version to: ", PLUGIN_VERSION);
 
-const version = `-beta.${PLUGIN_VERSION}`;
+if (Number(PLUGIN_VERSION)) {
+  PLUGIN_VERSION = "a" + PLUGIN_VERSION;
+}
+
+const version = `.${PLUGIN_VERSION}.beta`;
 
 packageJson.version += version;
 packageJson.nhctl.serverVersion = MINIMUNM_VERSION_REQUIREMENT;
