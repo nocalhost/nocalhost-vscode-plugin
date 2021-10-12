@@ -6,7 +6,7 @@ import registerCommand from "./register";
 import host from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as shell from "../ctl/shell";
-import { getPodNames, NhctlCommand, getContainerNames } from "../ctl/nhctl";
+import { getPodNames, NhctlCommand, getContainers } from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
 import { ExecOutputReturnValue } from "shelljs";
@@ -34,8 +34,9 @@ export default class ExecCommand implements ICommand {
     if (!result || !result.containerName || !result.podName) {
       return;
     }
-    if (!(node instanceof Pod)) {
-      const status = await node.getStatus(true);
+    const status = await node.getStatus(true);
+
+    if (status === DeploymentStatus.developing || !(node instanceof Pod)) {
       let container = result.containerName;
       let pod = result.podName;
       if (status === DeploymentStatus.developing) {
@@ -157,6 +158,8 @@ export default class ExecCommand implements ICommand {
     const kubeConfigPath = node.getKubeConfigPath();
     let podName: string | undefined;
     let status = "";
+
+    status = await node.getStatus(true);
     if (node instanceof Pod) {
       podName = node.name;
     } else {
@@ -167,7 +170,6 @@ export default class ExecCommand implements ICommand {
         kubeConfigPath: kubeConfigPath,
       });
       podName = podNameArr[0];
-      status = await node.getStatus(true);
       if (status !== DeploymentStatus.developing && podNameArr.length > 1) {
         podName = await vscode.window.showQuickPick(podNameArr);
       }
@@ -175,15 +177,27 @@ export default class ExecCommand implements ICommand {
     if (!podName) {
       return;
     }
-    const containerNameArr = await getContainerNames({
-      podName,
-      kubeConfigPath: kubeConfigPath,
-      namespace: node.getNameSpace(),
-    });
-    let containerName: string | undefined = containerNameArr[0];
-    if (status !== DeploymentStatus.developing && containerNameArr.length > 1) {
-      containerName = await vscode.window.showQuickPick(containerNameArr);
+
+    let containerName: string | undefined;
+    if (status === DeploymentStatus.developing) {
+      containerName = "nocalhost-dev";
+    } else {
+      const containerNameArr = await getContainers({
+        appName: node.getAppName(),
+        name: node.name,
+        resourceType: node.resourceType,
+        kubeConfigPath: node.getKubeConfigPath(),
+        namespace: node.getNameSpace(),
+      });
+      containerName = containerNameArr[0];
+      if (
+        status !== DeploymentStatus.developing &&
+        containerNameArr.length > 1
+      ) {
+        containerName = await vscode.window.showQuickPick(containerNameArr);
+      }
     }
+
     if (!containerName) {
       return;
     }

@@ -17,13 +17,13 @@ export class StatefulSet extends ControllerResourceNode {
     try {
       let status = "";
       status = await this.getStatus();
-      const [icon, label] = await this.getIconAndLabelByStatus(status);
+      const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
       const check = checkWorkloadConfig(this.nocalhostService);
       treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
-      }-${status}`;
+      }-${status}-${mode}`;
       if (this.firstRender) {
         this.firstRender = false;
       }
@@ -48,7 +48,7 @@ export class StatefulSet extends ControllerResourceNode {
       await this.refreshSvcProfile();
     }
     if (this.svcProfile?.develop_status !== "NONE") {
-      return this.svcProfile.develop_status === "STARTING"
+      return this.svcProfile?.develop_status === "STARTED"
         ? DeploymentStatus.developing
         : DeploymentStatus.running;
     }

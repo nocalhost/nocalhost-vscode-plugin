@@ -13,13 +13,13 @@ export class Deployment extends ControllerResourceNode {
     let status = "";
     try {
       status = await this.getStatus();
-      const [icon, label] = await this.getIconAndLabelByStatus(status);
+      const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
       const check = checkWorkloadConfig(this.nocalhostService);
       treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
-      }-${status}`;
+      }-${status}-${mode}`;
     } catch (e) {
       logger.error("deployment getTreeItem");
       logger.error(e);

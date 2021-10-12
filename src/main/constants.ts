@@ -56,6 +56,7 @@ export const TMP_RESOURCE_TYPE = "tmpResourceType";
 export const TMP_KUBECONFIG_PATH = "tmpKubeconfigPath";
 export const TMP_STORAGE_CLASS = "tmpStorageClass";
 export const TMP_CONTAINER = "tmpContainer";
+export const TMP_MODE = "tmpMode";
 export const TMP_DEVSTART_APPEND_COMMAND = "tmpDevstartAppendCommand";
 export const TMP_DEV_START_IMAGE = "tmpDevstartImage";
 
