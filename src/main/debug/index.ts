@@ -7,7 +7,6 @@ import { getSyncStatus, getContainers } from "../ctl/nhctl";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import ConfigService, {
-  ContainerConfig,
   NocalhostServiceConfig,
 } from "../service/configService";
 import logger from "../utils/logger";
@@ -78,7 +77,12 @@ export async function waitForSync(node: ControllerResourceNode) {
 }
 
 export async function getContainer(node: ControllerResourceNode) {
-  const containerNames = await getContainers(node);
+  const containerNames = await getContainers({
+    kubeConfigPath: node.getKubeConfigPath(),
+    namespace: node.getNameSpace(),
+    appName: node.getAppName(),
+    ...node,
+  });
 
   let serviceConfig = node.nocalhostService;
 
