@@ -6,11 +6,11 @@ import { GoDebugProvider } from "./goDebugProvider";
 import { PythonDebugProvider } from "./pythonDebugProvider";
 import { IDebugProvider } from "./IDebugProvider";
 
-const support = {
+export const support = {
   node: NodeDebugProvider,
   java: JavaDebugProvider,
   golang: GoDebugProvider,
-  python: PythonDebugProvider,
+  // python: PythonDebugProvider,
 };
 
 type Language = keyof typeof support;

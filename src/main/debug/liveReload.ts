@@ -30,7 +30,7 @@ export class LiveReload {
       app: node.getAppName(),
       service: node.name,
     };
-
+    // var watcher = workspace.createFileSystemWatcher("*.ts");
     this.disposable = [
       workspace.onWillSaveTextDocument(this.onDidSaveTextDocument.bind(this)),
       workspace.onDidChangeTextDocument(

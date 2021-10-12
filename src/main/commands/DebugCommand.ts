@@ -9,7 +9,7 @@ import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { ContainerConfig } from "../service/configService";
-import { chooseDebugProvider, Language } from "../debug/provider";
+import { chooseDebugProvider, Language, support } from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
@@ -128,15 +128,9 @@ export default class DebugCommand implements ICommand {
     const { image } = containerConfig.dev;
 
     if (image.includes("nocalhost/dev-images")) {
-      if (image.includes("node")) {
-        type = "node";
-      } else if (image.includes("golang")) {
-        type = "golang";
-      } else if (image.includes("python")) {
-        type = "python";
-      } else if (image.includes("java")) {
-        type = "java";
-      }
+      type = Object.keys(support).find((name) =>
+        image.includes(name)
+      ) as Language;
     }
 
     return await chooseDebugProvider(type);
