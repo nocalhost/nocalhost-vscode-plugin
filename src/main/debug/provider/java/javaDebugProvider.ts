@@ -24,7 +24,7 @@ export class JavaDebugProvider extends IDebugProvider {
       port,
     };
   }
-  private async connect(port: number, timeout: number) {
+  private async connect(port: number, timeout: number = 0) {
     if (this.jdwp && this.jdwp.socket.connecting) {
       return Promise.resolve();
     }

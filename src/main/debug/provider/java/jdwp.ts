@@ -31,8 +31,12 @@ export class JDWP {
 
         jdwp.handshake(res, rej);
       });
-      socket.once("error", rej);
-      socket.once("close", rej);
+      socket.once("error", (err) => {
+        rej(err);
+      });
+      // socket.once("close", (err) => {
+      //   rej(err);
+      // });
 
       if (timeout > 0) {
         setTimeout(() => rej(new Error("timeout")), timeout * 1000);
@@ -80,10 +84,6 @@ export class JDWP {
 
   private decode() {
     const bufLength = this.buf.length;
-
-    if (bufLength < 11) {
-      return false;
-    }
 
     let packetLength = this.buf.readInt32BE(0);
     if (packetLength > bufLength) {
