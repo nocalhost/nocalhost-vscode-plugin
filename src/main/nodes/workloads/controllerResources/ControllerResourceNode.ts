@@ -77,8 +77,14 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
   }
   public async getIconAndLabelByStatus(
     status: string
-  ): Promise<[vscode.Uri, string]> {
+  ): Promise<[vscode.Uri, string, string]> {
     const portForwardStatus = await this.getPortForwardStatus();
+    if (!this.svcProfile) {
+      await this.refreshSvcProfile();
+    }
+    const devModeType = this.svcProfile?.devModeType || "replace";
+    const possess = this.svcProfile?.possess;
+
     let iconPath,
       label = this.label;
     switch (status) {
@@ -90,9 +96,12 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
         break;
       case "developing":
-        const possess = this.svcProfile.possess;
         iconPath = resolveVSCodeUri(
-          possess === false ? "dev_other.svg" : "dev_start.svg"
+          devModeType === "duplicate"
+            ? "dev_copy.svg"
+            : possess === false
+            ? "dev_other.svg"
+            : "dev_start.svg"
         );
         const container = await this.getContainer();
         if (container) {
@@ -100,7 +109,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
         if (portForwardStatus) {
           iconPath = resolveVSCodeUri(
-            possess === false
+            devModeType === "duplicate"
+              ? "dev_copy_forwarding.svg"
+              : possess === false
               ? "dev_port_forwarding_other.svg"
               : "dev_port_forwarding.svg"
           );
@@ -116,7 +127,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         iconPath = resolveVSCodeUri("status_failed.svg");
         break;
     }
-    return [iconPath, label];
+    return [iconPath, label, possess ? `${devModeType}-self` : devModeType];
   }
 
   /**

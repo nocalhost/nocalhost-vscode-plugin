@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 
-import { PLUGIN_TEMP_DIR, TMP_DEV_START_COMMAND } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import NocalhostAppProvider from "./appProvider";
 import {
+  PLUGIN_TEMP_DIR,
+  TMP_DEV_START_IMAGE,
   BASE_URL,
   HELM_VALUES_DIR,
   KUBE_CONFIG_DIR,
@@ -22,9 +23,11 @@ import {
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_CONTAINER,
+  TMP_MODE,
   TMP_DEVSPACE,
   TMP_NAMESPACE,
   NH_BIN,
+  TMP_DEV_START_COMMAND,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -176,7 +179,7 @@ export async function activate(context: vscode.ExtensionContext) {
         SyncServiceCommand.checkSync();
       }
     } catch (error) {
-      host.log(`${error}, +++++`, true);
+      host.log(`MessageBus install: ${error}`, true);
     }
   });
   await vscode.commands.executeCommand(
@@ -216,6 +219,9 @@ function launchDevspace() {
     TMP_DEVSTART_APPEND_COMMAND
   );
   const tmpContainer = host.getGlobalState(TMP_CONTAINER);
+  const tmpMode = host.getGlobalState(TMP_MODE);
+  const tmpImage = host.getGlobalState(TMP_DEV_START_IMAGE);
+
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     host.removeGlobalState(TMP_DEVSPACE);
     host.removeGlobalState(TMP_NAMESPACE);
@@ -272,7 +278,12 @@ function launchDevspace() {
       getSpaceName: () => tmpDevspace,
       getNameSpace: () => tmpNamespace,
     };
-    vscode.commands.executeCommand(START_DEV_MODE, node, tmpCommand);
+
+    vscode.commands.executeCommand(START_DEV_MODE, node, {
+      mode: tmpMode,
+      image: tmpImage,
+      command: tmpCommand,
+    });
   }
 }
 

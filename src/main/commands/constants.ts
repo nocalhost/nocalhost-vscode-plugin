@@ -17,6 +17,7 @@ export const WRITE_SERVICE_CONFIG = "Nocalhost.writeServiceConfig";
 export const EDIT_APP_CONFIG = "Nocalhost.EditAppConfig";
 
 export const START_DEV_MODE = "Nocalhost.startDevMode";
+export const START_COPY_DEV_MODE = "Nocalhost.startCopyDevMode";
 export const END_DEV_MODE = "Nocalhost.endDevMode";
 export const RESET = "Nocalhost.reset";
 

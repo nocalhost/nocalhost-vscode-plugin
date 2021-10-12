@@ -34,6 +34,7 @@ export interface SvcProfile {
   cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;
+  devModeType: "replace" | "duplicate";
   develop_status: "NONE" | "STARTING" | "STARTED";
   portForwarded: boolean;
   associate: string;

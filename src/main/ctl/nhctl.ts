@@ -20,18 +20,14 @@ import services from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 import { IDevSpaceInfo, IPortForWard } from "../domain";
-import {
-  PodResource,
-  Resource,
-  ResourceStatus,
-} from "../nodes/types/resourceType";
+import { Resource, ResourceStatus } from "../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
-import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
+import { NodeInfo } from "../typings";
 
 export interface InstalledAppInfo {
   name: string;
@@ -324,26 +320,6 @@ export async function getRunningPodNames(
     return res.metadata.name;
   });
   return podNameArr;
-}
-
-export async function getContainerNames(
-  props: IBaseCommand<{
-    podName: string;
-  }>
-) {
-  const podStr = await getLoadResource({
-    ...props,
-    kind: "pods",
-    name: props.podName,
-    outputType: "json",
-  });
-  const pod = JSON.parse(podStr as string) as PodResource;
-
-  const containerNameArr = pod.spec.containers.map((c) => {
-    return c.name;
-  });
-
-  return containerNameArr;
 }
 
 export async function getLoadResource(
@@ -733,9 +709,11 @@ export async function devStart(
     isOld: boolean;
     dirs: string | Array<string>;
   },
+  mode: "copy" | "replace",
   container?: string,
   storageClass?: string,
-  devStartAppendCommand?: string
+  devStartAppendCommand?: string,
+  image?: string
 ) {
   let options = "";
   if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
@@ -754,9 +732,11 @@ export async function devStart(
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} --without-terminal  ${options} ${
+    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} ${
+      mode === "copy" ? "-m duplicate" : ""
+    } --without-terminal  ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
-    }`
+    } ${image ? `-i ${image}` : ""}`
   );
 
   return execWithProgress({
@@ -852,7 +832,7 @@ export async function startPortForward(
     namespace,
     `port-forward start ${appName} -d ${workloadName} ${portOptions} ${
       resourceType ? `--type ${resourceType}` : ""
-    } ${pod ? `--pod ${pod}` : ""} --way ${way}`
+    } ${pod ? `--pod ${pod}` : ""}`
   );
 
   const sudo = isSudo(ports);
@@ -1570,4 +1550,13 @@ export async function devTerminal(
   terminal.show();
 
   return terminal;
+}
+export async function getContainers(node: NodeInfo): Promise<string[]> {
+  const { appName, name, resourceType, namespace, kubeConfigPath } = node;
+  const result = await NhctlCommand.create(
+    `dev containers ${appName} -d ${name} -t ${resourceType} -n ${namespace} --kubeconfig ${kubeConfigPath}`
+  )
+    .toJson()
+    .exec();
+  return result;
 }
