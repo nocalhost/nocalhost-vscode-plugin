@@ -104,7 +104,8 @@ export class GoDebugProvider extends IDebugProvider {
 
     const result = await this.call("GetVersion", [], 2);
 
-    logger.debug("dlv GetVersion", result);
     assert(result);
+
+    logger.debug("dlv GetVersion", result);
   }
 }

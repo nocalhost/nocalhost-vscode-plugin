@@ -43,7 +43,7 @@ export class JDWP {
   private async handshake(res: Function, rej: Function) {
     this.socket.once("data", (data) => {
       if (data.length < 14) {
-        rej();
+        rej(new Error("Minimum length of handshake data is 14 bits"));
       } else {
         const handshake = data.slice(0, 14).toString();
 

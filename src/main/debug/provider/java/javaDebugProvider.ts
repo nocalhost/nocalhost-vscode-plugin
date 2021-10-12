@@ -36,8 +36,9 @@ export class JavaDebugProvider extends IDebugProvider {
 
     const result = await this.jdwp.call({ command: 1, commandSet: 1 }, 2);
 
-    logger.debug("jdwp version", result.data);
     assert(result);
+
+    logger.debug("jdwp version", result);
 
     this.jdwp.socket.end();
     this.jdwp = null;

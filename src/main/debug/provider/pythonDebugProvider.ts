@@ -3,6 +3,7 @@ import * as assert from "assert";
 import * as net from "net";
 
 import { IDebugProvider } from "./IDebugProvider";
+import logger from "../../utils/logger";
 
 const TWO_CRLF = "\r\n\r\n";
 
@@ -86,10 +87,10 @@ export class PythonDebugProvider extends IDebugProvider {
     };
   }
 
-  private getResponses(data: Buffer) {
+  private rawData = Buffer.allocUnsafe(0);
+  private contentLength = -1;
+  private handleData(data: Buffer) {
     this.rawData = Buffer.concat([this.rawData, data]);
-
-    const responses: Response[] = [];
 
     while (true) {
       if (this.contentLength >= 0) {
@@ -99,10 +100,11 @@ export class PythonDebugProvider extends IDebugProvider {
           this.rawData = this.rawData.slice(this.contentLength);
           this.contentLength = -1;
           if (message.length > 0) {
-            try {
-            } catch (e) {}
+            const response = JSON.parse(message) as Response;
+            if (response.request_seq) {
+              this.socket.emit("response", response);
+            }
           }
-          responses.push(JSON.parse(message) as Response);
 
           continue;
         }
@@ -123,12 +125,8 @@ export class PythonDebugProvider extends IDebugProvider {
       }
       break;
     }
-
-    return responses;
   }
 
-  rawData = Buffer.allocUnsafe(0);
-  contentLength = -1;
   sequence = 1;
 
   private async call<T extends Response>(
@@ -150,6 +148,7 @@ export class PythonDebugProvider extends IDebugProvider {
 
     return this.request<T>(request, timeout);
   }
+
   private async request<T extends Response>(request: Request, timeout: number) {
     const { command, seq } = request;
     const json = JSON.stringify(request);
@@ -157,23 +156,15 @@ export class PythonDebugProvider extends IDebugProvider {
     return new Promise<T>((res, rej) => {
       const err = new Error(`Then Call ${command} timed out.`);
       if (timeout) {
-        setTimeout(() => {
-          rej(err);
-        }, timeout * 1000);
+        setTimeout(() => rej(err), timeout * 1000);
       }
-
-      this.socket.once("data", (data) => {
-        const req = this.getResponses(data);
-        const response = req.find(
-          (item) => item.command === command && item.request_seq === seq
-        ) as T;
-
-        if (response) {
-          res(response);
-        } else {
-          rej(req);
+      const handResponse = (response: Response) => {
+        if (response.command === command && response.request_seq === seq) {
+          res(response as T);
         }
-      });
+      };
+
+      this.socket.on("response", handResponse);
 
       this.socket.write(
         `Content-Length: ${Buffer.byteLength(json, "utf8")}${TWO_CRLF}${json}`,
@@ -182,7 +173,7 @@ export class PythonDebugProvider extends IDebugProvider {
     });
   }
 
-  private async connect(port: number) {
+  private async connect(port: number, timeout = 0) {
     if (this.socket && this.socket.connecting) {
       return Promise.resolve();
     }
@@ -190,16 +181,27 @@ export class PythonDebugProvider extends IDebugProvider {
     this.socket = net.connect(port);
 
     return new Promise((res, rej) => {
+      if (timeout) {
+        setTimeout(() => rej(new Error("connect timeout")), timeout * 1000);
+      }
       this.socket.once("connect", res);
       this.socket.once("error", rej);
       this.socket.once("close", rej);
+      this.socket.on("data", (data) => {
+        this.handleData(data);
+      });
     });
   }
   async waitDebuggerStart(port: number) {
-    await this.connect(port);
+    await this.connect(port, 2);
 
     const result = await this.call("initialize", null, 2);
 
     assert(result.success);
+
+    logger.debug("debugpy initialize", result);
+
+    this.socket.end();
+    this.socket = null;
   }
 }
