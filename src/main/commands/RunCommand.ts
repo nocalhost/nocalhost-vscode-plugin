@@ -55,7 +55,9 @@ export default class RunCommand implements ICommand {
       const status = await node.getStatus(true);
 
       if (status !== "developing") {
-        vscode.commands.executeCommand(START_DEV_MODE, node, RUN);
+        vscode.commands.executeCommand(START_DEV_MODE, node, {
+          command: RUN,
+        });
         return;
       }
     }

@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import * as AsyncRetry from "async-retry";
 
 import { SyncMsg } from "../commands/SyncServiceCommand";
-import { getSyncStatus } from "../ctl/nhctl";
+import { getSyncStatus, getContainers } from "../ctl/nhctl";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import ConfigService, {
@@ -78,9 +78,10 @@ export async function waitForSync(node: ControllerResourceNode) {
 }
 
 export async function getContainer(node: ControllerResourceNode) {
-  let container: ContainerConfig | undefined;
+  const containerNames = await getContainers(node);
 
   let serviceConfig = node.nocalhostService;
+
   if (!serviceConfig) {
     serviceConfig = (await ConfigService.getAppConfig(
       node.getKubeConfigPath(),
@@ -92,23 +93,19 @@ export async function getContainer(node: ControllerResourceNode) {
   }
   const containers = (serviceConfig && serviceConfig.containers) || [];
 
-  if (containers.length > 1) {
-    const containerNames = containers.map((c) => c.name);
-    const containerName = await host.showQuickPick(containerNames);
+  let containerName = containerNames[0];
+
+  if (containerNames.length > 1) {
+    containerName = await host.showQuickPick(containerNames);
 
     if (!containerName) {
       return;
     }
-
-    container = containers.filter((c) => {
-      return c.name === containerName;
-    })[0];
-  } else if (containers.length === 1) {
-    container = containers[0];
-  } else {
-    host.showInformationMessage("Missing container confiuration");
-    return;
   }
+
+  let container = containers.find((c) => c.name === containerName);
+
+  assert(container, "Missing container configuration");
 
   return container;
 }

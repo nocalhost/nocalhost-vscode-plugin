@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
 import * as assert from "assert";
 import { validate } from "json-schema";
-import * as AsyncRetry from "async-retry";
 
 import ICommand from "./ICommand";
 import { DEBUG, START_DEV_MODE } from "./constants";
@@ -40,7 +39,9 @@ export default class DebugCommand implements ICommand {
       const status = await node.getStatus(true);
 
       if (status !== "developing") {
-        vscode.commands.executeCommand(START_DEV_MODE, node, DEBUG);
+        vscode.commands.executeCommand(START_DEV_MODE, node, {
+          command: DEBUG,
+        });
         return;
       }
     }
