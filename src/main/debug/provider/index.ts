@@ -22,6 +22,10 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
     type = (await window.showQuickPick(supportType)) as Language;
   }
 
+  if (!type) {
+    return;
+  }
+
   let debugProvider = support[type];
 
   return new debugProvider();

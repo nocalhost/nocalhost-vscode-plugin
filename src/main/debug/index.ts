@@ -84,7 +84,7 @@ export async function getContainer(node: ControllerResourceNode) {
     ...node,
   });
 
-  let serviceConfig = node.nocalhostService;
+  let serviceConfig = await node.config;
 
   if (!serviceConfig) {
     serviceConfig = (await ConfigService.getAppConfig(
