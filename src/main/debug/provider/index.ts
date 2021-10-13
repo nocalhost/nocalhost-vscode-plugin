@@ -23,7 +23,7 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
   }
 
   if (!type) {
-    return;
+    return Promise.reject();
   }
 
   let debugProvider = support[type];
