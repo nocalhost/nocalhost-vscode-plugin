@@ -169,7 +169,7 @@ export default class StartDevModeCommand implements ICommand {
         containerName,
         mode,
         image,
-        info.command
+        info?.command
       );
     } else if (destDir) {
       this.saveAndOpenFolder(
@@ -179,7 +179,7 @@ export default class StartDevModeCommand implements ICommand {
         containerName,
         mode,
         image,
-        info.command
+        info?.command
       );
       messageBus.emit("devstart", {
         name: appName,

@@ -41,34 +41,20 @@ export default class ExecCommand implements ICommand {
     }
     const status = await node.getStatus(true);
 
-    if (status === DeploymentStatus.developing || !(node instanceof Pod)) {
-      let container = result.containerName;
-      let pod = result.podName;
-      if (status === DeploymentStatus.developing) {
-        container = "nocalhost-dev";
-        pod = "";
-      }
-      const terminal = await devTerminal(
-        node.getAppName(),
-        node.name,
-        node.resourceType,
-        container,
-        node.getKubeConfigPath(),
-        node.getNameSpace(),
-        pod
-      );
-      host.pushDispose(
-        node.getSpaceName(),
-        node.getAppName(),
-        node.name,
-        terminal
-      );
-      return;
+    let container = result.containerName;
+    let pod = result.podName;
+    if (status === DeploymentStatus.developing) {
+      container = "nocalhost-dev";
+      pod = "";
     }
-    const terminal = await this.openExec(
-      node,
-      result.podName,
-      result.containerName
+    const terminal = await devTerminal(
+      node.getAppName(),
+      node.name,
+      node.resourceType,
+      container,
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      pod
     );
     host.pushDispose(
       node.getSpaceName(),
