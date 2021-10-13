@@ -9,6 +9,8 @@ import logger from "../utils/logger";
 
 function showGlobalMsg(str: string) {
   if (str.indexOf("[WARNING]") > -1) {
+    str = str.replaceAll("<br>", "\n");
+
     host.showInformationMessage(str, {
       modal: true,
     });
