@@ -68,15 +68,11 @@ jobs:
 
       - name: Wait cluster ready
         run: >-
-          for ((i=1;i<=100;i++))
+          while [ ! -f "${HOME}/config" ]
           do
-            if [ ! -f "${HOME}/config" ]; then
-              time=`date "+%Y-%m-%d %H:%M:%S"`
-              echo  $time wait cluster ready
-              sleep 5s;
-            else
-              break;
-            fi
+            time=`date "+%Y-%m-%d %H:%M:%S"`
+            echo  $time wait cluster ready
+            sleep 5s;
           done
 
       - name: Set kubeconfig
