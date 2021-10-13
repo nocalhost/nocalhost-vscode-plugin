@@ -68,10 +68,10 @@ jobs:
 
       - name: Wait cluster ready
         run: >-
-          while [ ! -f "${HOME}/config" ]
+          for (;! -f "${HOME}/config";)
           do
             tail -n 5 ~/cluster.log
-            sleep 10s;
+            sleep 10s
           done
 
       - name: Set kubeconfig
