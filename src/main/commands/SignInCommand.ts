@@ -6,6 +6,8 @@ import registerCommand from "./register";
 import host from "../host";
 import { AccountCluster as AccountClusterService } from "../clusters";
 import state from "../state";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import { NOCALHOST } from "../constants";
 
 interface LoginInfo {
   username: string;
@@ -31,9 +33,14 @@ export default class SignInCommand implements ICommand {
       info.username = info.username.trim();
       info.baseUrl = info.baseUrl.trim();
 
-      await AccountClusterService.appendClusterByLoginInfo(info);
+      const accountClusterNode = await AccountClusterService.appendClusterByLoginInfo(
+        info
+      );
 
-      await state.refreshTree();
+      const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
+      await rootNode.addCluster(accountClusterNode);
+
+      await state.refreshTree(false);
 
       vscode.window.showInformationMessage("Login successful");
     });

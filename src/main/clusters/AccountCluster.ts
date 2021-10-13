@@ -130,7 +130,7 @@ export default class AccountClusterService {
     );
 
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
-      const msg = `no cluster found for ${newAccountCluser.loginInfo.baseUrl}@${newAccountCluser.loginInfo.username}`;
+      const msg = `no cluster found for ${newAccountCluser.loginInfo.baseUrl} ${newAccountCluser.loginInfo.username}`;
 
       logger.error(msg);
       throw new Error(msg);
@@ -270,7 +270,9 @@ export default class AccountClusterService {
 
     return { id, kubeConfigPath };
   }
-  static appendClusterByLoginInfo = async (loginInfo: LoginInfo) => {
+  static appendClusterByLoginInfo = async (
+    loginInfo: LoginInfo
+  ): Promise<AccountClusterNode> => {
     const accountServer = new AccountClusterService(loginInfo);
     const newAccountCluser = await accountServer.buildAccountClusterNode();
 

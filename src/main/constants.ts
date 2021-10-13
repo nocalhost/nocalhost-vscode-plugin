@@ -1,6 +1,8 @@
 import { homedir, tmpdir } from "os";
 import * as path from "path";
 
+export const NOCALHOST = "Nocalhost";
+
 export const HOME_DIR = homedir();
 export const NH_CONFIG_DIR = path.resolve(HOME_DIR, ".nh");
 export const PLUGIN_CONFIG_DIR = path.resolve(NH_CONFIG_DIR, "vscode-plugin");

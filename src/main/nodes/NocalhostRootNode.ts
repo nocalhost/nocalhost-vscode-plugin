@@ -8,7 +8,12 @@ import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
 import { sortResources } from "../clusters";
 import logger from "../utils/logger";
 
-import { GLOBAL_TIMEOUT, LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
+import {
+  GLOBAL_TIMEOUT,
+  LOCAL_PATH,
+  NOCALHOST,
+  SERVER_CLUSTER_LIST,
+} from "../constants";
 import { AppNode } from "./AppNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
@@ -22,6 +27,7 @@ import { DevSpaceNode } from "./DevSpaceNode";
 
 import arrayDiffer = require("array-differ");
 import { asyncLimit } from "../utils";
+import { LoginInfo } from "../clusters/interface";
 
 async function getClusterName(res: IRootNode) {
   if (!res.kubeConfigPath) {
@@ -145,6 +151,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     return nodes;
   }
   public async updateData(isInit?: boolean): Promise<any> {
+    const updateTime = Date.now();
+
     const results = await Promise.allSettled([
       this.getLocalData(),
       this.getServerData(),
@@ -161,9 +169,64 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     await this.cleanDiffDevSpace(resultData);
 
-    state.setData(this.getNodeStateId(), sortResources(resultData), isInit);
+    const isSave = state.setData(
+      this.getNodeStateId(),
+      resultData,
+      isInit,
+      updateTime
+    );
+
+    if (isSave === false) {
+      return state.getData(this.getNodeStateId());
+    }
 
     return resultData;
+  }
+  public async addCluster(node: AccountClusterNode | LocalClusterNode) {
+    let addResources: IRootNode[];
+
+    if (node instanceof LocalClusterNode) {
+      addResources = [await LocalCusterService.getLocalClusterRootNode(node)];
+    } else {
+      addResources = await AccountClusterService.getServerClusterRootNodes(
+        node
+      );
+    }
+    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
+
+    if (resources) {
+      resources = resources.concat(addResources);
+    }
+
+    resources = sortResources(resources);
+
+    state.setData(this.getNodeStateId(), resources, false);
+
+    vscode.commands.executeCommand("Nocalhost.refresh", this);
+  }
+
+  public async deleteCluster(info: LoginInfo | string) {
+    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
+
+    if (resources) {
+      if (typeof info === "string") {
+        resources = resources.filter((item) => item.kubeConfigPath !== info);
+      } else {
+        resources = resources.filter((item: any) => {
+          const node = item as KubeConfigNode;
+          const { username, baseUrl } = node.accountClusterService?.loginInfo;
+
+          return !(username === info.username && baseUrl === info.baseUrl);
+        });
+      }
+      resources = sortResources(resources);
+
+      await this.cleanDiffDevSpace(resources);
+
+      state.setData(this.getNodeStateId(), resources, false);
+
+      vscode.commands.executeCommand("Nocalhost.refresh", this);
+    }
   }
 
   private async cleanDiffDevSpace(resources: IRootNode[]) {
@@ -203,7 +266,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     }
   }
 
-  public label: string = "Nocalhost";
+  public label: string = NOCALHOST;
   public type = ROOT;
   constructor(public parent: BaseNocalhostNode | null) {
     console.log(AppNode);
@@ -241,7 +304,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         state: res.state,
       });
     }).then((results) => {
-      const devs: BaseNocalhostNode[] = results.map((result, index) => {
+      const nodes: BaseNocalhostNode[] = results.map((result, index) => {
         if (result.status === "fulfilled") {
           return result.value;
         }
@@ -272,7 +335,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         });
       });
 
-      return orderBy(devs, ["label"]);
+      return orderBy(nodes, ["label"]);
     });
 
     return children;
@@ -287,6 +350,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   }
 
   getNodeStateId(): string {
-    return "Nocalhost";
+    return NOCALHOST;
   }
 }

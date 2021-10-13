@@ -13,11 +13,13 @@ import { ClusterSource } from "../common/define";
 import { ClustersState } from ".";
 
 export class LocalClusterNode {
-  filePath: string;
-  id: string;
-  clusterNickName?: string;
-  createTime: number;
-  state: ClustersState;
+  constructor(
+    public filePath: string,
+    public id: string,
+    public createTime: number,
+    public state: ClustersState,
+    public clusterNickName?: string
+  ) {}
 }
 
 export default class LocalCluster {
@@ -129,12 +131,12 @@ export default class LocalCluster {
 
     const state = await checkCluster(resultFilePath);
 
-    const newCluster: LocalClusterNode = {
-      filePath: resultFilePath,
-      id: hash,
-      createTime: Date.now(),
-      state,
-    };
+    const newCluster = new LocalClusterNode(
+      resultFilePath,
+      hash,
+      Date.now(),
+      state
+    );
 
     if (
       !localClusterNodes.find(

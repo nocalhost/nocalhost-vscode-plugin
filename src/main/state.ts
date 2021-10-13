@@ -37,11 +37,24 @@ class State {
     }, 500);
   }
 
-  public setData(id: string, data: object, isInit?: boolean) {
-    const currentData = this.dataMap.get(id);
-    const isSame = _.isEqual(currentData, data);
+  public setData(
+    id: string,
+    data: object,
+    isInit?: boolean,
+    time = Date.now()
+  ) {
+    const result = (this.dataMap.get(id) || { data: undefined, time: -1 }) as {
+      data?: any;
+      time: number;
+    };
 
-    this.dataMap.set(id, data);
+    if (time < result.time) {
+      return false;
+    }
+    const isSame = _.isEqual(result.data, data);
+
+    this.dataMap.set(id, { data, time });
+
     if (!isSame && !isInit) {
       this.queueRender.push(id);
 
@@ -52,7 +65,8 @@ class State {
   }
 
   public getData(id: string) {
-    return this.dataMap.get(id);
+    const result: { data?: any } = this.dataMap.get(id) || { data: undefined };
+    return result.data;
   }
 
   public clearAllData() {
@@ -77,7 +91,7 @@ class State {
     return this.running;
   }
 
-  async refreshTree() {
+  async refreshTree(force = false) {
     const isExist = isExistCluster();
 
     await vscode.commands.executeCommand(
@@ -92,7 +106,7 @@ class State {
       isExist
     );
     await vscode.commands.executeCommand("Nocalhost.refresh");
-    host.startAutoRefresh();
+    host.startAutoRefresh(force);
   }
 
   setRunning(running: boolean) {

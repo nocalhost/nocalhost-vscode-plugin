@@ -59,7 +59,6 @@ export class Host implements vscode.Disposable {
   public stopAutoRefresh() {
     if (this.autoRefreshTimeId) {
       clearTimeout(this.autoRefreshTimeId);
-      this.autoRefreshTimeId = null;
     }
   }
 
@@ -82,7 +81,11 @@ export class Host implements vscode.Disposable {
       await asyncLimit(
         Array.from(state.refreshFolderMap.entries()),
         ([id, expanded]) => {
-          if (expanded && autoRefreshTimeId === this.autoRefreshTimeId) {
+          if (
+            state.get(id) &&
+            expanded &&
+            autoRefreshTimeId === this.autoRefreshTimeId
+          ) {
             const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
 
             return node.updateData();
@@ -103,10 +106,12 @@ export class Host implements vscode.Disposable {
     }
   }
 
-  public async startAutoRefresh() {
+  public async startAutoRefresh(force = false) {
     this.stopAutoRefresh();
 
-    this.isRefresh = false;
+    if (force) {
+      this.isRefresh = false;
+    }
 
     await this.autoRefresh();
   }

@@ -6,14 +6,14 @@ import { SIGN_OUT } from "./constants";
 import registerCommand from "./register";
 
 import state from "../state";
-import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
+import { KUBE_CONFIG_DIR, NOCALHOST, SERVER_CLUSTER_LIST } from "../constants";
 import host from "../host";
 import { IUserInfo } from "../domain";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import Bookinfo from "../common/bookinfo";
-import { AccountClusterNode } from "../clusters";
 import { kubeconfig } from "../ctl/nhctl";
 import { LoginInfo } from "../clusters/interface";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -43,7 +43,10 @@ export default class SignOutCommand implements ICommand {
 
     Bookinfo.cleanCheck(node);
 
-    await state.refreshTree();
+    const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
+    await rootNode.deleteCluster(node.accountClusterService.loginInfo);
+
+    await state.refreshTree(false);
 
     this.cleanKubeConfig(node.accountClusterService.loginInfo);
   }
