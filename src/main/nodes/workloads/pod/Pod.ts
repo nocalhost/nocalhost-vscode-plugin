@@ -15,7 +15,7 @@ export class Pod extends ControllerResourceNode {
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
     try {
-      const [status, dev] = await this.getStatusPod();
+      const [status, dev] = await this.getStatusPod(true);
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
