@@ -27,7 +27,7 @@ export default class SignInCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(info: LoginInfo) {
-    host.showProgressing("Logging in ...", async () => {
+    await host.showProgressing("Logging in ...", async () => {
       info.username = info.username.trim();
       info.baseUrl = info.baseUrl.trim();
 
