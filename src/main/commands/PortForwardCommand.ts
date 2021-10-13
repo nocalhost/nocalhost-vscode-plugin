@@ -22,29 +22,42 @@ export default class PortForwardCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    let podName: string | undefined;
-    if (node instanceof ControllerResourceNode) {
-      const kind = node.resourceType;
-      const name = node.name;
 
-      const podNameArr = await nhctl.getRunningPodNames({
-        name,
-        kind,
-        namespace: node.getNameSpace(),
-        kubeConfigPath: node.getKubeConfigPath(),
-      });
-      podName = podNameArr[0];
-      if (podNameArr.length > 1) {
-        podName = await vscode.window.showQuickPick(podNameArr);
-      }
-      if (!podName) {
+    const svcProfile = await nhctl.getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+
+    let podName: string | undefined;
+    if (svcProfile?.develop_status !== "STARTED") {
+      if (node instanceof ControllerResourceNode) {
+        const kind = node.resourceType;
+        const name = node.name;
+
+        const podNameArr = await nhctl.getRunningPodNames({
+          name,
+          kind,
+          namespace: node.getNameSpace(),
+          kubeConfigPath: node.getKubeConfigPath(),
+        });
+        podName = podNameArr[0];
+        if (podNameArr.length > 1) {
+          podName = await vscode.window.showQuickPick(podNameArr);
+        }
+        if (!podName) {
+          return;
+        }
+      } else if (node instanceof Pod) {
+        podName = node.name;
+      } else {
+        host.showInformationMessage(
+          "Does not support this type at the moment."
+        );
         return;
       }
-    } else if (node instanceof Pod) {
-      podName = node.name;
-    } else {
-      host.showInformationMessage("Does not support this type at the moment.");
-      return;
     }
 
     const reg = /^([1-9][0-9]*)?:?([1-9][0-9]*)$/;
@@ -154,25 +167,8 @@ export default class PortForwardCommand implements ICommand {
           terminalCommands.unshift(shellPath);
           host.showInformationMessage("Please input your password");
         } else {
-          // const username = await host.showInputBox({placeHolder: "Please input a super administrator account"});
-          // if (!username) {
-          //   return;
-          // }
-          // const command = `"${shellPath} ${terminalCommands.join(" ")}"`;
-          // terminalCommands = [`/user:${username}`, command];
         }
       }
-      // const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      //   nhctlCommand.args,
-      //   nhctl.NhctlCommand.nhctlPath,
-      //   "nhctl"
-      // );
-      // const terminalDisposed = host.invokeInNewTerminalSpecialShell(
-      //   terminalCommands,
-      //   this.getShellPath(sudo, shellPath),
-      //   "kubectl"
-      // );
-      // terminalDisposed.show();
       const ports = portMap.split(",").filter((str) => {
         let reg = /([0-9]+)?:[0-9]+/g;
         if (reg.exec(str)) {

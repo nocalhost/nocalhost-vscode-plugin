@@ -20,17 +20,14 @@ import services from "../common/DataCenter/services";
 import { SvcProfile } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 import { IDevSpaceInfo, IPortForWard } from "../domain";
-import {
-  PodResource,
-  Resource,
-  ResourceStatus,
-} from "../nodes/types/resourceType";
+import { Resource, ResourceStatus } from "../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../utils/download";
 import { keysToCamel } from "../utils";
 import { IPvc } from "../domain";
 import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
+import { NodeInfo } from "../typings";
 
 export interface InstalledAppInfo {
   name: string;
@@ -73,8 +70,39 @@ export class NhctlCommand {
 
     return command;
   }
-  static exec(baseParams?: IBaseCommand<unknown>) {
-    return NhctlCommand.create("k exec", baseParams);
+  static kExec(baseParams?: IBaseCommand<{ args?: string[] }>) {
+    const command = NhctlCommand.create("k exec", baseParams);
+    command.args = baseParams.args ?? [];
+
+    return command;
+  }
+
+  static exec(
+    params: IBaseCommand<{
+      args?: string[];
+      app: string;
+      name: string;
+      resourceType: string;
+      container?: string;
+      commands: string[];
+    }>
+  ) {
+    let { args, app, name, resourceType, container, commands } = params;
+
+    const command = NhctlCommand.create("exec", params);
+
+    args = args ?? [];
+    commands.forEach((command) => args.push(`-c ${command}`));
+
+    args.unshift(
+      app,
+      `-d ${name}`,
+      `-t ${resourceType}`,
+      `--container ${container ?? "nocalhost-dev"}`
+    );
+
+    command.args = args;
+    return command;
   }
   static logs(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("k logs", baseParams);
@@ -292,26 +320,6 @@ export async function getRunningPodNames(
     return res.metadata.name;
   });
   return podNameArr;
-}
-
-export async function getContainerNames(
-  props: IBaseCommand<{
-    podName: string;
-  }>
-) {
-  const podStr = await getLoadResource({
-    ...props,
-    kind: "pods",
-    name: props.podName,
-    outputType: "json",
-  });
-  const pod = JSON.parse(podStr as string) as PodResource;
-
-  const containerNameArr = pod.spec.containers.map((c) => {
-    return c.name;
-  });
-
-  return containerNameArr;
 }
 
 export async function getLoadResource(
@@ -701,9 +709,11 @@ export async function devStart(
     isOld: boolean;
     dirs: string | Array<string>;
   },
+  mode: "copy" | "replace",
   container?: string,
   storageClass?: string,
-  devStartAppendCommand?: string
+  devStartAppendCommand?: string,
+  image?: string
 ) {
   let options = "";
   if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
@@ -722,9 +732,11 @@ export async function devStart(
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} --without-terminal  ${options} ${
+    `dev start ${appName} -d ${workLoadName} -t ${workloadType.toLowerCase()} ${
+      mode === "copy" ? "-m duplicate" : ""
+    } --without-terminal  ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
-    }`
+    } ${image ? `-i ${image}` : ""}`
   );
 
   return execWithProgress({
@@ -820,7 +832,7 @@ export async function startPortForward(
     namespace,
     `port-forward start ${appName} -d ${workloadName} ${portOptions} ${
       resourceType ? `--type ${resourceType}` : ""
-    } ${pod ? `--pod ${pod}` : ""} --way ${way}`
+    } ${pod ? `--pod ${pod}` : ""}`
   );
 
   const sudo = isSudo(ports);
@@ -1224,7 +1236,8 @@ export async function getSyncStatus(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  args: string[] = []
 ) {
   let baseCommand = "sync-status ";
   if (appName) {
@@ -1233,10 +1246,7 @@ export async function getSyncStatus(
 
   const command = nhctlCommand(kubeConfigPath, namespace, baseCommand);
 
-  const r = await exec({ command }).promise.catch((e) => {
-    logger.info("Nocalhost.syncService syncCommand");
-    logger.error(e);
-
+  const r = await exec({ command, args }).promise.catch(() => {
     return { code: 0, stdout: "", stderr: "" };
   });
 
@@ -1469,14 +1479,9 @@ export function nhctlCommand(
   namespace: string,
   baseCommand: string
 ) {
-  const nhctlPath = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
-  const command = `${nhctlPath} ${baseCommand} ${
+  const command = `${NhctlCommand.nhctlPath} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
   } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
-  console.log(command);
   return command;
 }
 
@@ -1508,5 +1513,50 @@ export async function kubeconfig(
 
   logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
 
+  return result;
+}
+
+export async function devTerminal(
+  appName: string,
+  workloadName: string,
+  workloadType: string,
+  container: string | null,
+  kubeConfigPath: string,
+  namespace: string,
+  pod: string | null
+) {
+  const shellArgs = ["dev", "terminal", appName];
+
+  shellArgs.push("-d", workloadName);
+  shellArgs.push("-t", workloadType);
+  shellArgs.push("--kubeconfig", kubeConfigPath);
+  shellArgs.push("-n", namespace);
+
+  if (pod) {
+    shellArgs.push("--pod", pod);
+  }
+  if (container) {
+    shellArgs.push("--container", container);
+  }
+
+  const terminal = host.createTerminal({
+    shellPath: NhctlCommand.nhctlPath,
+    shellArgs,
+    name: `${appName}-${workloadName}`,
+    iconPath: {
+      id: "vm-connect",
+    },
+  });
+  terminal.show();
+
+  return terminal;
+}
+export async function getContainers(node: NodeInfo): Promise<string[]> {
+  const { appName, name, resourceType, namespace, kubeConfigPath } = node;
+  const result = await NhctlCommand.create(
+    `dev containers ${appName} -d ${name} -t ${resourceType} -n ${namespace} --kubeconfig ${kubeConfigPath}`
+  )
+    .toJson()
+    .exec();
   return result;
 }

@@ -1,5 +1,10 @@
 import * as vscode from "vscode";
-import { CancellationToken, Progress, QuickPickOptions } from "vscode";
+import {
+  CancellationToken,
+  ExtensionTerminalOptions,
+  Progress,
+  QuickPickOptions,
+} from "vscode";
 import * as shell from "./ctl/shell";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
@@ -19,8 +24,6 @@ export class Host implements vscode.Disposable {
     vscode.StatusBarAlignment.Left,
     100
   );
-  private newTerminal!: vscode.Terminal | null;
-
   public bookinfoTimeoutId: NodeJS.Timeout | null = null; // bookinfo
 
   // private debugDisposesMap = new Map<string, { dispose: () => any }>();
@@ -276,7 +279,7 @@ export class Host implements vscode.Disposable {
 
   public showProgressing(
     title: string,
-    aciton: (
+    task: (
       progress: Progress<{ message?: string; increment?: number }>
     ) => Thenable<unknown>
   ) {
@@ -286,7 +289,7 @@ export class Host implements vscode.Disposable {
         location: vscode.ProgressLocation.Notification,
         cancellable: false,
       },
-      aciton
+      task
     );
   }
 
@@ -372,7 +375,7 @@ export class Host implements vscode.Disposable {
     });
   }
 
-  copyTextToclipboard(text: string) {
+  copyTextToClipboard(text: string) {
     vscode.env.clipboard.writeText(text);
   }
 
@@ -380,23 +383,12 @@ export class Host implements vscode.Disposable {
     return this.outputChannel;
   }
 
-  invokeInNewTerminal(command: string, name?: string) {
-    this.newTerminal = vscode.window.createTerminal(name);
-    this.newTerminal.show();
-    this.newTerminal.sendText(command);
-    return this.newTerminal;
-  }
-
-  invokeInNewTerminalSpecialShell(
-    commands: string[],
-    shellPath: string,
-    name: string
+  createTerminal(
+    options: (vscode.TerminalOptions | ExtensionTerminalOptions) & {
+      iconPath?: { id: string };
+    }
   ) {
-    return vscode.window.createTerminal({
-      name,
-      shellArgs: commands,
-      shellPath,
-    });
+    return vscode.window.createTerminal(options);
   }
 
   log(msg: string, line?: boolean) {
@@ -411,9 +403,6 @@ export class Host implements vscode.Disposable {
     this.statusBar.dispose();
     this.outputChannel.dispose();
     this.disposeBookInfo();
-    if (this.newTerminal) {
-      this.newTerminal.dispose();
-    }
 
     this.devspaceDisposesMap.forEach((m, key) => {
       this.disposeDevspace(key);

@@ -1,4 +1,3 @@
-import { IRootNode } from "./../domain/IRootNode";
 import * as vscode from "vscode";
 import ICommand from "./ICommand";
 import NocalhostAppProvider from "../appProvider";
@@ -6,7 +5,6 @@ import { SIGN_IN } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { AccountCluster as AccountClusterService } from "../clusters";
-import logger from "../utils/logger";
 import state from "../state";
 
 interface LoginInfo {
@@ -30,6 +28,9 @@ export default class SignInCommand implements ICommand {
   }
   async execCommand(info: LoginInfo) {
     host.showProgressing("Logging in ...", async () => {
+      info.username = info.username.trim();
+      info.baseUrl = info.baseUrl.trim();
+
       await AccountClusterService.appendClusterByLoginInfo(info);
 
       await state.refreshTree();

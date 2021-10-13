@@ -1,80 +1,138 @@
 import * as vscode from "vscode";
+import * as JsonSchema from "json-schema";
+import * as assert from "assert";
+import { validate } from "json-schema";
 
 import ICommand from "./ICommand";
-import { DEBUG } from "./constants";
+import { DEBUG, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
-import { JavaDebugProvider } from "../debug/javaDebugProvider";
-import { NodeDebugProvider } from "../debug/nodeDebugProvider";
-import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
-import { GoDebugProvider } from "../debug/goDebugProvider";
-import logger from "../utils/logger";
+import { ContainerConfig } from "../service/configService";
+import { chooseDebugProvider, Language, support } from "../debug/provider";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
+import { closeTerminals, getContainer, waitForSync } from "../debug";
+import { IDebugProvider } from "../debug/provider/IDebugProvider";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
+  node: ControllerResourceNode;
+  container: ContainerConfig;
+
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  async execCommand(node: Deployment) {
+  async execCommand(...rest: any[]) {
+    const [node, command] = rest as [ControllerResourceNode, string];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
-    await host.withProgress(
-      {
-        title: "Debugging ...",
-        cancellable: true,
-        location: vscode.ProgressLocation.Notification,
-      },
-      async (progress, token) => {
-        try {
-          const debugSession = new DebugSession();
-          // get current workspaceFolder
-          const workspaceFolder = await host.showWorkspaceFolderPick();
-          if (!workspaceFolder) {
-            host.showInformationMessage(
-              "You need to open a folder before execute this command."
-            );
-            return;
-          }
-          // TODO:
-          const supportType = ["node", "java"];
-          const type = await vscode.window.showQuickPick(supportType);
-          if (!type) {
-            return;
-          }
-          const debugProvider = this.getDebugProvider(type);
-          if (!debugProvider) {
-            host.showInformationMessage("Not support");
-            return;
-          }
-          await debugSession.launch(workspaceFolder, debugProvider, node);
-        } catch (e) {
-          (token as any).cancel();
-          host.log("[debug] cancel");
-          logger.info("[debug] cancel");
-        }
+    this.node = node;
+    this.container = await getContainer(node);
+    this.validateDebugConfig(this.container);
+
+    await closeTerminals();
+
+    if (!command) {
+      const status = await node.getStatus(true);
+
+      if (status !== "developing") {
+        vscode.commands.executeCommand(START_DEV_MODE, node, {
+          command: DEBUG,
+        });
+        return;
       }
+    }
+
+    await waitForSync(node);
+
+    this.startDebugging(node);
+  }
+
+  validateDebugConfig(config: ContainerConfig) {
+    const schema: JsonSchema.JSONSchema6 = {
+      $schema: "http://json-schema.org/schema#",
+      type: "object",
+      required: ["dev"],
+      properties: {
+        dev: {
+          type: "object",
+          required: ["command", "debug"],
+          properties: {
+            command: {
+              type: "object",
+              required: ["debug"],
+              properties: {
+                debug: {
+                  type: "array",
+                  minItems: 1,
+                  items: {
+                    type: "string",
+                  },
+                },
+              },
+            },
+            debug: {
+              type: "object",
+              properties: {
+                remoteDebugPort: {
+                  type: "number",
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const valid = validate(config, schema);
+
+    assert.strictEqual(
+      valid.errors.length,
+      0,
+      `please check config.\n${valid.errors
+        .map((e) => `${e.property}:${e.message}`)
+        .join("\n")}`
     );
   }
 
-  getDebugProvider(type: string) {
-    let debugProvider = null;
-    switch (type) {
-      case "node":
-        debugProvider = new NodeDebugProvider();
-        break;
-      case "go":
-        debugProvider = new GoDebugProvider();
-        break;
-      case "java":
-        debugProvider = new JavaDebugProvider();
-        break;
-      default:
+  async startDebugging(node: ControllerResourceNode) {
+    const debugSession = new DebugSession();
+
+    const workspaceFolder = await host.showWorkspaceFolderPick();
+
+    if (!workspaceFolder) {
+      host.showInformationMessage(
+        "You need to open a folder before execute this command."
+      );
+      return;
     }
 
-    return debugProvider;
+    await debugSession.launch(
+      workspaceFolder,
+      await this.getDebugProvider(node),
+      node,
+      await getContainer(node)
+    );
+  }
+
+  async getDebugProvider(
+    node: ControllerResourceNode
+  ): Promise<IDebugProvider> {
+    let containerConfig = await getContainer(node);
+
+    let type: Language = null;
+
+    const { image } = containerConfig.dev;
+
+    if (image.includes("nocalhost/dev-images")) {
+      type = Object.keys(support).find((name) =>
+        image.includes(name)
+      ) as Language;
+    }
+
+    return await chooseDebugProvider(type);
   }
 }
