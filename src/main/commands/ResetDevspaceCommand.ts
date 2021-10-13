@@ -44,7 +44,7 @@ export default class ResetDevspaceCommand implements ICommand {
       node.info.namespace,
       node.info.spaceName
     ).finally(async () => {
-      await node.parent.accountClusterService.resetDevspace(node.info.id);
+      await node.parent.accountClusterService.resetDevSpace(node.info.id);
 
       const nocalhostRootNode = node.parent.parent as NocalhostRootNode;
 

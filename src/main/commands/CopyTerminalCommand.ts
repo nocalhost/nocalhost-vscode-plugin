@@ -69,7 +69,7 @@ export default class CopyTerminalCommand implements ICommand {
     for (let i = 0; i < CopyTerminalCommand.defaultShells.length; i++) {
       let notExist = false;
 
-      const command = NhctlCommand.exec({
+      const command = NhctlCommand.kExec({
         kubeConfigPath,
       })
         .addArgument(podName)
@@ -140,7 +140,7 @@ export default class CopyTerminalCommand implements ICommand {
       kubeConfigPath
     );
 
-    const command = NhctlCommand.exec({
+    const command = NhctlCommand.kExec({
       kubeConfigPath: kubeConfigPath,
       namespace,
     })
