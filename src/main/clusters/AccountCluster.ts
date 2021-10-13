@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import * as semver from "semver";
+import * as url from "url";
 import arrayDiffer = require("array-differ");
 import { uniqBy } from "lodash";
 import * as path from "path";
@@ -35,14 +36,18 @@ export class AccountClusterNode {
 }
 export default class AccountClusterService {
   instance: AxiosInstance;
-  loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
   refreshToken: string;
   lastServiceAccounts: IServiceAccountInfo[];
   isRefreshing: boolean;
-  constructor(loginInfo: LoginInfo) {
-    this.loginInfo = loginInfo;
+  constructor(public loginInfo: LoginInfo) {
+    var parsed = url.parse(loginInfo.baseUrl);
+
+    if (!parsed.protocol) {
+      loginInfo.baseUrl = "http://" + loginInfo.baseUrl;
+    }
+
     this.isRefreshing = true;
     this.instance = axios.create({
       baseURL: loginInfo.baseUrl,
@@ -326,9 +331,6 @@ export default class AccountClusterService {
     }
     logger.info("login end");
     return this.jwt;
-    // this.userInfo = await this.getUserInfo();
-    // this.loginInfo.password = null;
-    // this.id = `${this.userInfo.id}${this.loginInfo.baseUrl}`;
   };
 
   // get refresh token
