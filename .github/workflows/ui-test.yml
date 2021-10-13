@@ -24,7 +24,7 @@ jobs:
         run: |
           curl -fL "https://nocalhost-generic.pkg.coding.net/nocalhost-test/binary/tketools?version=latest" -o ~/cluster
           chmod +x ~/cluster
-          ~/cluster create &
+          ~/cluster create > ~/cluster.log
 
       - uses: actions/checkout@v2
 
@@ -70,9 +70,8 @@ jobs:
         run: >-
           while [ ! -f "${HOME}/config" ]
           do
-            time=`date "+%Y-%m-%d %H:%M:%S"`
-            echo  $time wait cluster ready
-            sleep 5s;
+            tail -n 5 ~/cluster.log
+            sleep 10s;
           done
 
       - name: Set kubeconfig
