@@ -109,7 +109,10 @@ export async function getContainer(node: ControllerResourceNode) {
 
   let container = containers.find((c) => c.name === containerName);
 
-  assert(container, "Missing container configuration");
+  assert(
+    container,
+    `Cannot find configuration with container name ${containerName}`
+  );
 
   return container;
 }
