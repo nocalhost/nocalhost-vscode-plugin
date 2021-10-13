@@ -8,7 +8,6 @@ import { Deployment } from "../nodes/workloads/controllerResources/deployment/De
 import host from "../host";
 import { associate, getServiceConfig, NhctlCommand } from "../ctl/nhctl";
 import { getContainer } from "../utils/getContainer";
-import { INhCtlGetResult } from "../domain";
 import SyncServiceCommand from "./SyncServiceCommand";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
@@ -28,7 +27,17 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     const kubeConfigPath = node.getKubeConfigPath();
 
     const status = await node.getStatus();
-    if (status === "developing" && !container) {
+    /*
+     * https://nocalhost.coding.net/p/nocalhost/bug-tracking/issues/615/detail
+     */
+    const devModeType = node?.svcProfile?.devModeType;
+    const possess = node?.svcProfile?.possess;
+
+    if (
+      !(devModeType !== "duplicate" && possess === false) &&
+      status === "developing" &&
+      !container
+    ) {
       host.showWarnMessage(
         "You are already in DevMode, please exit and try again"
       );
