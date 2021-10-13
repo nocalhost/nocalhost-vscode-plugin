@@ -150,13 +150,18 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     return nodes;
   }
-  public async updateData(isInit?: boolean): Promise<any> {
-    const updateTime = Date.now();
-
+  public async updateData(
+    isInit?: boolean,
+    action?: vscode.CancellationTokenSource
+  ): Promise<any> {
     const results = await Promise.allSettled([
       this.getLocalData(),
       this.getServerData(),
     ]);
+
+    if (action?.token.isCancellationRequested) {
+      return;
+    }
 
     const data = results.map((result) => {
       if (result.status === "fulfilled") {
@@ -169,16 +174,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     await this.cleanDiffDevSpace(resultData);
 
-    const isSave = state.setData(
-      this.getNodeStateId(),
-      resultData,
-      isInit,
-      updateTime
-    );
-
-    if (isSave === false) {
-      return state.getData(this.getNodeStateId());
-    }
+    state.setData(this.getNodeStateId(), resultData, isInit);
 
     return resultData;
   }

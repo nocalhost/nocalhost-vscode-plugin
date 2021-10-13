@@ -37,25 +37,17 @@ class State {
     }, 500);
   }
 
-  public setData(
-    id: string,
-    data: object,
-    isInit?: boolean,
-    time = Date.now()
-  ) {
-    const result = (this.dataMap.get(id) || { data: undefined, time: -1 }) as {
-      data?: any;
-      time: number;
-    };
+  public setData(id: string, data: object, isInit?: boolean) {
+    const currentData = this.dataMap.get(id);
+    const isSame = _.isEqual(currentData, data);
 
-    if (time < result.time) {
-      return false;
+    if (!isSame) {
+      return;
     }
-    const isSame = _.isEqual(result.data, data);
 
-    this.dataMap.set(id, { data, time });
+    this.dataMap.set(id, data);
 
-    if (!isSame && !isInit) {
+    if (!isInit) {
       this.queueRender.push(id);
 
       this.startRender();
@@ -65,8 +57,7 @@ class State {
   }
 
   public getData(id: string) {
-    const result: { data?: any } = this.dataMap.get(id) || { data: undefined };
-    return result.data;
+    return this.dataMap.get(id);
   }
 
   public clearAllData() {

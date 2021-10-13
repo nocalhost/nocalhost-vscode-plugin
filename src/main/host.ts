@@ -15,7 +15,6 @@ import logger from "./utils/logger";
 import { asyncLimit } from "./utils";
 import { GLOBAL_TIMEOUT } from "./constants";
 
-// import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
@@ -25,8 +24,6 @@ export class Host implements vscode.Disposable {
     100
   );
   public bookinfoTimeoutId: NodeJS.Timeout | null = null; // bookinfo
-
-  // private debugDisposesMap = new Map<string, { dispose: () => any }>();
 
   private devspaceDisposesMap = new Map<
     string,
@@ -62,58 +59,67 @@ export class Host implements vscode.Disposable {
     }
   }
 
-  isRefresh = false;
-  public async autoRefresh() {
-    if (this.isRefresh) {
+  currentRefresh: {
+    refresh: Promise<void>;
+    action: vscode.CancellationTokenSource;
+  };
+  private autoRefresh() {
+    if (this.currentRefresh) {
       return;
     }
 
-    try {
-      this.isRefresh = true;
+    let action = new vscode.CancellationTokenSource();
 
-      const { autoRefreshTimeId } = this;
+    const refresh = async () => {
+      try {
+        const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+        if (rootNode) {
+          await rootNode.updateData(null, action).catch(() => {});
+        }
 
-      const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
-      if (rootNode) {
-        await rootNode.updateData().catch(() => {});
+        await asyncLimit(
+          Array.from(state.refreshFolderMap.entries()),
+          ([id, expanded]) => {
+            if (
+              state.get(id) &&
+              expanded &&
+              !action.token.isCancellationRequested
+            ) {
+              const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
+
+              return node.updateData();
+            }
+
+            return Promise.resolve();
+          },
+          GLOBAL_TIMEOUT
+        );
+
+        action.dispose();
+        action = null;
+      } catch (e) {
+        logger.error("autoRefresh error:", e);
+      } finally {
+        this.currentRefresh = null;
+
+        this.autoRefreshTimeId = setTimeout(async () => {
+          await this.startAutoRefresh();
+        }, 10 * 1000);
       }
+    };
 
-      await asyncLimit(
-        Array.from(state.refreshFolderMap.entries()),
-        ([id, expanded]) => {
-          if (
-            state.get(id) &&
-            expanded &&
-            autoRefreshTimeId === this.autoRefreshTimeId
-          ) {
-            const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-
-            return node.updateData();
-          }
-
-          return Promise.resolve();
-        },
-        GLOBAL_TIMEOUT
-      );
-    } catch (e) {
-      logger.error("autoRefresh error:", e);
-    } finally {
-      this.isRefresh = false;
-
-      this.autoRefreshTimeId = setTimeout(async () => {
-        await this.startAutoRefresh();
-      }, 10 * 1000);
-    }
+    return { action, refresh };
   }
 
   public async startAutoRefresh(force = false) {
     this.stopAutoRefresh();
 
-    if (force) {
-      this.isRefresh = false;
+    if (force && this.currentRefresh) {
+      this.currentRefresh.action.cancel();
+      this.currentRefresh = null;
     }
 
-    await this.autoRefresh();
+    await this.autoRefresh().refresh();
   }
 
   public setGlobalState(key: string, state: any) {
