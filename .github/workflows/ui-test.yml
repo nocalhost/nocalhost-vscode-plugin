@@ -24,7 +24,7 @@ jobs:
         run: |
           curl -fL "https://nocalhost-generic.pkg.coding.net/nocalhost-test/binary/tketools?version=latest" -o ~/cluster
           chmod +x ~/cluster
-          ~/cluster create > ~/cluster.log
+          ~/cluster create > ~/cluster.log &
 
       - uses: actions/checkout@v2
 
