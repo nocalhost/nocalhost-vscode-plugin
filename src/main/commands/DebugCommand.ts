@@ -13,6 +13,7 @@ import { chooseDebugProvider, Language, support } from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
+import state from "../state";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -123,7 +124,10 @@ export default class DebugCommand implements ICommand {
   ): Promise<IDebugProvider> {
     let containerConfig = await getContainer(node);
 
-    let type: Language = null;
+    let type: Language = state.getAppState(
+      node.getAppNode().getNodeStateId(),
+      "debugProvider"
+    );
 
     const { image } = containerConfig.dev;
 
@@ -133,6 +137,16 @@ export default class DebugCommand implements ICommand {
       ) as Language;
     }
 
-    return await chooseDebugProvider(type);
+    const provider = await chooseDebugProvider(type);
+
+    if (!type) {
+      state.setAppState(
+        node.getAppNode().getNodeStateId(),
+        "debugProvider",
+        provider.name.toLocaleLowerCase()
+      );
+    }
+
+    return provider;
   }
 }

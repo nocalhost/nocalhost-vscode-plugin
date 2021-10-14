@@ -3,7 +3,9 @@ import * as nhctl from "../../../ctl/nhctl";
 import { get as _get } from "lodash";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
-import { NocalhostServiceConfig } from "../../../service/configService";
+import ConfigService, {
+  NocalhostServiceConfig,
+} from "../../../service/configService";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import {
   BaseNocalhostNode,
@@ -39,13 +41,23 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     public parent: BaseNocalhostNode,
     public resource: IK8sResource,
     public conditionsStatus?: Array<IStatus> | string,
-    public svcProfile?: SvcProfile | undefined | null,
-    public nocalhostService?: NocalhostServiceConfig | undefined | null
+    public svcProfile?: SvcProfile | undefined | null
   ) {
     super();
     this.label = resource.metadata.name;
     this.name = resource.metadata.name;
     state.setNode(this.getNodeStateId(), this);
+  }
+
+  get config() {
+    const node = this;
+    return ConfigService.getAppConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    ) as Promise<NocalhostServiceConfig>;
   }
 
   public async refreshSvcProfile() {

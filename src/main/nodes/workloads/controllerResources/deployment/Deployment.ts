@@ -16,7 +16,7 @@ export class Deployment extends ControllerResourceNode {
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = checkWorkloadConfig(this.nocalhostService);
+      const check = checkWorkloadConfig(await this.config);
       treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
       }-${status}-${mode}`;
@@ -26,9 +26,5 @@ export class Deployment extends ControllerResourceNode {
     }
 
     return treeItem;
-  }
-
-  public getConfig() {
-    return this.nocalhostService;
   }
 }
