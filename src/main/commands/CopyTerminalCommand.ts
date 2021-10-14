@@ -8,7 +8,7 @@ import registerCommand from "./register";
 import host from "../host";
 import { ControllerNodeApi } from "./StartDevModeCommand";
 import * as shell from "../ctl/shell";
-import { NhctlCommand, getContainerNames, getPodNames } from "../ctl/nhctl";
+import { NhctlCommand, getContainers, getPodNames } from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
 import { ExecOutputReturnValue } from "shelljs";
@@ -69,7 +69,7 @@ export default class CopyTerminalCommand implements ICommand {
     for (let i = 0; i < CopyTerminalCommand.defaultShells.length; i++) {
       let notExist = false;
 
-      const command = NhctlCommand.exec({
+      const command = NhctlCommand.kExec({
         kubeConfigPath,
       })
         .addArgument(podName)
@@ -140,7 +140,7 @@ export default class CopyTerminalCommand implements ICommand {
       kubeConfigPath
     );
 
-    const command = NhctlCommand.exec({
+    const command = NhctlCommand.kExec({
       kubeConfigPath: kubeConfigPath,
       namespace,
     })
@@ -178,8 +178,10 @@ export default class CopyTerminalCommand implements ICommand {
     if (!podName) {
       return;
     }
-    const containerNameArr = await getContainerNames({
-      podName,
+    const containerNameArr = await getContainers({
+      appName: node.getAppName(),
+      resourceType: node.resourceType,
+      name: node.name,
       kubeConfigPath: kubeConfigPath,
       namespace: node.getNameSpace(),
     });
@@ -220,8 +222,10 @@ export default class CopyTerminalCommand implements ICommand {
     if (!podName) {
       return;
     }
-    const containerNameArr = await getContainerNames({
-      podName,
+    const containerNameArr = await getContainers({
+      appName: node.getAppName(),
+      name: node.name,
+      resourceType: node.resourceType,
       kubeConfigPath: kubeConfigPath,
       namespace: node.getNameSpace(),
     });

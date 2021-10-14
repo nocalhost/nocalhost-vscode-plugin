@@ -8,7 +8,6 @@ import { Deployment } from "../nodes/workloads/controllerResources/deployment/De
 import host from "../host";
 import { associate, getServiceConfig, NhctlCommand } from "../ctl/nhctl";
 import { getContainer } from "../utils/getContainer";
-import { INhCtlGetResult } from "../domain";
 import SyncServiceCommand from "./SyncServiceCommand";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
@@ -28,7 +27,17 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
     const kubeConfigPath = node.getKubeConfigPath();
 
     const status = await node.getStatus();
-    if (status === "developing" && !container) {
+    /*
+     * https://nocalhost.coding.net/p/nocalhost/bug-tracking/issues/615/detail
+     */
+    const devModeType = node?.svcProfile?.devModeType;
+    const possess = node?.svcProfile?.possess;
+
+    if (
+      !(devModeType !== "duplicate" && possess === false) &&
+      status === "developing" &&
+      !container
+    ) {
       host.showWarnMessage(
         "You are already in DevMode, please exit and try again"
       );
@@ -43,19 +52,16 @@ export default class AssociateLocalDirectoryCommand implements ICommand {
       node.resourceType
     );
 
-    const resource: INhCtlGetResult = await NhctlCommand.get({
-      kubeConfigPath: node.getKubeConfigPath(),
-      namespace: node.getNameSpace(),
-    })
-      .addArgumentStrict(node.resourceType, node.name)
-      .addArgument("-a", node.getAppName())
-      .addArgument("-o", "json")
-      .exec();
-
     const containerName =
       container ||
       (await node.getContainer()) ||
-      (await getContainer(resource.info));
+      (await getContainer({
+        appName: node.getAppName(),
+        name: node.name,
+        resourceType: node.resourceType.toLocaleLowerCase(),
+        namespace: node.getNameSpace(),
+        kubeConfigPath: node.getKubeConfigPath(),
+      }));
 
     const currentUri = host.getCurrentRootPath();
 

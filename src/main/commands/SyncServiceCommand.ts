@@ -17,7 +17,7 @@ export interface Sync {
   namespace: string;
 }
 
-interface SyncMsg {
+export interface SyncMsg {
   status: string;
   msg: string;
   tips: string;

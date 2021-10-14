@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 
-import { PLUGIN_TEMP_DIR } from "./constants";
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import NocalhostAppProvider from "./appProvider";
 import {
+  PLUGIN_TEMP_DIR,
+  TMP_DEV_START_IMAGE,
   BASE_URL,
   HELM_VALUES_DIR,
   KUBE_CONFIG_DIR,
@@ -22,9 +23,11 @@ import {
   TMP_DEVSTART_APPEND_COMMAND,
   TMP_ID,
   TMP_CONTAINER,
+  TMP_MODE,
   TMP_DEVSPACE,
   TMP_NAMESPACE,
   NH_BIN,
+  TMP_DEV_START_COMMAND,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -176,7 +179,7 @@ export async function activate(context: vscode.ExtensionContext) {
         SyncServiceCommand.checkSync();
       }
     } catch (error) {
-      host.log(`${error}, +++++`, true);
+      host.log(`MessageBus install: ${error}`, true);
     }
   });
   await vscode.commands.executeCommand(
@@ -210,10 +213,15 @@ function launchDevspace() {
   const tmpResourceType = host.getGlobalState(TMP_RESOURCE_TYPE);
   const tmpKubeConfigPath = host.getGlobalState(TMP_KUBECONFIG_PATH);
   const tmpStorageClass = host.getGlobalState(TMP_STORAGE_CLASS);
+  const tmpCommand = host.getGlobalState(TMP_DEV_START_COMMAND);
+
   const tmpDevstartAppendCommand = host.getGlobalState(
     TMP_DEVSTART_APPEND_COMMAND
   );
   const tmpContainer = host.getGlobalState(TMP_CONTAINER);
+  const tmpMode = host.getGlobalState(TMP_MODE);
+  const tmpImage = host.getGlobalState(TMP_DEV_START_IMAGE);
+
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
     host.removeGlobalState(TMP_DEVSPACE);
     host.removeGlobalState(TMP_NAMESPACE);
@@ -227,6 +235,7 @@ function launchDevspace() {
     host.removeGlobalState(TMP_ID);
     host.removeGlobalState(TMP_CONTAINER);
     host.removeGlobalState(TMP_STORAGE_CLASS);
+    host.removeGlobalState(TMP_DEV_START_COMMAND);
 
     const node: ControllerNodeApi = {
       name: tmpWorkload,
@@ -269,7 +278,12 @@ function launchDevspace() {
       getSpaceName: () => tmpDevspace,
       getNameSpace: () => tmpNamespace,
     };
-    vscode.commands.executeCommand(START_DEV_MODE, node);
+
+    vscode.commands.executeCommand(START_DEV_MODE, node, {
+      mode: tmpMode,
+      image: tmpImage,
+      command: tmpCommand,
+    });
   }
 }
 
@@ -340,8 +354,9 @@ process.on("unhandledRejection", (error?: string | Error | any) => {
 
   function isIgnoreError(message: string) {
     if (
-      message === "read ENOTCONN" ||
-      message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER")
+      message &&
+      (message === "read ENOTCONN" ||
+        message.includes("routines:OPENSSL_internal:WRONG_VERSION_NUMBER"))
     ) {
       return true;
     }
