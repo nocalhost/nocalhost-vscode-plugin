@@ -34,11 +34,11 @@ export class JavaDebugProvider extends IDebugProvider {
   async waitDebuggerStart(port: number): Promise<any> {
     await this.connect(port, 2);
 
-    const result = await this.jdwp.call({ command: 1, commandSet: 1 }, 2);
+    // const result = await this.jdwp.call({ command: 1, commandSet: 1 }, 2);
 
-    assert(result);
+    // assert(result);
 
-    logger.debug("jdwp version", result);
+    // logger.debug("jdwp version", result);
 
     this.jdwp.socket.end();
     this.jdwp = null;
