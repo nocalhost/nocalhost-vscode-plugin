@@ -7,6 +7,7 @@ import { getSyncStatus, getContainers } from "../ctl/nhctl";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import ConfigService, {
+  ContainerConfig,
   NocalhostServiceConfig,
 } from "../service/configService";
 import logger from "../utils/logger";
@@ -77,13 +78,6 @@ export async function waitForSync(node: ControllerResourceNode) {
 }
 
 export async function getContainer(node: ControllerResourceNode) {
-  const containerNames = await getContainers({
-    kubeConfigPath: node.getKubeConfigPath(),
-    namespace: node.getNameSpace(),
-    appName: node.getAppName(),
-    ...node,
-  });
-
   let serviceConfig = await node.config;
 
   if (!serviceConfig) {
@@ -96,23 +90,21 @@ export async function getContainer(node: ControllerResourceNode) {
     )) as NocalhostServiceConfig;
   }
   const containers = (serviceConfig && serviceConfig.containers) || [];
+  let container: ContainerConfig;
 
-  let containerName = containerNames[0];
+  if (containers.length > 1) {
+    const name = await host.showQuickPick(containers.map((item) => item.name));
 
-  if (containerNames.length > 1) {
-    containerName = await host.showQuickPick(containerNames);
-
-    if (!containerName) {
-      return;
+    if (!name) {
+      return Promise.reject();
     }
+
+    return containers.find((item) => item.name === name);
+  } else if (containers.length === 1) {
+    container = containers[0];
   }
 
-  let container = containers.find((c) => c.name === containerName);
-
-  assert(
-    container,
-    `Cannot find configuration with container name ${containerName}`
-  );
+  assert(container, `Missing container configuration.`);
 
   return container;
 }
