@@ -108,11 +108,11 @@ export function createProcess(param: ExecParam) {
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
 
-  if (host.isWindow()) {
-    command = command.replaceAll(path.sep, "\\\\");
-  }
-
   logger.info(`[cmd] ${command}`);
+
+  if (host.isWindow() && env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
+    command = command.replaceAll(path.sep, "\\\\\\");
+  }
 
   const proc = spawn(command, [], { shell: true, env });
 
