@@ -125,8 +125,8 @@ export default class DebugCommand implements ICommand {
     let containerConfig = await getContainer(node);
 
     let type: Language = state.getAppState(
-      node.getAppNode().getNodeStateId(),
-      "debugProvider"
+      node.getAppName(),
+      `${node.name}_debugProvider`
     );
 
     const { image } = containerConfig.dev;
@@ -141,8 +141,8 @@ export default class DebugCommand implements ICommand {
 
     if (!type) {
       state.setAppState(
-        node.getAppNode().getNodeStateId(),
-        "debugProvider",
+        node.getAppName(),
+        `${node.name}_debugProvider`,
         provider.name.toLocaleLowerCase()
       );
     }
