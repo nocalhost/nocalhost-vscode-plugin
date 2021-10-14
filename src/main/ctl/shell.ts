@@ -162,6 +162,7 @@ export function createProcess(param: ExecParam) {
 export function exec(
   param: ExecParam
 ): {
+  proc: ChildProcessWithoutNullStreams;
   cancel: Event<any>;
   promise: Promise<ExecOutputReturnValue>;
 } {
@@ -177,6 +178,7 @@ export function exec(
 
   return {
     promise,
+    proc,
     cancel() {
       if (!proc.killed) {
         kill(proc.pid, "SIGTERM", (err) => {

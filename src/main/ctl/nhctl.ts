@@ -1069,13 +1069,20 @@ export async function getConfig(
   workloadName?: string,
   workloadType?: string
 ) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `config get ${appName} ${workloadName ? `-d ${workloadName}` : ""} ${
-      workloadType ? `-t ${workloadType.toLowerCase()}` : ""
-    }`
-  );
+  const commands = ["config", "get", appName];
+
+  if (workloadName) {
+    commands.push(`-d ${workloadName}`);
+  }
+  if (workloadType) {
+    commands.push(`-t ${workloadType.toLowerCase()}`);
+  }
+
+  if (!workloadType && !workloadName) {
+    commands.push("--app-config");
+  }
+
+  const command = nhctlCommand(kubeConfigPath, namespace, commands.join(" "));
 
   const result = await exec({ command }).promise;
   return result.stdout;
@@ -1085,51 +1092,30 @@ export async function editConfig(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string | undefined | null,
-  workloadType: string | undefined | null,
-  contents: string
+  contents: Buffer,
+  workloadName?: string,
+  workloadType?: string
 ) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `config edit ${appName} ${workloadName ? `-d ${workloadName}` : ""} ${
-      workloadType ? `-t ${workloadType.toLowerCase()}` : ""
-    } -c ${contents}`
-  );
+  const commands = ["config", "edit", appName, "-f -"];
 
-  const result = await exec({ command }).promise;
-  return result.stdout;
-}
+  if (workloadName) {
+    commands.push(`-d ${workloadName}`);
+  }
+  if (workloadType) {
+    commands.push(`-t ${workloadType.toLowerCase()}`);
+  }
 
-export async function getAppConfig(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string
-) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `config get ${appName} --app-config`
-  );
+  if (!workloadType && !workloadName) {
+    commands.push("--app-config");
+  }
 
-  const result = await exec({ command }).promise;
-  return result.stdout;
-}
+  const command = nhctlCommand(kubeConfigPath, namespace, commands.join(" "));
 
-export async function editAppConfig(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string,
-  contents: string
-) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `config edit ${appName} --app-config -c ${contents}`
-  );
+  const { proc, promise } = await exec({ command });
+  proc.stdin.write(contents);
+  proc.stdin.end();
 
-  const result = await exec({ command }).promise;
-  return result.stdout;
+  return await (await promise).stdout;
 }
 
 export async function resetApp(

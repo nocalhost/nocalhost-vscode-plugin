@@ -26,6 +26,17 @@ import { KubernetesResourceNode } from "./nodes/abstract/KubernetesResourceNode"
 import logger from "./utils/logger";
 
 export default class NocalhostFileSystemProvider implements FileSystemProvider {
+  delete(uri: Uri, options: { recursive: boolean }): void | Thenable<void> {}
+  rename(
+    oldUri: Uri,
+    newUri: Uri,
+    options: { overwrite: boolean }
+  ): void | Thenable<void> {}
+  copy?(
+    source: Uri,
+    destination: Uri,
+    options: { overwrite: boolean }
+  ): void | Thenable<void> {}
   static supportScheme = ["Nocalhost", "NocalhostRW"];
   static supportAuthority = ["k8s", "nh"];
   public dataMap: Map<Uri, Uint8Array> = new Map();
@@ -261,7 +272,6 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     const style = uri.path.substring(uri.path.length - 4);
     const paths = uri.path.substring(0, uri.path.length - 5).split("/");
     const type = paths[1];
-    const data = this.parse(content.toString(), style);
     const query = querystring.decode(uri.query);
 
     let id = "";
@@ -282,57 +292,27 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const key = paths[4]; // Array|Object|string
         const subKey = paths[5]; // subPropery
 
-        // destDir = ConfigService.getAppConfigPath(appName);
         if (key === "services" && subKey) {
           await ConfigService.writeConfig(
             kubeConfigPath,
             namespace,
             appName,
+            content,
             subKey,
-            workloadType,
-            data
+            workloadType
           );
           command = "Nocalhost.refresh";
           commands.executeCommand(command, state.getNode(id));
           return;
         }
 
-        const appInfo: any = await ConfigService.getAppConfig(
+        await ConfigService.writeConfig(
           kubeConfigPath,
           namespace,
-          appName
+          appName,
+          content
         );
-        let originData = "";
-        if (key && subKey) {
-          originData = this.getOriginData(subKey, data);
-          if (appInfo[key] instanceof Array) {
-            let replaced = false;
-            for (let i = 0; i < appInfo[key].length; i++) {
-              if (appInfo[key][i].name === subKey) {
-                appInfo[key][i] = originData;
-                replaced = true;
-              }
-            }
-            if (!replaced) {
-              appInfo[key].push(originData);
-            }
-            command = "Nocalhost.refresh";
-            args = { appName: appName, workloadName: subKey };
-          } else if (appInfo[key] instanceof Object) {
-            appInfo[key][subKey] = originData;
-          }
-        } else if (key) {
-          appInfo[key] = originData;
-        } else {
-          await ConfigService.writeAppConfig(
-            kubeConfigPath,
-            namespace,
-            appName,
-            data
-          );
-          return;
-        }
-        destData = Buffer.from(this.stringify(appInfo, style) || "", "utf-8");
+        return;
       }
     } else if (type === "helm-value" && paths[2] === "app") {
       // NocalhostRW://nh/helm-value/app/${appNode.name}.yaml
@@ -408,16 +388,4 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
     }
     return content;
   }
-
-  delete(uri: Uri, options: { recursive: boolean }): void | Thenable<void> {}
-  rename(
-    oldUri: Uri,
-    newUri: Uri,
-    options: { overwrite: boolean }
-  ): void | Thenable<void> {}
-  copy?(
-    source: Uri,
-    destination: Uri,
-    options: { overwrite: boolean }
-  ): void | Thenable<void> {}
 }
