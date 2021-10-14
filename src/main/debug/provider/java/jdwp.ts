@@ -34,9 +34,9 @@ export class JDWP {
       socket.once("error", (err) => {
         rej(err);
       });
-      // socket.once("close", (err) => {
-      //   rej(err);
-      // });
+      socket.once("close", (err) => {
+        rej(err);
+      });
 
       if (timeout > 0) {
         setTimeout(() => rej(new Error("timeout")), timeout * 1000);
@@ -52,9 +52,6 @@ export class JDWP {
         const handshake = data.slice(0, 14).toString();
 
         if (handshake === "JDWP-Handshake") {
-          this.socket.on("data", (data) => {
-            this.handleData(data);
-          });
           res(this);
         } else {
           rej(new Error("missing handshake bytes"));
