@@ -27,7 +27,7 @@ import { IPvc } from "../domain";
 import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
-import { NodeInfo } from "../typings";
+import { NodeInfo } from "../nodes/types/nodeType";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1097,8 +1097,12 @@ export async function editConfig(
     } -c ${contents}`
   );
 
-  const result = await exec({ command }).promise;
-  return result.stdout;
+  try {
+    const result = await exec({ command }).promise;
+    return result.stdout;
+  } catch (err: any) {
+    throw err.stderr || err.stdout;
+  }
 }
 
 export async function getAppConfig(
