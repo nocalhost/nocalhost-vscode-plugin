@@ -1,5 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as shell from "shelljs";
+import * as path from "path";
 import { Event } from "vscode";
 import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
@@ -106,6 +107,10 @@ export function createProcess(param: ExecParam) {
   let { command, args, output } = param;
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
+
+  if (host.isWindow()) {
+    command = command.replaceAll(path.sep, "\\\\");
+  }
 
   logger.info(`[cmd] ${command}`);
 
