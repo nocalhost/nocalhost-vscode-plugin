@@ -22,10 +22,6 @@ export default class OpenProjectCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    const status = await node.getStatus();
-    if (status !== "developing") {
-      return;
-    }
 
     const kubeConfigPath = node.getKubeConfigPath();
     const namespace = node.getNameSpace();
@@ -34,11 +30,11 @@ export default class OpenProjectCommand implements ICommand {
     const containerName =
       (await node.getContainer()) ||
       (await getContainer({
-        appName: node.getAppName(),
+        appName: appName,
         name: node.name,
-        resourceType: node.resourceType.toLocaleLowerCase(),
-        namespace: node.getNameSpace(),
-        kubeConfigPath: node.getKubeConfigPath(),
+        resourceType: node.resourceType,
+        namespace: namespace,
+        kubeConfigPath,
       }));
 
     const profile = await associateInfo(
@@ -49,8 +45,6 @@ export default class OpenProjectCommand implements ICommand {
       node.name,
       containerName
     );
-
-    host.log(`[associate info: ] ${profile}`, true);
 
     if (profile) {
       if (!existsSync(profile)) {

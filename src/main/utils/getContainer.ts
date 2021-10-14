@@ -1,5 +1,5 @@
 import host from "../host";
-import { NodeInfo } from "../typings/";
+import { NodeInfo } from "../nodes/types/nodeType";
 import { getContainers } from "../ctl/nhctl";
 
 export async function getContainer(info: NodeInfo) {
