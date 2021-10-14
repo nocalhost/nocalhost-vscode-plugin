@@ -148,7 +148,7 @@ export function createProcess(param: ExecParam) {
         logger.error(error);
 
         if (!err) {
-          host.log(`\n[cmd] ${command}\n stderr:${stderr}`);
+          host.log(`\n[cmd] ${command} \rstderr:${stderr}`);
         }
 
         rej(error);
