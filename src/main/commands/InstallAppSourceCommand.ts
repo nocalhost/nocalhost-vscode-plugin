@@ -538,7 +538,7 @@ export default class InstallAppSourceCommand implements ICommand {
     let config: INocalhostConfig | null = null;
     try {
       const str = await new NhctlCommand("render", null, {
-        output: false,
+        ignoreError: true,
       })
         .addArgument(path)
         .exec();
