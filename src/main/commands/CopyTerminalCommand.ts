@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as path from "path";
-const isWindows = require("is-windows");
 
 import ICommand from "./ICommand";
 import { COPY_TERMINAL } from "./constants";
@@ -118,7 +117,7 @@ export default class CopyTerminalCommand implements ICommand {
     this.copyCommand(`${NhctlCommand.nhctlPath} ${terminalCommands.join(" ")}`);
   }
   private copyCommand(command: string) {
-    if (isWindows()) {
+    if (host.isWindow()) {
       command = command.replaceAll(path.sep, "\\\\");
     }
 

@@ -1,5 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as shell from "shelljs";
+import * as path from "path";
 import { Event } from "vscode";
 import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
@@ -108,6 +109,10 @@ export function createProcess(param: ExecParam) {
   command = command + " " + (args || []).join(" ");
 
   logger.info(`[cmd] ${command}`);
+
+  if (host.isWindow() && env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
+    command = command.replaceAll(path.sep, "\\\\\\");
+  }
 
   const proc = spawn(command, [], { shell: true, env });
 
