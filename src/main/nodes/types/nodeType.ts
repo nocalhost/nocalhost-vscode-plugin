@@ -1,6 +1,4 @@
-import AccountClusterService, {
-  AccountClusterNode,
-} from "./../../clusters/AccountCluster";
+import AccountClusterService from "./../../clusters/AccountCluster";
 import * as vscode from "vscode";
 
 export interface AppInfo {
@@ -36,6 +34,8 @@ export interface SvcProfile {
   cmconfigloaded: boolean;
   actualName: string;
   developing: boolean;
+  devModeType: "replace" | "duplicate";
+  develop_status: "NONE" | "STARTING" | "STARTED";
   portForwarded: boolean;
   associate: string;
   syncing: boolean;
@@ -81,4 +81,12 @@ export enum DeploymentStatus {
   developing = "developing",
   starting = "starting",
   unknown = "unknown",
+}
+
+export interface NodeInfo {
+  appName: string;
+  name: string;
+  resourceType: string;
+  namespace: string;
+  kubeConfigPath: string;
 }

@@ -8,6 +8,7 @@ node_modules/
 *.lsif
 *.db
 .DS_Store
+*/.DS_Store
 npm-debug.log
 Thumbs.db
 yarn-error.log

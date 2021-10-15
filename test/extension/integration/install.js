@@ -9,6 +9,7 @@ const {
   checkPort,
 } = require("./index");
 const assert = require("assert");
+const logger = require("../lib/log");
 
 /**
  *
@@ -24,13 +25,14 @@ async function install(page) {
 
   treeView = await getTreeView(page);
 
-  const index = (
-    await Promise.all(
-      treeView.map((item) => item.evaluate((el) => el.innerText))
+  const defaultView = await Promise.all(
+    treeView.map((item) =>
+      item.evaluate(
+        (el) =>
+          el.getAttribute("aria-level") === "2" && el.innerText === "default"
+      )
     )
-  ).findIndex((text) => text === "default");
-
-  const defaultView = treeView[index];
+  ).then((results) => treeView.find((_, index) => results[index]));
 
   const className = await (
     await defaultView.$(".monaco-tl-twistie")
@@ -39,14 +41,6 @@ async function install(page) {
   if (className.includes("collapsed")) {
     await defaultView.click();
     await page.waitForTimeout(3000);
-
-    // await page.waitForFunction(() => {
-    //   return !document
-    //     .querySelector("#workbench\\.parts\\.sidebar")
-    //     ?.querySelectorAll(".monaco-list-row .monaco-tl-twistie")[1]
-    //     .getAttribute("class")
-    //     .includes("collapsed");
-    // });
   }
 
   const app = await getInstallApp(page, "bookinfo");
@@ -66,7 +60,7 @@ async function install(page) {
  */
 async function checkInstall(page) {
   assert(await (await isInstallSucceed(page, "bookinfo")).jsonValue());
-  assert(await checkPort("39080"));
+  await checkPort("39080");
 }
 
 /**
@@ -144,7 +138,7 @@ async function installFromLocal(page, path) {
 async function installHelmLocal(page, path) {
   await installFromLocal(page, path);
 
-  await quickPick(page, "config.kustomize.local.yaml");
+  await quickPick(page, "config.helm.local.yaml");
 
   await setInputBox(page, "Use Default");
 

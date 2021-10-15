@@ -1,18 +1,7 @@
-import * as vscode from "vscode";
-import { getResourceList } from "../../../../ctl/nhctl";
-import ConfigService, {
-  NocalhostConfig,
-  NocalhostServiceConfig,
-} from "../../../../service/configService";
 import state from "../../../../state";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { STATEFUL_SET_FOLDER } from "../../../nodeContants";
-import {
-  AppInfo,
-  BaseNocalhostNode,
-  SvcProfile,
-} from "../../../types/nodeType";
-import { List, Resource, ResourceStatus } from "../../../types/resourceType";
+import { BaseNocalhostNode } from "../../../types/nodeType";
 import { StatefulSet } from "./StatefulSet";
 import { kubernetesResourceDevMode } from "../../KubernetesResourceDevMode";
 

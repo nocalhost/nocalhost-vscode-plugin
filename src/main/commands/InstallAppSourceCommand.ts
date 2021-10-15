@@ -1,23 +1,23 @@
-import { NhctlCommand } from "./../ctl/nhctl";
 import * as vscode from "vscode";
 import * as path from "path";
-import { execChildProcessAsync } from "../ctl/shell";
 import * as tempy from "tempy";
-import Bookinfo from "../common/bookinfo";
+import * as yaml from "yaml";
+import * as nls from "vscode-nls";
 
+import Bookinfo from "../common/bookinfo";
+import { NhctlCommand } from "./../ctl/nhctl";
+import { execWithProgress } from "../ctl/shell";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { replaceSpacePath } from "../utils/fileUtil";
-import * as yaml from "yaml";
 import git from "../ctl/git";
 import ICommand from "./ICommand";
 import { INSTALL_APP_SOURCE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import { getFilesByDir, readYaml } from "../utils/fileUtil";
+import { getFilesByDir } from "../utils/fileUtil";
 import { INocalhostConfig } from "../domain";
 import { AppType } from "../domain/define";
 import state from "../state";
-import * as nls from "vscode-nls";
 import { ID_SPLIT } from "../nodes/nodeContants";
 
 const localize = nls.loadMessageBundle();
@@ -376,64 +376,6 @@ export default class InstallAppSourceCommand implements ICommand {
     return [values, valuesStr];
   }
 
-  // async installRawManifastLocal(props: {
-  //   appName: string;
-  //   installType: string;
-  //   kubeConfigPath: string;
-  //   resourcePath: string[];
-  //   gitRef?: string;
-  //   gitUrl?: string;
-  //   localPath?: string;
-  //   namespace: string;
-  //   configPath: string;
-  // }) {
-  //   const {
-  //     appName,
-  //     gitRef,
-  //     gitUrl,
-  //     kubeConfigPath,
-  //     localPath,
-  //     installType,
-  //     configPath,
-  //     resourcePath,
-  //     namespace,
-  //   } = props;
-
-  //   state.setAppState(this.getNodeStateId(appName), "installing", true);
-
-  //   host.log(`Installing application: ${appName}`, true);
-
-  //   const installCommand = await NhctlCommand.install({
-  //     kubeConfigPath,
-  //     namespace,
-  //   })
-  //     .addArgument(appName)
-  //     .addArgumentStrict("-t", installType)
-  //     .addArgumentStrict("--resource-path", resourcePath)
-  //     .addArgumentStrict("--git-ref", gitRef)
-  //     .addArgumentStrict("--git-url", gitUrl)
-  //     .addArgumentStrict("--local-path", localPath)
-  //     .addArgumentStrict(
-  //       `--config`,
-  //       configPath ? path.basename(configPath) : null
-  //     )
-  //     .getCommand();
-  //   await vscode.window.withProgress(
-  //     {
-  //       location: vscode.ProgressLocation.Notification,
-  //       title: `Installing application: ${appName}`,
-  //       cancellable: false,
-  //     },
-  //     () => {
-  //       return execChildProcessAsync(host, installCommand, [], {
-  //         dialog: `Install application (${appName}) fail`,
-  //       }).finally(() => {
-  //         state.deleteAppState(this.getNodeStateId(appName), "installing");
-  //       });
-  //     }
-  //   );
-  // }
-
   async installHelmRep(props: {
     appName: string;
     kubeConfigPath: string;
@@ -490,7 +432,7 @@ export default class InstallAppSourceCommand implements ICommand {
     state.setAppState(this.getNodeStateId(appName), "installing", true);
     host.log(`Installing application: ${appName}`, true);
 
-    const installCommand = NhctlCommand.install({
+    const command = NhctlCommand.install({
       kubeConfigPath,
       namespace,
     })
@@ -510,20 +452,19 @@ export default class InstallAppSourceCommand implements ICommand {
         configPath ? path.basename(configPath) : null
       )
       .getCommand();
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: `Installing application: ${appName}`,
-        cancellable: false,
-      },
-      () => {
-        return execChildProcessAsync(host, installCommand, [], {
-          dialog: `Install application (${appName}) fail`,
-        }).finally(() => {
-          state.deleteAppState(this.getNodeStateId(appName), "installing");
-        });
-      }
-    );
+
+    const title = `Installing application: ${appName}`;
+
+    return await execWithProgress({
+      title,
+      command,
+    })
+      .catch(() => {
+        return Promise.reject(new Error(`${title} fail`));
+      })
+      .finally(() => {
+        state.deleteAppState(this.getNodeStateId(appName), "installing");
+      });
   }
   async installHelmApp(props: {
     appName: string;
@@ -596,7 +537,11 @@ export default class InstallAppSourceCommand implements ICommand {
   async readYamlSync(path: string) {
     let config: INocalhostConfig | null = null;
     try {
-      const str = await new NhctlCommand("render").addArgument(path).exec();
+      const str = await new NhctlCommand("render", null, {
+        ignoreError: true,
+      })
+        .addArgument(path)
+        .exec();
       if (str) {
         config = yaml.parse(str);
       }

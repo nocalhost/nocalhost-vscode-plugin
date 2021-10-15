@@ -16,13 +16,13 @@ export class DaemonSet extends ControllerResourceNode {
     let status = "";
     try {
       status = await this.getStatus();
-      const [icon, label] = await this.getIconAndLabelByStatus(status);
+      const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
       const check = await this.checkConfig();
       treeItem.contextValue = `${treeItem.contextValue}-dev-${
         check ? "info" : "warn"
-      }-${status}`;
+      }-${status}-${mode}`;
       if (this.firstRender) {
         this.firstRender = false;
       }

@@ -28,8 +28,8 @@ export default class ResetCommand implements ICommand {
       node.resourceType
     );
     const appNode = node.getAppNode();
-    const devspace = appNode.getParent() as DevSpaceNode;
-    host.disposeWorkload(devspace.info.spaceName, appName, node.name);
+    const devSpace = appNode.getParent() as DevSpaceNode;
+    host.disposeWorkload(devSpace.info.spaceName, appName, node.name);
     vscode.commands.executeCommand(REFRESH, node);
     host.showInformationMessage(`reset service ${node.name}`);
   }

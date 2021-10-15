@@ -1,5 +1,20 @@
 # Change Log
 
+## 0.6.0 (2021-10-15)
+
+#### New Features
+
+- Supports Duplicate DevMode
+- Supports remote debug、run、hotReload for Node and Golang
+- Supports kill nhctl operation if nhctl spent too much time
+- Supports using git bash(unix shell) as default shell in windows
+
+#### Refactor & Improvement
+
+- Optimize icon for developing status
+- Optimize experience for logining nocalhost server
+
+
 ## 0.5.6 (2021-09-16)
 
 #### New Features

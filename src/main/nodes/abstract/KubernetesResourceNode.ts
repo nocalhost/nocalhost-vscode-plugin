@@ -54,11 +54,17 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
     }
   }
 
+  public get kubeConfigPath() {
+    return this.getKubeConfigPath();
+  }
   public getKubeConfigPath() {
     const appNode = this.getAppNode();
     return appNode.getKubeConfigPath();
   }
 
+  public get appName() {
+    return this.getAppName();
+  }
   public getAppName() {
     const appNode = this.getAppNode();
     return appNode.name;
@@ -70,6 +76,9 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
     return devspace.info.spaceName;
   }
 
+  public get namespace() {
+    return this.getNameSpace();
+  }
   public getNameSpace() {
     const appNode = this.getAppNode();
     const devspace = appNode.getParent() as DevSpaceNode;

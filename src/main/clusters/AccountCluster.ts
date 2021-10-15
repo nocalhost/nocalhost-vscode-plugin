@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import * as semver from "semver";
+import * as url from "url";
 import arrayDiffer = require("array-differ");
 import { uniqBy } from "lodash";
 import * as path from "path";
@@ -35,14 +36,18 @@ export class AccountClusterNode {
 }
 export default class AccountClusterService {
   instance: AxiosInstance;
-  loginInfo: LoginInfo;
   accountClusterNode: AccountClusterNode;
   jwt: string;
   refreshToken: string;
   lastServiceAccounts: IServiceAccountInfo[];
   isRefreshing: boolean;
-  constructor(loginInfo: LoginInfo) {
-    this.loginInfo = loginInfo;
+  constructor(public loginInfo: LoginInfo) {
+    var parsed = url.parse(loginInfo.baseUrl);
+
+    if (!parsed.protocol) {
+      loginInfo.baseUrl = "http://" + loginInfo.baseUrl;
+    }
+
     this.isRefreshing = true;
     this.instance = axios.create({
       baseURL: loginInfo.baseUrl,
@@ -237,7 +242,7 @@ export default class AccountClusterService {
 
       await Promise.allSettled(
         diff.map((id) => {
-          return new Promise(async (res, rej) => {
+          return new Promise<void>(async (res) => {
             const file = path.resolve(KUBE_CONFIG_DIR, id);
 
             await kubeconfig(file, "remove");
@@ -308,7 +313,7 @@ export default class AccountClusterService {
       },
     };
   };
-  resetDevspace = async (devSpaceId: number) => {
+  resetDevSpace = async (devSpaceId: number) => {
     return this.instance.post(`/v1/plugin/${devSpaceId}/recreate`);
   };
   login = async (loginInfo: LoginInfo) => {
@@ -326,9 +331,6 @@ export default class AccountClusterService {
     }
     logger.info("login end");
     return this.jwt;
-    // this.userInfo = await this.getUserInfo();
-    // this.loginInfo.password = null;
-    // this.id = `${this.userInfo.id}${this.loginInfo.baseUrl}`;
   };
 
   // get refresh token

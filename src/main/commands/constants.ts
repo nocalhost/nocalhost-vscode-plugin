@@ -17,6 +17,7 @@ export const WRITE_SERVICE_CONFIG = "Nocalhost.writeServiceConfig";
 export const EDIT_APP_CONFIG = "Nocalhost.EditAppConfig";
 
 export const START_DEV_MODE = "Nocalhost.startDevMode";
+export const START_COPY_DEV_MODE = "Nocalhost.startCopyDevMode";
 export const END_DEV_MODE = "Nocalhost.endDevMode";
 export const RESET = "Nocalhost.reset";
 
@@ -63,5 +64,3 @@ export const OPEN_PROJECT = "Nocalhost.openProject";
 export const DELETE_KUBECONFIG = "Nocalhost.deleteKubeConfig";
 export const ADD_KUBECONFIG = "Nocalhost.addKubeconfig";
 export const CLUSTERS_VIEW = "Nocalhost.ClustersView";
-
-export const GLOBAL_TIMEOUT = 30 * 1000;

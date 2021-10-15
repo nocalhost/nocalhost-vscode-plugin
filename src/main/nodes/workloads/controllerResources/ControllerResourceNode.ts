@@ -3,7 +3,9 @@ import * as nhctl from "../../../ctl/nhctl";
 import { get as _get } from "lodash";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
-import { NocalhostServiceConfig } from "../../../service/configService";
+import ConfigService, {
+  NocalhostServiceConfig,
+} from "../../../service/configService";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import {
   BaseNocalhostNode,
@@ -39,13 +41,23 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     public parent: BaseNocalhostNode,
     public resource: IK8sResource,
     public conditionsStatus?: Array<IStatus> | string,
-    public svcProfile?: SvcProfile | undefined | null,
-    public nocalhostService?: NocalhostServiceConfig | undefined | null
+    public svcProfile?: SvcProfile | undefined | null
   ) {
     super();
     this.label = resource.metadata.name;
     this.name = resource.metadata.name;
     state.setNode(this.getNodeStateId(), this);
+  }
+
+  get config() {
+    const node = this;
+    return ConfigService.getAppConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    ) as Promise<NocalhostServiceConfig>;
   }
 
   public async refreshSvcProfile() {
@@ -75,18 +87,16 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
     return false;
   }
-  public async isDeveloping() {
-    if (this.svcProfile && this.svcProfile.developing) {
-      return true;
-    }
-
-    return false;
-  }
-
   public async getIconAndLabelByStatus(
     status: string
-  ): Promise<[vscode.Uri, string]> {
+  ): Promise<[vscode.Uri, string, string]> {
     const portForwardStatus = await this.getPortForwardStatus();
+    if (!this.svcProfile) {
+      await this.refreshSvcProfile();
+    }
+    const devModeType = this.svcProfile?.devModeType || "replace";
+    const possess = this.svcProfile?.possess;
+
     let iconPath,
       label = this.label;
     switch (status) {
@@ -98,9 +108,12 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
         break;
       case "developing":
-        const possess = this.svcProfile.possess;
         iconPath = resolveVSCodeUri(
-          possess === false ? "dev_other.svg" : "dev_start.svg"
+          devModeType === "duplicate"
+            ? "dev_copy.svg"
+            : possess === false
+            ? "dev_other.svg"
+            : "dev_start.svg"
         );
         const container = await this.getContainer();
         if (container) {
@@ -108,7 +121,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
         if (portForwardStatus) {
           iconPath = resolveVSCodeUri(
-            possess === false
+            devModeType === "duplicate"
+              ? "dev_copy_forwarding.svg"
+              : possess === false
               ? "dev_port_forwarding_other.svg"
               : "dev_port_forwarding.svg"
           );
@@ -124,7 +139,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         iconPath = resolveVSCodeUri("status_failed.svg");
         break;
     }
-    return [iconPath, label];
+    return [iconPath, label, possess ? `${devModeType}-self` : devModeType];
   }
 
   /**
@@ -206,8 +221,14 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     if (refresh) {
       await this.refreshSvcProfile();
     }
-    if (this.svcProfile && this.svcProfile.developing) {
-      return DeploymentStatus.developing;
+
+    if (
+      this.svcProfile?.develop_status &&
+      this.svcProfile?.develop_status !== "NONE"
+    ) {
+      return this.svcProfile.develop_status === "STARTED"
+        ? DeploymentStatus.developing
+        : DeploymentStatus.starting;
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;

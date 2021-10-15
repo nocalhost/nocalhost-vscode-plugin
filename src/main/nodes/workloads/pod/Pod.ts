@@ -15,14 +15,14 @@ export class Pod extends ControllerResourceNode {
   async getTreeItem(): Promise<vscode.TreeItem> {
     let treeItem = await super.getTreeItem();
     try {
-      const [status, dev] = await this.getStatusPod();
-      const [icon, label] = await this.getIconAndLabelByStatus(status);
+      const [status, dev] = await this.getStatusPod(true);
+      const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
       const check = await this.checkConfig();
       treeItem.contextValue = `${treeItem.contextValue}-${dev ? "dev-" : ""}${
         check ? "info" : "warn"
-      }-${status}`;
+      }-${status}-${mode}`;
     } catch (e) {
       logger.error("pod getTreeItem");
       logger.error(e);
@@ -41,9 +41,15 @@ export class Pod extends ControllerResourceNode {
       await this.refreshSvcProfile();
     }
     const resource = this.resource;
-    if (this.svcProfile && this.svcProfile.developing) {
+    if (
+      this.svcProfile &&
+      this.svcProfile.develop_status &&
+      this.svcProfile.develop_status !== "NONE"
+    ) {
       return [
-        DeploymentStatus.developing,
+        this.svcProfile.develop_status === "STARTED"
+          ? DeploymentStatus.developing
+          : DeploymentStatus.running,
         !resource?.metadata?.ownerReferences,
       ];
     }

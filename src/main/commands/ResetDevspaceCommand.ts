@@ -44,15 +44,13 @@ export default class ResetDevspaceCommand implements ICommand {
       node.info.namespace,
       node.info.spaceName
     ).finally(async () => {
-      await node.parent.accountClusterService.resetDevspace(node.info.id);
+      await node.parent.accountClusterService.resetDevSpace(node.info.id);
 
       const nocalhostRootNode = node.parent.parent as NocalhostRootNode;
 
       await nocalhostRootNode.updateData();
 
       vscode.commands.executeCommand("Nocalhost.refresh", nocalhostRootNode);
-
-      host.showInformationMessage(`reset ${node.info.spaceName}`);
 
       state.delete(node.info.spaceName);
     });
@@ -65,7 +63,6 @@ export default class ResetDevspaceCommand implements ICommand {
     devspaceName: string
   ) {
     host.log(`Reseting devspace: ${devspaceName}`, true);
-    host.showInformationMessage(`Reseting devspace: ${devspaceName}`);
     await nhctl.resetApp(kubeconfigPath, namespace, devspaceName);
     host.removeGlobalState(devspaceName);
     host.log(`Devspace ${devspaceName} reset`, true);

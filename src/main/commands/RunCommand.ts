@@ -1,15 +1,19 @@
 import * as vscode from "vscode";
 import * as JsonSchema from "json-schema";
-import * as path from "path";
+import * as assert from "assert";
+import { capitalCase } from "change-case";
+import { validate } from "json-schema";
 
 import ICommand from "./ICommand";
-import { RUN } from "./constants";
-import { NH_BIN } from "../constants";
+import { RUN, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
-import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
-import { validate } from "json-schema";
 import { ContainerConfig } from "../service/configService";
+import { LiveReload } from "../debug/liveReload";
+import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
+import { closeTerminals, getContainer, waitForSync } from "../debug";
+import { RemoteTerminal } from "../debug/remoteTerminal";
+import { NhctlCommand } from "../ctl/nhctl";
 
 export interface ExecCommandParam {
   appName: string;
@@ -22,104 +26,105 @@ export interface ExecCommandParam {
 
 export default class RunCommand implements ICommand {
   command: string = RUN;
+  node: ControllerResourceNode;
+  container: ContainerConfig;
+  isReload: boolean = false;
+  terminal: RemoteTerminal;
+
+  disposable: Array<{ dispose(): any }> = [];
+
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  async execCommand(node: Deployment) {
+
+  async execCommand(...rest: any[]) {
+    const [node, command] = rest as [ControllerResourceNode, string];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    await host.showProgressing("running ...", async () => {
-      const workspaceFolder = await host.showWorkspaceFolderPick();
-      if (!workspaceFolder) {
-        host.showInformationMessage("no workspacefolder");
-        return;
-      }
-      const serviceConfig = node.getConfig();
-      const containers = (serviceConfig && serviceConfig.containers) || [];
-      let container: ContainerConfig | undefined;
 
-      if (containers.length > 1) {
-        const containerNames = containers.map((c) => c.name);
-        const containerName = await vscode.window.showQuickPick(containerNames);
-        if (!containerName) {
-          return;
-        }
-        container = containers.filter((c) => {
-          if (c.name === containerName) {
-            return true;
-          }
-          return false;
-        })[0];
-      } else if (containers.length === 1) {
-        container = containers[0];
-      } else {
-        host.showInformationMessage("Missing container configuration");
-        return;
-      }
-      const valid = this.validateRunConfig(container);
-      if (valid.errors.length > 0) {
-        let message = "please check config.\n";
-        valid.errors.forEach((e) => {
-          message += `${e.property}: ${e.message} \n`;
+    this.node = node;
+    this.container = await getContainer(node);
+
+    this.validateRunConfig(this.container);
+
+    await closeTerminals();
+
+    if (!command) {
+      const status = await node.getStatus(true);
+
+      if (status !== "developing") {
+        vscode.commands.executeCommand(START_DEV_MODE, node, {
+          command: RUN,
         });
-        host.showErrorMessage(`${message}`);
         return;
       }
+    }
 
-      if (!container.dev.command?.run?.length) {
-        host.showErrorMessage(
-          "Missing parameters. Please configure the run service"
-        );
-        return;
-      }
+    await waitForSync(node);
 
-      let commands = [
-        container.dev.shell || "sh",
-        "",
-        "",
-        `"${(container.dev.command?.run ?? []).join(" ")}"`,
-      ];
-      const appNode = node.getAppNode();
-      await this.exec({
-        appName: node.getAppName(),
-        workload: node.name,
-        resourceType: node.resourceType,
-        commands,
-        namespace: appNode.namespace,
-        kubeConfigPath: node.getKubeConfigPath(),
-      }).catch(() => {});
-    });
+    const name = `${capitalCase(node.name)} Process Console`;
+
+    await this.startRun(name);
   }
-  async exec(param: ExecCommandParam) {
-    const terminalCommands = new Array<string>();
-    terminalCommands.push("exec", param.appName);
-    terminalCommands.push("-d", param.workload);
-    param.commands.forEach((c) => {
-      terminalCommands.push("-c", c);
+
+  async startRun(name: string) {
+    const { node } = this;
+
+    await this.createRunTerminal(name);
+
+    if (this.container.dev.hotReload === true) {
+      const liveReload = new LiveReload(node, async () => {
+        this.isReload = true;
+
+        await this.terminal.restart();
+
+        this.isReload = false;
+      });
+
+      this.disposable.push(liveReload);
+    }
+
+    this.disposable.push(
+      vscode.window.onDidCloseTerminal(async (e) => {
+        if ((await e.processId) === (await this.terminal.processId)) {
+          await this.terminal.sendCtrlC();
+
+          this.disposable.forEach((d) => d.dispose());
+          this.disposable.length = 0;
+        }
+      })
+    );
+  }
+
+  async createRunTerminal(name: string) {
+    const { container, node } = this;
+    const { run } = container.dev.command;
+
+    const command = NhctlCommand.exec({
+      app: node.getAppName(),
+      name: node.name,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+      resourceType: node.resourceType,
+      commands: run,
+    }).getCommand();
+
+    const terminal = await RemoteTerminal.create({
+      terminal: {
+        name,
+        iconPath: { id: "vm-running" },
+      },
+      spawn: { command },
     });
-    terminalCommands.push("-n", param.namespace);
-    terminalCommands.push("--kubeconfig", param.kubeConfigPath);
-    const shellPath = path.resolve(
-      NH_BIN,
-      host.isWindow() ? "nhctl.exe" : "nhctl"
-    );
-
-    const terminal = host.invokeInNewTerminal(
-      `${shellPath} ${terminalCommands.join(" ")}`,
-      `${param.appName}/${param.workload}:run`
-    );
-
-    // const terminal = host.invokeInNewTerminalSpecialShell(
-    //   terminalCommands,
-    //   process.platform === "win32" ? `${shellPath}.exe` : shellPath,
-    //   `${param.appName}/${param.workload}:run`
-    // );
     terminal.show();
-  }
 
-  public validateRunConfig(config: ContainerConfig) {
+    this.terminal = terminal;
+
+    this.disposable.push(this.terminal);
+  }
+  validateRunConfig(config: ContainerConfig) {
     const schema: JsonSchema.JSONSchema6 = {
       $schema: "http://json-schema.org/schema#",
       type: "object",
@@ -147,7 +152,14 @@ export default class RunCommand implements ICommand {
       },
     };
 
-    const result = validate(config, schema);
-    return result;
+    const valid = validate(config, schema);
+
+    assert.strictEqual(
+      valid.errors.length,
+      0,
+      `Please check config.\n${valid.errors
+        .map((e) => `${e.property}:${e.message}`)
+        .join("\n")}`
+    );
   }
 }
