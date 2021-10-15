@@ -73,6 +73,7 @@ export interface ExecParam {
   args?: any[];
   timeout?: number;
   output?: OutPut;
+  ignoreError?: boolean;
 }
 
 type OutPut = boolean | { err: boolean; out: boolean };
@@ -152,7 +153,7 @@ export function createProcess(param: ExecParam) {
         const error = new ShellExecError({ code, stdout, stderr, command });
         logger.error(error);
 
-        if (!err) {
+        if (param.ignoreError !== true && !err) {
           host.log(`\n[cmd] ${command} \rstderr:${stderr}`);
         }
 
