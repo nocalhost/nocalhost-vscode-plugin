@@ -54,15 +54,21 @@ export class NhctlCommand {
   );
   private outputMethod: string = "toJson";
 
-  private execParam: Omit<ExecParam, "command"> = {};
-
-  constructor(base: string, baseParams?: IBaseCommand<unknown>) {
+  constructor(
+    base: string,
+    baseParams?: IBaseCommand<unknown>,
+    private execParam: Omit<ExecParam, "command"> = {}
+  ) {
     this.baseParams = baseParams;
     this.args = [];
     this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
   }
-  static create(base: string, baseParams?: IBaseCommand<unknown>) {
-    return new NhctlCommand(base, baseParams);
+  static create(
+    base: string,
+    baseParams?: IBaseCommand<unknown>,
+    execParam: Omit<ExecParam, "command"> = {}
+  ) {
+    return new NhctlCommand(base, baseParams, execParam);
   }
   static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
     const command = NhctlCommand.create("get", baseParams);
