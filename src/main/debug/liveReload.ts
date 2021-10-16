@@ -30,7 +30,7 @@ export class LiveReload {
     };
 
     this.watcher = workspace.createFileSystemWatcher(
-      new RelativePattern(host.getCurrentRootPath(), "*.*")
+      new RelativePattern(host.getCurrentRootPath(), "**/*.*")
     );
     this.watcher.onDidChange(this.waitSyncFile.bind(this));
     this.watcher.onDidCreate(this.waitSyncFile.bind(this));

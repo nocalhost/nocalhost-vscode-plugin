@@ -89,8 +89,6 @@ export default class RunCommand implements ICommand {
     this.disposable.push(
       vscode.window.onDidCloseTerminal(async (e) => {
         if ((await e.processId) === (await this.terminal.processId)) {
-          await this.terminal.sendCtrlC();
-
           this.disposable.forEach((d) => d.dispose());
           this.disposable.length = 0;
         }

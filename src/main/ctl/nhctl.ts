@@ -1256,9 +1256,11 @@ export async function getSyncStatus(
 
   const command = nhctlCommand(kubeConfigPath, namespace, baseCommand);
 
-  const r = await exec({ command, args }).promise.catch(() => {
-    return { code: 0, stdout: "", stderr: "" };
-  });
+  const r = await exec({ command, args, printCommand: false }).promise.catch(
+    () => {
+      return { code: 0, stdout: "", stderr: "" };
+    }
+  );
 
   return r.stdout;
 }

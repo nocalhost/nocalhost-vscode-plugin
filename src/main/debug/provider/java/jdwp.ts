@@ -4,10 +4,10 @@ import { ByteBuffer } from "./byteBuffer";
 export enum Command {
   version = 1,
 }
-interface Response<T> {
+interface Response {
   id: number;
   flags: number;
-  data: T;
+  data: ByteBuffer;
   commandSet?: number;
   command?: number;
   errorCode?: number;
@@ -52,6 +52,9 @@ export class JDWP {
         const handshake = data.slice(0, 14).toString();
 
         if (handshake === "JDWP-Handshake") {
+          this.socket.on("data", (data) => {
+            this.handleData(data);
+          });
           res(this);
         } else {
           rej(new Error("missing handshake bytes"));
@@ -61,7 +64,7 @@ export class JDWP {
 
     this.socket.write(Buffer.from("JDWP-Handshake"));
   }
-  private buf = Buffer.allocUnsafe(0);
+  private buf: Buffer = Buffer.allocUnsafe(0);
 
   private handleData(chunk: Buffer) {
     this.buf = this.buf ? Buffer.concat([this.buf, chunk]) : chunk;
@@ -89,16 +92,10 @@ export class JDWP {
 
     const buff = ByteBuffer.wrap(this.buf, 11, packetLength - 11);
 
-    const packet: Response<any> = {
+    const packet: Response = {
       id: this.buf.readInt32BE(4),
       flags: this.buf[8],
-      data: {
-        description: buff.getString(),
-        jdwpMajor: buff.getInt(),
-        jdwpMinor: buff.getInt(),
-        vmVersion: buff.getString(),
-        vmName: buff.getString(),
-      },
+      data: ByteBuffer.wrap(this.buf, 11, packetLength - 11),
     };
     if (packet.flags === 0x80) {
       packet.errorCode = this.buf.readInt16BE(9);
@@ -115,7 +112,7 @@ export class JDWP {
       return true;
     }
 
-    this.buf = null;
+    this.buf = Buffer.allocUnsafe(0);
     return false;
   }
   private encode(packet: Request) {
@@ -133,16 +130,32 @@ export class JDWP {
     }
     return buf;
   }
-  call<T extends Response<any>>(
-    request: Omit<Request, "id">,
-    timeout = 0
-  ): Promise<T> {
-    return new Promise<T>((res, rej) => {
+  async getVersion(): Promise<{
+    description: string;
+    jdwpMajor: number;
+    jdwpMinor: number;
+    vmVersion: string;
+    vmName: string;
+  }> {
+    const res = await this.call({ command: 1, commandSet: 1 }, 2);
+
+    const { data } = res;
+
+    return {
+      description: data.getString(),
+      jdwpMajor: data.getInt(),
+      jdwpMinor: data.getInt(),
+      vmVersion: data.getString(),
+      vmName: data.getString(),
+    };
+  }
+  private async call(request: Omit<Request, "id">, timeout = 0) {
+    return new Promise<Response>((res, rej) => {
       const id = this.id++;
 
-      this.socket.once("packet", (data: Response<T>) => {
+      this.socket.on("packet", (data: Response) => {
         if (data.id === id) {
-          res(data as T);
+          res(data);
         }
       });
 

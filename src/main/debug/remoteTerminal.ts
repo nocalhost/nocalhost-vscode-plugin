@@ -56,10 +56,8 @@ export class RemoteTerminal implements vscode.Terminal {
           this.proc = null;
         }
       },
-      handleInput: (data: string) => {
-        if (this.proc?.stdin.writable) {
-          this.proc?.stdin.write(data);
-        }
+      handleInput: async (data: string) => {
+        await this.write(data);
       },
     };
 
@@ -102,6 +100,23 @@ export class RemoteTerminal implements vscode.Terminal {
     this.proc = proc;
   }
 
+  private async write(chunk: any) {
+    return new Promise<void>((res, rej) => {
+      if (this.proc?.stdin.writable) {
+        this.proc.stdin.write(chunk, (error) => {
+          if (error) {
+            rej(error);
+            return;
+          }
+          res();
+        });
+
+        return;
+      }
+
+      res();
+    });
+  }
   private send(text: string) {
     text = text.replace(/\n/g, "\r\n");
 
@@ -124,10 +139,11 @@ export class RemoteTerminal implements vscode.Terminal {
       return Promise.resolve();
     }
 
-    await new Promise<void>((resolve) => {
-      this.proc.stdin.write("\x03");
-
+    await new Promise<void>(async (resolve) => {
       this.exitCallback = resolve;
+
+      await this.write("\x03");
+      this.proc?.stdin.end();
 
       setTimeout(() => {
         if (!this.exitCallback) {
