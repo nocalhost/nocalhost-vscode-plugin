@@ -3,7 +3,6 @@ import * as getPort from "get-port";
 
 import { NhctlCommand } from "./../ctl/nhctl";
 import { ContainerConfig } from "../service/configService";
-import { checkDebuggerInstalled } from "./provider";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { DebugCancellationTokenSource, getContainer } from "./index";
@@ -27,11 +26,6 @@ export class DebugSession {
     container?: ContainerConfig
   ) {
     if (!workspaceFolder) {
-      return;
-    }
-
-    const isInstalled = checkDebuggerInstalled(debugProvider);
-    if (!isInstalled) {
       return;
     }
 

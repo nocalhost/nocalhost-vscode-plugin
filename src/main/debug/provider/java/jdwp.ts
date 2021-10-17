@@ -137,7 +137,7 @@ export class JDWP {
     vmVersion: string;
     vmName: string;
   }> {
-    const res = await this.call({ command: 1, commandSet: 1 }, 2);
+    const res = await this.call({ command: Command.version, commandSet: 1 }, 2);
 
     const { data } = res;
 

@@ -30,6 +30,10 @@ export abstract class IDebugProvider {
     return Promise.resolve();
   }
 
+  async checkDebuggerDependent() {
+    return Promise.resolve();
+  }
+
   async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
     await AsyncRetry(
       async (bail) => {

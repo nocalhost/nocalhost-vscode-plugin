@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import * as AsyncRetry from "async-retry";
 
 import { SyncMsg } from "../commands/SyncServiceCommand";
-import { getSyncStatus, getContainers } from "../ctl/nhctl";
+import { getSyncStatus } from "../ctl/nhctl";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import ConfigService, {
