@@ -60,7 +60,11 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
+let currentContext: vscode.ExtensionContext;
+
 export async function activate(context: vscode.ExtensionContext) {
+  currentContext = context;
+
   await init(context);
   let appTreeProvider = new NocalhostAppProvider();
   initCommands(context, appTreeProvider);
@@ -364,7 +368,7 @@ process.on("unhandledRejection", (error?: string | Error | any) => {
 
   if (error instanceof Error || error instanceof ShellExecError) {
     if (
-      !process.argv.includes("--type=extensionHost") &&
+      currentContext.extensionMode === vscode.ExtensionMode.Production &&
       error.stack &&
       !error.stack.includes("nocalhost.nocalhost")
     ) {

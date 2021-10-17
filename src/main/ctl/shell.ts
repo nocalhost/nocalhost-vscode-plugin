@@ -148,11 +148,7 @@ export function createProcess(param: ExecParam) {
       if (code === 0) {
         res({ code, stdout, stderr });
       } else {
-        if (param.ignoreError) {
-          return;
-        }
-
-        if ("SIGTERM" === signal) {
+        if ("SIGTERM" === signal || param.ignoreError) {
           rej();
           return;
         }
