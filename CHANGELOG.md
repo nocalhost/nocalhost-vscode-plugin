@@ -1,8 +1,8 @@
 # Change Log
 
-#### Refactor & Improvement
-
 ## 0.6.2 (2021-10-18)
+
+#### Refactor & Improvement
 
 - Optimize tree refresh
 - Optimize display of nhctl execution command results
