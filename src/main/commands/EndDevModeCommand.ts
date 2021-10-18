@@ -30,8 +30,8 @@ export default class EndDevModeCommand implements ICommand {
       node.resourceType
     );
     if (
-      svcProfile.possess === false &&
-      svcProfile.develop_status !== "STARTING"
+      svcProfile?.possess === false &&
+      svcProfile?.develop_status !== "STARTING"
     ) {
       result = await vscode.window.showInformationMessage(
         "This service is already in DevMode and you not the initiator, do you want exit the DevMode first?",
