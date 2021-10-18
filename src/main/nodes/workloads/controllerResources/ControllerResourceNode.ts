@@ -3,9 +3,7 @@ import * as nhctl from "../../../ctl/nhctl";
 import { get as _get } from "lodash";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
-import ConfigService, {
-  NocalhostServiceConfig,
-} from "../../../service/configService";
+import { NocalhostServiceConfig } from "../../../service/configService";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import {
   BaseNocalhostNode,
@@ -41,23 +39,13 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     public parent: BaseNocalhostNode,
     public resource: IK8sResource,
     public conditionsStatus?: Array<IStatus> | string,
-    public svcProfile?: SvcProfile | undefined | null
+    public svcProfile?: SvcProfile | undefined | null,
+    public config?: NocalhostServiceConfig | undefined | null
   ) {
     super();
     this.label = resource.metadata.name;
     this.name = resource.metadata.name;
     state.setNode(this.getNodeStateId(), this);
-  }
-
-  get config() {
-    const node = this;
-    return ConfigService.getAppConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
-      node.name,
-      node.resourceType
-    ) as Promise<NocalhostServiceConfig>;
   }
 
   public async refreshSvcProfile() {
@@ -91,9 +79,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     status: string
   ): Promise<[vscode.Uri, string, string]> {
     const portForwardStatus = await this.getPortForwardStatus();
-    if (!this.svcProfile) {
-      await this.refreshSvcProfile();
-    }
+
     const devModeType = this.svcProfile?.devModeType || "replace";
     const possess = this.svcProfile?.possess;
 
