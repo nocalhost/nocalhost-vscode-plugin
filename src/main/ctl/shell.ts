@@ -19,7 +19,7 @@ function showGlobalMsg(str: string) {
   if (str.indexOf("[INFO]") > -1) {
     host.showWarnMessage(str);
   }
-  if (str.indexOf("ERROR") > -1) {
+  if (str.indexOf("[ERROR]") > -1) {
     host.showErrorMessage(str);
   }
 }
