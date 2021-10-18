@@ -1,7 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as shell from "shelljs";
 import * as path from "path";
-import { Event, TreeItem } from "vscode";
+import { Event } from "vscode";
 import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
 
