@@ -1,8 +1,9 @@
 import * as vscode from "vscode";
 
 import { IDebugProvider } from "./IDebugProvider";
+
 export class PhpDebugProvider extends IDebugProvider {
-  name: string = "Php";
+  name: string = "php";
   requireExtensions: string[] = ["felixfbecker.php-debug"];
 
   getDebugConfiguration(
@@ -12,9 +13,9 @@ export class PhpDebugProvider extends IDebugProvider {
   ): vscode.DebugConfiguration {
     // https://code.visualstudio.com/docs/java/java-debugging
     return {
-      type: "java",
+      type: "php",
       name,
-      request: "attach",
+      request: "launch",
       hostName: "localhost",
       port,
     };
