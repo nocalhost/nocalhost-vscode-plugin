@@ -9,18 +9,25 @@ import host from "../host";
 import logger from "../utils/logger";
 
 function showGlobalMsg(str: string) {
-  if (str.indexOf("[WARNING]") > -1) {
-    str = str.replaceAll("<br>", "\n");
+  const strArr = str.split("\n");
 
-    host.showInformationMessage(str, {
+  const findStr = (keyWords: string) => {
+    return (str: string) => str.startsWith(keyWords);
+  };
+
+  const warnStr = strArr.find(findStr("[WARNING]"));
+  if (warnStr) {
+    return host.showInformationMessage(warnStr, {
       modal: true,
     });
   }
-  if (str.indexOf("[INFO]") > -1) {
-    host.showWarnMessage(str);
+  const infoStr = strArr.find(findStr("[INFO]"));
+  if (infoStr) {
+    return host.showWarnMessage(infoStr);
   }
-  if (str.indexOf("[ERROR]") > -1) {
-    host.showErrorMessage(str);
+  const errStr = strArr.find(findStr("[ERROR]"));
+  if (errStr) {
+    host.showErrorMessage(errStr);
   }
 }
 
