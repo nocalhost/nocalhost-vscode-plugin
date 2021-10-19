@@ -22,6 +22,7 @@ import host from "./host";
 import state from "./state";
 import ConfigService from "./service/configService";
 import { HELM_VALUES_DIR } from "./constants";
+import { CONFIG_URI_QUERY } from "./commands/constants";
 import { KubernetesResourceNode } from "./nodes/abstract/KubernetesResourceNode";
 import logger from "./utils/logger";
 
@@ -141,7 +142,9 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const style = uri.path.substring(uri.path.length - 4);
         const paths = uri.path.substring(0, uri.path.length - 5).split("/");
         const type = paths[1];
-        const query = querystring.decode(uri.query);
+        const query = querystring.decode(
+          uri.query || host.getGlobalState(CONFIG_URI_QUERY)
+        );
         const kubeConfigPath = query.kubeConfigPath as string;
         const namespace = query.namespace as string;
         const workloadType = query.workloadType as string;
