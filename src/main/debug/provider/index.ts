@@ -8,7 +8,7 @@ import { IDebugProvider } from "./IDebugProvider";
 
 export const support = {
   node: NodeDebugProvider,
-  // java: JavaDebugProvider,
+  java: JavaDebugProvider,
   golang: GoDebugProvider,
   // python: PythonDebugProvider,
 };

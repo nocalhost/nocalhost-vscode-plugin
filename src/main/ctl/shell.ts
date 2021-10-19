@@ -82,6 +82,7 @@ export interface ExecParam {
   timeout?: number;
   output?: OutPut;
   ignoreError?: boolean;
+  printCommand?: boolean;
 }
 
 type OutPut = boolean | { err: boolean; out: boolean };
@@ -117,7 +118,9 @@ export function createProcess(param: ExecParam) {
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
 
-  logger.info(`[cmd] ${command}`);
+  if (param.printCommand !== false) {
+    logger.info(`[cmd] ${command}`);
+  }
 
   if (host.isWindow() && env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
     command = command.replaceAll(path.sep, "\\\\\\");
@@ -134,8 +137,8 @@ export function createProcess(param: ExecParam) {
   }
 
   proc.stdout.on("data", function (data: Buffer) {
-    let str = data.toString();
-    stdout += data;
+    const str = data.toString();
+    stdout += str;
 
     out && host.log(str);
     showGlobalMsg(str);
@@ -153,7 +156,7 @@ export function createProcess(param: ExecParam) {
       if (code === 0) {
         res({ code, stdout, stderr });
       } else {
-        if ("SIGTERM" === signal) {
+        if ("SIGTERM" === signal || param.ignoreError) {
           rej();
           return;
         }

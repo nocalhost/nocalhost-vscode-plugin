@@ -10,6 +10,7 @@ import * as AsyncRetry from "async-retry";
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
 import logger from "../../utils/logger";
+import host from "../../host";
 
 export abstract class IDebugProvider {
   abstract name: string;
@@ -26,6 +27,10 @@ export abstract class IDebugProvider {
   }
 
   async waitDebuggerStart(port: number): Promise<any> {
+    return Promise.resolve();
+  }
+
+  async checkDebuggerDependent() {
     return Promise.resolve();
   }
 
