@@ -25,7 +25,6 @@ function showGlobalMsg(str: string) {
   if (infoStr) {
     return host.showWarnMessage(infoStr);
   }
-
   const errStr = strArr.find(findStr("[ERROR]"));
   if (errStr) {
     host.showErrorMessage(errStr);
