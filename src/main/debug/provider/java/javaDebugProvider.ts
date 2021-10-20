@@ -54,13 +54,6 @@ export class JavaDebugProvider extends IDebugProvider {
 
     logger.debug("jdwp version", result);
 
-    return new Promise<void>((res) => {
-      if (this.jdwp) {
-        this.jdwp.socket.end(res);
-        this.jdwp = null;
-        return;
-      }
-      res();
-    });
+    await this.jdwp.destroy();
   }
 }

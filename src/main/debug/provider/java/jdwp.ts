@@ -149,6 +149,15 @@ export class JDWP {
       vmName: data.getString(),
     };
   }
+  async destroy() {
+    return new Promise<void>((res) => {
+      this.socket.on("close", (hasError) => {
+        setTimeout(res, 2000);
+        this.socket = null;
+      });
+      this.socket.destroy();
+    });
+  }
   private async call(request: Omit<Request, "id">, timeout = 0) {
     return new Promise<Response>((res, rej) => {
       const id = this.id++;
