@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
-import * as JsonSchema from "json-schema";
 import * as assert from "assert";
-import { validate } from "json-schema";
+import { ValidateFunction } from "ajv";
 
 import ICommand from "./ICommand";
 import { DEBUG, START_DEV_MODE } from "./constants";
@@ -19,6 +18,7 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
 import state from "../state";
+import validate, { validateData } from "../utils/validate";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -61,7 +61,7 @@ export default class DebugCommand implements ICommand {
   }
 
   validateDebugConfig(config: ContainerConfig) {
-    const schema: JsonSchema.JSONSchema6 = {
+    const schema = {
       $schema: "http://json-schema.org/schema#",
       type: "object",
       required: ["dev"],
@@ -96,15 +96,16 @@ export default class DebugCommand implements ICommand {
       },
     };
 
-    const valid = validate(config, schema);
+    const valid = validateData(config, schema);
 
-    assert.strictEqual(
-      valid.errors.length,
-      0,
-      `please check config.\n${valid.errors
-        .map((e) => `${e.property}:${e.message}`)
-        .join("\n")}`
-    );
+    let message = "please check config.";
+    if (valid !== true) {
+      message = `config \n${(valid as ValidateFunction)
+        .errors!.map((e) => `${e.dataPath} ${e.message}`)
+        .join("\n")}`;
+    }
+
+    assert.strictEqual(valid, true, message);
   }
 
   async startDebugging(

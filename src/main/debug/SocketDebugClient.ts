@@ -95,6 +95,10 @@ export class SocketDebugClient {
   async event<T extends Response>(event: string, body?: any, timeout = 0) {
     return this.call<T>(new Event(this.sequence++, event, body), timeout);
   }
+  destroy() {
+    this.socket.destroy();
+    this._onError.dispose();
+  }
   private async call<T extends Response>(
     request: Request | Event,
     timeout: number

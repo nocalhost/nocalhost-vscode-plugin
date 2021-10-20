@@ -11,6 +11,7 @@ import { ControllerResourceNode } from "../../nodes/workloads/controllerResource
 import { ContainerConfig } from "../../service/configService";
 import logger from "../../utils/logger";
 import host from "../../host";
+import { portForward } from "..";
 
 export abstract class IDebugProvider {
   abstract name: string;
@@ -59,7 +60,12 @@ export abstract class IDebugProvider {
       }
     );
   }
-
+  async getRemotePort(
+    node: ControllerResourceNode,
+    container: ContainerConfig
+  ) {
+    return await portForward(node, container, "start");
+  }
   async startDebugging(
     workspaceFolder: string,
     debugSessionName: string,

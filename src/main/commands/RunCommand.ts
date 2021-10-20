@@ -1,8 +1,6 @@
 import * as vscode from "vscode";
-import * as JsonSchema from "json-schema";
 import * as assert from "assert";
 import { capitalCase } from "change-case";
-import { validate } from "json-schema";
 
 import ICommand from "./ICommand";
 import { RUN, START_DEV_MODE } from "./constants";
@@ -14,6 +12,8 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { RemoteTerminal } from "../debug/remoteTerminal";
 import { NhctlCommand } from "../ctl/nhctl";
+import { validateData } from "../utils/validate";
+import { ValidateFunction } from "ajv";
 
 export interface ExecCommandParam {
   appName: string;
@@ -123,7 +123,7 @@ export default class RunCommand implements ICommand {
     this.disposable.push(this.terminal);
   }
   validateRunConfig(config: ContainerConfig) {
-    const schema: JsonSchema.JSONSchema6 = {
+    const schema = {
       $schema: "http://json-schema.org/schema#",
       type: "object",
       required: ["dev"],
@@ -150,14 +150,15 @@ export default class RunCommand implements ICommand {
       },
     };
 
-    const valid = validate(config, schema);
+    const valid = validateData(config, schema);
 
-    assert.strictEqual(
-      valid.errors.length,
-      0,
-      `Please check config.\n${valid.errors
-        .map((e) => `${e.property}:${e.message}`)
-        .join("\n")}`
-    );
+    let message = "please check config.";
+    if (valid !== true) {
+      message = `config \n${(valid as ValidateFunction)
+        .errors!.map((e) => `${e.dataPath} ${e.message}`)
+        .join("\n")}`;
+    }
+
+    assert.strictEqual(valid, true, message);
   }
 }

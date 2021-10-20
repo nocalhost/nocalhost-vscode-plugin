@@ -180,6 +180,7 @@ export function exec(
 ): {
   cancel: Event<any>;
   promise: Promise<ExecOutputReturnValue>;
+  proc: ChildProcessWithoutNullStreams;
 } {
   const { command, timeout } = param;
   const startTime = Date.now();
@@ -193,6 +194,7 @@ export function exec(
 
   return {
     promise,
+    proc,
     cancel() {
       if (!proc.killed) {
         kill(proc.pid, "SIGTERM", (err) => {
