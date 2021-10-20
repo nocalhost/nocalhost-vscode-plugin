@@ -1,5 +1,4 @@
 import * as net from "net";
-import * as stream from "stream";
 import * as vscode from "vscode";
 
 const TWO_CRLF = "\r\n\r\n";
@@ -72,28 +71,19 @@ interface Response extends ProtocolMessage {
   /** Contains request result if success is true and optional error details if success is false. */
   body?: any;
 }
-export class SocketDebugAdapter {
+export class SocketDebugClient {
   protected socket?: net.Socket;
-
-  constructor(private port: number, private sequence: number = 1) {}
-
-  private outputStream!: stream.Writable;
   private rawData = Buffer.allocUnsafe(0);
   private contentLength = -1;
 
-  protected readonly _onError = new vscode.EventEmitter<Error>();
-  protected connect(
-    readable: stream.Readable,
-    writable: stream.Writable
-  ): void {
-    this.outputStream = writable;
+  constructor(private port: number, private sequence: number = 1) {
     this.rawData = Buffer.allocUnsafe(0);
     this.contentLength = -1;
-
-    readable.on("data", (data: Buffer) => this.handleData(data));
   }
 
-  private async request<T extends Response>(
+  protected readonly _onError = new vscode.EventEmitter<Error>();
+
+  async request<T extends Response>(
     command: string,
     args?: { [key: string]: any },
     timeout = 0
@@ -102,11 +92,7 @@ export class SocketDebugAdapter {
 
     return this.call<T>(request, timeout);
   }
-  private async event<T extends Response>(
-    event: string,
-    body?: any,
-    timeout = 0
-  ) {
+  async event<T extends Response>(event: string, body?: any, timeout = 0) {
     return this.call<T>(new Event(this.sequence++, event, body), timeout);
   }
   private async call<T extends Response>(
@@ -175,14 +161,20 @@ export class SocketDebugAdapter {
     }
   }
 
-  protected connection(): Promise<void> {
+  connect(timeout: number = 0): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      if (timeout > 0) {
+        setTimeout(() => reject(new Error("timeout")), timeout * 100);
+      }
+
       let connected = false;
 
       this.socket = net.createConnection(this.port, "127.0.0.1", () => {
         resolve();
         connected = true;
       });
+
+      this.socket.on("data", (data: Buffer) => this.handleData(data));
 
       this.socket.on("close", () => {
         if (connected) {
