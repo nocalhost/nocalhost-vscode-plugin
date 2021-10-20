@@ -44,5 +44,17 @@ export default class EditServiceConfigCommand implements ICommand {
     );
     let doc = await vscode.workspace.openTextDocument(uri);
     vscode.window.showTextDocument(doc, { preview: true });
+
+    // show web edit
+    const res = await host.showInformationMessage(
+      "Do you want to open the browser to edit config?",
+      { modal: true },
+      "go"
+    );
+
+    if (res === "go") {
+      const uri = vscode.Uri.parse(`https://nocalhost.dev/tools?from=daemon`);
+      vscode.env.openExternal(uri);
+    }
   }
 }
