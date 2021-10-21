@@ -8,6 +8,7 @@ import * as nhctl from "../ctl/nhctl";
 import host from "../host";
 import logger from "../utils/logger";
 import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
+import { AssociateQueryResult } from "../ctl/nhctl.types";
 
 export interface Sync {
   app: string;
@@ -68,23 +69,10 @@ export default class SyncServiceCommand implements ICommand {
       }
     }
 
-    let result: {
-      kubeconfig_path: string;
-      svc_pack: {
-        ns: string;
-        app: string;
-        svc_type: string;
-        svc: string;
-        container: string;
-      };
-    };
-
     try {
-      result = await nhctl.NhctlCommand.create(
-        `dev associate-queryer -s ${currentRootPath} --current --json`
-      )
-        .toJson()
-        .exec();
+      const result = (await nhctl.associateQuery({
+        current: true,
+      })) as AssociateQueryResult;
 
       if (result) {
         const {

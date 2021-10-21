@@ -28,6 +28,7 @@ import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
 import { NodeInfo } from "../nodes/types/nodeType";
+import { AssociateQueryResult } from "./nhctl.types";
 
 export interface InstalledAppInfo {
   name: string;
@@ -45,9 +46,7 @@ export interface AllInstallAppInfo {
 
 export class NhctlCommand {
   public baseCommand: string = null;
-  public args: string[] = null;
   private argTheTail: string = null;
-  private baseParams: IBaseCommand = null;
   public static nhctlPath: string = path.resolve(
     NH_BIN,
     host.isWindow() ? "nhctl.exe" : "nhctl"
@@ -56,23 +55,33 @@ export class NhctlCommand {
 
   constructor(
     base: string,
-    baseParams?: IBaseCommand<unknown>,
-    private execParam: Omit<ExecParam, "command"> = {}
+    private baseParams?: IBaseCommand<unknown>,
+    private execParam: Omit<ExecParam, "command"> = {},
+    public args: string[] = []
   ) {
-    this.baseParams = baseParams;
-    this.args = [];
     this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
   }
   static create(
     base: string,
     baseParams?: IBaseCommand<unknown>,
-    execParam: Omit<ExecParam, "command"> = {}
+    execParam: Omit<ExecParam, "command"> = {},
+    args: string[] = []
   ) {
-    return new NhctlCommand(base, baseParams, execParam);
+    return new NhctlCommand(base, baseParams, execParam, args);
   }
   static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
     const command = NhctlCommand.create("get", baseParams);
     command.execParam.timeout = ms;
+
+    return command;
+  }
+  static dev(
+    baseParams?: IBaseCommand<unknown>,
+    execParam: Omit<ExecParam, "command"> = {},
+    args: string[] = []
+  ) {
+    const command = NhctlCommand.create("dev", baseParams, execParam, args);
+    command.execParam = execParam;
 
     return command;
   }
@@ -1571,4 +1580,23 @@ export async function getContainers(node: NodeInfo): Promise<string[]> {
     .toJson()
     .exec();
   return result;
+}
+
+export async function associateQuery(param: {
+  associate?: string;
+  current?: boolean;
+}): Promise<AssociateQueryResult[] | AssociateQueryResult> {
+  const args = ["associate-queryer"];
+
+  if (!param.associate) {
+    param.associate = host.getCurrentRootPath();
+  }
+
+  args.push(`--associate ${param.associate}`);
+
+  if (param.current === true) {
+    args.push("--current");
+  }
+
+  return NhctlCommand.dev(null, null, args).toJson().exec();
 }
