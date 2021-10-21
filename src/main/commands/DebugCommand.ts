@@ -133,11 +133,7 @@ export default class DebugCommand implements ICommand {
   async getDebugProvider(
     node: ControllerResourceNode
   ): Promise<IDebugProvider> {
-    let type: Language = state.getAppState(
-      node.getAppName(),
-      `${node.name}_debugProvider`
-    );
-
+    let type: Language;
     const { image } = this.container.dev;
 
     if (image.includes("nocalhost/dev-images")) {
@@ -147,14 +143,6 @@ export default class DebugCommand implements ICommand {
     }
 
     const debugProvider = await chooseDebugProvider(type);
-
-    if (!type) {
-      state.setAppState(
-        node.getAppName(),
-        `${node.name}_debugProvider`,
-        debugProvider.name.toLocaleLowerCase()
-      );
-    }
 
     const isInstalled = checkDebuggerInstalled(debugProvider);
     if (!isInstalled) {
