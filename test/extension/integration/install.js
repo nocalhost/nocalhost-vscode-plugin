@@ -29,7 +29,7 @@ async function install(page) {
     treeView.map((item) =>
       item.evaluate(
         (el) =>
-          el.getAttribute("aria-level") === "2" && el.innerText === "default"
+          el.getAttribute("aria-level") === "2" && el.innerText === "nh115klbi"
       )
     )
   ).then((results) => treeView.find((_, index) => results[index]));
