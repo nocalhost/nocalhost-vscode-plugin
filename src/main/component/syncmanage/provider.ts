@@ -61,29 +61,35 @@ class AssociateNode extends BaseNode {
   }
 }
 
-let list: AssociateQueryResult[] = null;
-
 export class SyncManageProvider
   implements vscode.TreeDataProvider<BaseNodeType> {
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
     BaseNodeType | undefined
   >();
   onDidChangeTreeData?: vscode.Event<void | BaseNodeType>;
-  constructor() {
+  constructor(private associateData: AssociateQueryResult[] = null) {
     vscode.window.onDidChangeActiveColorTheme(() => this.refresh());
   }
+  async getData() {
+    if (!this.associateData) {
+      this.associateData = (await associateQuery({})) as AssociateQueryResult[];
+    }
+
+    return this.associateData;
+  }
+
   getTreeItem(
     element: BaseNodeType
   ): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element.getTreeItem();
   }
+
   async getChildren(element?: BaseNodeType) {
     if (element) {
       return element.getChildren();
     }
-    if (!list) {
-      list = (await associateQuery({})) as AssociateQueryResult[];
-    }
+
+    const list = await this.getData();
 
     if (list.length === 0) {
       return [new BaseNode("Waiting for enter DevMode")];
@@ -95,6 +101,7 @@ export class SyncManageProvider
 
     return [new GroupNode("current"), new GroupNode("related")];
   }
+
   refresh(node?: BaseNodeType) {
     this.onDidChangeTreeDataEventEmitter.fire(node);
   }
