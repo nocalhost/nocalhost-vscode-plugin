@@ -1563,6 +1563,7 @@ export async function devTerminal(
 
   return terminal;
 }
+
 export async function getContainers(node: NodeInfo): Promise<string[]> {
   const { appName, name, resourceType, namespace, kubeConfigPath } = node;
   const result = await NhctlCommand.create(
@@ -1571,4 +1572,20 @@ export async function getContainers(node: NodeInfo): Promise<string[]> {
     .toJson()
     .exec();
   return result;
+}
+
+// judge config is valid
+export async function isConfigValid(node: NodeInfo): Promise<boolean> {
+  try {
+    const { appName, name, resourceType, namespace, kubeConfigPath } = node;
+    const result = await NhctlCommand.create(
+      `ide config ${appName} --action check -d ${name} -t ${resourceType} -n ${namespace} --kubeconfig ${kubeConfigPath}`
+    )
+      .toJson()
+      .exec();
+
+    return !!result;
+  } catch (e) {
+    return false;
+  }
 }

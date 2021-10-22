@@ -37,7 +37,7 @@ import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
 import { getContainer } from "../utils/getContainer";
 import SyncServiceCommand from "./SyncServiceCommand";
-import { getContainers } from "../ctl/nhctl";
+import { getContainers, isConfigValid } from "../ctl/nhctl";
 
 export interface ControllerNodeApi {
   name: string;
@@ -80,6 +80,31 @@ export default class StartDevModeCommand implements ICommand {
     let image = info?.image;
     const mode = info?.mode || "replace";
     this.node = node;
+
+    // is config valid
+    const configValid = await isConfigValid({
+      appName: node.getAppName(),
+      name: node.name,
+      namespace: node.getNameSpace(),
+      kubeConfigPath: node.getKubeConfigPath(),
+      resourceType: node.resourceType,
+    });
+
+    if (!configValid) {
+      const selectConfigResult = host.showInformationMessage(
+        "There is no development configuration for this service, please select an operation.",
+        {
+          modal: true,
+        },
+        "Still enter development mode",
+        "Set development configuration with form"
+      );
+
+      if (selectConfigResult) {
+        const uri = vscode.Uri.parse(`https://nocalhost.dev/tools?from=daemon`);
+        vscode.env.openExternal(uri);
+      }
+    }
 
     await nhctl.NhctlCommand.authCheck({
       base: "dev",
