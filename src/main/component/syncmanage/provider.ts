@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import { isEqual } from "lodash";
+
 import { associateQuery, Associate } from "../../ctl/nhctl";
 import logger from "../../utils/logger";
 import { BaseNode, BaseNodeType, GroupNode } from "./node";
@@ -20,6 +22,8 @@ export class SyncManageProvider
   changeVisible(visible: boolean) {
     if (visible) {
       this.refresh();
+
+      this.onDidChangeTreeDataEventEmitter.fire(undefined);
     } else {
       clearTimeout(this.time);
     }
@@ -30,7 +34,7 @@ export class SyncManageProvider
     }
     return undefined;
   }
-  async getData(refresh = true) {
+  async getData(refresh = false) {
     if (!associateData || refresh) {
       associateData =
         ((await associateQuery({})) as Associate.QueryResult[]) || [];
@@ -69,16 +73,18 @@ export class SyncManageProvider
   async refresh() {
     clearTimeout(this.time);
 
-    this.time = setTimeout(async () => {
-      try {
-        await this.getData(true);
+    try {
+      const newAssociateData = await this.getData(true);
 
+      if (!isEqual(newAssociateData, associateData)) {
         this.onDidChangeTreeDataEventEmitter.fire(undefined);
-      } catch (error) {
-        logger.error("SyncManageProvider refresh", error);
-      } finally {
-        this.refresh();
       }
-    }, 5_000);
+    } catch (error) {
+      logger.error("SyncManageProvider refresh", error);
+    } finally {
+      this.time = setTimeout(async () => {
+        this.refresh();
+      }, 5_000);
+    }
   }
 }

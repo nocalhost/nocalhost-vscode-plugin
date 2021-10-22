@@ -199,7 +199,6 @@ export class NhctlCommand {
   }
   toJson() {
     this.outputMethod = "json";
-    this.args.push("--json");
     return this;
   }
 
@@ -1600,5 +1599,8 @@ export async function associateQuery(param: {
     args.push("--current");
   }
 
-  return NhctlCommand.dev(null, null, args).toJson().exec();
+  return NhctlCommand.dev(null, null, args)
+    .addArgument("--json")
+    .toJson()
+    .exec();
 }

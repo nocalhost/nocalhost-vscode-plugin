@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as _ from "lodash";
+import { isEqual } from "lodash";
 import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import host from "./host";
@@ -39,7 +39,7 @@ class State {
 
   public setData(id: string, data: object, isInit?: boolean) {
     const currentData = this.dataMap.get(id);
-    const isSame = _.isEqual(currentData, data);
+    const isSame = isEqual(currentData, data);
 
     this.dataMap.set(id, data);
     if (!isSame && !isInit) {
