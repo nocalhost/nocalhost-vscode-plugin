@@ -118,14 +118,18 @@ export default class ConfigService {
     workloadName?: string,
     workloadType?: string
   ) {
-    await nhctl.editConfig(
-      kubeConfigPath,
-      namespace,
-      appName,
-      Buffer.from(config),
-      workloadName,
-      workloadType
-    );
+    try {
+      await nhctl.editConfig(
+        kubeConfigPath,
+        namespace,
+        appName,
+        Buffer.from(config),
+        workloadName,
+        workloadType
+      );
+    } catch (err: any) {
+      throw err?.stderr;
+    }
   }
 
   static async getWorkloadConfig(
