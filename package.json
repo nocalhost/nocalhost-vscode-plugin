@@ -60,6 +60,12 @@
       ]
     },
     "views": {
+      "explorer": [
+        {
+          "id": "NocalhostSyncManage",
+          "name": "Nocalhost Sync Manage"
+        }
+      ],
       "NocalhostView": [
         {
           "id": "Nocalhost",
@@ -276,6 +282,22 @@
           "command": "Nocalhost.rename",
           "when": "viewItem =~ /^kubeconfig-local/i",
           "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.switchAssociate",
+          "when": "viewItem =~ /^syncAssociate-other/i"
+        },
+        {
+          "command": "Nocalhost.disassociateAssociate",
+          "when": "viewItem =~ /^syncAssociate/i"
+        },
+        {
+          "command": "Nocalhost.reconnectSync",
+          "when": "viewItem =~ /^syncAssociate-(.*)-resume/i"
+        },
+        {
+          "command": "Nocalhost.overrideSync",
+          "when": "viewItem =~ /^syncAssociate-(.*)-override/i"
         }
       ]
     },
@@ -478,6 +500,22 @@
       {
         "command": "Nocalhost.openProject",
         "title": "%OpenProject%"
+      },
+      {
+        "command": "Nocalhost.reconnectSync",
+        "title": "%resumeSync%"
+      },
+      {
+        "command": "Nocalhost.overrideSync",
+        "title": "%overrideRemoteChang%"
+      },
+      {
+        "command": "Nocalhost.switchAssociate",
+        "title": "%switchAssociate%"
+      },
+      {
+        "command": "Nocalhost.disassociateAssociate",
+        "title": "%disassociateAssociate%"
       }
     ]
   },

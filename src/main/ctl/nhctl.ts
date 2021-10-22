@@ -17,7 +17,7 @@ import { readYaml, replaceSpacePath } from "../utils/fileUtil";
 import * as packageJson from "../../../package.json";
 import { NH_BIN } from "../constants";
 import services from "../common/DataCenter/services";
-import { SvcProfile } from "../nodes/types/nodeType";
+import { SvcProfile, NodeInfo } from "../nodes/types/nodeType";
 import logger from "../utils/logger";
 import { IDevSpaceInfo, IPortForWard } from "../domain";
 import { Resource, ResourceStatus } from "../nodes/types/resourceType";
@@ -27,8 +27,9 @@ import { IPvc } from "../domain";
 import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
-import { NodeInfo } from "../nodes/types/nodeType";
-import { AssociateQueryResult } from "./nhctl.types";
+import { Associate } from "./nhctl.type";
+
+export * from "./nhctl.type";
 
 export interface InstalledAppInfo {
   name: string;
@@ -198,6 +199,7 @@ export class NhctlCommand {
   }
   toJson() {
     this.outputMethod = "json";
+    this.args.push("--json");
     return this;
   }
 
@@ -660,7 +662,7 @@ export async function associate(
   type: string,
   workLoadName: string,
   container: string,
-  params = ""
+  params: "--de-associate" | "--migrate" | "" = ""
 ) {
   const resultDir = replaceSpacePath(dir);
   const command = nhctlCommand(
@@ -1583,16 +1585,16 @@ export async function getContainers(node: NodeInfo): Promise<string[]> {
 }
 
 export async function associateQuery(param: {
-  associate?: string;
+  localSync?: string;
   current?: boolean;
-}): Promise<AssociateQueryResult[] | AssociateQueryResult> {
+}): Promise<Associate.QueryResult[] | Associate.QueryResult> {
   const args = ["associate-queryer"];
 
-  if (!param.associate) {
-    param.associate = host.getCurrentRootPath();
+  if (!param.localSync) {
+    param.localSync = host.getCurrentRootPath();
   }
 
-  args.push(`--associate ${param.associate}`);
+  args.push(`--local-sync ${param.localSync}`);
 
   if (param.current === true) {
     args.push("--current");

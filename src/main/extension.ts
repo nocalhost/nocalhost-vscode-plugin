@@ -54,6 +54,7 @@ import { unlock } from "./utils/download";
 import * as nls from "vscode-nls";
 import SyncServiceCommand from "./commands/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
+import { createSyncManage } from "./component/syncManage";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -64,6 +65,8 @@ let currentContext: vscode.ExtensionContext;
 
 export async function activate(context: vscode.ExtensionContext) {
   currentContext = context;
+
+  createSyncManage(context);
 
   await init(context);
   let appTreeProvider = new NocalhostAppProvider();

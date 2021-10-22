@@ -8,7 +8,7 @@ import * as nhctl from "../ctl/nhctl";
 import host from "../host";
 import logger from "../utils/logger";
 import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
-import { AssociateQueryResult } from "../ctl/nhctl.types";
+import { Associate } from "../ctl/nhctl.type";
 
 export interface Sync {
   app: string;
@@ -57,6 +57,7 @@ export default class SyncServiceCommand implements ICommand {
           currentRootPath,
           resourceType,
           service,
+          "",
           "--migrate"
         );
       } catch (err) {
@@ -72,7 +73,7 @@ export default class SyncServiceCommand implements ICommand {
     try {
       const result = (await nhctl.associateQuery({
         current: true,
-      })) as AssociateQueryResult;
+      })) as Associate.QueryResult;
 
       if (result) {
         const {
