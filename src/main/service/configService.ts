@@ -114,19 +114,17 @@ export default class ConfigService {
     kubeConfigPath: string,
     namespace: string,
     appName: string,
-    workloadName: string | undefined | null,
-    workloadType: string | undefined | null,
-    config: NocalhostConfig | NocalhostServiceConfig
+    config: Uint8Array,
+    workloadName?: string,
+    workloadType?: string
   ) {
-    let objJsonStr = JSON.stringify(config);
-    let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
     await nhctl.editConfig(
       kubeConfigPath,
       namespace,
       appName,
+      Buffer.from(config),
       workloadName,
-      workloadType,
-      objJsonB64
+      workloadType
     );
   }
 
@@ -193,24 +191,9 @@ export default class ConfigService {
     namespace: string,
     appName: string
   ) {
-    const configStr = await nhctl.getAppConfig(
-      kubeConfigPath,
-      namespace,
-      appName
-    );
+    const configStr = await nhctl.getConfig(kubeConfigPath, namespace, appName);
     const config = yaml.parse(configStr) as NocalhostConfig;
 
     return config;
-  }
-
-  static async writeAppConfig(
-    kubeConfigPath: string,
-    namespace: string,
-    appName: string,
-    config: NocalhostConfig
-  ) {
-    let objJsonStr = JSON.stringify(config);
-    let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
-    await nhctl.editAppConfig(kubeConfigPath, namespace, appName, objJsonB64);
   }
 }

@@ -91,7 +91,7 @@ export default class StartDevModeCommand implements ICommand {
     });
 
     if (!configValid) {
-      const selectConfigResult = host.showInformationMessage(
+      const selectConfigResult = await host.showInformationMessage(
         "There is no development configuration for this service, please select an operation.",
         {
           modal: true,
@@ -100,9 +100,9 @@ export default class StartDevModeCommand implements ICommand {
         "Set development configuration with form"
       );
 
-      if (selectConfigResult) {
+      if (selectConfigResult === "Set development configuration with form") {
         const uri = vscode.Uri.parse(`https://nocalhost.dev/tools?from=daemon`);
-        vscode.env.openExternal(uri);
+        return vscode.env.openExternal(uri);
       }
     }
 
