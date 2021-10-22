@@ -49,7 +49,7 @@ function switchAssociate(treeDataProvider: SyncManageProvider) {
         return;
       }
 
-      treeDataProvider.refresh(true);
+      treeDataProvider.switchCurrent(node.associate);
     }
   );
 }

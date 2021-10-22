@@ -8,6 +8,7 @@ export namespace Associate {
       svc: string;
       container: string;
     };
+    sha: string;
     server: string;
     syncthing_status: {
       msg: string;

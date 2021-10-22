@@ -5,12 +5,8 @@ import { associateQuery, Associate } from "../../ctl/nhctl";
 import logger from "../../utils/logger";
 import { BaseNode, BaseNodeType, GroupNode } from "./node";
 
-let associateData: {
-  current: Associate.QueryResult[];
-  other: Associate.QueryResult[];
-};
-
 export class SyncManageProvider
+  extends vscode.Disposable
   implements vscode.TreeDataProvider<BaseNodeType> {
   private time: NodeJS.Timeout;
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
@@ -18,8 +14,28 @@ export class SyncManageProvider
   >();
   readonly onDidChangeTreeData?: vscode.Event<void | BaseNodeType> = this
     .onDidChangeTreeDataEventEmitter.event;
+
+  private disposable: vscode.Disposable[] = [];
+
+  private associateData: {
+    current: Associate.QueryResult;
+    switchCurrent?: Associate.QueryResult;
+    other: Associate.QueryResult[];
+  };
+
   constructor() {
-    vscode.window.onDidChangeActiveColorTheme(() => this.refresh());
+    super(() => {
+      this.disposable.forEach((item) => item.dispose());
+    });
+
+    this.disposable.push(
+      vscode.window.onDidChangeActiveColorTheme(() => this.refresh()),
+      {
+        dispose: () => {
+          clearTimeout(this.time);
+        },
+      }
+    );
   }
 
   changeVisible(visible: boolean) {
@@ -36,17 +52,32 @@ export class SyncManageProvider
     return undefined;
   }
   async getData(refresh = false) {
-    if (!associateData || refresh) {
+    if (!this.associateData || refresh) {
       const list =
         ((await associateQuery({})) as Associate.QueryResult[]) || [];
+      let current = (await associateQuery({
+        current: true,
+      })) as Associate.QueryResult;
 
-      associateData = {
-        current: [list.pop()],
-        other: list,
+      let { switchCurrent } = this.associateData ?? {};
+
+      if (
+        switchCurrent &&
+        list.find((item) => item.sha === switchCurrent.sha)
+      ) {
+        current = switchCurrent;
+      }
+
+      const other = list.filter((item) => item.sha !== current.sha);
+
+      this.associateData = {
+        current,
+        switchCurrent,
+        other,
       };
     }
 
-    return associateData;
+    return this.associateData;
   }
 
   getTreeItem(
@@ -62,27 +93,40 @@ export class SyncManageProvider
 
     const list = await this.getData();
 
-    if (list.current.length === 0 && list.other.length === 0) {
+    if (!list.current && list.other.length === 0) {
       return [new BaseNode(element, "Waiting for enter DevMode")];
     }
 
     if (list.other.length === 0) {
-      return [new GroupNode(element, "current", list.current)];
+      return [new GroupNode(element, "current", [list.current])];
     }
 
     return [
-      new GroupNode(element, "current", list.current),
+      new GroupNode(element, "current", [list.current]),
       new GroupNode(element, "other", list.other),
     ];
+  }
+  public async switchCurrent(node: Associate.QueryResult) {
+    const { other, current } = this.associateData;
+
+    this.associateData = {
+      other: [current, ...other].filter((item) => item.sha !== node.sha),
+      current: node,
+      switchCurrent: node,
+    };
+
+    this.onDidChangeTreeDataEventEmitter.fire(undefined);
   }
 
   public async refresh(force: boolean = false) {
     clearTimeout(this.time);
 
     try {
-      const newAssociateData = await this.getData(true);
+      const associateData = this.associateData;
 
-      if (!isEqual(newAssociateData, associateData) || force) {
+      await this.getData(true);
+
+      if (!isEqual(associateData, this.associateData) || force) {
         this.onDidChangeTreeDataEventEmitter.fire(undefined);
       }
     } catch (error) {

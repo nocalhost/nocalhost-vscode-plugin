@@ -12,11 +12,6 @@ export function createSyncManage(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     ...registerCommand(syncManageDataProvider),
-    {
-      dispose() {
-        syncManageDataProvider.changeVisible(false);
-      },
-    },
     treeView.onDidChangeVisibility(({ visible }) => {
       syncManageDataProvider.changeVisible(visible);
     }),
