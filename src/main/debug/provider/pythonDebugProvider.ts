@@ -178,6 +178,8 @@ export class PythonDebugProvider extends IDebugProvider {
       }
       const handResponse = (response: Response) => {
         if (response.request_seq === seq) {
+          this.socket.off("response", handResponse);
+
           res(response as T);
         }
       };
@@ -219,19 +221,7 @@ export class PythonDebugProvider extends IDebugProvider {
 
     logger.debug("debugpy debugpySystemInfo", result);
 
-    this.socket.end();
+    this.socket.destroy();
     this.socket = null;
   }
-  // async waitDebuggerStop() {
-  //   // await this.connect(port, 2);
-
-  //   let result = await this.event("terminated");
-  //   logger.debug("waitDebuggerStop terminated", result);
-
-  //   result = await this.event("exited");
-  //   logger.debug("waitDebuggerStop exited", result);
-
-  //   this.socket.end();
-  //   this.socket = null;
-  // }
 }
