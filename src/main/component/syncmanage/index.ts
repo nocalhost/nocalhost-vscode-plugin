@@ -1,22 +1,24 @@
 import * as vscode from "vscode";
+import { registerCommand } from "./command";
 
 import { SyncManageProvider } from "./provider";
 
 export function createSyncManage(context: vscode.ExtensionContext) {
-  const treeDataProvider = new SyncManageProvider();
+  const syncManageDataProvider = new SyncManageProvider();
 
   const treeView = vscode.window.createTreeView("NocalhostSyncManage", {
-    treeDataProvider,
+    treeDataProvider: syncManageDataProvider,
   });
 
   context.subscriptions.push(
+    ...registerCommand(syncManageDataProvider),
     {
       dispose() {
-        treeDataProvider.changeVisible(false);
+        syncManageDataProvider.changeVisible(false);
       },
     },
     treeView.onDidChangeVisibility(({ visible }) => {
-      treeDataProvider.changeVisible(visible);
+      syncManageDataProvider.changeVisible(visible);
     }),
     treeView
   );

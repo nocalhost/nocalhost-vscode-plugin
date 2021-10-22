@@ -45,9 +45,6 @@ import OpenProjectCommand from "./OpenProjectCommand";
 import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
-import DisassociateAssociateCommand from "./DisassociateAssociateCommand";
-import SwitchAssociateCommand from "./SwitchAssociateCommand";
-
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
@@ -106,7 +103,4 @@ export default function initCommands(
 
   new ResetPluginCommand(context);
   new StartCopyDevModeCommand(context);
-
-  new DisassociateAssociateCommand(context);
-  new SwitchAssociateCommand(context);
 }

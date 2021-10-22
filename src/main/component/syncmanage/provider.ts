@@ -5,7 +5,10 @@ import { associateQuery, Associate } from "../../ctl/nhctl";
 import logger from "../../utils/logger";
 import { BaseNode, BaseNodeType, GroupNode } from "./node";
 
-let associateData: Associate.QueryResult[] = null;
+let associateData: {
+  current: Associate.QueryResult[];
+  other: Associate.QueryResult[];
+};
 
 export class SyncManageProvider
   implements vscode.TreeDataProvider<BaseNodeType> {
@@ -21,9 +24,7 @@ export class SyncManageProvider
 
   changeVisible(visible: boolean) {
     if (visible) {
-      this.refresh();
-
-      this.onDidChangeTreeDataEventEmitter.fire(undefined);
+      this.refresh(true);
     } else {
       clearTimeout(this.time);
     }
@@ -36,8 +37,13 @@ export class SyncManageProvider
   }
   async getData(refresh = false) {
     if (!associateData || refresh) {
-      associateData =
+      const list =
         ((await associateQuery({})) as Associate.QueryResult[]) || [];
+
+      associateData = {
+        current: [list.pop()],
+        other: list,
+      };
     }
 
     return associateData;
@@ -56,27 +62,27 @@ export class SyncManageProvider
 
     const list = await this.getData();
 
-    if (list.length === 0) {
+    if (list.current.length === 0 && list.other.length === 0) {
       return [new BaseNode(element, "Waiting for enter DevMode")];
     }
 
-    if (list.length === 1) {
-      return [new GroupNode(element, "current", list)];
+    if (list.other.length === 0) {
+      return [new GroupNode(element, "current", list.current)];
     }
 
     return [
-      new GroupNode(element, "current", [list.pop()]),
-      new GroupNode(element, "other", list),
+      new GroupNode(element, "current", list.current),
+      new GroupNode(element, "other", list.other),
     ];
   }
 
-  async refresh() {
+  public async refresh(force: boolean = false) {
     clearTimeout(this.time);
 
     try {
       const newAssociateData = await this.getData(true);
 
-      if (!isEqual(newAssociateData, associateData)) {
+      if (!isEqual(newAssociateData, associateData) || force) {
         this.onDidChangeTreeDataEventEmitter.fire(undefined);
       }
     } catch (error) {
