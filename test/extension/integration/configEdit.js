@@ -1,6 +1,10 @@
 const puppeteer = require("puppeteer-core");
-// const ncp = require("copy-paste");
+const ncp = require("copy-paste");
+const yaml2json = require("js-yaml");
+const json2yaml = require("json2yaml");
 
+const namespaceName = "nh115klbi";
+const clusterName = "develop";
 /**
  *
  * @param {puppeteer.Page} page
@@ -16,12 +20,12 @@ async function editConfig(page, browser) {
 
   const sidebar = await page.waitForSelector("#workbench\\.parts\\.sidebar");
   // cluster
-  const cluster = await sidebar.$('div[aria-label="develop Active"]');
+  const cluster = await sidebar.$(`div[aria-label="${clusterName} Active"]`);
 
   // namespace
   await cluster.click();
   await page.waitForTimeout(300);
-  const namespace = await sidebar.$('div[aria-label="nh115klbi "]');
+  const namespace = await sidebar.$(`div[aria-label="${namespaceName} "]`);
   // application
   await namespace.click();
   await page.waitForTimeout(300);
@@ -63,15 +67,38 @@ async function editConfig(page, browser) {
   //   "clipboard-write",
   // ]);
 
-  const content = await page.evaluate(async () => {
-    const text = await navigator.clipboard.readText();
-    console.warn("text", text);
-    // return navigator.clipboard.readText();
-  });
+  // const content = await page.evaluate(async () => {
+  //   const text = await navigator.clipboard.readText();
+  //   console.warn("text", text);
+  //   // return navigator.clipboard.readText();
+  // });
 
   // const content = await navigator.clipboard.readText();
+  const content = ncp.paste();
+  const obj = yaml2json.load(content);
+  obj.containers[0].dev.hotReload = false;
+  const str = json2yaml.stringify(obj);
+  ncp.copy(str);
 
-  debugger;
+  await page.waitForTimeout(1000);
+
+  await page.keyboard.down("Meta");
+  await page.keyboard.down("A");
+  await page.keyboard.up("A");
+  await page.keyboard.up("Meta");
+  await page.keyboard.down("Backspace");
+  await page.keyboard.up("Backspace");
+
+  await page.waitForTimeout(1000);
+
+  await page.keyboard.down("Meta");
+  await page.keyboard.down("V");
+  await page.keyboard.up("V");
+
+  await page.keyboard.down("S");
+  await page.keyboard.up("S");
+
+  await page.keyboard.up("Meta");
 }
 
 module.exports = {
