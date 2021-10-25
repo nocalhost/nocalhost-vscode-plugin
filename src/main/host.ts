@@ -8,7 +8,6 @@ import {
 import * as shell from "./ctl/shell";
 import state from "./state";
 import * as path from "path";
-import { RefreshData } from "./nodes/impl/updateData";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";
 import { asyncLimit } from "./utils";
@@ -52,39 +51,41 @@ export class Host implements vscode.Disposable {
 
   private autoRefreshTimeId: NodeJS.Timeout | null = null;
 
-  public stopAutoRefresh() {
+  public stopAutoRefresh(force = false) {
     if (this.autoRefreshTimeId) {
       clearTimeout(this.autoRefreshTimeId);
     }
+
+    if (force && this.cancellationToken) {
+      this.cancellationToken.cancel();
+      this.cancellationToken = null;
+    }
   }
 
-  currentRefresh: {
-    refresh: Promise<void>;
-    action: vscode.CancellationTokenSource;
-  };
+  cancellationToken: vscode.CancellationTokenSource;
   private autoRefresh() {
-    if (this.currentRefresh) {
+    if (this.cancellationToken) {
       return;
     }
 
     let action = new vscode.CancellationTokenSource();
+    action.token.onCancellationRequested(() => {
+      console.warn("cancel");
+    });
 
     const refresh = async () => {
+      const { token } = action;
       try {
         const rootNode = state.getNode("Nocalhost") as BaseNocalhostNode;
         if (rootNode) {
-          await rootNode.updateData(null, action).catch(() => {});
+          await rootNode.updateData(null, token).catch(() => {});
         }
 
         await asyncLimit(
           Array.from(state.refreshFolderMap.entries()),
           ([id, expanded]) => {
-            if (
-              state.get(id) &&
-              expanded &&
-              !action.token.isCancellationRequested
-            ) {
-              const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
+            if (!token.isCancellationRequested && state.get(id) && expanded) {
+              const node = state.getNode(id) as BaseNocalhostNode;
 
               return node.updateData();
             }
@@ -93,13 +94,13 @@ export class Host implements vscode.Disposable {
           },
           GLOBAL_TIMEOUT
         );
-
-        action.dispose();
-        action = null;
       } catch (e) {
         logger.error("autoRefresh error:", e);
       } finally {
-        this.currentRefresh = null;
+        action.dispose();
+        action = null;
+
+        this.cancellationToken = null;
 
         this.autoRefreshTimeId = setTimeout(async () => {
           await this.startAutoRefresh();
@@ -107,18 +108,15 @@ export class Host implements vscode.Disposable {
       }
     };
 
-    return { action, refresh };
+    this.cancellationToken = action;
+
+    return refresh();
   }
 
   public async startAutoRefresh(force = false) {
-    this.stopAutoRefresh();
+    this.stopAutoRefresh(force);
 
-    if (force && this.currentRefresh) {
-      this.currentRefresh.action.cancel();
-      this.currentRefresh = null;
-    }
-
-    await this.autoRefresh().refresh();
+    await this.autoRefresh();
   }
 
   public setGlobalState(key: string, state: any) {

@@ -66,7 +66,7 @@ export interface BaseNocalhostNode {
   parent: BaseNocalhostNode | undefined | null;
   updateData?: (
     init?: boolean,
-    action?: vscode.CancellationTokenSource
+    token?: vscode.CancellationToken
   ) => Promise<any>;
   getNodeStateId(): string;
   getChildren(

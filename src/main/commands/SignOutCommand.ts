@@ -25,30 +25,38 @@ export default class SignOutCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    host.stopAutoRefresh();
+    host.stopAutoRefresh(true);
 
-    let globalUserList: {
-      userInfo: IUserInfo;
-      jwt: string;
-      id: string;
-    }[] = (host.getGlobalState(SERVER_CLUSTER_LIST) || []).filter((it: any) => {
-      if (!it.userInfo || !node.id) {
-        return true;
-      }
-      return it.id !== node.id;
-    });
-    host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
+    try {
+      await host.stopAutoRefresh(true);
 
-    await state.disposeNode(node);
+      let globalUserList: {
+        userInfo: IUserInfo;
+        jwt: string;
+        id: string;
+      }[] = (host.getGlobalState(SERVER_CLUSTER_LIST) || []).filter(
+        (it: any) => {
+          if (!it.userInfo || !node.id) {
+            return true;
+          }
+          return it.id !== node.id;
+        }
+      );
+      host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
-    Bookinfo.cleanCheck(node);
+      await state.disposeNode(node);
 
-    const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
-    await rootNode.deleteCluster(node.accountClusterService.loginInfo);
+      Bookinfo.cleanCheck(node);
 
-    await state.refreshTree(false);
+      const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
+      await rootNode.deleteCluster(node.accountClusterService.loginInfo);
 
-    this.cleanKubeConfig(node.accountClusterService.loginInfo);
+      this.cleanKubeConfig(node.accountClusterService.loginInfo);
+    } catch (error) {
+      throw error;
+    } finally {
+      await state.refreshTree(true);
+    }
   }
 
   cleanKubeConfig(loginInfo: LoginInfo) {
