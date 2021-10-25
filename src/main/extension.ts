@@ -105,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext) {
       node instanceof KubernetesResourceFolder ||
       node instanceof DevSpaceNode
     ) {
-      state.refreshFolderMap.set(node.getNodeStateId(), false);
+      state.refreshFolderMap.delete(node.getNodeStateId());
     }
     if (node instanceof NocalhostFolderNode) {
       node.isExpand = false;
