@@ -63,11 +63,13 @@ async function editConfig(page, browser) {
   //   "clipboard-write",
   // ]);
 
-  // const content = await page.evaluate(() => {
-  //   return navigator.clipboard.readText();
-  // });
+  const content = await page.evaluate(async () => {
+    const text = await navigator.clipboard.readText();
+    console.warn("text", text);
+    // return navigator.clipboard.readText();
+  });
 
-  const content = await navigator.clipboard.readText();
+  // const content = await navigator.clipboard.readText();
 
   debugger;
 }
