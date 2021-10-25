@@ -136,9 +136,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(...subs);
 
-  host.getOutputChannel().show(true);
   // await registerYamlSchemaSupport();
 
+  await vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    true
+  );
+  if (isExistCluster()) {
+    await state.refreshTree();
+  } else {
+    await vscode.commands.executeCommand("setContext", "emptyCluster", true);
+  }
+  launchDevspace();
+
+  bindEvent();
+}
+function bindEvent() {
   messageBus.on("devstart", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
       launchDevspace();
@@ -171,29 +185,17 @@ export async function activate(context: vscode.ExtensionContext) {
         status: string;
       };
       if (data.status === "loading") {
-        host.stopAutoRefresh();
+        state.stopAutoRefresh(true);
         SyncServiceCommand.stopSyncStatus();
       } else {
-        host.startAutoRefresh();
+        state.startAutoRefresh();
         SyncServiceCommand.checkSync();
       }
     } catch (error) {
       host.log(`MessageBus install: ${error}`, true);
     }
   });
-  await vscode.commands.executeCommand(
-    "setContext",
-    "extensionActivated",
-    true
-  );
-  if (isExistCluster()) {
-    await state.refreshTree();
-  } else {
-    await vscode.commands.executeCommand("setContext", "emptyCluster", true);
-  }
-  launchDevspace();
 }
-
 function launchDevspace() {
   SyncServiceCommand.checkSync();
 

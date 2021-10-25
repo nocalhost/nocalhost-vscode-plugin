@@ -28,6 +28,7 @@ import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
 import { NodeInfo } from "../typings";
+import state from "../state";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1338,10 +1339,10 @@ function setUpgrade(isUpgrade: boolean) {
 
   if (isUpgrade) {
     host.setGlobalState(KEY, true);
-    host.stopAutoRefresh();
+    state.stopAutoRefresh();
   } else {
     host.removeGlobalState(KEY);
-    host.startAutoRefresh();
+    state.startAutoRefresh();
   }
 
   vscode.commands.executeCommand(

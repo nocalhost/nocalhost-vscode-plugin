@@ -7,6 +7,13 @@ import host from "../host";
 
 import * as fileUtil from "./fileUtil";
 
+type event = {
+  uninstall: {};
+  install: {};
+  endDevMode: {};
+  devstart: {};
+};
+
 export interface MessageBusInfo {
   source: string;
   destination: string;

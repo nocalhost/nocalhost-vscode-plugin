@@ -34,7 +34,7 @@ export default class SignInCommand implements ICommand {
       info.baseUrl = info.baseUrl.trim();
 
       try {
-        await host.stopAutoRefresh(true);
+        await state.stopAutoRefresh(true);
 
         const accountClusterNode = await AccountClusterService.appendClusterByLoginInfo(
           info

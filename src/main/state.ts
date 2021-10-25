@@ -2,9 +2,9 @@ import * as vscode from "vscode";
 import * as _ from "lodash";
 import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
-import host from "./host";
 import logger from "./utils/logger";
 import { asyncLimit } from "./utils";
+import { GLOBAL_TIMEOUT } from "./constants";
 
 class State {
   private login = false;
@@ -60,6 +60,76 @@ class State {
     return this.dataMap.get(id);
   }
 
+  private autoRefreshTimeId: NodeJS.Timeout | null = null;
+
+  public stopAutoRefresh(force = false) {
+    if (this.autoRefreshTimeId) {
+      clearTimeout(this.autoRefreshTimeId);
+    }
+
+    if (force && this.cancellationToken) {
+      this.cancellationToken.cancel();
+      this.cancellationToken = null;
+    }
+  }
+
+  cancellationToken: vscode.CancellationTokenSource;
+  private autoRefresh() {
+    if (this.cancellationToken) {
+      return;
+    }
+
+    let action = new vscode.CancellationTokenSource();
+    action.token.onCancellationRequested(() => {
+      console.warn("cancel");
+    });
+
+    const refresh = async () => {
+      const { token } = action;
+      try {
+        const rootNode = this.getNode("Nocalhost") as BaseNocalhostNode;
+        if (rootNode) {
+          await rootNode.updateData(null, token).catch(() => {});
+        }
+
+        await asyncLimit(
+          Array.from(this.refreshFolderMap.entries()),
+          ([id, expanded]) => {
+            if (!token.isCancellationRequested && this.get(id) && expanded) {
+              const node = this.getNode(id) as BaseNocalhostNode;
+
+              return node.updateData();
+            }
+
+            return Promise.resolve();
+          },
+          GLOBAL_TIMEOUT
+        );
+      } catch (e) {
+        logger.error("autoRefresh error:", e);
+      } finally {
+        action.dispose();
+        action = null;
+
+        this.cancellationToken = null;
+
+        this.autoRefreshTimeId = setTimeout(async () => {
+          await this.startAutoRefresh();
+        }, 10 * 1000);
+      }
+    };
+
+    this.cancellationToken = action;
+
+    return refresh();
+  }
+
+  public async startAutoRefresh(force = false) {
+    this.stopAutoRefresh(force);
+
+    await this.autoRefresh();
+  }
+
   public clearAllData() {
     this.dataMap.clear();
   }
@@ -97,7 +167,7 @@ class State {
       isExist
     );
     await vscode.commands.executeCommand("Nocalhost.refresh");
-    host.startAutoRefresh(force);
+    this.startAutoRefresh(force);
   }
 
   setRunning(running: boolean) {

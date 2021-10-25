@@ -25,10 +25,9 @@ export default class SignOutCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    host.stopAutoRefresh(true);
 
     try {
-      await host.stopAutoRefresh(true);
+      await state.stopAutoRefresh(true);
 
       let globalUserList: {
         userInfo: IUserInfo;
