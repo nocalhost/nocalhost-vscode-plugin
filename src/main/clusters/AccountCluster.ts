@@ -1,8 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import * as semver from "semver";
 import * as url from "url";
-import arrayDiffer = require("array-differ");
-import { uniqBy } from "lodash";
+import { uniqBy, difference } from "lodash";
 import * as path from "path";
 
 import {
@@ -235,7 +234,7 @@ export default class AccountClusterService {
     const prevData = host.getGlobalState(KEY);
 
     if (prevData) {
-      const diff = arrayDiffer(prevData as Array<string>, configs);
+      const diff = difference(prevData as Array<string>, configs);
 
       if (diff.length === 0) {
         return;

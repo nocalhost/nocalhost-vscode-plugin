@@ -16,8 +16,7 @@ import { RefreshData } from "./impl/updateData";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { NodeType } from "./interfact";
 import { resolveVSCodeUri } from "../utils/fileUtil";
-
-import arrayDiffer = require("array-differ");
+import { difference } from "lodash";
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
@@ -162,7 +161,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       const children = await this.getChildren();
 
       if (children.length) {
-        const diff: string[] = arrayDiffer(
+        const diff: string[] = difference(
           children.map((item) => item.label),
           ["default"],
           this.installedApps.map((item) => item.name)

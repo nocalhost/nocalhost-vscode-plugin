@@ -41,7 +41,7 @@ class State {
     const currentData = this.dataMap.get(id);
     const isSame = _.isEqual(currentData, data);
 
-    if (!isSame) {
+    if (isSame) {
       return;
     }
 

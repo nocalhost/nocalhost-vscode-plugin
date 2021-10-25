@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { orderBy, get } from "lodash";
+import { orderBy, get, difference } from "lodash";
 
 import AccountClusterService, {
   AccountClusterNode,
@@ -25,7 +25,6 @@ import { IRootNode } from "../domain";
 import { ClusterSource } from "../common/define";
 import { DevSpaceNode } from "./DevSpaceNode";
 
-import arrayDiffer = require("array-differ");
 import { asyncLimit } from "../utils";
 import { LoginInfo } from "../clusters/interface";
 
@@ -230,7 +229,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       const children = await this.getChildren();
 
       if (children.length) {
-        const diff: string[] = arrayDiffer(
+        const diff: string[] = difference(
           children
             .map((node) => {
               return (node as KubeConfigNode).devSpaceInfos.map(
