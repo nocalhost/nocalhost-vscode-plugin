@@ -21,7 +21,6 @@ export class Host implements vscode.Disposable {
     vscode.StatusBarAlignment.Left,
     100
   );
-  public bookinfoTimeoutId: NodeJS.Timeout | null = null; // bookinfo
 
   private devspaceDisposesMap = new Map<
     string,
@@ -35,9 +34,6 @@ export class Host implements vscode.Disposable {
       >
     >
   >();
-
-  // TODO: DELETE
-  private bookInfoDisposes: Array<{ dispose: () => any }> = [];
 
   private context: vscode.ExtensionContext | null = null;
 
@@ -246,20 +242,6 @@ export class Host implements vscode.Disposable {
     arr.push(obj);
   }
 
-  public pushBookInfoDispose(item: { dispose: () => any }) {
-    this.bookInfoDisposes.push(item);
-  }
-
-  public disposeBookInfo() {
-    this.bookInfoDisposes.map((item) => {
-      if (item) {
-        item.dispose();
-      }
-    });
-
-    this.bookInfoDisposes = [];
-  }
-
   public showInputBox(options: vscode.InputBoxOptions) {
     return vscode.window.showInputBox(options);
   }
@@ -410,7 +392,6 @@ export class Host implements vscode.Disposable {
   dispose() {
     this.statusBar.dispose();
     this.outputChannel.dispose();
-    this.disposeBookInfo();
 
     this.devspaceDisposesMap.forEach((m, key) => {
       this.disposeDevspace(key);

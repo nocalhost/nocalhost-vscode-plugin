@@ -141,7 +141,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   messageBus.on("devstart", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      host.disposeBookInfo();
       launchDevspace();
     }
   });
