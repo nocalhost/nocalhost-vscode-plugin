@@ -27,6 +27,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
     await openNocalhost(page);
 
     this.global.page = page;
+    this.global.browser = __BROWSER__;
   }
 
   /**
