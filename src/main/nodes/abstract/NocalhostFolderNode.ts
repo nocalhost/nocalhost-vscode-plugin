@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { AppNode } from "../AppNode";
 import { ID_SPLIT } from "../nodeContants";
 
 import { BaseNocalhostNode } from "../types/nodeType";

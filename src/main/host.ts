@@ -6,7 +6,6 @@ import {
   QuickPickOptions,
 } from "vscode";
 import * as shell from "./ctl/shell";
-import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import state from "./state";
 import * as path from "path";
 import { RefreshData } from "./nodes/impl/updateData";
@@ -72,7 +71,7 @@ export class Host implements vscode.Disposable {
 
     const refresh = async () => {
       try {
-        const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
+        const rootNode = state.getNode("Nocalhost") as BaseNocalhostNode;
         if (rootNode) {
           await rootNode.updateData(null, action).catch(() => {});
         }
