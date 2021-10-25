@@ -3,12 +3,12 @@ import * as vscode from "vscode";
 import { AssociateNode } from "./node";
 import * as nhctl from "../../ctl/nhctl";
 import host from "../../host";
-import { SyncManageProvider } from "./provider";
+import { SyncManageDataProvider } from "./provider";
 
 const DISASSOCIATE_ASSOCIATE = "Nocalhost.disassociateAssociate";
 const SWITCH_ASSOCIATE = "Nocalhost.switchAssociate";
 
-function disassociateAssociate(treeDataProvider: SyncManageProvider) {
+function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
   return vscode.commands.registerCommand(
     DISASSOCIATE_ASSOCIATE,
     async (node: AssociateNode) => {
@@ -40,7 +40,7 @@ function disassociateAssociate(treeDataProvider: SyncManageProvider) {
     }
   );
 }
-function switchAssociate(treeDataProvider: SyncManageProvider) {
+function switchAssociate(treeDataProvider: SyncManageDataProvider) {
   return vscode.commands.registerCommand(
     SWITCH_ASSOCIATE,
     (node: AssociateNode) => {
@@ -54,7 +54,7 @@ function switchAssociate(treeDataProvider: SyncManageProvider) {
   );
 }
 
-export function registerCommand(treeDataProvider: SyncManageProvider) {
+export function registerCommand(treeDataProvider: SyncManageDataProvider) {
   return [
     disassociateAssociate(treeDataProvider),
     switchAssociate(treeDataProvider),

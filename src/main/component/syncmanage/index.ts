@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import { registerCommand } from "./command";
 
-import { SyncManageProvider } from "./provider";
+import { SyncManageDataProvider } from "./provider";
 
 export function createSyncManage(context: vscode.ExtensionContext) {
-  const syncManageDataProvider = new SyncManageProvider();
+  const syncManageDataProvider = new SyncManageDataProvider();
 
   const treeView = vscode.window.createTreeView("NocalhostSyncManage", {
     treeDataProvider: syncManageDataProvider,

@@ -16,6 +16,7 @@ export namespace Associate {
     };
   };
 }
+
 const SyncStatus = {
   outOfSync: "warning",
   disconnected: "debug-disconnect",
@@ -25,6 +26,7 @@ const SyncStatus = {
   idle: "check",
   end: "error",
 };
+
 type SyncStatusType = keyof typeof SyncStatus;
 
 export function getIconIdByStatus(status: SyncStatusType) {

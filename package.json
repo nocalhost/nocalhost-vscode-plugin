@@ -503,10 +503,12 @@
       },
       {
         "command": "Nocalhost.reconnectSync",
+        "shortTitle": "resume",
         "title": "%resumeSync%"
       },
       {
         "command": "Nocalhost.overrideSync",
+        "shortTitle": "override",
         "title": "%overrideRemoteChang%"
       },
       {

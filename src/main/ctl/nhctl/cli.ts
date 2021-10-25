@@ -3,33 +3,31 @@ import {
   GLOBAL_TIMEOUT,
   PLUGIN_TEMP_DIR,
   TEMP_NHCTL_BIN,
-} from "./../constants";
+} from "./../../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
-import { exec, ExecParam, execWithProgress } from "./shell";
-import host, { Host } from "../host";
+import { exec, ExecParam, execWithProgress } from "../shell";
+import host, { Host } from "../../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
-import { readYaml, replaceSpacePath } from "../utils/fileUtil";
-import * as packageJson from "../../../package.json";
-import { NH_BIN } from "../constants";
-import services from "../common/DataCenter/services";
-import { SvcProfile, NodeInfo } from "../nodes/types/nodeType";
-import logger from "../utils/logger";
-import { IDevSpaceInfo, IPortForWard } from "../domain";
-import { Resource, ResourceStatus } from "../nodes/types/resourceType";
-import { downloadNhctl, lock, unlock } from "../utils/download";
-import { keysToCamel } from "../utils";
-import { IPvc } from "../domain";
-import { getBooleanValue } from "../utils/config";
-import messageBus from "../utils/messageBus";
-import { ClustersState } from "../clusters";
-import { Associate } from "./nhctl.type";
-
-export * from "./nhctl.type";
+import { readYaml, replaceSpacePath } from "../../utils/fileUtil";
+import * as packageJson from "../../../../package.json";
+import { NH_BIN } from "../../constants";
+import services from "../../common/DataCenter/services";
+import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";
+import logger from "../../utils/logger";
+import { IDevSpaceInfo, IPortForWard } from "../../domain";
+import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
+import { downloadNhctl, lock, unlock } from "../../utils/download";
+import { keysToCamel } from "../../utils";
+import { IPvc } from "../../domain";
+import { getBooleanValue } from "../../utils/config";
+import messageBus from "../../utils/messageBus";
+import { ClustersState } from "../../clusters";
+import { Associate } from "./type";
 
 export interface InstalledAppInfo {
   name: string;

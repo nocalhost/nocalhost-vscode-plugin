@@ -59,28 +59,27 @@ export class AssociateNode extends BaseNode {
   getTreeItem() {
     const treeItem = super.getTreeItem();
 
-    const { ns, app, svc_type, svc } = this.associate.svc_pack;
+    const {
+      server,
+      syncthing_status: { msg, status },
+      svc_pack: { ns, app, svc_type, svc },
+    } = this.associate;
 
-    treeItem.description = this.associate.syncthing_status.msg;
-    treeItem.tooltip = [this.associate.server, ns, app, svc_type, svc].join(
-      "/"
-    );
-    treeItem.iconPath = new vscode.ThemeIcon(
-      getIconIdByStatus(this.associate.syncthing_status.status)
-    );
+    treeItem.label = [ns, app, svc].join("/");
+    treeItem.description = msg;
+    treeItem.tooltip = [server, ns, app, svc_type, svc].join("/");
 
+    treeItem.iconPath = new vscode.ThemeIcon(getIconIdByStatus(status));
     treeItem.contextValue = `syncAssociate-${this.parent.type}`;
 
-    let statusValue: string = "-";
+    let statusValue: string = "-diassociate-";
 
-    const { status } = this.associate.syncthing_status;
     switch (status) {
+      case "end":
+        break;
       case "disconnected":
       case "error":
         statusValue += "resume";
-        break;
-      case "end":
-        statusValue += "diassociate";
         break;
       default:
         statusValue += "override";

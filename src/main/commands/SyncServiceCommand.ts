@@ -8,7 +8,7 @@ import * as nhctl from "../ctl/nhctl";
 import host from "../host";
 import logger from "../utils/logger";
 import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
-import { Associate } from "../ctl/nhctl.type";
+import { Associate } from "../ctl/nhctl";
 
 export interface Sync {
   app: string;

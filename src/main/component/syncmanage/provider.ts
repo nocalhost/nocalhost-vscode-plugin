@@ -5,7 +5,7 @@ import { associateQuery, Associate } from "../../ctl/nhctl";
 import logger from "../../utils/logger";
 import { BaseNode, BaseNodeType, GroupNode } from "./node";
 
-export class SyncManageProvider
+export class SyncManageDataProvider
   extends vscode.Disposable
   implements vscode.TreeDataProvider<BaseNodeType> {
   private time: NodeJS.Timeout;
