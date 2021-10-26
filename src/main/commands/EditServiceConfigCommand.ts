@@ -18,13 +18,17 @@ export default class EditServiceConfigCommand implements ICommand {
       return;
     }
     const appNode = node.getAppNode();
+    const appName = node.getAppName();
+    const kubeConfigPath = node.getKubeConfigPath();
+    const namespace = node.getNameSpace();
+    const { resourceType, name } = node;
     let protocol = "NocalhostRW";
     const svcProfile = await getServiceConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
-      node.name,
-      node.resourceType
+      kubeConfigPath,
+      namespace,
+      appName,
+      name,
+      resourceType
     );
     if (
       svcProfile.localconfigloaded ||
@@ -34,13 +38,13 @@ export default class EditServiceConfigCommand implements ICommand {
       protocol = "Nocalhost";
     }
     const uri = vscode.Uri.parse(
-      `${protocol}://nh/config/app/${appNode.name}/services/${node.name}.yaml`
+      `${protocol}://nh/config/app/${appNode.name}/services/${name}.yaml`
     );
     host.setGlobalState(
       CONFIG_URI_QUERY,
-      `appName=${node.getAppName()}&nodeName=${node.name}&resourceType=${
+      `appName=${appName}nodeName=${name}&resourceType=${
         node.resourceType
-      }&id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${node.getNameSpace()}&workloadType=${
+      }&id=${node.getNodeStateId()}&kubeConfigPath=${kubeConfigPath}&namespace=${namespace}&workloadType=${
         node.resourceType
       }`
     );
@@ -55,7 +59,9 @@ export default class EditServiceConfigCommand implements ICommand {
     );
 
     if (res === "go") {
-      const uri = vscode.Uri.parse(`https://nocalhost.dev/tools?from=daemon`);
+      const uri = vscode.Uri.parse(
+        `https://nocalhost.dev/tools?name=${name}&type=${node.resourceType}&kubeconfig=${kubeConfigPath}&namespace=${namespace}&application=${appName}&from=daemon`
+      );
       vscode.env.openExternal(uri);
     }
   }
