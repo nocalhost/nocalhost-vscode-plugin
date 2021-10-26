@@ -1301,7 +1301,7 @@ export async function reconnectSync(
     namespace,
     `sync ${appName} -d ${workloadName} -t ${controllerType} --resume`
   );
-  host.log(`[cmd] ${command}`);
+  host.log(`[cmd] ${command}`, true);
 
   await exec({
     command,

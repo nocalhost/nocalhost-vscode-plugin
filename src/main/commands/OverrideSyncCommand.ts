@@ -16,14 +16,27 @@ export default class OverrideSyncCommand implements ICommand {
   }
 
   async execCommand(syncData: Sync | AssociateNode) {
+    let data: Sync;
+
     if (syncData instanceof AssociateNode) {
-      return await this.syncAssociate(syncData);
-    }
-    await this.sync(syncData);
-  }
-  async sync(syncData: Sync) {
-    if (!syncData.app || !syncData.service) {
-      return;
+      const {
+        associate: {
+          kubeconfig_path,
+          svc_pack: { ns, app, svc, svc_type },
+        },
+      } = syncData;
+      data = {
+        kubeConfigPath: kubeconfig_path,
+        namespace: ns,
+        app,
+        service: svc,
+        resourceType: svc_type,
+      };
+    } else {
+      data = syncData;
+      if (!syncData.app || !syncData.service) {
+        return;
+      }
     }
 
     const result = await host.showInformationMessage(
@@ -31,33 +44,17 @@ export default class OverrideSyncCommand implements ICommand {
       { modal: true },
       "Confirm"
     );
+
     if (result !== "Confirm") {
       return;
     }
+
     await nhctl.overrideSyncFolders(
-      syncData.kubeConfigPath,
-      syncData.namespace,
-      syncData.app,
-      syncData.service,
-      syncData.resourceType
+      data.kubeConfigPath,
+      data.namespace,
+      data.app,
+      data.service,
+      data.resourceType
     );
-  }
-
-  async syncAssociate(node: AssociateNode) {
-    const result = await host.showInformationMessage(
-      "Override the remote changes according to the local folders?",
-      { modal: true },
-      "Confirm"
-    );
-    if (result !== "Confirm") {
-      return;
-    }
-    const {
-      associate: {
-        kubeconfig_path,
-        svc_pack: { ns, app, svc, svc_type },
-      },
-    } = node;
-    await nhctl.overrideSyncFolders(kubeconfig_path, ns, app, svc, svc_type);
   }
 }
