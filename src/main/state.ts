@@ -162,6 +162,10 @@ class State {
       !isExist
     );
 
+    if (!isExist) {
+      return;
+    }
+
     await vscode.commands.executeCommand(
       "setContext",
       "Nocalhost.visibleTree",

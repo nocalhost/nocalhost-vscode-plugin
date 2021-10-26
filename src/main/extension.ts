@@ -148,11 +148,9 @@ export async function activate(context: vscode.ExtensionContext) {
     "extensionActivated",
     true
   );
-  if (isExistCluster()) {
-    await state.refreshTree();
-  } else {
-    await vscode.commands.executeCommand("setContext", "emptyCluster", true);
-  }
+
+  await state.refreshTree();
+
   launchDevSpace();
 
   bindEvent();
@@ -162,6 +160,9 @@ function bindEvent() {
     if (value.isCurrentWorkspace) {
       return;
     }
+
+    logger.debug("refreshTree", value);
+
     state.startAutoRefresh(true);
   });
 
