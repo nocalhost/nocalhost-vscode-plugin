@@ -273,18 +273,23 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       const children = await this.getChildren();
 
       if (children.length) {
-        const diff: string[] = difference(
+        const diff: any[] = difference(
           children
-            .map((node) => {
-              return (node as KubeConfigNode).devSpaceInfos.map(
-                (item) => item.spaceName || item.namespace
-              );
+            .map((item) => {
+              const node = item as KubeConfigNode;
+              if (node.clusterSource === ClusterSource.local) {
+                return [node.id];
+              }
+              return node.devSpaceInfos.map((item) => item.id);
             })
             .flat(1),
           resources
-            .map((item) =>
-              item.devSpaces.map((item) => item.spaceName || item.namespace)
-            )
+            .map((node) => {
+              if (node.clusterSource === ClusterSource.local) {
+                return [node.id];
+              }
+              return node.devSpaces.map((item) => item.id);
+            })
             .flat(1)
         );
 
