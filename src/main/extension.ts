@@ -136,6 +136,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(...subs);
 
+  host.getOutputChannel().show(true);
   // await registerYamlSchemaSupport();
 
   await vscode.commands.executeCommand(
@@ -148,35 +149,37 @@ export async function activate(context: vscode.ExtensionContext) {
   } else {
     await vscode.commands.executeCommand("setContext", "emptyCluster", true);
   }
-  launchDevspace();
+  launchDevSpace();
 
   bindEvent();
 }
 function bindEvent() {
-  messageBus.on("devstart", (value) => {
+  messageBus.on("refreshTree", (value) => {
+    if (value.isCurrentWorkspace) {
+      return;
+    }
+    state.startAutoRefresh(true);
+  });
+
+  messageBus.on("devStart", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      launchDevspace();
+      launchDevSpace();
     }
   });
 
   messageBus.on("endDevMode", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      const data = value.value as {
-        devspaceName: string;
-        appName: string;
-        workloadName: string;
-      };
-      host.disposeWorkload(data.devspaceName, data.appName, data.workloadName);
+      host.disposeWorkload(
+        value.devSpaceName,
+        value.appName,
+        value.workloadName
+      );
     }
   });
 
   messageBus.on("uninstall", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      const data = value.value as {
-        devspaceName: string;
-        appName: string;
-      };
-      host.disposeApp(data.devspaceName, data.appName);
+      host.disposeApp(value.devSpaceName, value.appName);
     }
   });
   messageBus.on("install", (value) => {
@@ -196,7 +199,7 @@ function bindEvent() {
     }
   });
 }
-function launchDevspace() {
+function launchDevSpace() {
   SyncServiceCommand.checkSync();
 
   const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);

@@ -14,6 +14,7 @@ import Bookinfo from "../common/bookinfo";
 import { kubeconfig } from "../ctl/nhctl";
 import { LoginInfo } from "../clusters/interface";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import messageBus from "../utils/messageBus";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -51,6 +52,8 @@ export default class SignOutCommand implements ICommand {
       await rootNode.deleteCluster(node.accountClusterService.loginInfo);
 
       this.cleanKubeConfig(node.accountClusterService.loginInfo);
+
+      messageBus.emit("refreshTree", {});
     } catch (error) {
       throw error;
     } finally {

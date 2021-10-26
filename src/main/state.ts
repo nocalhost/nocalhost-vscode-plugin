@@ -244,7 +244,7 @@ class State {
     this.set(appId, appMap);
   }
 
-  async disposeNode(node: BaseNocalhostNode) {
+  async disposeNode(node: Pick<BaseNocalhostNode, "getNodeStateId">) {
     const stateId = node.getNodeStateId();
 
     for (let key of this.stateMap.keys()) {

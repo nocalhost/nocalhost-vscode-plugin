@@ -12,6 +12,7 @@ import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import Bookinfo from "../common/bookinfo";
 import { kubeconfig } from "../ctl/nhctl";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import messageBus from "../utils/messageBus";
 
 export default class DeleteKubeConfigCommand implements ICommand {
   command: string = DELETE_KUBECONFIG;
@@ -52,6 +53,8 @@ export default class DeleteKubeConfigCommand implements ICommand {
     await rootNode.deleteCluster(kubeConfigPath);
 
     await state.refreshTree(true);
+
+    messageBus.emit("refreshTree", {});
 
     deleted.forEach(async (f) => {
       if (await isExist(f.filePath)) {

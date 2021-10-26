@@ -8,10 +8,20 @@ import host from "../host";
 import * as fileUtil from "./fileUtil";
 
 type event = {
-  uninstall: {};
-  install: {};
-  endDevMode: {};
-  devstart: {};
+  uninstall: {
+    devSpaceName: string;
+    appName: string;
+  };
+  install: {
+    status: "loading" | "end";
+  };
+  endDevMode: {
+    devSpaceName: string;
+    appName: string;
+    workloadName: string;
+  };
+  devStart: {};
+  refreshTree: {};
 };
 
 export interface MessageBusInfo {
@@ -30,7 +40,10 @@ class MessageBus {
     PLUGIN_CONFIG_DIR,
     "eventMessage"
   );
-  private eventMap = new Map<string, Array<(value: MessageBusInfo) => void>>();
+  private eventMap = new Map<
+    string,
+    Array<(value: MessageBusInfo & { isCurrentWorkspace: boolean }) => void>
+  >();
   private content: FileMessageInfo = {};
   async init() {
     const isExist = await fileUtil.isExist(MessageBus.filePath);
@@ -55,7 +68,10 @@ class MessageBus {
             this.content[key].timestamp < value.timestamp
           ) {
             arr.forEach((callback) => {
-              callback(value);
+              callback({
+                ...value,
+                isCurrentWorkspace: host.getCurrentRootPath() === value.source,
+              });
             });
             this.content[key] = value;
           }
@@ -64,17 +80,26 @@ class MessageBus {
     });
   }
 
-  on(eventName: string, callback: (value: MessageBusInfo) => void) {
+  on<T extends keyof event, K extends event[T]>(
+    eventName: T,
+    callback: (
+      value: MessageBusInfo & K & { isCurrentWorkspace: boolean }
+    ) => void
+  ) {
     let arr = this.eventMap.get(eventName);
     if (!arr) {
       arr = [];
       this.eventMap.set(eventName, arr);
     }
 
-    arr.push(callback);
+    arr.push(callback as any);
   }
 
-  emit(eventName: string, value: object, destination?: string) {
+  emit<T extends keyof event, K extends event[T]>(
+    eventName: T,
+    value: K,
+    destination?: string
+  ) {
     // read file
     const content = fs.readFileSync(MessageBus.filePath).toString("utf-8");
     const obj = JSON.parse(content) as FileMessageInfo;
