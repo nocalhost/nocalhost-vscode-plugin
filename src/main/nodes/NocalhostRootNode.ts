@@ -243,8 +243,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       if (typeof info === "string") {
         resources = resources.filter(
           (item) =>
-            item.clusterSource === ClusterSource.local &&
-            item.kubeConfigPath !== info
+            !(
+              item.clusterSource === ClusterSource.local &&
+              item.kubeConfigPath === info
+            )
         );
       } else {
         resources = resources.filter((item: any) => {

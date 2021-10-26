@@ -68,6 +68,7 @@ class State {
     }
 
     if (force && this.cancellationToken) {
+      this.queueRender.length = 0;
       this.cancellationToken.cancel();
       this.cancellationToken = null;
     }
@@ -95,9 +96,9 @@ class State {
         await asyncLimit(
           Array.from(this.refreshFolderMap.entries()),
           ([id, expanded]) => {
-            if (!token.isCancellationRequested && this.get(id) && expanded) {
-              const node = this.getNode(id) as BaseNocalhostNode;
+            const node = this.getNode(id) as BaseNocalhostNode;
 
+            if (!token.isCancellationRequested && node && expanded) {
               return node.updateData();
             }
 

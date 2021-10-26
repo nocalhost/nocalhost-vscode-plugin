@@ -110,9 +110,10 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
               await LocalCluster.getLocalClusterRootNode(newLocalCluster);
 
               const node = state.getNode(NOCALHOST) as NocalhostRootNode;
+
               await node.addCluster(newLocalCluster);
 
-              await state.refreshTree(false);
+              await state.refreshTree(true);
             }
 
             vscode.window.showInformationMessage("Success");

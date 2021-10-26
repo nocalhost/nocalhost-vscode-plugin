@@ -48,9 +48,10 @@ export default class DeleteKubeConfigCommand implements ICommand {
     Bookinfo.cleanCheck(node);
 
     const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
+
     await rootNode.deleteCluster(kubeConfigPath);
 
-    await state.refreshTree(false);
+    await state.refreshTree(true);
 
     deleted.forEach(async (f) => {
       if (await isExist(f.filePath)) {

@@ -33,21 +33,15 @@ export default class SignInCommand implements ICommand {
       info.username = info.username.trim();
       info.baseUrl = info.baseUrl.trim();
 
-      try {
-        await state.stopAutoRefresh(true);
+      const accountClusterNode = await AccountClusterService.appendClusterByLoginInfo(
+        info
+      );
 
-        const accountClusterNode = await AccountClusterService.appendClusterByLoginInfo(
-          info
-        );
+      const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
+      await rootNode.addCluster(accountClusterNode);
+      vscode.window.showInformationMessage("Login successful");
 
-        const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
-        await rootNode.addCluster(accountClusterNode);
-        vscode.window.showInformationMessage("Login successful");
-      } catch (error) {
-        throw error;
-      } finally {
-        await state.refreshTree(true);
-      }
+      await state.refreshTree(true);
     });
   }
 }
