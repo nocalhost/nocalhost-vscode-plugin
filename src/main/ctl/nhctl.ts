@@ -27,8 +27,8 @@ import { IPvc } from "../domain";
 import { getBooleanValue } from "../utils/config";
 import messageBus from "../utils/messageBus";
 import { ClustersState } from "../clusters";
-import { NodeInfo } from "../typings";
 import state from "../state";
+import { NodeInfo } from "../nodes/types/nodeType";
 
 export interface InstalledAppInfo {
   name: string;
@@ -55,15 +55,21 @@ export class NhctlCommand {
   );
   private outputMethod: string = "toJson";
 
-  private execParam: Omit<ExecParam, "command"> = {};
-
-  constructor(base: string, baseParams?: IBaseCommand<unknown>) {
+  constructor(
+    base: string,
+    baseParams?: IBaseCommand<unknown>,
+    private execParam: Omit<ExecParam, "command"> = {}
+  ) {
     this.baseParams = baseParams;
     this.args = [];
     this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
   }
-  static create(base: string, baseParams?: IBaseCommand<unknown>) {
-    return new NhctlCommand(base, baseParams);
+  static create(
+    base: string,
+    baseParams?: IBaseCommand<unknown>,
+    execParam: Omit<ExecParam, "command"> = {}
+  ) {
+    return new NhctlCommand(base, baseParams, execParam);
   }
   static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
     const command = NhctlCommand.create("get", baseParams);
@@ -1098,8 +1104,12 @@ export async function editConfig(
     } -c ${contents}`
   );
 
-  const result = await exec({ command }).promise;
-  return result.stdout;
+  try {
+    const result = await exec({ command }).promise;
+    return result.stdout;
+  } catch (err: any) {
+    throw err.stderr || err.stdout;
+  }
 }
 
 export async function getAppConfig(
@@ -1247,9 +1257,11 @@ export async function getSyncStatus(
 
   const command = nhctlCommand(kubeConfigPath, namespace, baseCommand);
 
-  const r = await exec({ command, args }).promise.catch(() => {
-    return { code: 0, stdout: "", stderr: "" };
-  });
+  const r = await exec({ command, args, printCommand: false }).promise.catch(
+    () => {
+      return { code: 0, stdout: "", stderr: "" };
+    }
+  );
 
   return r.stdout;
 }

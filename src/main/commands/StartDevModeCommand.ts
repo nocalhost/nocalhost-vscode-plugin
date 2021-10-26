@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as os from "os";
 import { get as _get } from "lodash";
 import { existsSync } from "fs";
-
 import { INhCtlGetResult, IDescribeConfig } from "../domain";
 import ICommand from "./ICommand";
 import { START_DEV_MODE, SYNC_SERVICE } from "./constants";

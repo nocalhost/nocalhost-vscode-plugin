@@ -537,7 +537,11 @@ export default class InstallAppSourceCommand implements ICommand {
   async readYamlSync(path: string) {
     let config: INocalhostConfig | null = null;
     try {
-      const str = await new NhctlCommand("render").addArgument(path).exec();
+      const str = await new NhctlCommand("render", null, {
+        ignoreError: true,
+      })
+        .addArgument(path)
+        .exec();
       if (str) {
         config = yaml.parse(str);
       }

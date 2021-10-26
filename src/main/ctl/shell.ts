@@ -1,5 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as shell from "shelljs";
+import * as path from "path";
 import { Event } from "vscode";
 import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
@@ -8,18 +9,25 @@ import host from "../host";
 import logger from "../utils/logger";
 
 function showGlobalMsg(str: string) {
-  if (str.indexOf("[WARNING]") > -1) {
-    str = str.replaceAll("<br>", "\n");
+  const strArr = str.split("\n");
 
-    host.showInformationMessage(str, {
+  const findStr = (keyWords: string) => {
+    return (str: string) => str.startsWith(keyWords);
+  };
+
+  const warnStr = strArr.find(findStr("[WARNING]"));
+  if (warnStr) {
+    return host.showInformationMessage(warnStr, {
       modal: true,
     });
   }
-  if (str.indexOf("[INFO]") > -1) {
-    host.showWarnMessage(str);
+  const infoStr = strArr.find(findStr("[INFO]"));
+  if (infoStr) {
+    return host.showWarnMessage(infoStr);
   }
-  if (str.indexOf("ERROR") > -1) {
-    host.showErrorMessage(str);
+  const errStr = strArr.find(findStr("[ERROR]"));
+  if (errStr) {
+    host.showErrorMessage(errStr);
   }
 }
 
@@ -72,6 +80,8 @@ export interface ExecParam {
   args?: any[];
   timeout?: number;
   output?: OutPut;
+  ignoreError?: boolean;
+  printCommand?: boolean;
 }
 
 type OutPut = boolean | { err: boolean; out: boolean };
@@ -107,7 +117,13 @@ export function createProcess(param: ExecParam) {
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
 
-  logger.info(`[cmd] ${command}`);
+  if (param.printCommand !== false) {
+    logger.info(`[cmd] ${command}`);
+  }
+
+  if (host.isWindow() && env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
+    command = command.replaceAll(path.sep, "\\\\\\");
+  }
 
   const proc = spawn(command, [], { shell: true, env });
 
@@ -120,8 +136,8 @@ export function createProcess(param: ExecParam) {
   }
 
   proc.stdout.on("data", function (data: Buffer) {
-    let str = data.toString();
-    stdout += data;
+    const str = data.toString();
+    stdout += str;
 
     out && host.log(str);
     showGlobalMsg(str);
@@ -139,7 +155,7 @@ export function createProcess(param: ExecParam) {
       if (code === 0) {
         res({ code, stdout, stderr });
       } else {
-        if ("SIGTERM" === signal) {
+        if ("SIGTERM" === signal || param.ignoreError) {
           rej();
           return;
         }
@@ -147,8 +163,8 @@ export function createProcess(param: ExecParam) {
         const error = new ShellExecError({ code, stdout, stderr, command });
         logger.error(error);
 
-        if (!err) {
-          host.log(`\n[cmd] ${command}\n stderr:${stderr}`);
+        if (param.ignoreError !== true && !err) {
+          host.log(`\n[cmd] ${command} \rstderr:${stderr}`);
         }
 
         rej(error);

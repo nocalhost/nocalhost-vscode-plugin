@@ -1,5 +1,42 @@
 # Change Log
 
+## 0.6.2 (2021-10-18)
+
+#### Refactor & Improvement
+
+- Optimize tree refresh
+- Optimize display of nhctl execution command results
+- Fixed the problem of hot reload does not refresh
+
+## 0.6.0 (2021-10-15)
+
+#### New Features
+
+- Supports Duplicate DevMode
+- Supports remote debug、run、hotReload for Node and Golang
+- Supports kill nhctl operation if nhctl spent too much time
+- Supports using git bash(unix shell) as default shell in windows
+
+#### Refactor & Improvement
+
+- Optimize icon for developing status
+- Optimize experience for logining nocalhost server
+
+## 0.5.6 (2021-09-16)
+
+#### New Features
+
+- Add new Nocalhost Server dashboard features support
+
+#### Refactor & Improvement
+
+- Notify `nhctl` to clean up the cache for expired KubeConfig
+
+#### Bug Fixes
+
+- Fixed container selector issue when opening or associate directory
+- Fixed an issue that could not be recovered after code synchronization for non-Deployment workloads was disconnected
+
 ## 0.5.2 (2021-08-30)
 
 #### New Features

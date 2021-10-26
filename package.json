@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.5.18",
+  "version": "0.6.1",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -28,7 +28,7 @@
   "main": "./dist/extension.js",
   "nhctl": {
     "serverVersion": "0.4.7",
-    "version": "0.5.9"
+    "version": "0.6.1"
   },
   "contributes": {
     "configuration": [
@@ -168,17 +168,17 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!developing)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting))/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-developing/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-(developing|starting)/i",
           "group": "inline@0"
         },
         {

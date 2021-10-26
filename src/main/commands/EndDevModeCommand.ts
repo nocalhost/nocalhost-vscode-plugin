@@ -29,7 +29,10 @@ export default class EndDevModeCommand implements ICommand {
       node.name,
       node.resourceType
     );
-    if (svcProfile.possess === false) {
+    if (
+      svcProfile?.possess === false &&
+      svcProfile?.develop_status !== "STARTING"
+    ) {
       result = await vscode.window.showInformationMessage(
         "This service is already in DevMode and you not the initiator, do you want exit the DevMode first?",
         { modal: true },
@@ -37,9 +40,11 @@ export default class EndDevModeCommand implements ICommand {
         "No"
       );
     }
+
     if (result !== "Yes") {
       return;
     }
+
     const appNode = node.getAppNode();
     host.getOutputChannel().show(true);
     const devSpace = appNode.getParent() as DevSpaceNode;

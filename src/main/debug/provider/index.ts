@@ -10,7 +10,7 @@ export const support = {
   node: NodeDebugProvider,
   java: JavaDebugProvider,
   golang: GoDebugProvider,
-  // python: PythonDebugProvider,
+  python: PythonDebugProvider,
 };
 
 type Language = keyof typeof support;
@@ -19,7 +19,14 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
   const supportType = Object.keys(support) as Array<Language>;
 
   if (!type) {
-    type = (await window.showQuickPick(supportType)) as Language;
+    type = (await window.showQuickPick(supportType, {
+      title: "Please select the language to debug",
+      ignoreFocusOut: true,
+    })) as Language;
+  }
+
+  if (!type) {
+    return Promise.reject();
   }
 
   let debugProvider = support[type];

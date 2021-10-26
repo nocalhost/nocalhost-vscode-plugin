@@ -9,10 +9,16 @@ import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { ContainerConfig } from "../service/configService";
-import { chooseDebugProvider, Language, support } from "../debug/provider";
+import {
+  checkDebuggerInstalled,
+  chooseDebugProvider,
+  Language,
+  support,
+} from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { closeTerminals, getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
+import state from "../state";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -31,7 +37,10 @@ export default class DebugCommand implements ICommand {
 
     this.node = node;
     this.container = await getContainer(node);
+
     this.validateDebugConfig(this.container);
+
+    const debugProvider = await this.getDebugProvider(node);
 
     await closeTerminals();
 
@@ -48,7 +57,7 @@ export default class DebugCommand implements ICommand {
 
     await waitForSync(node);
 
-    this.startDebugging(node);
+    this.startDebugging(node, debugProvider);
   }
 
   validateDebugConfig(config: ContainerConfig) {
@@ -98,7 +107,10 @@ export default class DebugCommand implements ICommand {
     );
   }
 
-  async startDebugging(node: ControllerResourceNode) {
+  async startDebugging(
+    node: ControllerResourceNode,
+    debugProvider: IDebugProvider
+  ) {
     const debugSession = new DebugSession();
 
     const workspaceFolder = await host.showWorkspaceFolderPick();
@@ -112,20 +124,20 @@ export default class DebugCommand implements ICommand {
 
     await debugSession.launch(
       workspaceFolder,
-      await this.getDebugProvider(node),
+      debugProvider,
       node,
-      await getContainer(node)
+      this.container
     );
   }
-
   async getDebugProvider(
     node: ControllerResourceNode
   ): Promise<IDebugProvider> {
-    let containerConfig = await getContainer(node);
+    let type: Language = state.getAppState(
+      node.getAppName(),
+      `${node.name}_debugProvider`
+    );
 
-    let type: Language = null;
-
-    const { image } = containerConfig.dev;
+    const { image } = this.container.dev;
 
     if (image.includes("nocalhost/dev-images")) {
       type = Object.keys(support).find((name) =>
@@ -133,6 +145,21 @@ export default class DebugCommand implements ICommand {
       ) as Language;
     }
 
-    return await chooseDebugProvider(type);
+    const debugProvider = await chooseDebugProvider(type);
+
+    if (!type) {
+      state.setAppState(
+        node.getAppName(),
+        `${node.name}_debugProvider`,
+        debugProvider.name.toLocaleLowerCase()
+      );
+    }
+
+    const isInstalled = checkDebuggerInstalled(debugProvider);
+    if (!isInstalled) {
+      return Promise.reject();
+    }
+
+    return debugProvider;
   }
 }
