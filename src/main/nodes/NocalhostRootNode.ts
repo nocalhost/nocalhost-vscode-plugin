@@ -1,32 +1,28 @@
+import { difference, get, orderBy } from "lodash";
 import * as vscode from "vscode";
-import { orderBy, get, difference } from "lodash";
-
+import { sortResources } from "../clusters";
 import AccountClusterService, {
   AccountClusterNode,
 } from "../clusters/AccountCluster";
+import { LoginInfo } from "../clusters/interface";
 import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
-import { sortResources } from "../clusters";
-import logger from "../utils/logger";
-
+import { ClusterSource } from "../common/define";
 import {
   GLOBAL_TIMEOUT,
   LOCAL_PATH,
   NOCALHOST,
   SERVER_CLUSTER_LIST,
 } from "../constants";
+import { IRootNode } from "../domain";
+import host from "../host";
+import state from "../state";
+import { asyncLimit } from "../utils";
+import { isExistSync, readYaml } from "../utils/fileUtil";
+import logger from "../utils/logger";
 import { AppNode } from "./AppNode";
+import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
-import host from "../host";
-import { isExistSync, readYaml } from "../utils/fileUtil";
-import state from "../state";
-import { KubeConfigNode } from "./KubeConfigNode";
-import { IRootNode } from "../domain";
-import { ClusterSource } from "../common/define";
-import { DevSpaceNode } from "./DevSpaceNode";
-
-import { asyncLimit } from "../utils";
-import { LoginInfo } from "../clusters/interface";
 
 async function getClusterName(res: IRootNode) {
   if (!res.kubeConfigPath) {
@@ -288,25 +284,33 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   }
 
   private async cleanDiffDevSpace(resources: IRootNode[]) {
-    // const oldResources = state.getData(this.getNodeStateId()) as
-    if (state.getData(this.getNodeStateId())) {
-      const children = (await this.getChildren()) as KubeConfigNode[];
+    const old = state.getData(this.getNodeStateId()) as IRootNode[];
 
-      if (children.length) {
-        const diff: string[] = difference(
-          children.map((item) => item.id),
-          resources.map((item) => item.id!)
-        );
+    if (old && old.length && resources.length) {
+      const getId = async (resource: IRootNode) => {
+        const kubeconfigNode = await this.getKubeConfigNode(resource);
+        const children = await kubeconfigNode.getChildren();
 
-        if (diff.length) {
-          diff.forEach((id) => {
-            state.disposeNode({
-              getNodeStateId() {
-                return id;
-              },
-            });
+        let arryId = [kubeconfigNode.getNodeStateId()];
+
+        arryId = arryId.concat(children.map((child) => child.getNodeStateId()));
+
+        return arryId;
+      };
+
+      const oldId = (await Promise.all(old.map(getId))).flat(1);
+      const newId = (await Promise.all(resources.map(getId))).flat(1);
+
+      const diff: string[] = difference(oldId, newId);
+
+      if (diff.length) {
+        diff.forEach((id) => {
+          state.disposeNode({
+            getNodeStateId() {
+              return id;
+            },
           });
-        }
+        });
       }
     }
   }
@@ -322,6 +326,22 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     return;
   }
 
+  async getKubeConfigNode(res: IRootNode) {
+    const clusterName = await getClusterName(res);
+
+    return new KubeConfigNode({
+      id: res.id,
+      label: clusterName,
+      parent: this,
+      kubeConfigPath: res.kubeConfigPath,
+      devSpaceInfos: res.devSpaces,
+      applications: res.applications,
+      userInfo: res.userInfo,
+      clusterSource: res.clusterSource,
+      accountClusterService: res.accountClusterService,
+      state: res.state,
+    });
+  }
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<Array<BaseNocalhostNode>> {
@@ -333,22 +353,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     resources = resources.filter((it) => Boolean(it));
 
-    const children = await asyncLimit(resources, async (res) => {
-      const clusterName = await getClusterName(res);
-
-      return new KubeConfigNode({
-        id: res.id,
-        label: clusterName,
-        parent: this,
-        kubeConfigPath: res.kubeConfigPath,
-        devSpaceInfos: res.devSpaces,
-        applications: res.applications,
-        userInfo: res.userInfo,
-        clusterSource: res.clusterSource,
-        accountClusterService: res.accountClusterService,
-        state: res.state,
-      });
-    }).then((results) => {
+    const children = await asyncLimit(
+      resources,
+      this.getKubeConfigNode.bind(this)
+    ).then((results) => {
       const nodes: BaseNocalhostNode[] = results.map((result, index) => {
         if (result.status === "fulfilled") {
           return result.value;
