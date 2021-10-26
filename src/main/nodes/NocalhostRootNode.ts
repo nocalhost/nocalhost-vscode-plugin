@@ -190,7 +190,19 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public async addCluster(node: AccountClusterNode | LocalClusterNode) {
     let addResources: IRootNode[];
 
+    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
+
     if (node instanceof LocalClusterNode) {
+      if (
+        resources.findIndex(
+          (item) =>
+            item.clusterSource === ClusterSource.local &&
+            item.kubeConfigPath === node.filePath
+        ) > -1
+      ) {
+        return;
+      }
+
       addResources = [
         await LocalCusterService.getLocalClusterRootNode(node).catch((err) => {
           return {
@@ -206,6 +218,15 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         }),
       ];
     } else {
+      if (
+        resources.findIndex(
+          (item) =>
+            item.clusterSource === ClusterSource.server && item.id === node.id
+        ) > -1
+      ) {
+        return;
+      }
+
       addResources = await AccountClusterService.getServerClusterRootNodes(
         node
       ).catch((err) => {
@@ -225,8 +246,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         ];
       });
     }
-    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
-
     if (resources) {
       resources = resources.concat(addResources);
     }
@@ -269,41 +288,23 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   }
 
   private async cleanDiffDevSpace(resources: IRootNode[]) {
+    // const oldResources = state.getData(this.getNodeStateId()) as
     if (state.getData(this.getNodeStateId())) {
-      const children = await this.getChildren();
+      const children = (await this.getChildren()) as KubeConfigNode[];
 
       if (children.length) {
-        const diff: any[] = difference(
-          children
-            .map((item) => {
-              const node = item as KubeConfigNode;
-              if (node.clusterSource === ClusterSource.local) {
-                return [node.id];
-              }
-              return node.devSpaceInfos.map((item) => item.id);
-            })
-            .flat(1),
-          resources
-            .map((node) => {
-              if (node.clusterSource === ClusterSource.local) {
-                return [node.id];
-              }
-              return node.devSpaces.map((item) => item.id);
-            })
-            .flat(1)
+        const diff: string[] = difference(
+          children.map((item) => item.id),
+          resources.map((item) => item.id!)
         );
 
         if (diff.length) {
-          const devSpaceNodes: DevSpaceNode[] = (
-            await Promise.all(
-              children.map((node) => node.getChildren() as DevSpaceNode[])
-            )
-          ).flat(1);
-
-          diff.forEach((name) => {
-            const node = devSpaceNodes.find((item) => item.label === name);
-
-            node && state.disposeNode(node);
+          diff.forEach((id) => {
+            state.disposeNode({
+              getNodeStateId() {
+                return id;
+              },
+            });
           });
         }
       }
