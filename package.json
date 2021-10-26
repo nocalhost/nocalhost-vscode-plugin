@@ -289,15 +289,15 @@
         },
         {
           "command": "Nocalhost.disassociateAssociate",
-          "when": "viewItem =~ /^syncAssociate/i"
+          "when": "viewItem =~ /^syncAssociate-(.*)disassociate/i"
         },
         {
           "command": "Nocalhost.reconnectSync",
-          "when": "viewItem =~ /^syncAssociate-(.*)-resume/i"
+          "when": "viewItem =~ /^syncAssociate-(.*)resume/i"
         },
         {
           "command": "Nocalhost.overrideSync",
-          "when": "viewItem =~ /^syncAssociate-(.*)-override/i"
+          "when": "viewItem =~ /^syncAssociate-(.*)override/i"
         }
       ]
     },

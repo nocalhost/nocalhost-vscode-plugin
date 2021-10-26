@@ -4,6 +4,7 @@ import { isEqual } from "lodash";
 import { associateQuery, Associate } from "../../ctl/nhctl";
 import logger from "../../utils/logger";
 import { BaseNode, BaseNodeType, GroupNode } from "./node";
+import { SYNC_SERVICE } from "../../commands/constants";
 
 export class SyncManageDataProvider
   extends vscode.Disposable
@@ -99,12 +100,12 @@ export class SyncManageDataProvider
 
     let children: BaseNode[] = [];
 
-    if (list.other.length) {
-      children.push(new GroupNode(element, "other", list.other));
-    }
-
     if (list.current) {
       children.push(new GroupNode(element, "current", [list.current]));
+    }
+
+    if (list.other.length) {
+      children.push(new GroupNode(element, "other", list.other));
     }
 
     return children;
@@ -118,8 +119,20 @@ export class SyncManageDataProvider
       current: node,
       switchCurrent: node,
     };
-
     this.onDidChangeTreeDataEventEmitter.fire(undefined);
+
+    const {
+      kubeconfig_path,
+      svc_pack: { app, svc, svc_type, ns },
+    } = node;
+
+    vscode.commands.executeCommand(SYNC_SERVICE, {
+      app,
+      resourceType: svc_type,
+      service: svc,
+      kubeConfigPath: kubeconfig_path,
+      namespace: ns,
+    });
   }
 
   public async refresh(force: boolean = false) {

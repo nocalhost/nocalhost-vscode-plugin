@@ -72,17 +72,21 @@ export class AssociateNode extends BaseNode {
     treeItem.iconPath = new vscode.ThemeIcon(getIconIdByStatus(status));
     treeItem.contextValue = `syncAssociate-${this.parent.type}`;
 
-    let statusValue: string = "-diassociate-";
+    let statusValue: string = "-";
 
     switch (status) {
       case "end":
+        statusValue += "disassociate";
         break;
       case "disconnected":
-      case "error":
         statusValue += "resume";
+        break;
+      case "error":
+        statusValue += "override-resume";
         break;
       default:
         statusValue += "override";
+        break;
     }
 
     treeItem.contextValue += statusValue;
