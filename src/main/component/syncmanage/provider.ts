@@ -97,15 +97,19 @@ export class SyncManageDataProvider
       return [new BaseNode(element, "Waiting for enter DevMode")];
     }
 
-    if (list.other.length === 0) {
-      return [new GroupNode(element, "current", [list.current])];
+    let children: BaseNode[] = [];
+
+    if (list.other.length) {
+      children.push(new GroupNode(element, "other", list.other));
     }
 
-    return [
-      new GroupNode(element, "current", [list.current]),
-      new GroupNode(element, "other", list.other),
-    ];
+    if (list.current) {
+      children.push(new GroupNode(element, "current", [list.current]));
+    }
+
+    return children;
   }
+
   public async switchCurrent(node: Associate.QueryResult) {
     const { other, current } = this.associateData;
 
