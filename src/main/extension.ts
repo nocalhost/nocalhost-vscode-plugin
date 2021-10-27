@@ -97,23 +97,18 @@ export async function activate(context: vscode.ExtensionContext) {
     ) {
       state.refreshFolderMap.set(node.getNodeStateId(), true);
     }
-
-    if (node instanceof NocalhostFolderNode) {
-      node.isExpand = true;
-    }
   });
 
   appTreeView.onDidCollapseElement((e) => {
     const node = e.element;
-    if (
-      node instanceof KubernetesResourceFolder ||
-      node instanceof DevSpaceNode
-    ) {
-      state.refreshFolderMap.delete(node.getNodeStateId());
-    }
-    if (node instanceof NocalhostFolderNode) {
-      node.isExpand = false;
-    }
+
+    const nodeStateId = node.getNodeStateId();
+
+    Array.from(state.refreshFolderMap.keys()).forEach((id) => {
+      if (id.startsWith(nodeStateId)) {
+        state.refreshFolderMap.delete(id);
+      }
+    });
   });
 
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();

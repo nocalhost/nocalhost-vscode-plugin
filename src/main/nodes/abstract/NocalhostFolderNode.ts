@@ -8,8 +8,6 @@ export abstract class NocalhostFolderNode implements BaseNocalhostNode {
   abstract label: string;
   abstract type: string;
 
-  public isExpand: boolean = false;
-
   getNodeStateId(): string {
     const parentStateId = this.parent.getNodeStateId();
     return `${parentStateId}${ID_SPLIT}${this.label}`;
