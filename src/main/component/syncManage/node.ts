@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import { sortBy } from "lodash";
+
 import { Associate, getIconIdByStatus } from "../../ctl/nhctl";
 import host from "../../host";
 
@@ -38,9 +40,11 @@ export class GroupNode extends BaseNode {
   }
   getChildren(element?: GroupNode): vscode.ProviderResult<BaseNodeType[]> {
     const currentPath = host.getCurrentRootPath();
-    return this.children.map(
-      (child) => new AssociateNode(this, currentPath, child)
-    );
+    return sortBy(this.children, [
+      "svc_pack.ns",
+      "svc_pack.app",
+      "svc_pack.svc",
+    ]).map((child) => new AssociateNode(this, currentPath, child));
   }
 }
 

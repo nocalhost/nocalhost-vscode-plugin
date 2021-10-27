@@ -41,7 +41,7 @@ export class SyncManageDataProvider
 
   changeVisible(visible: boolean) {
     if (visible) {
-      this.refresh(true);
+      this.refresh();
     } else {
       clearTimeout(this.time);
     }
@@ -135,7 +135,7 @@ export class SyncManageDataProvider
     });
   }
 
-  public async refresh(force: boolean = false) {
+  public async refresh() {
     clearTimeout(this.time);
 
     try {
@@ -143,7 +143,7 @@ export class SyncManageDataProvider
 
       await this.getData(true);
 
-      if (!isEqual(associateData, this.associateData) || force) {
+      if (!isEqual(associateData, this.associateData)) {
         this.onDidChangeTreeDataEventEmitter.fire(undefined);
       }
     } catch (error) {

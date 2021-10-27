@@ -114,6 +114,11 @@
           "command": "Nocalhost.addKubeconfig",
           "when": "extensionActivated && view == Nocalhost",
           "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.syncManage.refresh",
+          "when": "view == NocalhostSyncManage",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -364,6 +369,12 @@
         "command": "Nocalhost.signin",
         "title": "Sign in",
         "icon": "$(sign-in)"
+      },
+      {
+        "command": "Nocalhost.syncManage.refresh",
+        "title": "Refresh",
+        "alt": "Refresh",
+        "icon": "$(refresh)"
       },
       {
         "command": "Nocalhost.refresh",

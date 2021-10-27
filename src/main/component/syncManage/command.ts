@@ -7,6 +7,7 @@ import { SyncManageDataProvider } from "./provider";
 
 const DISASSOCIATE_ASSOCIATE = "Nocalhost.disassociateAssociate";
 const SWITCH_ASSOCIATE = "Nocalhost.switchAssociate";
+const SYNCMANAGE_REFRESH = "Nocalhost.syncManage.refresh";
 
 function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
   return vscode.commands.registerCommand(
@@ -36,7 +37,7 @@ function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
         "--de-associate"
       );
 
-      treeDataProvider.refresh(true);
+      treeDataProvider.refresh();
     }
   );
 }
@@ -54,9 +55,17 @@ function switchAssociate(treeDataProvider: SyncManageDataProvider) {
   );
 }
 
+function refresh(treeDataProvider: SyncManageDataProvider) {
+  return vscode.commands.registerCommand(
+    SYNCMANAGE_REFRESH,
+    treeDataProvider.refresh
+  );
+}
+
 export function registerCommand(treeDataProvider: SyncManageDataProvider) {
   return [
     disassociateAssociate(treeDataProvider),
     switchAssociate(treeDataProvider),
+    refresh(treeDataProvider),
   ];
 }
