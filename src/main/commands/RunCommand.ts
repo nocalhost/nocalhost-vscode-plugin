@@ -49,8 +49,6 @@ export default class RunCommand implements ICommand {
 
     this.validateRunConfig(this.container);
 
-    await closeTerminals();
-
     if (!command) {
       const status = await node.getStatus(true);
 
@@ -62,7 +60,7 @@ export default class RunCommand implements ICommand {
       }
     }
 
-    await waitForSync(node);
+    await waitForSync(node, RUN);
 
     const name = `${capitalCase(node.name)} Process Console`;
 

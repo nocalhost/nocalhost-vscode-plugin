@@ -15,10 +15,9 @@ import {
   support,
 } from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { closeTerminals, getContainer, waitForSync } from "../debug";
+import { getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
-import state from "../state";
-import validate, { validateData } from "../utils/validate";
+import { validateData } from "../utils/validate";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -40,9 +39,7 @@ export default class DebugCommand implements ICommand {
 
     this.validateDebugConfig(this.container);
 
-    const debugProvider = await this.getDebugProvider(node);
-
-    await closeTerminals();
+    const debugProvider = await this.getDebugProvider();
 
     if (!command) {
       const status = await node.getStatus(true);
@@ -55,7 +52,7 @@ export default class DebugCommand implements ICommand {
       }
     }
 
-    await waitForSync(node);
+    await waitForSync(node, DEBUG);
 
     this.startDebugging(node, debugProvider);
   }
@@ -130,9 +127,7 @@ export default class DebugCommand implements ICommand {
       this.container
     );
   }
-  async getDebugProvider(
-    node: ControllerResourceNode
-  ): Promise<IDebugProvider> {
+  async getDebugProvider(): Promise<IDebugProvider> {
     let type: Language;
     const { image } = this.container.dev;
 
