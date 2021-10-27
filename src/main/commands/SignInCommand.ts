@@ -38,7 +38,8 @@ export default class SignInCommand implements ICommand {
       );
 
       const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
-      await rootNode.addCluster(accountClusterNode);
+      rootNode && (await rootNode.addCluster(accountClusterNode));
+
       vscode.window.showInformationMessage("Login successful");
 
       await state.refreshTree(true);
