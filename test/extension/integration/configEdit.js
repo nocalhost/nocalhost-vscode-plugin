@@ -54,6 +54,9 @@ async function editConfig(page, browser) {
 
   // copy config
   await page.waitForTimeout(3000);
+  await page.keyboard.down("Escape");
+  await page.keyboard.up("Escape");
+
   await page.keyboard.down("Meta");
   await page.keyboard.down("A");
   await page.keyboard.up("A");
@@ -83,22 +86,31 @@ async function editConfig(page, browser) {
   await page.waitForTimeout(1000);
 
   await page.keyboard.down("Meta");
-  await page.keyboard.down("A");
-  await page.keyboard.up("A");
+  await page.keyboard.press("A");
   await page.keyboard.up("Meta");
-  await page.keyboard.down("Backspace");
-  await page.keyboard.up("Backspace");
+  await page.keyboard.press("Backspace");
 
   await page.waitForTimeout(1000);
 
   await page.keyboard.down("Meta");
-  await page.keyboard.down("V");
-  await page.keyboard.up("V");
+  await page.keyboard.press("V");
 
-  await page.keyboard.down("S");
-  await page.keyboard.up("S");
+  await page.keyboard.press("S");
 
   await page.keyboard.up("Meta");
+
+  // view log
+  await page.waitForTimeout(1000);
+  await authors.click();
+
+  await authors.click({ button: "right" });
+  await page.waitForTimeout(3000);
+
+  for (i = 0; i < 6; i++) {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(200);
+  }
+  await page.keyboard.press("Enter");
 }
 
 module.exports = {
