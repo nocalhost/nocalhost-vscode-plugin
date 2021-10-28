@@ -10,6 +10,7 @@ import { LocalCluster } from "../clusters";
 import host from "../host";
 import { readYaml, readFile, getYamlDefaultContext } from "../utils/fileUtil";
 import state from "../state";
+import { NOCALHOST } from "../constants";
 
 export class HomeWebViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "Nocalhost.Home";
@@ -106,12 +107,14 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
               );
             }
             if (newLocalCluster) {
-              const newLocalNode = await LocalCluster.getLocalClusterRootNode(
-                newLocalCluster
-              );
+              await LocalCluster.getLocalClusterRootNode(newLocalCluster);
+
+              const node = state.getNode(NOCALHOST) as NocalhostRootNode;
+
+              node && (await node.addCluster(newLocalCluster));
             }
 
-            await state.refreshTree();
+            await state.refreshTree(true);
 
             vscode.window.showInformationMessage("Success");
           });

@@ -47,10 +47,10 @@ export default class EndDevModeCommand implements ICommand {
 
     const appNode = node.getAppNode();
     host.getOutputChannel().show(true);
-    const devspace = appNode.getParent() as DevSpaceNode;
-    host.disposeWorkload(devspace.info.spaceName, appNode.name, node.name);
+    const devSpace = appNode.getParent() as DevSpaceNode;
+    host.disposeWorkload(devSpace.info.spaceName, appNode.name, node.name);
     messageBus.emit("endDevMode", {
-      devspaceName: devspace.info.spaceName,
+      devSpaceName: devSpace.info.spaceName,
       appName: appNode.name,
       workloadName: node.name,
     });

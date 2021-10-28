@@ -149,6 +149,8 @@ export class DebugSession {
     const { container, node } = this;
     const { debug } = container.dev.command;
 
+    debug.unshift("env", "NH_PLUGIN=VSCode");
+
     const command = NhctlCommand.exec({
       app: node.getAppName(),
       name: node.name,

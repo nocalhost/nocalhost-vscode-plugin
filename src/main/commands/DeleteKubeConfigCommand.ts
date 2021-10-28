@@ -3,7 +3,7 @@ import * as fs from "fs";
 import ICommand from "./ICommand";
 import { DELETE_KUBECONFIG } from "./constants";
 import registerCommand from "./register";
-import { LOCAL_PATH } from "../constants";
+import { LOCAL_PATH, NOCALHOST } from "../constants";
 import state from "../state";
 import { isExist } from "../utils/fileUtil";
 import host from "../host";
@@ -11,6 +11,8 @@ import { LocalClusterNode } from "../clusters/LocalCuster";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import Bookinfo from "../common/bookinfo";
 import { kubeconfig } from "../ctl/nhctl";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import messageBus from "../utils/messageBus";
 
 export default class DeleteKubeConfigCommand implements ICommand {
   command: string = DELETE_KUBECONFIG;
@@ -46,7 +48,13 @@ export default class DeleteKubeConfigCommand implements ICommand {
 
     Bookinfo.cleanCheck(node);
 
-    await state.refreshTree();
+    const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
+
+    await rootNode.deleteCluster(kubeConfigPath);
+
+    await state.refreshTree(true);
+
+    messageBus.emit("refreshTree", {});
 
     deleted.forEach(async (f) => {
       if (await isExist(f.filePath)) {

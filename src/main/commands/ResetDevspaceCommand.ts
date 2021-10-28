@@ -9,6 +9,7 @@ import * as nhctl from "../ctl/nhctl";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import Bookinfo from "../common/bookinfo";
+import messageBus from "../utils/messageBus";
 
 export default class ResetDevspaceCommand implements ICommand {
   command: string = RESET_DEVSPACE;
@@ -54,6 +55,8 @@ export default class ResetDevspaceCommand implements ICommand {
 
       state.delete(node.info.spaceName);
     });
+
+    messageBus.emit("refreshTree", {});
   }
 
   private async reset(

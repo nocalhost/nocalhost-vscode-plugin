@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import Axios from "axios";
-const retry = require("async-retry");
+import * as AsyncRetry from "async-retry";
 
 import { AppNode } from "../nodes/AppNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
@@ -148,7 +148,7 @@ class Bookinfo {
   async checkConnect() {
     const url = await this.getUrl();
     try {
-      await retry(async () => this.check(), {
+      await AsyncRetry(async () => this.check(), {
         randomize: false,
         retries: 6,
       });

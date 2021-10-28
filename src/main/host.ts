@@ -6,16 +6,8 @@ import {
   QuickPickOptions,
 } from "vscode";
 import * as shell from "./ctl/shell";
-import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
-import state from "./state";
 import * as path from "path";
-import { RefreshData } from "./nodes/impl/updateData";
-import { BaseNocalhostNode } from "./nodes/types/nodeType";
-import logger from "./utils/logger";
-import { asyncLimit } from "./utils";
-import { GLOBAL_TIMEOUT } from "./constants";
 
-// import * as shelljs from "shelljs";
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
@@ -24,9 +16,6 @@ export class Host implements vscode.Disposable {
     vscode.StatusBarAlignment.Left,
     100
   );
-  public bookinfoTimeoutId: NodeJS.Timeout | null = null; // bookinfo
-
-  // private debugDisposesMap = new Map<string, { dispose: () => any }>();
 
   private devspaceDisposesMap = new Map<
     string,
@@ -41,9 +30,6 @@ export class Host implements vscode.Disposable {
     >
   >();
 
-  // TODO: DELETE
-  private bookInfoDisposes: Array<{ dispose: () => any }> = [];
-
   private context: vscode.ExtensionContext | null = null;
 
   public setContext(context: vscode.ExtensionContext) {
@@ -52,58 +38,6 @@ export class Host implements vscode.Disposable {
 
   public getContext() {
     return this.context;
-  }
-
-  private autoRefreshTimeId: NodeJS.Timeout | null = null;
-
-  public stopAutoRefresh() {
-    if (this.autoRefreshTimeId) {
-      clearTimeout(this.autoRefreshTimeId);
-      this.autoRefreshTimeId = null;
-    }
-  }
-
-  isRefresh = false;
-  public async autoRefresh() {
-    if (this.isRefresh) {
-      return;
-    }
-
-    try {
-      this.isRefresh = true;
-
-      const rootNode = state.getNode("Nocalhost") as NocalhostRootNode;
-      if (rootNode) {
-        await rootNode.updateData().catch(() => {});
-      }
-
-      await asyncLimit(
-        Array.from(state.refreshFolderMap.entries()),
-        ([id, expanded]) => {
-          if (expanded) {
-            const node = state.getNode(id) as RefreshData & BaseNocalhostNode;
-
-            return node.updateData();
-          }
-
-          return Promise.resolve();
-        },
-        GLOBAL_TIMEOUT
-      );
-    } catch (e) {
-      logger.error("autoRefresh error:", e);
-    } finally {
-      this.isRefresh = false;
-
-      this.autoRefreshTimeId = setTimeout(async () => {
-        await this.startAutoRefresh();
-      }, 10 * 1000);
-    }
-  }
-
-  public async startAutoRefresh() {
-    this.stopAutoRefresh();
-    await this.autoRefresh();
   }
 
   public setGlobalState(key: string, state: any) {
@@ -231,20 +165,6 @@ export class Host implements vscode.Disposable {
     }
 
     arr.push(obj);
-  }
-
-  public pushBookInfoDispose(item: { dispose: () => any }) {
-    this.bookInfoDisposes.push(item);
-  }
-
-  public disposeBookInfo() {
-    this.bookInfoDisposes.map((item) => {
-      if (item) {
-        item.dispose();
-      }
-    });
-
-    this.bookInfoDisposes = [];
   }
 
   public showInputBox(options: vscode.InputBoxOptions) {
@@ -397,7 +317,6 @@ export class Host implements vscode.Disposable {
   dispose() {
     this.statusBar.dispose();
     this.outputChannel.dispose();
-    this.disposeBookInfo();
 
     this.devspaceDisposesMap.forEach((m, key) => {
       this.disposeDevspace(key);
