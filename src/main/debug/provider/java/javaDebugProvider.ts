@@ -5,13 +5,11 @@ import * as AsyncRetry from "async-retry";
 import { IDebugProvider } from "../IDebugProvider";
 import logger from "../../../utils/logger";
 import { JDWP } from "./jdwp";
-import host from "../../../host";
 
 export class JavaDebugProvider extends IDebugProvider {
   name: string = "Java";
   requireExtensions: string[] = ["vscjava.vscode-java-debug", "redhat.java"];
 
-  jdwp: JDWP;
   getDebugConfiguration(
     name: string,
     port: number,
@@ -26,13 +24,7 @@ export class JavaDebugProvider extends IDebugProvider {
       port,
     };
   }
-  private async connect(port: number, timeout: number = 0) {
-    if (this.jdwp) {
-      return Promise.resolve();
-    }
 
-    this.jdwp = await JDWP.connect(port, timeout);
-  }
   async waitDebuggerStop() {
     await AsyncRetry(
       async () => {
@@ -47,13 +39,13 @@ export class JavaDebugProvider extends IDebugProvider {
     return Promise.resolve();
   }
   async waitDebuggerStart(port: number): Promise<any> {
-    await this.connect(port, 10);
+    const jdwp = await JDWP.connect(port, 2);
 
-    const result = await this.jdwp.getVersion();
+    const result = await jdwp.getVersion();
     assert(result);
 
     logger.debug("jdwp version", result);
 
-    await this.jdwp.destroy();
+    await jdwp.destroy();
   }
 }

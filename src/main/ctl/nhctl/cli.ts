@@ -658,14 +658,17 @@ export async function associate(
   dir: string,
   type: string,
   workLoadName: string,
-  container: string,
+  container?: string,
   params: "--de-associate" | "--migrate" | "" = ""
 ) {
   const resultDir = replaceSpacePath(dir);
+
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} -c ${container} -t ${type} -d ${workLoadName} ${params}`
+    `dev associate ${appName} -s ${resultDir} ${
+      container ? `-c ${container}` : ""
+    } -t ${type} -d ${workLoadName} ${params}`
   );
   const result = await exec({ command }).promise;
   return result.stdout;

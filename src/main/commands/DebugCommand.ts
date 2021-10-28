@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
-import * as JsonSchema from "json-schema";
 import * as assert from "assert";
-import { validate } from "json-schema";
+import { ValidateFunction } from "ajv";
 
 import ICommand from "./ICommand";
 import { DEBUG, START_DEV_MODE } from "./constants";
@@ -16,9 +15,9 @@ import {
   support,
 } from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { closeTerminals, getContainer, waitForSync } from "../debug";
+import { getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
-import state from "../state";
+import { validateData } from "../utils/validate";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -40,9 +39,7 @@ export default class DebugCommand implements ICommand {
 
     this.validateDebugConfig(this.container);
 
-    const debugProvider = await this.getDebugProvider(node);
-
-    await closeTerminals();
+    const debugProvider = await this.getDebugProvider();
 
     if (!command) {
       const status = await node.getStatus(true);
@@ -55,13 +52,13 @@ export default class DebugCommand implements ICommand {
       }
     }
 
-    await waitForSync(node);
+    await waitForSync(node, DEBUG);
 
     this.startDebugging(node, debugProvider);
   }
 
   validateDebugConfig(config: ContainerConfig) {
-    const schema: JsonSchema.JSONSchema6 = {
+    const schema = {
       $schema: "http://json-schema.org/schema#",
       type: "object",
       required: ["dev"],
@@ -96,15 +93,16 @@ export default class DebugCommand implements ICommand {
       },
     };
 
-    const valid = validate(config, schema);
+    const valid = validateData(config, schema);
 
-    assert.strictEqual(
-      valid.errors.length,
-      0,
-      `please check config.\n${valid.errors
-        .map((e) => `${e.property}:${e.message}`)
-        .join("\n")}`
-    );
+    let message = "please check config.";
+    if (valid !== true) {
+      message = `config \n${(valid as ValidateFunction)
+        .errors!.map((e) => `${e.dataPath} ${e.message}`)
+        .join("\n")}`;
+    }
+
+    assert.strictEqual(valid, true, message);
   }
 
   async startDebugging(
@@ -129,14 +127,8 @@ export default class DebugCommand implements ICommand {
       this.container
     );
   }
-  async getDebugProvider(
-    node: ControllerResourceNode
-  ): Promise<IDebugProvider> {
-    let type: Language = state.getAppState(
-      node.getAppName(),
-      `${node.name}_debugProvider`
-    );
-
+  async getDebugProvider(): Promise<IDebugProvider> {
+    let type: Language;
     const { image } = this.container.dev;
 
     if (image.includes("nocalhost/dev-images")) {
@@ -146,14 +138,6 @@ export default class DebugCommand implements ICommand {
     }
 
     const debugProvider = await chooseDebugProvider(type);
-
-    if (!type) {
-      state.setAppState(
-        node.getAppName(),
-        `${node.name}_debugProvider`,
-        debugProvider.name.toLocaleLowerCase()
-      );
-    }
 
     const isInstalled = checkDebuggerInstalled(debugProvider);
     if (!isInstalled) {

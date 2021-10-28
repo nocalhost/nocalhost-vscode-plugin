@@ -1,9 +1,15 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import * as AsyncRetry from "async-retry";
+import * as getPort from "get-port";
 
-import { SyncMsg } from "../commands/SyncServiceCommand";
-import { getSyncStatus } from "../ctl/nhctl";
+import SyncServiceCommand, { SyncMsg } from "../commands/SyncServiceCommand";
+import {
+  associate,
+  getServiceConfig,
+  getSyncStatus,
+  NhctlCommand,
+} from "../ctl/nhctl";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import ConfigService, {
@@ -11,6 +17,9 @@ import ConfigService, {
   NocalhostServiceConfig,
 } from "../service/configService";
 import logger from "../utils/logger";
+import { exec } from "../ctl/shell";
+import messageBus from "../utils/messageBus";
+import { TMP_COMMAND } from "../constants";
 
 export async function closeTerminals() {
   let condition = (t: vscode.Terminal) => t.name.endsWith(`Process Console`);
@@ -34,7 +43,65 @@ export async function closeTerminals() {
   );
 }
 
-export async function waitForSync(node: ControllerResourceNode) {
+export async function waitForSync(node: ControllerResourceNode, name: string) {
+  const checkReady = async () => {
+    const profile = await getServiceConfig(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      node.name,
+      node.resourceType
+    );
+
+    assert(profile.associate, "You need to associate the local directory");
+
+    await associate(
+      node.getKubeConfigPath(),
+      node.getNameSpace(),
+      node.getAppName(),
+      profile.associate,
+      node.resourceType,
+      node.name
+    );
+
+    if (profile.associate !== host.getCurrentRootPath()) {
+      const uri = vscode.Uri.file(profile.associate);
+      vscode.commands.executeCommand("vscode.openFolder", uri, true);
+
+      const data = {
+        name,
+        parameter: {
+          kubeconfig: node.getKubeConfigPath(),
+          nameSpace: node.getNameSpace(),
+          associate: profile.associate,
+          app: node.getAppName(),
+          service: node.name,
+          resourceType: node.resourceType,
+          status: await node.getStatus(),
+        },
+      };
+
+      messageBus.emit("command", {
+        name,
+        parameter: {
+          kubeconfig: node.getKubeConfigPath(),
+          nameSpace: node.getNameSpace(),
+          associate: profile.associate,
+          app: node.getAppName(),
+          service: node.name,
+          resourceType: node.resourceType,
+          status: await node.getStatus(),
+        },
+      });
+
+      host.setGlobalState(TMP_COMMAND, data);
+
+      return Promise.reject();
+    }
+
+    SyncServiceCommand.checkSync();
+  };
+
   const sync = async () => {
     const str = await getSyncStatus(
       node.resourceType,
@@ -55,6 +122,10 @@ export async function waitForSync(node: ControllerResourceNode) {
   await host.withProgress(
     { title: "Waiting for sync file ...", cancellable: true },
     async (_, token) => {
+      await checkReady();
+
+      await closeTerminals();
+
       token.onCancellationRequested(() => {
         host.showWarnMessage("Cancel waiting");
       });
@@ -119,3 +190,46 @@ export class DebugCancellationTokenSource extends vscode.CancellationTokenSource
     this.reason = reason;
   }
 }
+
+export async function portForward(
+  node: ControllerResourceNode,
+  container: ContainerConfig,
+  command: "end" | "start",
+  localPort?: number
+) {
+  const { remoteDebugPort } = container.dev.debug;
+  const port = localPort ?? (await getPort());
+
+  await exec({
+    command: NhctlCommand.nhctlPath,
+    args: [
+      "port-forward",
+      command,
+      node.getAppName(),
+      `-d ${node.name}`,
+      `-t ${node.resourceType}`,
+      `-p ${port}:${remoteDebugPort}`,
+      `-n ${node.getNameSpace()}`,
+      `--kubeconfig ${node.getKubeConfigPath()}`,
+    ],
+  }).promise;
+
+  let dispose = () => {
+    return Promise.resolve();
+  };
+
+  if (command === "start") {
+    dispose = async () => {
+      await portForward(node, container, "end", port);
+    };
+  }
+
+  return {
+    port,
+    dispose,
+  };
+}
+export function sshReverse(
+  node: ControllerResourceNode,
+  container: ContainerConfig
+) {}
