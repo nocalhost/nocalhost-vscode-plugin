@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
+import * as net from "net";
 import * as getPort from "get-port";
 
 import { getPodNames, NhctlCommand } from "../../ctl/nhctl";
@@ -78,16 +79,11 @@ export class PhpDebugProvider extends IDebugProvider {
 
     return { port, dispose };
   }
+
   async waitDebuggerStart(port: number): Promise<any> {
-    const debugClient = new SocketDebugClient(port);
-    await debugClient.connect(2);
-
-    const result = await debugClient.request("debugpySystemInfo", null, 2);
-
-    assert(result.success);
-
-    logger.debug("debugpy debugpySystemInfo", result);
-
-    debugClient.destroy();
+    const server = net.createServer();
+    server.on("connection", async (socket: net.Socket) => {});
+    server.on("error", (error: Error) => {});
+    server.listen(port, "");
   }
 }
