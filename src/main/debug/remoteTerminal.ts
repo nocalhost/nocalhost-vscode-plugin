@@ -30,6 +30,7 @@ export class RemoteTerminal implements vscode.Terminal {
 
     return this;
   }
+  state: vscode.TerminalState;
   static create(options: RemoteTerminalType) {
     return new RemoteTerminal(options);
   }
