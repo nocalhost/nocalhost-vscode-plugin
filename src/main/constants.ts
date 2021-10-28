@@ -64,6 +64,8 @@ export const TMP_DEV_START_IMAGE = "tmpDevstartImage";
 
 export const TMP_DEV_START_COMMAND = "tmpDevStartCommand";
 
+export const TMP_COMMAND = "tmpCommand";
+
 export const DATA_CENTER_INTERVAL_MS = 5000;
 export const GLOBAL_TIMEOUT = 30 * 1000;
 

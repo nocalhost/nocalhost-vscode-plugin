@@ -37,7 +37,7 @@ import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
 import { getContainer } from "../utils/getContainer";
 import SyncServiceCommand from "./SyncServiceCommand";
-import { getContainers } from "../ctl/nhctl";
+import { getContainers, isConfigValid } from "../ctl/nhctl";
 
 export interface ControllerNodeApi {
   name: string;
@@ -81,11 +81,43 @@ export default class StartDevModeCommand implements ICommand {
     const mode = info?.mode || "replace";
     this.node = node;
 
+    // is config valid
+    const appName = node.getAppName();
+    const { name, resourceType } = node;
+    const namespace = node.getNameSpace();
+    const kubeConfigPath = node.getKubeConfigPath();
+
+    const configValid = await isConfigValid({
+      appName: appName,
+      name: name,
+      namespace: namespace,
+      kubeConfigPath: kubeConfigPath,
+      resourceType: resourceType,
+    });
+
+    if (!configValid) {
+      const selectConfigResult = await host.showInformationMessage(
+        "There is no development configuration for this service, please select an operation.",
+        {
+          modal: true,
+        },
+        "Still enter development mode",
+        "Set development configuration with form"
+      );
+
+      if (selectConfigResult === "Set development configuration with form") {
+        const uri = vscode.Uri.parse(
+          `https://nocalhost.dev/tools?from=daemon&name=${name}&application=${appName}&namespace=${namespace}&kubeconfig=${kubeConfigPath}&type=${resourceType}`
+        );
+        return vscode.env.openExternal(uri);
+      }
+    }
+
     await nhctl.NhctlCommand.authCheck({
       base: "dev",
-      args: ["start", node.getAppName(), "-t" + node.resourceType, node.name],
-      kubeConfigPath: node.getKubeConfigPath(),
-      namespace: node.getNameSpace(),
+      args: ["start", appName, "-t" + node.resourceType, node.name],
+      kubeConfigPath: kubeConfigPath,
+      namespace,
     }).exec();
 
     if (node instanceof ControllerResourceNode && appTreeView) {
@@ -93,8 +125,8 @@ export default class StartDevModeCommand implements ICommand {
     }
     host.log("[start dev] Initializing..", true);
     const resource: INhCtlGetResult = await nhctl.NhctlCommand.get({
-      kubeConfigPath: node.getKubeConfigPath(),
-      namespace: node.getNameSpace(),
+      kubeConfigPath,
+      namespace,
     })
       .addArgumentStrict(node.resourceType, node.name)
       .addArgument("-a", node.getAppName())
@@ -110,11 +142,11 @@ export default class StartDevModeCommand implements ICommand {
 
     if (!containerName) {
       containerName = await getContainer({
-        appName: node.getAppName(),
-        name: node.name,
-        resourceType: node.resourceType.toLocaleLowerCase(),
-        namespace: node.getNameSpace(),
-        kubeConfigPath: node.getKubeConfigPath(),
+        appName,
+        name,
+        resourceType,
+        namespace,
+        kubeConfigPath,
       });
     }
 
@@ -130,7 +162,6 @@ export default class StartDevModeCommand implements ICommand {
         return;
       }
     }
-    const appName = node.getAppName();
     const destDir = await this.cloneOrGetFolderDir(
       appName,
       node,
@@ -148,11 +179,11 @@ export default class StartDevModeCommand implements ICommand {
     }
 
     await this.saveConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
+      kubeConfigPath,
+      namespace,
       appName,
-      node.name,
-      node.resourceType,
+      name,
+      resourceType,
       containerName,
       "image",
       image as string

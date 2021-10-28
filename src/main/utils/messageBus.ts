@@ -1,13 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as _ from "lodash";
+import { isEqual } from "lodash";
 
 import { PLUGIN_CONFIG_DIR } from "../constants";
 import host from "../host";
-
 import * as fileUtil from "./fileUtil";
 
-type event = {
+export type EventType = {
   uninstall: {
     devSpaceName: string;
     appName: string;
@@ -22,6 +21,16 @@ type event = {
   };
   devStart: {};
   refreshTree: {};
+  command: {
+    parameter: {
+      kubeconfig: string;
+      nameSpace: string;
+      app: string;
+      service: string;
+      resourceType: string;
+    };
+    name: string;
+  };
 };
 
 export interface MessageBusInfo {
@@ -62,7 +71,7 @@ class MessageBus {
       const content = JSON.parse(contentstr.toString()) as FileMessageInfo;
       this.eventMap.forEach((arr, key) => {
         const value = content[key];
-        if (!_.isEqual(this.content[key], value)) {
+        if (!isEqual(this.content[key], value)) {
           if (
             this.content[key] &&
             this.content[key].timestamp < value.timestamp
@@ -80,7 +89,7 @@ class MessageBus {
     });
   }
 
-  on<T extends keyof event, K extends event[T]>(
+  on<T extends keyof EventType, K extends EventType[T]>(
     eventName: T,
     callback: (
       value: MessageBusInfo & K & { isCurrentWorkspace: boolean }
@@ -95,7 +104,7 @@ class MessageBus {
     arr.push(callback as any);
   }
 
-  emit<T extends keyof event, K extends event[T]>(
+  emit<T extends keyof EventType, K extends EventType[T]>(
     eventName: T,
     value: K,
     destination?: string

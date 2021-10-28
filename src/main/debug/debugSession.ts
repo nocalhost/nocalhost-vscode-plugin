@@ -1,12 +1,10 @@
 import * as vscode from "vscode";
-import * as getPort from "get-port";
 
 import { NhctlCommand } from "./../ctl/nhctl";
 import { ContainerConfig } from "../service/configService";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { DebugCancellationTokenSource, getContainer } from "./index";
-import { exec } from "../ctl/shell";
 import { IDebugProvider } from "./provider/IDebugProvider";
 import { RemoteTerminal } from "./remoteTerminal";
 import host from "../host";
@@ -38,43 +36,17 @@ export class DebugSession {
     await this.startDebug(debugProvider, workspaceFolder);
   }
 
-  async portForward(command: "end" | "start", localPort?: number) {
-    const { container, node } = this;
-    const { remoteDebugPort } = container.dev.debug;
-    const port = localPort ?? (await getPort());
-
-    await exec({
-      command: NhctlCommand.nhctlPath,
-      args: [
-        "port-forward",
-        command,
-        node.getAppName(),
-        `-d ${node.name}`,
-        `-t ${node.resourceType}`,
-        `-p ${port}:${remoteDebugPort}`,
-        `-n ${node.getNameSpace()}`,
-        `--kubeconfig ${node.getKubeConfigPath()}`,
-      ],
-    }).promise;
-
-    if (command === "start") {
-      this.disposable.push({
-        dispose: async () => {
-          await this.portForward("end", port);
-        },
-      });
-    }
-
-    return port;
-  }
-
   async startDebug(
     debugProvider: IDebugProvider,
     workspaceFolder: vscode.WorkspaceFolder
   ) {
     const { container, node } = this;
 
-    const port = await this.portForward("start");
+    const { port, dispose } = await debugProvider.getRemotePort(
+      node,
+      container
+    );
+    this.disposable.push({ dispose });
 
     const terminalName = `${debugProvider.name} Process Console`;
     const debugSessionName = `${node.getAppName()}-${node.name}`;

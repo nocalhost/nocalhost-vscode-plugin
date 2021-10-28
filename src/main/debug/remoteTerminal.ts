@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import host from "../host";
+import logger from "../utils/logger";
 type SpawnClose = (code: number, signal: NodeJS.Signals) => void;
 type RemoteTerminalType = {
   terminal: {
@@ -68,6 +69,11 @@ export class RemoteTerminal implements vscode.Terminal {
   }
   private createProc() {
     const { close, command } = this.options.spawn;
+
+    const log = `\n[createTerminal]: ${command}`;
+
+    host.log(log);
+    logger.info(log);
 
     const proc = spawn(command, [], {
       shell: true,

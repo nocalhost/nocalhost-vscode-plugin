@@ -28,6 +28,7 @@ import {
   TMP_NAMESPACE,
   NH_BIN,
   TMP_DEV_START_COMMAND,
+  TMP_COMMAND,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -44,7 +45,7 @@ import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 // import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
-import messageBus from "./utils/messageBus";
+import messageBus, { EventType } from "./utils/messageBus";
 import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
@@ -198,6 +199,16 @@ function bindEvent() {
       host.log(`MessageBus install: ${error}`, true);
     }
   });
+
+  messageBus.on("command", (value) => {
+    execCommand(value.value as any);
+  });
+
+  const commandData = host.getGlobalState(TMP_COMMAND);
+
+  if (commandData) {
+    execCommand(commandData);
+  }
 }
 function launchDevSpace() {
   SyncServiceCommand.checkSync();
@@ -289,6 +300,36 @@ function launchDevSpace() {
       command: tmpCommand,
     });
   }
+}
+
+function execCommand(
+  data: EventType["command"] & {
+    parameter: { associate: string; status: string };
+  }
+) {
+  const { name, parameter } = data;
+  if (parameter.associate !== host.getCurrentRootPath()) {
+    return;
+  }
+
+  vscode.commands.executeCommand(name, {
+    getKubeConfigPath() {
+      return parameter.kubeconfig;
+    },
+    getNameSpace() {
+      return parameter.nameSpace;
+    },
+    getAppName() {
+      return parameter.app;
+    },
+    name: parameter.service,
+    resourceType: parameter.resourceType,
+    getStatus() {
+      return parameter.status;
+    },
+  });
+
+  host.removeGlobalState(TMP_COMMAND);
 }
 
 export async function deactivate() {
