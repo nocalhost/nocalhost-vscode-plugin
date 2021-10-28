@@ -28,6 +28,7 @@ import {
   TMP_NAMESPACE,
   NH_BIN,
   TMP_DEV_START_COMMAND,
+  TMP_COMMAND,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -54,6 +55,7 @@ import { unlock } from "./utils/download";
 import * as nls from "vscode-nls";
 import SyncServiceCommand from "./commands/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
+import { createSyncManage } from "./component/syncManage";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -64,6 +66,8 @@ let currentContext: vscode.ExtensionContext;
 
 export async function activate(context: vscode.ExtensionContext) {
   currentContext = context;
+
+  createSyncManage(context);
 
   await init(context);
   let appTreeProvider = new NocalhostAppProvider();
@@ -186,6 +190,9 @@ export async function activate(context: vscode.ExtensionContext) {
       host.log(`MessageBus install: ${error}`, true);
     }
   });
+  messageBus.on("command", (value) => {
+    execCommand(value.value as any);
+  });
   await vscode.commands.executeCommand(
     "setContext",
     "extensionActivated",
@@ -197,6 +204,12 @@ export async function activate(context: vscode.ExtensionContext) {
     await vscode.commands.executeCommand("setContext", "emptyCluster", true);
   }
   launchDevspace();
+
+  const commandData = host.getGlobalState(TMP_COMMAND);
+
+  if (commandData) {
+    execCommand(commandData);
+  }
 }
 
 function launchDevspace() {
@@ -289,6 +302,43 @@ function launchDevspace() {
       command: tmpCommand,
     });
   }
+}
+
+function execCommand(data: {
+  parameter: {
+    kubeconfig: string;
+    nameSpace: string;
+    app: string;
+    service: string;
+    resourceType: string;
+    associate: string;
+    status: string;
+  };
+  name: string;
+}) {
+  const { name, parameter } = data;
+  if (parameter.associate !== host.getCurrentRootPath()) {
+    return;
+  }
+
+  vscode.commands.executeCommand(name, {
+    getKubeConfigPath() {
+      return parameter.kubeconfig;
+    },
+    getNameSpace() {
+      return parameter.nameSpace;
+    },
+    getAppName() {
+      return parameter.app;
+    },
+    name: parameter.service,
+    resourceType: parameter.resourceType,
+    getStatus() {
+      return parameter.status;
+    },
+  });
+
+  host.removeGlobalState(TMP_COMMAND);
 }
 
 export async function deactivate() {
