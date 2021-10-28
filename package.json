@@ -640,7 +640,6 @@
   },
   "dependencies": {
     "@dineug/vscode-google-analytics": "^0.1.2",
-    "@types/json-schema": "^7.0.7",
     "@types/proper-lockfile": "^4.1.1",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
@@ -650,7 +649,6 @@
     "fs-extra": "^10.0.0",
     "highlight.js": "^10.5.0",
     "i18next": "^20.3.5",
-    "json-schema": "^0.3.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
     "proper-lockfile": "^4.1.2",
