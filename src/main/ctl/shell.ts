@@ -181,6 +181,7 @@ export function exec(
   proc: ChildProcessWithoutNullStreams;
   cancel: Event<any>;
   promise: Promise<ExecOutputReturnValue>;
+  proc: ChildProcessWithoutNullStreams;
 } {
   const { command, timeout } = param;
   const startTime = Date.now();

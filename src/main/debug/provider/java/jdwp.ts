@@ -90,8 +90,6 @@ export class JDWP {
       return false;
     }
 
-    const buff = ByteBuffer.wrap(this.buf, 11, packetLength - 11);
-
     const packet: Response = {
       id: this.buf.readInt32BE(4),
       flags: this.buf[8],
