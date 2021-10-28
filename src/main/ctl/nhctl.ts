@@ -1417,17 +1417,23 @@ export async function checkVersion() {
         });
         let command = "taskkill /im nhctl.exe -f";
 
-        await exec({ command }).promise.catch(logger.error);
+        await exec({ command }).promise.catch((e) => {
+          logger.error(e);
+        });
 
         command = "tasklist | findstr nhctl.exe";
 
-        const result = await exec({ command }).promise.catch(logger.error);
+        const result = await exec({ command }).promise.catch((e) => {
+          logger.error(e);
+        });
 
         if (!result) {
           logger.info("after kill has not daemon");
         } else {
           logger.info("after kill has daemon");
-          await exec({ command }).promise.catch(logger.error);
+          await exec({ command }).promise.catch((e) => {
+            logger.error(e);
+          });
         }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
