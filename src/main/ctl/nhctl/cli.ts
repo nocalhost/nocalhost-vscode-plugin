@@ -3,31 +3,31 @@ import {
   GLOBAL_TIMEOUT,
   PLUGIN_TEMP_DIR,
   TEMP_NHCTL_BIN,
-} from "./../constants";
+} from "./../../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
-import { exec, ExecParam, execWithProgress } from "./shell";
-import host, { Host } from "../host";
+import { exec, ExecParam, execWithProgress } from "../shell";
+import host, { Host } from "../../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
-import { readYaml, replaceSpacePath } from "../utils/fileUtil";
-import * as packageJson from "../../../package.json";
-import { NH_BIN } from "../constants";
-import services from "../common/DataCenter/services";
-import { SvcProfile } from "../nodes/types/nodeType";
-import logger from "../utils/logger";
-import { IDevSpaceInfo, IPortForWard } from "../domain";
-import { Resource, ResourceStatus } from "../nodes/types/resourceType";
-import { downloadNhctl, lock, unlock } from "../utils/download";
-import { keysToCamel } from "../utils";
-import { IPvc } from "../domain";
-import { getBooleanValue } from "../utils/config";
-import messageBus from "../utils/messageBus";
-import { ClustersState } from "../clusters";
-import { NodeInfo } from "../nodes/types/nodeType";
+import { readYaml, replaceSpacePath } from "../../utils/fileUtil";
+import * as packageJson from "../../../../package.json";
+import { NH_BIN } from "../../constants";
+import services from "../../common/DataCenter/services";
+import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";
+import logger from "../../utils/logger";
+import { IDevSpaceInfo, IPortForWard } from "../../domain";
+import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
+import { downloadNhctl, lock, unlock } from "../../utils/download";
+import { keysToCamel } from "../../utils";
+import { IPvc } from "../../domain";
+import { getBooleanValue } from "../../utils/config";
+import messageBus from "../../utils/messageBus";
+import { ClustersState } from "../../clusters";
+import { Associate } from "./type";
 
 export interface InstalledAppInfo {
   name: string;
@@ -45,9 +45,7 @@ export interface AllInstallAppInfo {
 
 export class NhctlCommand {
   public baseCommand: string = null;
-  public args: string[] = null;
   private argTheTail: string = null;
-  private baseParams: IBaseCommand = null;
   public static nhctlPath: string = path.resolve(
     NH_BIN,
     host.isWindow() ? "nhctl.exe" : "nhctl"
@@ -56,23 +54,33 @@ export class NhctlCommand {
 
   constructor(
     base: string,
-    baseParams?: IBaseCommand<unknown>,
-    private execParam: Omit<ExecParam, "command"> = {}
+    private baseParams?: IBaseCommand<unknown>,
+    private execParam: Omit<ExecParam, "command"> = {},
+    public args: string[] = []
   ) {
-    this.baseParams = baseParams;
-    this.args = [];
     this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
   }
   static create(
     base: string,
     baseParams?: IBaseCommand<unknown>,
-    execParam: Omit<ExecParam, "command"> = {}
+    execParam: Omit<ExecParam, "command"> = {},
+    args: string[] = []
   ) {
-    return new NhctlCommand(base, baseParams, execParam);
+    return new NhctlCommand(base, baseParams, execParam, args);
   }
   static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
     const command = NhctlCommand.create("get", baseParams);
     command.execParam.timeout = ms;
+
+    return command;
+  }
+  static dev(
+    baseParams?: IBaseCommand<unknown>,
+    execParam: Omit<ExecParam, "command"> = {},
+    args: string[] = []
+  ) {
+    const command = NhctlCommand.create("dev", baseParams, execParam, args);
+    command.execParam = execParam;
 
     return command;
   }
@@ -651,7 +659,7 @@ export async function associate(
   type: string,
   workLoadName: string,
   container?: string,
-  params = ""
+  params: "--de-associate" | "--migrate" | "" = ""
 ) {
   const resultDir = replaceSpacePath(dir);
 
@@ -1278,7 +1286,7 @@ export async function reconnectSync(
     namespace,
     `sync ${appName} -d ${workloadName} -t ${controllerType} --resume`
   );
-  host.log(`[cmd] ${command}`);
+  host.log(`[cmd] ${command}`, true);
 
   await exec({
     command,
@@ -1559,6 +1567,27 @@ export async function getContainers(node: NodeInfo): Promise<string[]> {
   return result;
 }
 
+export async function associateQuery(param: {
+  localSync?: string;
+  current?: boolean;
+}): Promise<Associate.QueryResult[] | Associate.QueryResult> {
+  const args = ["associate-queryer"];
+
+  if (!param.localSync) {
+    param.localSync = host.getCurrentRootPath();
+  }
+
+  args.push(`--local-sync ${param.localSync}`);
+
+  if (param.current === true) {
+    args.push("--current");
+  }
+
+  return NhctlCommand.dev(null, null, args)
+    .addArgument("--json")
+    .toJson()
+    .exec();
+}
 // judge config is valid
 export async function isConfigValid(node: NodeInfo): Promise<boolean> {
   try {
