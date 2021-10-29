@@ -1433,11 +1433,13 @@ export async function checkVersion() {
 
       fs.renameSync(destinationPath, binPath);
 
-      if (!(await checkDownloadNhctlVersion(requiredVersion))) {
-        vscode.window.showErrorMessage(failedMessage);
-      } else {
-        vscode.window.showInformationMessage(completedMessage);
-      }
+      setTimeout(async () => {
+        if (!(await checkDownloadNhctlVersion(requiredVersion))) {
+          vscode.window.showErrorMessage(failedMessage);
+        } else {
+          vscode.window.showInformationMessage(completedMessage);
+        }
+      }, 300);
     });
   } catch (err) {
     // host.log(`[update err] ${err}`, true);
