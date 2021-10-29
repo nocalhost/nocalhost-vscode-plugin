@@ -63,8 +63,9 @@ export class DebugSession {
         async (_, token) => {
           token.onCancellationRequested(() => {
             host.showWarnMessage("Cancel remote debugging");
-
             this.cancellationToken.cancelByReason("cancel");
+
+            this.dispose();
           });
 
           const success = await debugProvider.startDebugging(
@@ -168,7 +169,12 @@ export class DebugSession {
       spawn: {
         command,
         close: (code: number, signal: NodeJS.Signals) => {
-          if (this.cancellationToken && code !== 0 && !this.isReload) {
+          if (
+            this.cancellationToken &&
+            code !== 0 &&
+            !this.isReload &&
+            !this.cancellationToken.token.isCancellationRequested
+          ) {
             this.cancellationToken.cancelByReason("failed");
             host.showErrorMessage("Failed to start debug");
           }
