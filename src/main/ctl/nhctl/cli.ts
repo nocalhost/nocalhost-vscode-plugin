@@ -1358,13 +1358,15 @@ function setUpgrade(isUpgrade: boolean) {
 }
 
 export async function checkVersion() {
-  if (!getBooleanValue("nhctl.checkVersion")) {
-    return;
-  }
-
   const requiredVersion: string = packageJson.nhctl?.version;
+  // is dev plugin
+  const pluginVersion: string = packageJson.version;
 
-  if (!requiredVersion) {
+  if (
+    !getBooleanValue("nhctl.checkVersion") ||
+    !requiredVersion ||
+    pluginVersion.indexOf("-beta") > -1
+  ) {
     return;
   }
 
