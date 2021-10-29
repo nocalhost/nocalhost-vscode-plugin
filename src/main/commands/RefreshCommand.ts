@@ -7,7 +7,7 @@ import NocalhostAppProvider from "../appProvider";
 import registerCommand from "./register";
 import { BaseNocalhostNode } from "../nodes/types/nodeType";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
-import host from "../host";
+import state from "../state";
 
 export default class RefreshCommand implements ICommand {
   command: string = REFRESH;
@@ -22,7 +22,7 @@ export default class RefreshCommand implements ICommand {
   execCommand(node?: BaseNocalhostNode) {
     if (!node) {
       // clear all data;
-      host.startAutoRefresh();
+      state.startAutoRefresh();
       // state.clearAllData();
     }
     if (node instanceof NocalhostRootNode) {

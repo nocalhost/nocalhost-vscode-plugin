@@ -6,13 +6,15 @@ import { SIGN_OUT } from "./constants";
 import registerCommand from "./register";
 
 import state from "../state";
-import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
+import { KUBE_CONFIG_DIR, NOCALHOST, SERVER_CLUSTER_LIST } from "../constants";
 import host from "../host";
 import { IUserInfo } from "../domain";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import Bookinfo from "../common/bookinfo";
-import { AccountClusterNode } from "../clusters";
 import { kubeconfig } from "../ctl/nhctl";
+import { LoginInfo } from "../clusters/interface";
+import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
+import messageBus from "../utils/messageBus";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
@@ -24,39 +26,51 @@ export default class SignOutCommand implements ICommand {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
-    host.stopAutoRefresh();
 
-    let globalUserList: {
-      userInfo: IUserInfo;
-      jwt: string;
-      id: string;
-    }[] = (host.getGlobalState(SERVER_CLUSTER_LIST) || []).filter((it: any) => {
-      if (!it.userInfo || !node.id) {
-        return true;
-      }
-      return it.id !== node.id;
-    });
-    host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
+    try {
+      await state.stopAutoRefresh(true);
 
-    await state.disposeNode(node);
+      let globalUserList: {
+        userInfo: IUserInfo;
+        jwt: string;
+        id: string;
+      }[] = (host.getGlobalState(SERVER_CLUSTER_LIST) || []).filter(
+        (it: any) => {
+          if (!it.userInfo || !node.id) {
+            return true;
+          }
+          return it.id !== node.id;
+        }
+      );
+      host.setGlobalState(SERVER_CLUSTER_LIST, globalUserList);
 
-    Bookinfo.cleanCheck(node);
+      await state.disposeNode(node);
 
-    await state.refreshTree();
+      Bookinfo.cleanCheck(node);
 
-    this.cleanKubeConfig(node.accountClusterService.accountClusterNode);
+      const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
+      await rootNode.deleteCluster(node.accountClusterService.loginInfo);
+
+      this.cleanKubeConfig(node.accountClusterService.loginInfo);
+
+      messageBus.emit("refreshTree", {});
+    } catch (error) {
+      throw error;
+    } finally {
+      await state.refreshTree(true);
+    }
   }
 
-  cleanKubeConfig(accountCluster: AccountClusterNode) {
-    const { baseUrl, username } = accountCluster.loginInfo;
-    const KEY = `USER_LINK:${baseUrl}-${username}`;
+  cleanKubeConfig(loginInfo: LoginInfo) {
+    const { baseUrl, username } = loginInfo;
+    const KEY = `USER_LINK:${baseUrl}@${username}`;
 
     const prevData = host.getGlobalState(KEY);
 
     if (prevData) {
       Promise.allSettled(
         (prevData as Array<string>).map((id) => {
-          return new Promise(async (res, rej) => {
+          return new Promise<void>(async (res, rej) => {
             const file = path.resolve(KUBE_CONFIG_DIR, id);
 
             await kubeconfig(file, "remove");

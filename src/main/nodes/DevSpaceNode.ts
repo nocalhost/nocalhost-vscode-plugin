@@ -1,23 +1,21 @@
+import { difference } from "lodash";
 import * as vscode from "vscode";
-
-import * as nhctl from "../ctl/nhctl";
-import state from "../state";
 import { ClusterSource } from "../common/define";
-import { ID_SPLIT } from "./nodeContants";
-import { BaseNocalhostNode } from "./types/nodeType";
-import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
-import { NetworkFolderNode } from "./networks/NetworkFolderNode";
-import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
-import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
-import { StorageFolder } from "./storage/StorageFolder";
+import * as nhctl from "../ctl/nhctl";
 import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
-import { AppNode } from "./AppNode";
-import { RefreshData } from "./impl/updateData";
-import { KubeConfigNode } from "./KubeConfigNode";
-import { NodeType } from "./interfact";
+import state from "../state";
 import { resolveVSCodeUri } from "../utils/fileUtil";
-
-import arrayDiffer = require("array-differ");
+import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
+import { AppNode } from "./AppNode";
+import { ConfigurationFolderNode } from "./configurations/ConfigurationFolderNode";
+import { RefreshData } from "./impl/updateData";
+import { NodeType } from "./interfact";
+import { KubeConfigNode } from "./KubeConfigNode";
+import { NetworkFolderNode } from "./networks/NetworkFolderNode";
+import { ID_SPLIT } from "./nodeContants";
+import { StorageFolder } from "./storage/StorageFolder";
+import { BaseNocalhostNode } from "./types/nodeType";
+import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
@@ -149,7 +147,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       this.hasInit = true;
       this.installedApps = data;
 
-      await this.cleanDiffApp();
+      this.cleanDiffApp(data);
     }
 
     state.setData(this.getNodeStateId(), this.installedApps, isInit);
@@ -157,23 +155,25 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     return this.installedApps;
   }
 
-  private async cleanDiffApp() {
-    if (state.getData(this.getNodeStateId())) {
-      const children = await this.getChildren();
+  private cleanDiffApp(resources: nhctl.InstalledAppInfo[]) {
+    const old = state.getData(
+      this.getNodeStateId()
+    ) as nhctl.InstalledAppInfo[];
 
-      if (children.length) {
-        const diff: string[] = arrayDiffer(
-          children.map((item) => item.label),
-          ["default"],
-          this.installedApps.map((item) => item.name)
-        );
+    if (old && old.length && resources.length) {
+      const diff: string[] = difference(
+        old.map((item) => this.getAppNode(item).getNodeStateId()),
+        resources.map((item) => this.getAppNode(item).getNodeStateId())
+      );
 
-        if (diff.length) {
-          diff.forEach((name) => {
-            const node = children.find((item) => item.label === name);
-            node && state.disposeNode(node);
+      if (diff.length) {
+        diff.forEach((id) => {
+          state.disposeNode({
+            getNodeStateId() {
+              return id;
+            },
           });
-        }
+        });
       }
     }
   }
@@ -198,6 +198,14 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   resetting(): boolean {
     return !!state.getAppState(this.getNodeStateId(), "resetting");
   }
+  getAppNode(item: nhctl.InstalledAppInfo) {
+    let app = this.getApplication(item.name);
+    if (!app) {
+      app = this.buildApplicationInfo(item.name);
+    }
+    return this.buildAppNode(app);
+  }
+
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
     let data = state.getData(this.getNodeStateId()) as nhctl.InstalledAppInfo[];
 
@@ -207,13 +215,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
     // updateData
     // TODO: DISPLAY LOCAL APP NOT FILTER
-    const nodes = data.map((item) => {
-      let app = this.getApplication(item.name);
-      if (!app) {
-        app = this.buildApplicationInfo(item.name);
-      }
-      return this.buildAppNode(app);
-    });
+    const nodes = data.map(this.getAppNode.bind(this));
 
     const result = nodes.filter((node) => {
       if (node instanceof AppNode) {

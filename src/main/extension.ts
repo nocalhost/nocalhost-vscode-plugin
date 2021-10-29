@@ -45,7 +45,7 @@ import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 // import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
-import messageBus from "./utils/messageBus";
+import messageBus, { EventType } from "./utils/messageBus";
 import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
@@ -101,23 +101,18 @@ export async function activate(context: vscode.ExtensionContext) {
     ) {
       state.refreshFolderMap.set(node.getNodeStateId(), true);
     }
-
-    if (node instanceof NocalhostFolderNode) {
-      node.isExpand = true;
-    }
   });
 
   appTreeView.onDidCollapseElement((e) => {
     const node = e.element;
-    if (
-      node instanceof KubernetesResourceFolder ||
-      node instanceof DevSpaceNode
-    ) {
-      state.refreshFolderMap.set(node.getNodeStateId(), false);
-    }
-    if (node instanceof NocalhostFolderNode) {
-      node.isExpand = false;
-    }
+
+    const nodeStateId = node.getNodeStateId();
+
+    Array.from(state.refreshFolderMap.keys()).forEach((id) => {
+      if (id.startsWith(nodeStateId)) {
+        state.refreshFolderMap.delete(id);
+      }
+    });
   });
 
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
@@ -147,31 +142,48 @@ export async function activate(context: vscode.ExtensionContext) {
   host.getOutputChannel().show(true);
   // await registerYamlSchemaSupport();
 
-  messageBus.on("devstart", (value) => {
+  await vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    true
+  );
+
+  await state.refreshTree();
+
+  launchDevSpace();
+
+  bindEvent();
+}
+function bindEvent() {
+  messageBus.on("refreshTree", (value) => {
+    if (value.isCurrentWorkspace) {
+      return;
+    }
+
+    logger.debug("refreshTree", value);
+
+    state.startAutoRefresh(true);
+  });
+
+  messageBus.on("devStart", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      host.disposeBookInfo();
-      launchDevspace();
+      launchDevSpace();
     }
   });
 
   messageBus.on("endDevMode", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      const data = value.value as {
-        devspaceName: string;
-        appName: string;
-        workloadName: string;
-      };
-      host.disposeWorkload(data.devspaceName, data.appName, data.workloadName);
+      host.disposeWorkload(
+        value.devSpaceName,
+        value.appName,
+        value.workloadName
+      );
     }
   });
 
   messageBus.on("uninstall", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      const data = value.value as {
-        devspaceName: string;
-        appName: string;
-      };
-      host.disposeApp(data.devspaceName, data.appName);
+      host.disposeApp(value.devSpaceName, value.appName);
     }
   });
   messageBus.on("install", (value) => {
@@ -180,30 +192,20 @@ export async function activate(context: vscode.ExtensionContext) {
         status: string;
       };
       if (data.status === "loading") {
-        host.stopAutoRefresh();
+        state.stopAutoRefresh(true);
         SyncServiceCommand.stopSyncStatus();
       } else {
-        host.startAutoRefresh();
+        state.startAutoRefresh();
         SyncServiceCommand.checkSync();
       }
     } catch (error) {
       host.log(`MessageBus install: ${error}`, true);
     }
   });
+
   messageBus.on("command", (value) => {
     execCommand(value.value as any);
   });
-  await vscode.commands.executeCommand(
-    "setContext",
-    "extensionActivated",
-    true
-  );
-  if (isExistCluster()) {
-    await state.refreshTree();
-  } else {
-    await vscode.commands.executeCommand("setContext", "emptyCluster", true);
-  }
-  launchDevspace();
 
   const commandData = host.getGlobalState(TMP_COMMAND);
 
@@ -211,8 +213,7 @@ export async function activate(context: vscode.ExtensionContext) {
     execCommand(commandData);
   }
 }
-
-function launchDevspace() {
+function launchDevSpace() {
   SyncServiceCommand.checkSync();
 
   const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);
@@ -304,18 +305,11 @@ function launchDevspace() {
   }
 }
 
-function execCommand(data: {
-  parameter: {
-    kubeconfig: string;
-    nameSpace: string;
-    app: string;
-    service: string;
-    resourceType: string;
-    associate: string;
-    status: string;
-  };
-  name: string;
-}) {
+function execCommand(
+  data: EventType["command"] & {
+    parameter: { associate: string; status: string };
+  }
+) {
   const { name, parameter } = data;
   if (parameter.associate !== host.getCurrentRootPath()) {
     return;

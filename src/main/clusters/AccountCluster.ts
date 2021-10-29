@@ -1,8 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import * as semver from "semver";
 import * as url from "url";
-import arrayDiffer = require("array-differ");
-import { uniqBy } from "lodash";
+import { uniqBy, difference } from "lodash";
 import * as path from "path";
 
 import {
@@ -123,18 +122,19 @@ export default class AccountClusterService {
     const newRootNodes: IRootNode[] = [];
 
     let serviceAccounts = await accountClusterService.getServiceAccount();
-
-    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
-      logger.error(
-        `${newAccountCluser.loginInfo.baseUrl}： No cluster found for ${newAccountCluser.loginInfo.username}`
-      );
-      return [];
-    }
     logger.info(
       `[getServerClusterRootNodes] serviceAccounts length ${
         (serviceAccounts || []).length
       }`
     );
+
+    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
+      const msg = `no cluster found for ${newAccountCluser.loginInfo.baseUrl} ${newAccountCluser.loginInfo.username}`;
+
+      logger.error(msg);
+      throw new Error(msg);
+    }
+
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
     logger.info(
       `[getServerClusterRootNodes] applications length ${
@@ -229,12 +229,12 @@ export default class AccountClusterService {
     configs: Array<string>
   ) {
     const { baseUrl, username } = accountCluser.loginInfo;
-    const KEY = `USER_LINK:${baseUrl}-${username}`;
+    const KEY = `USER_LINK:${baseUrl}@${username}`;
 
     const prevData = host.getGlobalState(KEY);
 
     if (prevData) {
-      const diff = arrayDiffer(prevData as Array<string>, configs);
+      const diff = difference(prevData as Array<string>, configs);
 
       if (diff.length === 0) {
         return;
@@ -269,7 +269,9 @@ export default class AccountClusterService {
 
     return { id, kubeConfigPath };
   }
-  static appendClusterByLoginInfo = async (loginInfo: LoginInfo) => {
+  static appendClusterByLoginInfo = async (
+    loginInfo: LoginInfo
+  ): Promise<AccountClusterNode> => {
     const accountServer = new AccountClusterService(loginInfo);
     const newAccountCluser = await accountServer.buildAccountClusterNode();
 
@@ -411,9 +413,11 @@ export default class AccountClusterService {
       }
       return serviceAccount;
     } catch (e) {
-      logger.error(e);
-      console.log(e);
-      return this.lastServiceAccounts || [];
+      logger.error("getServiceAccount", e);
+
+      throw new Error(
+        `failed to get cluster for ${this.loginInfo.baseUrl}@${this.loginInfo.username}`
+      );
     }
   }
 

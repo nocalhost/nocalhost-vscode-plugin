@@ -211,7 +211,7 @@ export default class StartDevModeCommand implements ICommand {
         image,
         info?.command
       );
-      messageBus.emit("devstart", {
+      messageBus.emit("devStart", {
         name: appName,
         destDir,
         container: containerName,
