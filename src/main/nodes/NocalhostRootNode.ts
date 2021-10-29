@@ -291,11 +291,13 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         const kubeconfigNode = await this.getKubeConfigNode(resource);
         const children = await kubeconfigNode.getChildren();
 
-        let arryId = [kubeconfigNode.getNodeStateId()];
+        let arrayId = [kubeconfigNode.getNodeStateId()];
 
-        arryId = arryId.concat(children.map((child) => child.getNodeStateId()));
+        arrayId = arrayId.concat(
+          children.map((child) => child.getNodeStateId())
+        );
 
-        return arryId;
+        return arrayId;
       };
 
       const oldId = (await Promise.all(old.map(getId))).flat(1);
