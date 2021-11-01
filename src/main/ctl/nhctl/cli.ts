@@ -1365,7 +1365,7 @@ export async function checkVersion() {
   if (
     !getBooleanValue("nhctl.checkVersion") ||
     !requiredVersion ||
-    pluginVersion.indexOf("-beta") > -1
+    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(NH_BIN))
   ) {
     return;
   }
