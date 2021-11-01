@@ -7,8 +7,10 @@ export default class NocalhostAppProvider
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
     BaseNocalhostNode | undefined
   >();
-  constructor() {
-    vscode.window.onDidChangeActiveColorTheme(() => this.refresh());
+  constructor(context: vscode.ExtensionContext) {
+    context.subscriptions.push(
+      vscode.window.onDidChangeActiveColorTheme(() => this.refresh())
+    );
   }
   onDidChangeTreeData = this.onDidChangeTreeDataEventEmitter.event;
   async getTreeItem(element: BaseNocalhostNode): Promise<vscode.TreeItem> {
