@@ -1369,7 +1369,7 @@ export async function checkVersion() {
   if (
     !getBooleanValue("nhctl.checkVersion") ||
     !requiredVersion ||
-    (pluginVersion.indexOf("-beta") > -1 && binPath)
+    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(binPath))
   ) {
     return;
   }
