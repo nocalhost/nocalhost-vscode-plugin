@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.5.18",
+  "version": "0.6.1",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -28,7 +28,7 @@
   "main": "./dist/extension.js",
   "nhctl": {
     "serverVersion": "0.4.7",
-    "version": "0.5.9"
+    "version": "0.6.1"
   },
   "contributes": {
     "configuration": [
@@ -60,6 +60,12 @@
       ]
     },
     "views": {
+      "explorer": [
+        {
+          "id": "NocalhostSyncManage",
+          "name": "Nocalhost Sync Manage"
+        }
+      ],
       "NocalhostView": [
         {
           "id": "Nocalhost",
@@ -107,6 +113,11 @@
         {
           "command": "Nocalhost.addKubeconfig",
           "when": "extensionActivated && view == Nocalhost",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.syncManage.refresh",
+          "when": "view == NocalhostSyncManage",
           "group": "navigation"
         }
       ],
@@ -276,6 +287,22 @@
           "command": "Nocalhost.rename",
           "when": "viewItem =~ /^kubeconfig-local/i",
           "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.switchAssociate",
+          "when": "viewItem =~ /^syncAssociate-other/i"
+        },
+        {
+          "command": "Nocalhost.disassociateAssociate",
+          "when": "viewItem =~ /^syncAssociate-(.*)disassociate/i"
+        },
+        {
+          "command": "Nocalhost.reconnectSync",
+          "when": "viewItem =~ /^syncAssociate-(.*)resume/i"
+        },
+        {
+          "command": "Nocalhost.overrideSync",
+          "when": "viewItem =~ /^syncAssociate-(.*)override/i"
         }
       ]
     },
@@ -342,6 +369,12 @@
         "command": "Nocalhost.signin",
         "title": "Sign in",
         "icon": "$(sign-in)"
+      },
+      {
+        "command": "Nocalhost.syncManage.refresh",
+        "title": "Refresh",
+        "alt": "Refresh",
+        "icon": "$(refresh)"
       },
       {
         "command": "Nocalhost.refresh",
@@ -478,6 +511,24 @@
       {
         "command": "Nocalhost.openProject",
         "title": "%OpenProject%"
+      },
+      {
+        "command": "Nocalhost.reconnectSync",
+        "shortTitle": "resume",
+        "title": "%resumeSync%"
+      },
+      {
+        "command": "Nocalhost.overrideSync",
+        "shortTitle": "override",
+        "title": "%overrideRemoteChang%"
+      },
+      {
+        "command": "Nocalhost.switchAssociate",
+        "title": "%switchAssociate%"
+      },
+      {
+        "command": "Nocalhost.disassociateAssociate",
+        "title": "%disassociateAssociate%"
       }
     ]
   },
@@ -589,10 +640,8 @@
   },
   "dependencies": {
     "@dineug/vscode-google-analytics": "^0.1.2",
-    "@types/json-schema": "^7.0.7",
     "@types/proper-lockfile": "^4.1.1",
     "ajv": "^6.12.6",
-    "array-differ": "^3.0.0",
     "axios": "^0.21.0",
     "camelcase": "^6.2.0",
     "change-case": "^4.1.2",
@@ -600,7 +649,6 @@
     "fs-extra": "^10.0.0",
     "highlight.js": "^10.5.0",
     "i18next": "^20.3.5",
-    "json-schema": "^0.3.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
     "proper-lockfile": "^4.1.2",
