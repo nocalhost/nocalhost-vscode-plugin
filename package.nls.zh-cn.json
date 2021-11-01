@@ -40,5 +40,10 @@
   "nocalhostProfile": "Nocalhost Profile",
   "viewDevConfig": "View Dev Configs",
   "resetPod": "Reset Pod",
-  "startCopyDevMode": "Start DevMode(Duplicate)"
+  "startCopyDevMode": "Start DevMode(Duplicate)",
+
+  "switchAssociate": "Switch This Service as Current Service",
+  "disassociateAssociate": "Disassociate from Current Directory",
+  "overrideRemoteChang": "Override Remote Changing According to Local Files",
+  "resumeSync": "Resume File Sync"
 }

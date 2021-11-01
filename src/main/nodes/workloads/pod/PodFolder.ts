@@ -1,11 +1,7 @@
-import * as vscode from "vscode";
-
-import host from "../../../host";
 import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { PODS_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List, Resource } from "../../types/resourceType";
 import { Pod } from "./Pod";
 import { kubernetesResourceDevMode } from "../KubernetesResourceDevMode";
 

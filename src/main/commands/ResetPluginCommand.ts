@@ -25,7 +25,7 @@ export default class ResetPluginCommand implements ICommand {
       host.removeGlobalState(SERVER_CLUSTER_LIST);
       host.removeGlobalState(LOCAL_PATH);
 
-      await state.refreshTree();
+      await state.refreshTree(true);
 
       host.showInformationMessage("The plugin has been reset.");
     }

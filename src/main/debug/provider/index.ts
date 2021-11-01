@@ -4,13 +4,15 @@ import { JavaDebugProvider } from "./java";
 import { NodeDebugProvider } from "./nodeDebugProvider";
 import { GoDebugProvider } from "./goDebugProvider";
 import { PythonDebugProvider } from "./pythonDebugProvider";
+import { PhpDebugProvider } from "./phpDebugProvider";
 import { IDebugProvider } from "./IDebugProvider";
 
 export const support = {
   node: NodeDebugProvider,
   java: JavaDebugProvider,
   golang: GoDebugProvider,
-  // python: PythonDebugProvider,
+  python: PythonDebugProvider,
+  php: PhpDebugProvider,
 };
 
 type Language = keyof typeof support;

@@ -1,11 +1,37 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as _ from "lodash";
+import { isEqual } from "lodash";
 
 import { PLUGIN_CONFIG_DIR } from "../constants";
 import host from "../host";
-
 import * as fileUtil from "./fileUtil";
+
+export type EventType = {
+  uninstall: {
+    devSpaceName: string;
+    appName: string;
+  };
+  install: {
+    status: "loading" | "end";
+  };
+  endDevMode: {
+    devSpaceName: string;
+    appName: string;
+    workloadName: string;
+  };
+  devStart: {};
+  refreshTree: {};
+  command: {
+    parameter: {
+      kubeconfig: string;
+      nameSpace: string;
+      app: string;
+      service: string;
+      resourceType: string;
+    };
+    name: string;
+  };
+};
 
 export interface MessageBusInfo {
   source: string;
@@ -23,7 +49,10 @@ class MessageBus {
     PLUGIN_CONFIG_DIR,
     "eventMessage"
   );
-  private eventMap = new Map<string, Array<(value: MessageBusInfo) => void>>();
+  private eventMap = new Map<
+    string,
+    Array<(value: MessageBusInfo & { isCurrentWorkspace: boolean }) => void>
+  >();
   private content: FileMessageInfo = {};
   async init() {
     const isExist = await fileUtil.isExist(MessageBus.filePath);
@@ -42,13 +71,16 @@ class MessageBus {
       const content = JSON.parse(contentstr.toString()) as FileMessageInfo;
       this.eventMap.forEach((arr, key) => {
         const value = content[key];
-        if (!_.isEqual(this.content[key], value)) {
+        if (!isEqual(this.content[key], value)) {
           if (
             this.content[key] &&
             this.content[key].timestamp < value.timestamp
           ) {
             arr.forEach((callback) => {
-              callback(value);
+              callback({
+                ...value,
+                isCurrentWorkspace: host.getCurrentRootPath() === value.source,
+              });
             });
             this.content[key] = value;
           }
@@ -57,17 +89,26 @@ class MessageBus {
     });
   }
 
-  on(eventName: string, callback: (value: MessageBusInfo) => void) {
+  on<T extends keyof EventType, K extends EventType[T]>(
+    eventName: T,
+    callback: (
+      value: MessageBusInfo & K & { isCurrentWorkspace: boolean }
+    ) => void
+  ) {
     let arr = this.eventMap.get(eventName);
     if (!arr) {
       arr = [];
       this.eventMap.set(eventName, arr);
     }
 
-    arr.push(callback);
+    arr.push(callback as any);
   }
 
-  emit(eventName: string, value: object, destination?: string) {
+  emit<T extends keyof EventType, K extends EventType[T]>(
+    eventName: T,
+    value: K,
+    destination?: string
+  ) {
     // read file
     const content = fs.readFileSync(MessageBus.filePath).toString("utf-8");
     const obj = JSON.parse(content) as FileMessageInfo;

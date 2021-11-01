@@ -90,8 +90,6 @@ export class JDWP {
       return false;
     }
 
-    const buff = ByteBuffer.wrap(this.buf, 11, packetLength - 11);
-
     const packet: Response = {
       id: this.buf.readInt32BE(4),
       flags: this.buf[8],
@@ -148,6 +146,15 @@ export class JDWP {
       vmVersion: data.getString(),
       vmName: data.getString(),
     };
+  }
+  async destroy() {
+    return new Promise<void>((res) => {
+      this.socket.on("close", (hasError) => {
+        setTimeout(res, 2000);
+        this.socket = null;
+      });
+      this.socket.destroy();
+    });
   }
   private async call(request: Omit<Request, "id">, timeout = 0) {
     return new Promise<Response>((res, rej) => {

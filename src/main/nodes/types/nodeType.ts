@@ -64,7 +64,10 @@ export interface BaseNocalhostNode {
   accountClusterService?: AccountClusterService;
   hasInit?: boolean;
   parent: BaseNocalhostNode | undefined | null;
-  updateData?: (init: boolean) => Promise<any>;
+  updateData?: (
+    init?: boolean,
+    token?: vscode.CancellationToken
+  ) => Promise<any>;
   getNodeStateId(): string;
   getChildren(
     parent?: BaseNocalhostNode

@@ -45,7 +45,6 @@ import OpenProjectCommand from "./OpenProjectCommand";
 import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
-
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider

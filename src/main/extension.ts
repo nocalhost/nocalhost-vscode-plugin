@@ -28,6 +28,7 @@ import {
   TMP_NAMESPACE,
   NH_BIN,
   TMP_DEV_START_COMMAND,
+  TMP_COMMAND,
 } from "./constants";
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
@@ -44,7 +45,7 @@ import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 // import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
-import messageBus from "./utils/messageBus";
+import messageBus, { EventType } from "./utils/messageBus";
 import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
@@ -54,6 +55,7 @@ import { unlock } from "./utils/download";
 import * as nls from "vscode-nls";
 import SyncServiceCommand from "./commands/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
+import { createSyncManage } from "./component/syncManage";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -64,6 +66,8 @@ let currentContext: vscode.ExtensionContext;
 
 export async function activate(context: vscode.ExtensionContext) {
   currentContext = context;
+
+  createSyncManage(context);
 
   await init(context);
   let appTreeProvider = new NocalhostAppProvider();
@@ -97,23 +101,18 @@ export async function activate(context: vscode.ExtensionContext) {
     ) {
       state.refreshFolderMap.set(node.getNodeStateId(), true);
     }
-
-    if (node instanceof NocalhostFolderNode) {
-      node.isExpand = true;
-    }
   });
 
   appTreeView.onDidCollapseElement((e) => {
     const node = e.element;
-    if (
-      node instanceof KubernetesResourceFolder ||
-      node instanceof DevSpaceNode
-    ) {
-      state.refreshFolderMap.set(node.getNodeStateId(), false);
-    }
-    if (node instanceof NocalhostFolderNode) {
-      node.isExpand = false;
-    }
+
+    const nodeStateId = node.getNodeStateId();
+
+    Array.from(state.refreshFolderMap.keys()).forEach((id) => {
+      if (id.startsWith(nodeStateId)) {
+        state.refreshFolderMap.delete(id);
+      }
+    });
   });
 
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
@@ -143,31 +142,48 @@ export async function activate(context: vscode.ExtensionContext) {
   host.getOutputChannel().show(true);
   // await registerYamlSchemaSupport();
 
-  messageBus.on("devstart", (value) => {
+  await vscode.commands.executeCommand(
+    "setContext",
+    "extensionActivated",
+    true
+  );
+
+  await state.refreshTree();
+
+  launchDevSpace();
+
+  bindEvent();
+}
+function bindEvent() {
+  messageBus.on("refreshTree", (value) => {
+    if (value.isCurrentWorkspace) {
+      return;
+    }
+
+    logger.debug("refreshTree", value);
+
+    state.startAutoRefresh(true);
+  });
+
+  messageBus.on("devStart", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      host.disposeBookInfo();
-      launchDevspace();
+      launchDevSpace();
     }
   });
 
   messageBus.on("endDevMode", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      const data = value.value as {
-        devspaceName: string;
-        appName: string;
-        workloadName: string;
-      };
-      host.disposeWorkload(data.devspaceName, data.appName, data.workloadName);
+      host.disposeWorkload(
+        value.devSpaceName,
+        value.appName,
+        value.workloadName
+      );
     }
   });
 
   messageBus.on("uninstall", (value) => {
     if (value.source !== (host.getCurrentRootPath() || "")) {
-      const data = value.value as {
-        devspaceName: string;
-        appName: string;
-      };
-      host.disposeApp(data.devspaceName, data.appName);
+      host.disposeApp(value.devSpaceName, value.appName);
     }
   });
   messageBus.on("install", (value) => {
@@ -176,30 +192,28 @@ export async function activate(context: vscode.ExtensionContext) {
         status: string;
       };
       if (data.status === "loading") {
-        host.stopAutoRefresh();
+        state.stopAutoRefresh(true);
         SyncServiceCommand.stopSyncStatus();
       } else {
-        host.startAutoRefresh();
+        state.startAutoRefresh();
         SyncServiceCommand.checkSync();
       }
     } catch (error) {
       host.log(`MessageBus install: ${error}`, true);
     }
   });
-  await vscode.commands.executeCommand(
-    "setContext",
-    "extensionActivated",
-    true
-  );
-  if (isExistCluster()) {
-    await state.refreshTree();
-  } else {
-    await vscode.commands.executeCommand("setContext", "emptyCluster", true);
-  }
-  launchDevspace();
-}
 
-function launchDevspace() {
+  messageBus.on("command", (value) => {
+    execCommand(value.value as any);
+  });
+
+  const commandData = host.getGlobalState(TMP_COMMAND);
+
+  if (commandData) {
+    execCommand(commandData);
+  }
+}
+function launchDevSpace() {
   SyncServiceCommand.checkSync();
 
   const tmpWorkloadPath = host.getGlobalState(TMP_WORKLOAD_PATH);
@@ -289,6 +303,36 @@ function launchDevspace() {
       command: tmpCommand,
     });
   }
+}
+
+function execCommand(
+  data: EventType["command"] & {
+    parameter: { associate: string; status: string };
+  }
+) {
+  const { name, parameter } = data;
+  if (parameter.associate !== host.getCurrentRootPath()) {
+    return;
+  }
+
+  vscode.commands.executeCommand(name, {
+    getKubeConfigPath() {
+      return parameter.kubeconfig;
+    },
+    getNameSpace() {
+      return parameter.nameSpace;
+    },
+    getAppName() {
+      return parameter.app;
+    },
+    name: parameter.service,
+    resourceType: parameter.resourceType,
+    getStatus() {
+      return parameter.status;
+    },
+  });
+
+  host.removeGlobalState(TMP_COMMAND);
 }
 
 export async function deactivate() {
