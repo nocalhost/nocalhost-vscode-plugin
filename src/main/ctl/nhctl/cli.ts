@@ -1362,17 +1362,17 @@ export async function checkVersion() {
   // is dev plugin
   const pluginVersion: string = packageJson.version;
 
-  if (
-    !getBooleanValue("nhctl.checkVersion") ||
-    !requiredVersion ||
-    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(NH_BIN))
-  ) {
-    return;
-  }
-
   const { sourcePath, destinationPath, binPath } = getNhctlPath(
     requiredVersion
   );
+
+  if (
+    !getBooleanValue("nhctl.checkVersion") ||
+    !requiredVersion ||
+    (pluginVersion.indexOf("-beta") > -1 && binPath)
+  ) {
+    return;
+  }
 
   const currentVersion: string = await services.fetchNhctlVersion();
 
