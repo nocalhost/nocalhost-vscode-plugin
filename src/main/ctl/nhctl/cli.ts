@@ -6,9 +6,11 @@ import {
 } from "./../../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
+import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
+
 import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
@@ -1304,7 +1306,11 @@ function getNhctlPath(version: string) {
   if (host.isLinux()) {
     name = `nhctl-linux-amd64`;
   } else if (host.isMac()) {
-    name = `nhctl-darwin-amd64`;
+    if (os.arch() === "arm64") {
+      name = `nhctl-darwin-arm64`;
+    } else {
+      name = `nhctl-darwin-amd64`;
+    }
   } else if (host.isWindow()) {
     name = `nhctl-windows-amd64.exe`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
