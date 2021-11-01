@@ -423,17 +423,15 @@ export default class StartDevModeCommand implements ICommand {
     const result = await host.showInformationMessage(
       nls["tips.open"],
       { modal: true },
-      nls["bt.open.other"],
-      nls["bt.open.dir"]
+      nls["bt.open.dir"],
+      nls["bt.open.other"]
     );
     if (result === nls["bt.open.other"]) {
       await getUrl();
     } else if (result === nls["bt.open.dir"]) {
       destDir = await this.getAssociateDirectory();
-
       if (!existsSync(destDir)) {
         destDir = undefined;
-
         const res = await host.showInformationMessage(
           "The directory does not exist, do you want to associate the new source code directory.",
           { modal: true },
