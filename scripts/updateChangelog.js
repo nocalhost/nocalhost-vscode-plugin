@@ -13,7 +13,7 @@ if (!matched || matched.length !== 1) {
 version = matched[0];
 
 const CHANGELOG_PATH = path.resolve(__dirname, "../CHANGELOG.md");
-const currentVersion = version.replace(/(\d\.\d\.)(\d)/, "$1x");
+const currentVersion = version.replace(/(\d+\.\d+\.)(\d+)/, "$1x");
 function readUpdateFile() {
   const buf = Buffer.from(
     `# Change Log\n[https://nocalhost.dev/docs/changelogs/${currentVersion}](https://nocalhost.dev/docs/changelogs/${currentVersion})`

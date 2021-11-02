@@ -6,9 +6,11 @@ import {
 } from "./../../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
+import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
+
 import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
@@ -1304,7 +1306,11 @@ function getNhctlPath(version: string) {
   if (host.isLinux()) {
     name = `nhctl-linux-amd64`;
   } else if (host.isMac()) {
-    name = `nhctl-darwin-amd64`;
+    if (os.arch() === "arm64") {
+      name = `nhctl-darwin-arm64`;
+    } else {
+      name = `nhctl-darwin-amd64`;
+    }
   } else if (host.isWindow()) {
     name = `nhctl-windows-amd64.exe`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
@@ -1359,19 +1365,21 @@ function setUpgrade(isUpgrade: boolean) {
 }
 
 export async function checkVersion() {
-  if (!getBooleanValue("nhctl.checkVersion")) {
-    return;
-  }
-
   const requiredVersion: string = packageJson.nhctl?.version;
-
-  if (!requiredVersion) {
-    return;
-  }
+  // is dev plugin
+  const pluginVersion: string = packageJson.version;
 
   const { sourcePath, destinationPath, binPath } = getNhctlPath(
     requiredVersion
   );
+
+  if (
+    !getBooleanValue("nhctl.checkVersion") ||
+    !requiredVersion ||
+    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(binPath))
+  ) {
+    return;
+  }
 
   const currentVersion: string = await services.fetchNhctlVersion();
 
@@ -1411,28 +1419,36 @@ export async function checkVersion() {
         });
         let command = "taskkill /im nhctl.exe -f";
 
-        await exec({ command }).promise.catch(logger.error);
+        await exec({ command }).promise.catch((e) => {
+          logger.error(e);
+        });
 
         command = "tasklist | findstr nhctl.exe";
 
-        const result = await exec({ command }).promise.catch(logger.error);
+        const result = await exec({ command }).promise.catch((e) => {
+          logger.error(e);
+        });
 
         if (!result) {
           logger.info("after kill has not daemon");
         } else {
           logger.info("after kill has daemon");
-          await exec({ command }).promise.catch(logger.error);
+          await exec({ command }).promise.catch((e) => {
+            logger.error(e);
+          });
         }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
       fs.renameSync(destinationPath, binPath);
 
-      if (!(await checkDownloadNhctlVersion(requiredVersion))) {
-        vscode.window.showErrorMessage(failedMessage);
-      } else {
-        vscode.window.showInformationMessage(completedMessage);
-      }
+      setTimeout(async () => {
+        if (!(await checkDownloadNhctlVersion(requiredVersion))) {
+          vscode.window.showErrorMessage(failedMessage);
+        } else {
+          vscode.window.showInformationMessage(completedMessage);
+        }
+      }, 300);
     });
   } catch (err) {
     // host.log(`[update err] ${err}`, true);
