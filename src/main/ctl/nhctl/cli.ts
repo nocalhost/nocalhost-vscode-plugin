@@ -101,21 +101,24 @@ export class NhctlCommand {
       name: string;
       resourceType: string;
       container?: string;
+      shell?: string;
       commands: string[];
     }>
   ) {
-    let { args, app, name, resourceType, container, commands } = params;
+    let { args, app, name, resourceType, container, commands, shell } = params;
 
     const command = NhctlCommand.create("exec", params);
 
     args = args ?? [];
-    commands.forEach((command) => args.push(`-c ${command}`));
 
     args.unshift(
       app,
       `-d ${name}`,
       `-t ${resourceType}`,
-      `--container ${container ?? "nocalhost-dev"}`
+      `--container ${container ?? "nocalhost-dev"}`,
+      `--command ${shell || "sh"}`,
+      `--command -c`,
+      `--command "${commands.join(" ")}"`
     );
 
     command.args = args;
