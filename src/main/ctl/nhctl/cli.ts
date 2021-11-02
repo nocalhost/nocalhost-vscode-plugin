@@ -118,7 +118,7 @@ export class NhctlCommand {
       `--container ${container ?? "nocalhost-dev"}`,
       `--command ${shell || "sh"}`,
       `--command -c`,
-      `--command "${commands.join(" ")}"`
+      `--command '${commands.join(" ")}'`
     );
 
     command.args = args;
