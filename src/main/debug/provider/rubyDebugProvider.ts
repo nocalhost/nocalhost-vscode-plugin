@@ -5,7 +5,7 @@ import { delay } from "lodash";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class RubyDebugProvider extends IDebugProvider {
-  name: string = "ruby";
+  name: string = "Ruby";
   requireExtensions: string[] = ["rebornix.Ruby"];
 
   getDebugConfiguration(

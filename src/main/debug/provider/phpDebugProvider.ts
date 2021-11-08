@@ -9,7 +9,7 @@ import { ContainerConfig } from "../../service/configService";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class PhpDebugProvider extends IDebugProvider {
-  name: string = "php";
+  name: string = "Php";
   requireExtensions: string[] = ["felixfbecker.php-debug"];
 
   getDebugConfiguration(
