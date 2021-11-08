@@ -5,9 +5,7 @@ import {
   Progress,
   QuickPickOptions,
 } from "vscode";
-import * as path from "path";
 import * as iconv from "iconv-lite";
-import * as shell from "./ctl/shell";
 import { execSync } from "child_process";
 
 export class Host implements vscode.Disposable {
@@ -392,25 +390,6 @@ export class Host implements vscode.Disposable {
     } else {
       return path.replace(/ /g, "\\ ");
     }
-  }
-
-  async installVscodeExtension(extensionId: string): Promise<boolean> {
-    const vscodeCliPath = path.join(path.dirname(process.argv0), "bin", "code");
-    const shellResult = await shell.exec({
-      command: `"${vscodeCliPath}" --install-extension ${extensionId}`,
-    }).promise;
-
-    if (shellResult && shellResult.code === 0) {
-      const answer = await vscode.window.showInformationMessage(
-        `Extension '${extensionId}' was successfully installed. Please reload IDE to enable it.`,
-        "Reload Now"
-      );
-      if (answer === "Reload Now") {
-        await vscode.commands.executeCommand("workbench.action.reloadWindow");
-        return true;
-      }
-    }
-    return false;
   }
 }
 
