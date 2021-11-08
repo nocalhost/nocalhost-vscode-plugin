@@ -5,8 +5,10 @@ import {
   Progress,
   QuickPickOptions,
 } from "vscode";
-import * as shell from "./ctl/shell";
 import * as path from "path";
+import * as iconv from "iconv-lite";
+import * as shell from "./ctl/shell";
+import { execSync } from "child_process";
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -305,8 +307,28 @@ export class Host implements vscode.Disposable {
   ) {
     return vscode.window.createTerminal(options);
   }
+  private encoding: "gbk" | "utf8";
+  private decodeLog(str: string) {
+    if (
+      !this.encoding &&
+      this.isWindow() &&
+      !process.env.ComSpec.endsWith("Git\\bin\\bash.exe")
+    ) {
+      const stdout = execSync("chcp");
+
+      if (stdout.toString().includes("936")) {
+        this.encoding = "gbk";
+      }
+    }
+    if (this.encoding === "gbk") {
+      str = iconv.decode(Buffer.from(str), this.encoding);
+    }
+    return str;
+  }
 
   log(msg: string, line?: boolean) {
+    msg = this.decodeLog(msg);
+
     if (line) {
       this.outputChannel.appendLine(msg);
     } else {
