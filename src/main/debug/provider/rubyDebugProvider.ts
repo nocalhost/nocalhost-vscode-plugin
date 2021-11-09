@@ -41,7 +41,7 @@ export class RubyDebugProvider extends IDebugProvider {
         }
       });
 
-      delay(() => rej(new Error("timeout")), 2 * 1000);
+      delay(() => rej(new Error("timeout")), 5 * 1000);
     });
   }
 }
