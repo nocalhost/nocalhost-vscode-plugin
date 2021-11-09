@@ -530,6 +530,33 @@
         "command": "Nocalhost.disassociateAssociate",
         "title": "%disassociateAssociate%"
       }
+    ],
+    "debuggers": [
+      {
+        "type": "nocalhost",
+        "label": "Nocalhost",
+        "configurationAttributes": {
+          "attach": {}
+        },
+        "initialConfigurations": [
+          {
+            "type": "nocalhost",
+            "request": "attach",
+            "name": "Nocalhost Debug"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Nocalhost Debug: Attach",
+            "description": "A new configuration for 'debugging' a nocalhost.",
+            "body": {
+              "type": "nocalhost",
+              "request": "attach",
+              "name": "Nocalhost Debug"
+            }
+          }
+        ]
+      }
     ]
   },
   "scripts": {
