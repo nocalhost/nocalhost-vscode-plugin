@@ -93,9 +93,8 @@ export abstract class IDebugProvider {
       container.dev.workDir ?? "/home/nocalhost-dev"
     );
 
-    return await debug.startDebugging(
-      currentFolder,
-      merge(debugConfiguration, otherConfig)
-    );
+    config = merge(debugConfiguration, otherConfig);
+
+    return await debug.startDebugging(currentFolder, config);
   }
 }

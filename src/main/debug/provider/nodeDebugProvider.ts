@@ -12,23 +12,18 @@ export class NodeDebugProvider extends IDebugProvider {
     port: number,
     remoteRoot: string
   ): DebugConfiguration {
-    //https://github.dev/microsoft/vscode-js-debug/blob/a570239f82641de25583ccdaadf9c0903c1a6a78/src/targets/node/restartPolicy.ts
+    //https://code.visualstudio.com/docs/nodejs/nodejs-debugging
 
     return {
       type: "node",
       request: "attach",
       name,
-      hostName: "localhost",
+      address: "localhost",
       skipFiles: ["<node_internals>/**/*.js"],
       port,
       sourceMaps: true,
       localRoot: "${workspaceRoot}",
       remoteRoot,
-      //nodemon
-      // restart: {
-      //   delay: 500,
-      //   maxAttempts: 10,
-      // },
     };
   }
   async waitDebuggerStart(port: number) {
