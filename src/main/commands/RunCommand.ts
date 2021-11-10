@@ -38,7 +38,11 @@ export default class RunCommand implements ICommand {
   }
 
   async execCommand(...rest: any[]) {
-    const [node, command] = rest as [ControllerResourceNode, string];
+    const [node, { command }] = rest as [
+      ControllerResourceNode,
+      { command: string }
+    ];
+
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;

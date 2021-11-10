@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { QuickPickItem, window, commands } from "vscode";
+import { QuickPickItem, window, commands, DebugConfiguration } from "vscode";
 
 import { DEBUG } from "../../commands/constants";
 import { DISASSOCIATE_ASSOCIATE } from "../../component/syncManage";
@@ -9,14 +9,14 @@ import { NocalhostRootNode } from "../../nodes/NocalhostRootNode";
 import { BaseNocalhostNode } from "../../nodes/types/nodeType";
 import logger from "../../utils/logger";
 
-export async function startDebug() {
+export async function startDebug(configuration: DebugConfiguration) {
   const resourceNode = await getResourceNode();
 
   if (!resourceNode) {
     return;
   }
 
-  commands.executeCommand(DEBUG, resourceNode);
+  commands.executeCommand(DEBUG, resourceNode, { configuration });
 }
 
 async function getAssociate() {

@@ -11,44 +11,37 @@ import host from "../host";
 
 export class DebugSession {
   disposable: Array<{ dispose(): any }> = [];
-  container: ContainerConfig;
-  node: ControllerResourceNode;
   isReload: boolean = false;
   terminal: RemoteTerminal;
   cancellationToken: DebugCancellationTokenSource;
-
-  public async launch(
-    workspaceFolder: vscode.WorkspaceFolder,
-    debugProvider: IDebugProvider,
-    node: ControllerResourceNode,
-    container?: ContainerConfig
-  ) {
-    if (!workspaceFolder) {
+  constructor(
+    public workspaceFolder: vscode.WorkspaceFolder,
+    public debugProvider: IDebugProvider,
+    public node: ControllerResourceNode,
+    public container: ContainerConfig,
+    public configuration: vscode.DebugConfiguration
+  ) {}
+  public async launch() {
+    if (!this.workspaceFolder) {
       return;
     }
 
-    if (!container) {
-      container = await getContainer(node);
+    if (!this.container) {
+      this.container = await getContainer(this.node);
     }
-    this.container = container;
-    this.node = node;
-
-    await this.startDebug(debugProvider, workspaceFolder);
+    await this.startDebug();
   }
 
-  async startDebug(
-    debugProvider: IDebugProvider,
-    workspaceFolder: vscode.WorkspaceFolder
-  ) {
+  private async startDebug() {
     const { container, node } = this;
 
-    const { port, dispose } = await debugProvider.getRemotePort(
+    const { port, dispose } = await this.debugProvider.getRemotePort(
       node,
       container
     );
     this.disposable.push({ dispose });
 
-    const terminalName = `${debugProvider.name} Process Console`;
+    const terminalName = `${this.debugProvider.name} Process Console`;
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
     this.generateCancellationToken();
@@ -67,13 +60,14 @@ export class DebugSession {
             this.cancellationToken.cancelByReason("cancel");
           });
 
-          const success = await debugProvider.startDebugging(
-            workspaceFolder.uri.fsPath,
+          const success = await this.debugProvider.startDebugging(
+            this.workspaceFolder.uri.fsPath,
             debugSessionName,
             container,
             port,
             node,
-            this.cancellationToken
+            this.cancellationToken,
+            this.configuration
           );
 
           return success;
@@ -101,7 +95,7 @@ export class DebugSession {
         }),
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
           if (debugSession.name === debugSessionName) {
-            await debugProvider.waitDebuggerStop();
+            await this.debugProvider.waitDebuggerStop();
 
             if (this.isReload) {
               this.generateCancellationToken();

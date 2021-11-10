@@ -4,11 +4,11 @@ import { startDebug } from "./start";
 export class NocalhostDebugAdapterDescriptorFactory
   implements vscode.DebugAdapterDescriptorFactory {
   public async createDebugAdapterDescriptor(
-    _session: vscode.DebugSession,
+    session: vscode.DebugSession,
     _executable: vscode.DebugAdapterExecutable
   ): Promise<vscode.DebugAdapterDescriptor | undefined> {
     return new vscode.DebugAdapterInlineImplementation(
-      new NocalhostDebugAdapter()
+      new NocalhostDebugAdapter(session.configuration)
     );
   }
 }
@@ -16,10 +16,10 @@ export class NocalhostDebugAdapterDescriptorFactory
 interface DebugProtocolMessage {}
 
 class NocalhostDebugAdapter implements vscode.DebugAdapter {
-  constructor() {
+  constructor(configuration: vscode.DebugConfiguration) {
     setTimeout(async () => {
       await vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
-      startDebug();
+      startDebug(configuration);
     }, 0);
   }
   private _sendMessage = new vscode.EventEmitter<DebugProtocolMessage>();

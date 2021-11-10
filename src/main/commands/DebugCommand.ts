@@ -23,17 +23,21 @@ export default class DebugCommand implements ICommand {
   command: string = DEBUG;
   node: ControllerResourceNode;
   container: ContainerConfig;
-
+  configuration: vscode.DebugConfiguration;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(...rest: any[]) {
-    const [node, command] = rest as [ControllerResourceNode, string];
+    const [node, { command, configuration }] = rest as [
+      ControllerResourceNode,
+      { command: string; configuration: vscode.DebugConfiguration }
+    ];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
+    this.configuration = configuration;
     this.node = node;
     this.container = await getContainer(node);
 
@@ -47,6 +51,7 @@ export default class DebugCommand implements ICommand {
       if (status !== "developing") {
         vscode.commands.executeCommand(START_DEV_MODE, node, {
           command: DEBUG,
+          configuration,
         });
         return;
       }
@@ -109,8 +114,6 @@ export default class DebugCommand implements ICommand {
     node: ControllerResourceNode,
     debugProvider: IDebugProvider
   ) {
-    const debugSession = new DebugSession();
-
     const workspaceFolder = await host.showWorkspaceFolderPick();
 
     if (!workspaceFolder) {
@@ -120,12 +123,15 @@ export default class DebugCommand implements ICommand {
       return;
     }
 
-    await debugSession.launch(
+    const debugSession = new DebugSession(
       workspaceFolder,
       debugProvider,
       node,
-      this.container
+      this.container,
+      this.configuration
     );
+
+    await debugSession.launch();
   }
   async getDebugProvider(): Promise<IDebugProvider> {
     let type: Language;

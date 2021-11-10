@@ -54,7 +54,11 @@ export interface ControllerNodeApi {
   getSpaceName: () => string;
   getNameSpace: () => string;
 }
-
+type StartDevModeInfoType = {
+  image?: string;
+  mode?: "replace" | "copy";
+  command?: string;
+};
 export default class StartDevModeCommand implements ICommand {
   command: string = START_DEV_MODE;
   context: vscode.ExtensionContext;
@@ -63,15 +67,9 @@ export default class StartDevModeCommand implements ICommand {
     registerCommand(context, this.command, true, this.execCommand.bind(this));
   }
 
+  private info?: StartDevModeInfoType;
   private node: ControllerNodeApi;
-  async execCommand(
-    node: ControllerNodeApi,
-    info?: {
-      image?: string;
-      mode?: "replace" | "copy";
-      command?: string;
-    }
-  ) {
+  async execCommand(node: ControllerNodeApi, info?: StartDevModeInfoType) {
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
@@ -80,6 +78,7 @@ export default class StartDevModeCommand implements ICommand {
     let image = info?.image;
     const mode = info?.mode || "replace";
     this.node = node;
+    this.info = info;
 
     // is config valid
     const appName = node.getAppName();
@@ -192,15 +191,7 @@ export default class StartDevModeCommand implements ICommand {
       destDir === true ||
       (destDir && destDir === host.getCurrentRootPath())
     ) {
-      await this.startDevMode(
-        host,
-        appName,
-        node,
-        containerName,
-        mode,
-        image,
-        info?.command
-      );
+      await this.startDevMode(host, appName, node, containerName, mode, image);
     } else if (destDir) {
       this.saveAndOpenFolder(
         appName,
@@ -503,8 +494,7 @@ export default class StartDevModeCommand implements ICommand {
     node: ControllerNodeApi,
     containerName: string,
     mode: "replace" | "copy",
-    image: string,
-    command?: string
+    image: string
   ) {
     const currentUri = host.getCurrentRootPath() || os.homedir();
 
@@ -585,8 +575,11 @@ export default class StartDevModeCommand implements ICommand {
         namespace: node.getNameSpace(),
       });
 
-      if (command) {
-        vscode.commands.executeCommand(command, node, START_DEV_MODE);
+      if (this.info?.command) {
+        vscode.commands.executeCommand(this.info?.command, node, {
+          command: START_DEV_MODE,
+          ...this.info,
+        });
       }
     } catch (error) {
       logger.error(error);
