@@ -199,8 +199,7 @@ export default class StartDevModeCommand implements ICommand {
         destDir,
         containerName,
         mode,
-        image,
-        info?.command
+        image
       );
       messageBus.emit("devStart", {
         name: appName,
@@ -261,8 +260,7 @@ export default class StartDevModeCommand implements ICommand {
     destDir: string,
     containerName: string,
     mode: string,
-    image: string,
-    command: string
+    image: string
   ) {
     const currentUri = host.getCurrentRootPath();
 
@@ -274,7 +272,6 @@ export default class StartDevModeCommand implements ICommand {
         uri.fsPath,
         node as ControllerResourceNode,
         containerName,
-        command,
         mode,
         image
       );
@@ -592,7 +589,6 @@ export default class StartDevModeCommand implements ICommand {
     workloadPath: string,
     node: ControllerResourceNode,
     containerName: string,
-    command: string,
     mode: string,
     image: string
   ) {
@@ -607,7 +603,10 @@ export default class StartDevModeCommand implements ICommand {
     host.setGlobalState(TMP_KUBECONFIG_PATH, appNode.getKubeConfigPath());
     host.setGlobalState(TMP_WORKLOAD_PATH, workloadPath);
     host.setGlobalState(TMP_CONTAINER, containerName);
-    host.setGlobalState(TMP_DEV_START_COMMAND, command);
+
+    if (this.info?.command) {
+      host.setGlobalState(TMP_DEV_START_COMMAND, this.info?.command);
+    }
 
     host.setGlobalState(TMP_MODE, mode);
     host.setGlobalState(TMP_DEV_START_IMAGE, image);

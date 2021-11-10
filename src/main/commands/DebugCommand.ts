@@ -28,16 +28,16 @@ export default class DebugCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(...rest: any[]) {
-    const [node, { command, configuration }] = rest as [
+    const [node, param] = rest as [
       ControllerResourceNode,
-      { command: string; configuration: vscode.DebugConfiguration }
+      { command: string; configuration: vscode.DebugConfiguration } | undefined
     ];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
-    this.configuration = configuration;
+    this.configuration = param?.configuration;
     this.node = node;
     this.container = await getContainer(node);
 
@@ -45,13 +45,13 @@ export default class DebugCommand implements ICommand {
 
     const debugProvider = await this.getDebugProvider();
 
-    if (!command) {
+    if (!param?.command) {
       const status = await node.getStatus(true);
 
       if (status !== "developing") {
         vscode.commands.executeCommand(START_DEV_MODE, node, {
           command: DEBUG,
-          configuration,
+          configuration: this.configuration,
         });
         return;
       }

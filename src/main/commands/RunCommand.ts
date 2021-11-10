@@ -38,9 +38,9 @@ export default class RunCommand implements ICommand {
   }
 
   async execCommand(...rest: any[]) {
-    const [node, { command }] = rest as [
+    const [node, param] = rest as [
       ControllerResourceNode,
-      { command: string }
+      { command: string } | undefined
     ];
 
     if (!node) {
@@ -53,7 +53,7 @@ export default class RunCommand implements ICommand {
 
     this.validateRunConfig(this.container);
 
-    if (!command) {
+    if (!param?.command) {
       const status = await node.getStatus(true);
 
       if (status !== "developing") {
