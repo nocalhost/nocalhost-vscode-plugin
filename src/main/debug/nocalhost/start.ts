@@ -1,16 +1,31 @@
+import * as assert from "assert";
 import { QuickPickItem, window, commands } from "vscode";
+
 import { DEBUG } from "../../commands/constants";
+import { DISASSOCIATE_ASSOCIATE } from "../../component/syncManage";
 import { Associate, associateQuery } from "../../ctl/nhctl";
-import { KubernetesResourceNode } from "../../nodes/abstract/KubernetesResourceNode";
+import host from "../../host";
 import { NocalhostRootNode } from "../../nodes/NocalhostRootNode";
+import { BaseNocalhostNode } from "../../nodes/types/nodeType";
+import logger from "../../utils/logger";
 
 export async function startDebug() {
+  const resourceNode = await getResourceNode();
+
+  if (!resourceNode) {
+    return;
+  }
+
+  commands.executeCommand(DEBUG, resourceNode);
+}
+
+async function getAssociate() {
   const queryResult = (await associateQuery({})) as Associate.QueryResult[];
 
   let associate: Associate.QueryResult;
 
   if (queryResult.length > 1) {
-    let item = window.showQuickPick(
+    let select = await window.showQuickPick(
       queryResult.map((item) => {
         const {
           svc_pack: { svc, svc_type, app, ns },
@@ -23,37 +38,83 @@ export async function startDebug() {
       })
     );
 
-    if (!item) {
-      return;
+    if (!select) {
+      return Promise.reject();
     }
+
+    associate = queryResult.find((item) => {
+      const {
+        svc_pack: { svc, svc_type, app, ns },
+        server,
+      } = item;
+
+      return (
+        svc === select.label &&
+        select.description === [server, ns, app, svc_type].join("/")
+      );
+    });
   } else {
     associate = queryResult[0];
   }
+
+  assert(associate, "No associated workload found, please associate");
+
+  return associate;
+}
+
+async function getResourceNode() {
+  const associate = await getAssociate();
+
   const {
     svc_pack: { svc, svc_type, app, ns },
     server,
   } = associate;
 
-  const rootNode = new NocalhostRootNode(null);
-  const clusters = await rootNode.getChildren();
+  return await host.withProgress(
+    {
+      title: "Get debugging configuration...",
+      cancellable: true,
+    },
+    async (_, token) => {
+      return [
+        server,
+        ns,
+        app === "default.application" ? "default" : app,
+        "Workloads",
+        svc_type + "s",
+        svc,
+      ]
+        .reduce(async (parent, label) => {
+          if (token.isCancellationRequested) {
+            return null;
+          }
 
-  const clusterNode = clusters.find((item) => item.label === server);
+          const children = await (await parent).getChildren();
 
-  const nameSpaces = await clusterNode.getChildren();
+          return children.find(
+            (item) => item.label.toLowerCase() === label.toLowerCase()
+          );
+        }, Promise.resolve(new NocalhostRootNode(null) as BaseNocalhostNode))
+        .catch((error) => {
+          logger.error("getResourceNode", error);
 
-  const namespace = nameSpaces.find((item) => item.label === ns);
-  const apps = await namespace.getChildren();
-  const application = apps.find((item) => item.label === app);
+          disassociate(associate);
 
-  const appChildren = await application.getChildren();
-
-  const workloads = appChildren.find((item) => item.label === "Workloads");
-  const workload = (await workloads.getChildren()).find(
-    (item) => item.label.toLowerCase() === svc_type + "s"
+          return null;
+        });
+    }
   );
-
-  const node = ((await workload.getChildren()) as KubernetesResourceNode[]).find(
-    (item) => item.name === svc
+}
+async function disassociate(associate: Associate.QueryResult) {
+  const result = await host.showErrorMessage(
+    "Failed to get debugging configuration, whether to disassociate the workload? ",
+    "Disassociate",
+    "Cancel"
   );
-  commands.executeCommand(DEBUG, node);
+  if (result === "Disassociate") {
+    commands.executeCommand(DISASSOCIATE_ASSOCIATE, {
+      associate,
+      currentPath: host.getCurrentRootPath(),
+    });
+  }
 }

@@ -258,8 +258,8 @@ export class Host implements vscode.Disposable {
     return Promise.resolve(result);
   }
 
-  showErrorMessage(msg: string) {
-    return vscode.window.showErrorMessage(msg);
+  showErrorMessage(msg: string, ...items: string[]) {
+    return vscode.window.showErrorMessage(msg, ...items);
   }
 
   showWarnMessage(msg: string) {

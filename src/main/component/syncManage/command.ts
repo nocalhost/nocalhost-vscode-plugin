@@ -4,8 +4,7 @@ import { AssociateNode } from "./node";
 import * as nhctl from "../../ctl/nhctl";
 import host from "../../host";
 import { SyncManageDataProvider } from "./provider";
-
-const DISASSOCIATE_ASSOCIATE = "Nocalhost.disassociateAssociate";
+export const DISASSOCIATE_ASSOCIATE = "Nocalhost.disassociateAssociate";
 const SWITCH_ASSOCIATE = "Nocalhost.switchAssociate";
 const SYNCMANAGE_REFRESH = "Nocalhost.syncManage.refresh";
 

@@ -1,17 +1,6 @@
 import * as vscode from "vscode";
 import { startDebug } from "./start";
 
-export class NocalhostConfigurationProvider
-  implements vscode.DebugConfigurationProvider {
-  resolveDebugConfiguration?(
-    folder: vscode.WorkspaceFolder,
-    debugConfiguration: vscode.DebugConfiguration,
-    token?: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.DebugConfiguration> {
-    return debugConfiguration;
-  }
-}
-
 export class NocalhostDebugAdapterDescriptorFactory
   implements vscode.DebugAdapterDescriptorFactory {
   public async createDebugAdapterDescriptor(
