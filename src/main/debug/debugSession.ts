@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import * as JSON5 from "json5";
+
+import parse = require("json5/lib/parse");
 
 import { NhctlCommand } from "./../ctl/nhctl";
 import { ContainerConfig } from "../service/configService";
@@ -182,7 +183,10 @@ export class DebugSession {
   }
 
   async createLaunch() {
-    const filePath = "./.vscode/launch.json";
+    const filePath = path.join(
+      host.getCurrentRootPath(),
+      "/.vscode/launch.json"
+    );
 
     let launch: { configurations: vscode.DebugConfiguration[] };
 
@@ -197,7 +201,7 @@ export class DebugSession {
     } else {
       const str = fs.readFileSync(filePath).toString();
 
-      launch = JSON5.parse(str);
+      launch = parse(str);
     }
 
     if ("configurations" in launch) {
