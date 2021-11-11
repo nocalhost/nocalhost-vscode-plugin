@@ -1605,18 +1605,3 @@ export async function associateQuery(param: {
     .toJson()
     .exec();
 }
-// judge config is valid
-export async function isConfigValid(node: NodeInfo): Promise<boolean> {
-  try {
-    const { appName, name, resourceType, namespace, kubeConfigPath } = node;
-    const result = await NhctlCommand.create(
-      `ide config ${appName} --action check -d ${name} -t ${resourceType} -n ${namespace} --kubeconfig ${kubeConfigPath}`
-    )
-      .toJson()
-      .exec();
-
-    return !!result;
-  } catch (e) {
-    return false;
-  }
-}
