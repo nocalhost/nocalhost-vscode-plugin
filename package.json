@@ -535,6 +535,14 @@
       {
         "type": "nocalhost",
         "label": "Nocalhost",
+        "languages": [
+          "javascript",
+          "go",
+          "java",
+          "python",
+          "ruby",
+          "php"
+        ],
         "configurationAttributes": {
           "attach": {}
         },
