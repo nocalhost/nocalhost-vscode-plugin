@@ -280,34 +280,14 @@ export default class InstallAppSourceCommand implements ICommand {
     }
 
     if (res === INSTALL_QUICK_DEMO) {
-      const savePath = tempy.directory();
-      const args = [replaceSpacePath(savePath) as string];
-      const bookInfoGitUrl = "https://github.com/nocalhost/bookinfo.git";
-
-      await git.clone(host, bookInfoGitUrl, args);
-      host.log("git clone finish", true);
-
-      const configFileName = "config.yaml";
-      const dirPath = path.resolve(savePath, ".nocalhost");
-      const configPath = path.resolve(dirPath, configFileName);
-      const nocalhostConfig = await this.parseNocalhostConfig(configPath);
-
-      if (!nocalhostConfig) {
-        return;
-      }
-
-      const manifestType = nocalhostConfig?.application?.manifestType;
-
-      appName = nocalhostConfig?.application?.name;
-      applicationUrl = bookInfoGitUrl;
+      appName = "bookinfo";
+      applicationUrl = "https://github.com/nocalhost/bookinfo.git";
 
       await this.installApp({
         kubeConfigPath: appNode.getKubeConfigPath(),
         namespace: appNode?.info?.namespace,
-        gitUrl: bookInfoGitUrl,
-        resourcePath: nocalhostConfig?.application?.resourcePath,
-        installType: manifestType,
-        configPath,
+        gitUrl: applicationUrl,
+        installType: "rawManifest",
         appName,
       });
     }
