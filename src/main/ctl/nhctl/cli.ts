@@ -467,9 +467,10 @@ export async function getInstalledApp(
   ns: string,
   kubeconfig: string
 ): Promise<AllInstallAppInfo[]> {
-  let obj: AllInstallAppInfo[] = await NhctlCommand.create("get app", {
+  let obj: AllInstallAppInfo[] = await NhctlCommand.get({
     kubeConfigPath: kubeconfig,
   })
+    .addArgument("app")
     .addArgumentStrict("-o", "yaml")
     .addArgumentStrict("-n", ns)
     .toYaml()
