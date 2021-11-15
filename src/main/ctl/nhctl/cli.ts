@@ -130,13 +130,6 @@ export class NhctlCommand {
   static portForward(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("port-forward", baseParams);
   }
-  static list(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
-    const command = NhctlCommand.create("list", baseParams);
-    command.execParam.timeout = ms;
-
-    return command;
-  }
-
   static install(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("install", baseParams);
   }
@@ -474,10 +467,10 @@ export async function getInstalledApp(
   ns: string,
   kubeconfig: string
 ): Promise<AllInstallAppInfo[]> {
-  let obj: AllInstallAppInfo[] = await NhctlCommand.list({
+  let obj: AllInstallAppInfo[] = await NhctlCommand.create("get app", {
     kubeConfigPath: kubeconfig,
   })
-    .addArgument("--yaml")
+    .addArgumentStrict("-o", "yaml")
     .addArgumentStrict("-n", ns)
     .toYaml()
     .exec();
