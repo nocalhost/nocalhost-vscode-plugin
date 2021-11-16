@@ -10,7 +10,6 @@ import * as AsyncRetry from "async-retry";
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
 import logger from "../../utils/logger";
-import host from "../../host";
 import { portForward } from "..";
 
 export abstract class IDebugProvider {
@@ -35,7 +34,10 @@ export abstract class IDebugProvider {
     return Promise.resolve();
   }
 
-  async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
+  private async waitForReady(
+    port: number,
+    cancellationToken: CancellationTokenSource
+  ) {
     await AsyncRetry(
       async (bail) => {
         if (cancellationToken.token.isCancellationRequested) {

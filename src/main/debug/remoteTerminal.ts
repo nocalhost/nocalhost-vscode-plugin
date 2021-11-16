@@ -74,7 +74,7 @@ export class RemoteTerminal implements vscode.Terminal {
 
     command = getExecCommand(command);
 
-    const log = `\n[createTerminal]: ${command}`;
+    const log = `\n[createTerminal]: ${command}\n`;
 
     host.log(log);
     logger.info(log);

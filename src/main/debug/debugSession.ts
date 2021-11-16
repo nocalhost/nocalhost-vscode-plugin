@@ -33,6 +33,11 @@ export class DebugSession {
     this.container = container;
     this.node = node;
 
+    host.getContext().subscriptions.push({
+      dispose: () => {
+        this.dispose();
+      },
+    });
     await this.startDebug(debugProvider, workspaceFolder);
   }
 
@@ -144,6 +149,14 @@ export class DebugSession {
     }
 
     this.cancellationToken = new DebugCancellationTokenSource();
+
+    this.disposable.push({
+      dispose: () => {
+        if (this.cancellationToken) {
+          this.dispose();
+        }
+      },
+    });
   }
   async createDebugTerminal(name: string) {
     const { container, node } = this;
@@ -168,10 +181,9 @@ export class DebugSession {
       },
       spawn: {
         command,
-        close: (code: number, signal: NodeJS.Signals) => {
+        close: (code: number) => {
           if (this.cancellationToken && code !== 0 && !this.isReload) {
             this.cancellationToken.cancelByReason("failed");
-            host.showErrorMessage("Failed to start debug");
           }
         },
       },
