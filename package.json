@@ -234,7 +234,7 @@
         },
         {
           "command": "Nocalhost.editManifest",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
+          "when": "viewItem =~ /(^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)).*(?<!duplicate-self)$/i",
           "title": "%editManifest%",
           "group": "1"
         },
