@@ -158,6 +158,7 @@ export class DebugSession {
       kubeConfigPath: node.getKubeConfigPath(),
       resourceType: node.resourceType,
       commands: debug,
+      shell: container.dev.shell,
     }).getCommand();
 
     let terminal = await RemoteTerminal.create({
