@@ -1,4 +1,8 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
+
+import parse = require("json5/lib/parse");
 
 import { NhctlCommand } from "./../ctl/nhctl";
 import { ContainerConfig } from "../service/configService";
@@ -11,49 +15,43 @@ import host from "../host";
 
 export class DebugSession {
   disposable: Array<{ dispose(): any }> = [];
-  container: ContainerConfig;
-  node: ControllerResourceNode;
   isReload: boolean = false;
   terminal: RemoteTerminal;
   cancellationToken: DebugCancellationTokenSource;
-
-  public async launch(
-    workspaceFolder: vscode.WorkspaceFolder,
-    debugProvider: IDebugProvider,
-    node: ControllerResourceNode,
-    container?: ContainerConfig
-  ) {
-    if (!workspaceFolder) {
+  constructor(
+    public workspaceFolder: vscode.WorkspaceFolder,
+    public debugProvider: IDebugProvider,
+    public node: ControllerResourceNode,
+    public container: ContainerConfig,
+    public configuration: vscode.DebugConfiguration
+  ) {}
+  public async launch() {
+    if (!this.workspaceFolder) {
       return;
     }
 
-    if (!container) {
-      container = await getContainer(node);
+    if (!this.container) {
+      this.container = await getContainer(this.node);
     }
-    this.container = container;
-    this.node = node;
+    await this.startDebug();
 
     host.getContext().subscriptions.push({
       dispose: () => {
         this.dispose();
       },
     });
-    await this.startDebug(debugProvider, workspaceFolder);
   }
 
-  async startDebug(
-    debugProvider: IDebugProvider,
-    workspaceFolder: vscode.WorkspaceFolder
-  ) {
+  private async startDebug() {
     const { container, node } = this;
 
-    const { port, dispose } = await debugProvider.getRemotePort(
+    const { port, dispose } = await this.debugProvider.getRemotePort(
       node,
       container
     );
     this.disposable.push({ dispose });
 
-    const terminalName = `${debugProvider.name} Process Console`;
+    const terminalName = `${this.debugProvider.name} Process Console`;
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
     this.generateCancellationToken();
@@ -72,13 +70,14 @@ export class DebugSession {
             this.cancellationToken.cancelByReason("cancel");
           });
 
-          const success = await debugProvider.startDebugging(
-            workspaceFolder.uri.fsPath,
+          const success = await this.debugProvider.startDebugging(
+            this.workspaceFolder.uri.fsPath,
             debugSessionName,
             container,
             port,
             node,
-            this.cancellationToken
+            this.cancellationToken,
+            this.configuration
           );
 
           return success;
@@ -106,7 +105,7 @@ export class DebugSession {
         }),
         vscode.debug.onDidTerminateDebugSession(async (debugSession) => {
           if (debugSession.name === debugSessionName) {
-            await debugProvider.waitDebuggerStop();
+            await this.debugProvider.waitDebuggerStop();
 
             if (this.isReload) {
               this.generateCancellationToken();
@@ -129,6 +128,8 @@ export class DebugSession {
           }
         })
       );
+
+      this.createLaunch();
     }
   }
   liveReload() {
@@ -195,6 +196,50 @@ export class DebugSession {
     this.disposable.push(this.terminal);
   }
 
+  async createLaunch() {
+    const filePath = path.join(
+      host.getCurrentRootPath(),
+      "/.vscode/launch.json"
+    );
+
+    let launch: { configurations: vscode.DebugConfiguration[] };
+
+    if (!fs.existsSync(filePath)) {
+      const dir = path.dirname(filePath);
+
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+      }
+
+      launch = { configurations: [] };
+    } else {
+      const str = fs.readFileSync(filePath).toString();
+
+      launch = parse(str);
+    }
+
+    if ("configurations" in launch) {
+      const configurations = launch["configurations"];
+
+      if (
+        (Array.isArray(configurations) && configurations.length < 1) ||
+        !configurations.find(
+          (item) =>
+            item.type === "nocalhost" &&
+            item.request === "attach" &&
+            item.name === "Nocalhost Debug"
+        )
+      ) {
+        configurations.push({
+          type: "nocalhost",
+          request: "attach",
+          name: "Nocalhost Debug",
+        });
+
+        fs.writeFileSync(filePath, JSON.stringify(launch, null, 2));
+      }
+    }
+  }
   async dispose() {
     this.disposable.forEach((d) => d.dispose());
     this.disposable.length = 0;
