@@ -39,7 +39,7 @@ export class PhpDebugProvider extends IDebugProvider {
         kubeConfigPath: node.getKubeConfigPath(),
       },
       null,
-      ["pod", node.appName, `-t ${node.resourceType}`, `-d ${node.name}`]
+      ["pod", node.getAppName(), `-t ${node.resourceType}`, `-d ${node.name}`]
     ).exec();
 
     const { remoteDebugPort } = container.dev.debug;
