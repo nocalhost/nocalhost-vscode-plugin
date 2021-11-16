@@ -11,7 +11,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
 
-import { exec, ExecParam, execWithProgress } from "../shell";
+import { exec, ExecParam, execWithProgress, getExecCommand } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
@@ -784,6 +784,8 @@ function isSudo(ports: string[] | undefined) {
 }
 
 function sudoPortForward(command: string) {
+  command = getExecCommand(command);
+
   return new Promise((resolve, reject) => {
     const env = Object.assign(process.env, { DISABLE_SPINNER: true });
     logger.info(`[cmd] ${command}`);

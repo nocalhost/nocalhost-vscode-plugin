@@ -116,13 +116,10 @@ export function createProcess(param: ExecParam) {
   let { command, args, output } = param;
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
+  command = getExecCommand(command);
 
   if (param.printCommand !== false) {
     logger.info(`[cmd] ${command}`);
-  }
-
-  if (host.isWindow() && env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
-    command = command.replaceAll(path.sep, "\\\\\\");
   }
 
   const proc = spawn(command, [], { shell: true, env });
@@ -238,4 +235,11 @@ export function which(name: string) {
   const result = shell.which(name);
 
   return result && result.code === 0;
+}
+
+export function getExecCommand(command: string) {
+  if (host.isWindow() && process.env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
+    command = command.replaceAll(path.sep, "\\\\\\");
+  }
+  return command;
 }
