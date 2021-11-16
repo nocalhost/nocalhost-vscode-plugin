@@ -34,6 +34,12 @@ export class DebugSession {
       this.container = await getContainer(this.node);
     }
     await this.startDebug();
+
+    host.getContext().subscriptions.push({
+      dispose: () => {
+        this.dispose();
+      },
+    });
   }
 
   private async startDebug() {
@@ -144,6 +150,14 @@ export class DebugSession {
     }
 
     this.cancellationToken = new DebugCancellationTokenSource();
+
+    this.disposable.push({
+      dispose: () => {
+        if (this.cancellationToken) {
+          this.dispose();
+        }
+      },
+    });
   }
   async createDebugTerminal(name: string) {
     const { container, node } = this;
@@ -158,6 +172,7 @@ export class DebugSession {
       kubeConfigPath: node.getKubeConfigPath(),
       resourceType: node.resourceType,
       commands: debug,
+      shell: container.dev.shell,
     }).getCommand();
 
     let terminal = await RemoteTerminal.create({
@@ -167,10 +182,9 @@ export class DebugSession {
       },
       spawn: {
         command,
-        close: (code: number, signal: NodeJS.Signals) => {
+        close: (code: number) => {
           if (this.cancellationToken && code !== 0 && !this.isReload) {
             this.cancellationToken.cancelByReason("failed");
-            host.showErrorMessage("Failed to start debug");
           }
         },
       },

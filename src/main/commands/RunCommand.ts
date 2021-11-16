@@ -109,6 +109,7 @@ export default class RunCommand implements ICommand {
       kubeConfigPath: node.getKubeConfigPath(),
       resourceType: node.resourceType,
       commands: run,
+      shell: container.dev.shell,
     }).getCommand();
 
     const terminal = await RemoteTerminal.create({

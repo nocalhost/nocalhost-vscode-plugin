@@ -35,7 +35,10 @@ export abstract class IDebugProvider {
     return Promise.resolve();
   }
 
-  async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
+  private async waitForReady(
+    port: number,
+    cancellationToken: CancellationTokenSource
+  ) {
     await AsyncRetry(
       async (bail) => {
         if (cancellationToken.token.isCancellationRequested) {

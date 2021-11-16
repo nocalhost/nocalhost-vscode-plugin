@@ -14,7 +14,7 @@ export class PythonDebugProvider extends IDebugProvider {
     port: number,
     remoteRoot: string
   ): DebugConfiguration {
-    // https://github.com/xdebug/vscode-php-debug
+    // https://code.visualstudio.com/docs/python/debugging
     return {
       name,
       type: "python",

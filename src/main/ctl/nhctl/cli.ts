@@ -11,7 +11,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
 
-import { exec, ExecParam, execWithProgress } from "../shell";
+import { exec, ExecParam, execWithProgress, getExecCommand } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
@@ -101,21 +101,24 @@ export class NhctlCommand {
       name: string;
       resourceType: string;
       container?: string;
+      shell?: string;
       commands: string[];
     }>
   ) {
-    let { args, app, name, resourceType, container, commands } = params;
+    let { args, app, name, resourceType, container, commands, shell } = params;
 
     const command = NhctlCommand.create("exec", params);
 
     args = args ?? [];
-    commands.forEach((command) => args.push(`-c ${command}`));
 
     args.unshift(
       app,
       `-d ${name}`,
       `-t ${resourceType}`,
-      `--container ${container ?? "nocalhost-dev"}`
+      `--container ${container ?? "nocalhost-dev"}`,
+      `--command ${shell || "sh"}`,
+      `--command -c`,
+      `--command '${commands.join(" ")}'`
     );
 
     command.args = args;
@@ -784,6 +787,8 @@ function isSudo(ports: string[] | undefined) {
 }
 
 function sudoPortForward(command: string) {
+  command = getExecCommand(command);
+
   return new Promise((resolve, reject) => {
     const env = Object.assign(process.env, { DISABLE_SPINNER: true });
     logger.info(`[cmd] ${command}`);
@@ -1604,19 +1609,4 @@ export async function associateQuery(param: {
     .addArgument("--json")
     .toJson()
     .exec();
-}
-// judge config is valid
-export async function isConfigValid(node: NodeInfo): Promise<boolean> {
-  try {
-    const { appName, name, resourceType, namespace, kubeConfigPath } = node;
-    const result = await NhctlCommand.create(
-      `ide config ${appName} --action check -d ${name} -t ${resourceType} -n ${namespace} --kubeconfig ${kubeConfigPath}`
-    )
-      .toJson()
-      .exec();
-
-    return !!result;
-  } catch (e) {
-    return false;
-  }
 }
