@@ -39,7 +39,7 @@ async function portForWardListByApp(node: AppNode): Promise<IEndPortInfo> {
   });
   portForwardList = (portForwardList || []).filter(filter);
   if (!portForwardList || portForwardList.length === 0) {
-    host.showErrorMessage("Can not get service config");
+    host.showErrorMessage("No port-forwarding configured in this application");
     return;
   }
 
