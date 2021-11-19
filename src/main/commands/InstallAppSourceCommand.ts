@@ -281,7 +281,7 @@ export default class InstallAppSourceCommand implements ICommand {
 
     if (res === INSTALL_QUICK_DEMO) {
       appName = "bookinfo";
-      applicationUrl = "https://github.com/nocalhost/bookinfo.git";
+      applicationUrl = this.getBookInfoGitSource();
 
       await this.installApp({
         kubeConfigPath: appNode.getKubeConfigPath(),
@@ -301,7 +301,13 @@ export default class InstallAppSourceCommand implements ICommand {
     const app = appNode.buildAppNode(applicationInfo);
     Bookinfo.checkInstall(app);
   }
+  getBookInfoGitSource() {
+    if ((process.env["nh_region"] ?? "").toUpperCase() === "CN") {
+      return "https://e.coding.net/nocalhost/nocalhost/bookinfo.git";
+    }
 
+    return "https://github.com/nocalhost/bookinfo.git";
+  }
   async getKustomizeYamlPath(): Promise<string> {
     const res = await host.showInformationMessage(
       " Do you want to specify a Kustomize file path ?",
