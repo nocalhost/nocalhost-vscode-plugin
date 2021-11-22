@@ -302,7 +302,7 @@ export default class InstallAppSourceCommand implements ICommand {
     Bookinfo.checkInstall(app);
   }
   getBookInfoGitSource() {
-    if ((process.env["nh_region"] ?? "").toUpperCase() === "CN") {
+    if ((process.env["NH_REGION"] ?? "").toUpperCase() === "CN") {
       return "https://e.coding.net/nocalhost/nocalhost/bookinfo.git";
     }
 
