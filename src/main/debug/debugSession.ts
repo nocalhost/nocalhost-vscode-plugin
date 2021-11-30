@@ -245,7 +245,7 @@ export class DebugSession {
     this.disposable.forEach((d) => d.dispose());
     this.disposable.length = 0;
 
-    if (closeTerminal) {
+    if (closeTerminal && this.terminal) {
       this.terminal.dispose();
     }
   }
