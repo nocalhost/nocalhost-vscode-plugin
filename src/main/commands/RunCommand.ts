@@ -9,7 +9,7 @@ import host from "../host";
 import { ContainerConfig } from "../service/configService";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { closeTerminals, getContainer, waitForSync } from "../debug";
+import { getContainer, waitForSync } from "../debug";
 import { RemoteTerminal } from "../debug/remoteTerminal";
 import { NhctlCommand } from "../ctl/nhctl";
 import { validateData } from "../utils/validate";
@@ -91,8 +91,7 @@ export default class RunCommand implements ICommand {
     this.disposable.push(
       vscode.window.onDidCloseTerminal(async (e) => {
         if ((await e.processId) === (await this.terminal.processId)) {
-          this.disposable.forEach((d) => d.dispose());
-          this.disposable.length = 0;
+          this.dispose();
         }
       })
     );
@@ -117,13 +116,25 @@ export default class RunCommand implements ICommand {
         name,
         iconPath: { id: "vm-running" },
       },
-      spawn: { command },
+      spawn: {
+        command,
+        close: () => {
+          this.dispose(false);
+        },
+      },
     });
     terminal.show();
 
     this.terminal = terminal;
+  }
 
-    this.disposable.push(this.terminal);
+  async dispose(closeTerminal: boolean = true) {
+    this.disposable.forEach((d) => d.dispose());
+    this.disposable.length = 0;
+
+    if (closeTerminal) {
+      this.terminal.dispose();
+    }
   }
   validateRunConfig(config: ContainerConfig) {
     const schema = {

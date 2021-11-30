@@ -150,11 +150,14 @@ export class DebugSession {
     }
 
     this.cancellationToken = new DebugCancellationTokenSource();
+    this.cancellationToken.token.onCancellationRequested(() => {
+      this.dispose(false);
+    });
 
     this.disposable.push({
       dispose: () => {
         if (this.cancellationToken) {
-          this.dispose();
+          this.cancellationToken.dispose();
         }
       },
     });
@@ -192,8 +195,6 @@ export class DebugSession {
 
     terminal.show();
     this.terminal = terminal;
-
-    this.disposable.push(this.terminal);
   }
 
   async createLaunch() {
@@ -240,8 +241,12 @@ export class DebugSession {
       }
     }
   }
-  async dispose() {
+  async dispose(closeTerminal: boolean = true) {
     this.disposable.forEach((d) => d.dispose());
     this.disposable.length = 0;
+
+    if (closeTerminal) {
+      this.terminal.dispose();
+    }
   }
 }
