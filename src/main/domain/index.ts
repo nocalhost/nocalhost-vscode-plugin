@@ -10,8 +10,6 @@ export * from "./INhCtlGetResult";
 
 export * from "./IK8sResource";
 
-export * from "./IPortForWard";
-
 export * from "./INocalhostConfig";
 
 export * from "./IDevSpaceInfo";

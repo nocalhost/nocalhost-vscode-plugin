@@ -32,3 +32,15 @@ type SyncStatusType = keyof typeof SyncStatus;
 export function getIconIdByStatus(status: SyncStatusType) {
   return SyncStatus[status] || "error";
 }
+
+export interface IPortForward {
+  daemonserverpid: number;
+  port: string;
+  reason: string;
+  role: string;
+  servicetype: string;
+  status: string;
+  sudo: boolean;
+  svcName: string;
+  updated: string;
+}
