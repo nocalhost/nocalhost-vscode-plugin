@@ -55,6 +55,7 @@ export class DebugSession {
     const debugSessionName = `${node.getAppName()}-${node.name}`;
 
     this.generateCancellationToken();
+
     await this.createDebugTerminal(terminalName);
 
     const startDebugging = async () => {
@@ -85,8 +86,6 @@ export class DebugSession {
       );
     };
     const success = await startDebugging();
-    this.cancellationToken.dispose();
-    this.cancellationToken = null;
 
     if (!success) {
       this.dispose();
@@ -114,16 +113,14 @@ export class DebugSession {
                 (await this.terminal.restart()) &&
                 !(await startDebugging())
               ) {
-                this.dispose();
+                this.dispose(false);
               }
 
-              this.cancellationToken.dispose();
-              this.cancellationToken = null;
               this.isReload = false;
             } else {
               await this.terminal.sendCtrlC();
 
-              this.dispose();
+              this.dispose(false);
             }
           }
         })
@@ -151,16 +148,12 @@ export class DebugSession {
 
     this.cancellationToken = new DebugCancellationTokenSource();
     this.cancellationToken.token.onCancellationRequested(() => {
+      vscode.debug.stopDebugging(vscode.debug.activeDebugSession);
+
       this.dispose(false);
     });
 
-    this.disposable.push({
-      dispose: () => {
-        if (this.cancellationToken) {
-          this.cancellationToken.dispose();
-        }
-      },
-    });
+    this.disposable.push(this.cancellationToken);
   }
   async createDebugTerminal(name: string) {
     const { container, node } = this;
@@ -186,7 +179,7 @@ export class DebugSession {
       spawn: {
         command,
         close: (code: number) => {
-          if (this.cancellationToken && code !== 0 && !this.isReload) {
+          if (code !== 0 && !this.isReload) {
             this.cancellationToken.cancelByReason("failed");
           }
         },
