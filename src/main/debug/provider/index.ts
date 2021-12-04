@@ -1,4 +1,11 @@
-import { commands, extensions, ProgressLocation, window } from "vscode";
+import {
+  commands,
+  extensions,
+  ProgressLocation,
+  window,
+  Uri,
+  env,
+} from "vscode";
 
 import { JavaDebugProvider } from "./java";
 import { NodeDebugProvider } from "./nodeDebugProvider";
@@ -7,6 +14,7 @@ import { PythonDebugProvider } from "./pythonDebugProvider";
 import { PhpDebugProvider } from "./phpDebugProvider";
 import { RubyDebugProvider } from "./rubyDebugProvider";
 import { IDebugProvider } from "./IDebugProvider";
+import { which } from "../../ctl/shell";
 
 export const support = {
   node: NodeDebugProvider,
@@ -38,15 +46,35 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
   return new debugProvider();
 }
 
-function checkDebuggerInstalled(debugProvider: IDebugProvider) {
+async function checkDebuggerInstalled(debugProvider: IDebugProvider) {
   const { requireExtensions, name } = debugProvider;
+
+  // await checkLanageInstall(debugProvider);
 
   if (requireExtensions.length > 0 && !existExtensions(requireExtensions)) {
     guideToInstallExtension(name, requireExtensions);
     return false;
   }
 
-  return true;
+  await debugProvider.checkDebuggerDependent();
+}
+
+async function checkLanageInstall(debugProvider: IDebugProvider) {
+  const { name } = debugProvider;
+
+  if (!(await which(debugProvider.commandName))) {
+    const choice = await window.showErrorMessage(
+      `${name} is not installed, please download.`,
+      "Download"
+    );
+
+    if (choice === "Download") {
+      const uri = Uri.parse(debugProvider.downloadUrl);
+      env.openExternal(uri);
+    }
+
+    return Promise.reject();
+  }
 }
 
 function existExtensions(extensionArray: string[]) {

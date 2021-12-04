@@ -10,6 +10,9 @@ export class JavaDebugProvider extends IDebugProvider {
   name: string = "Java";
   requireExtensions: string[] = ["vscjava.vscode-java-debug", "redhat.java"];
 
+  downloadUrl: string = "https://www.oracle.com/java/technologies/downloads/";
+  commandName: string = "java";
+
   getDebugConfiguration(
     name: string,
     port: number,

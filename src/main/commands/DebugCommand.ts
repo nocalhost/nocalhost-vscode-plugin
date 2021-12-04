@@ -145,7 +145,7 @@ export default class DebugCommand implements ICommand {
 
     const debugProvider = await chooseDebugProvider(type);
 
-    const isInstalled = checkDebuggerInstalled(debugProvider);
+    const isInstalled = await checkDebuggerInstalled(debugProvider);
     if (!isInstalled) {
       return Promise.reject();
     }

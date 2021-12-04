@@ -10,6 +10,10 @@ import { IDebugProvider } from "./IDebugProvider";
 export class GoDebugProvider extends IDebugProvider {
   name: string = "Golang";
   requireExtensions: string[] = ["golang.go"];
+
+  downloadUrl: string = "https://go.dev/dl/";
+  commandName: string = "go";
+
   socket: net.Socket;
 
   getDebugConfiguration(
