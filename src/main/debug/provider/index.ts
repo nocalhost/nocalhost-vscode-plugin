@@ -46,29 +46,24 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
   return new debugProvider();
 }
 
-async function checkDebuggerInstalled(debugProvider: IDebugProvider) {
-  const { requireExtensions, name } = debugProvider;
+async function checkDebuggerDependencies(debugProvider: IDebugProvider) {
+  await checkLanage(debugProvider);
 
-  // await checkLanageInstall(debugProvider);
+  await checkExtension(debugProvider);
 
-  if (requireExtensions.length > 0 && !existExtensions(requireExtensions)) {
-    guideToInstallExtension(name, requireExtensions);
-    return false;
-  }
-
-  await debugProvider.checkDebuggerDependent();
+  await debugProvider.checkExtensionDependency();
 }
 
-async function checkLanageInstall(debugProvider: IDebugProvider) {
+async function checkLanage(debugProvider: IDebugProvider) {
   const { name } = debugProvider;
 
   if (!(await which(debugProvider.commandName))) {
     const choice = await window.showErrorMessage(
-      `${name} is not installed, please download.`,
-      "Download"
+      `${name} is not installed, please install and add to environment variables.`,
+      "Open Download"
     );
 
-    if (choice === "Download") {
+    if (choice === "Open Download") {
       const uri = Uri.parse(debugProvider.downloadUrl);
       env.openExternal(uri);
     }
@@ -91,40 +86,46 @@ function existExtensions(extensionArray: string[]) {
 /**
  * install
  */
-async function guideToInstallExtension(name: string, extensionArray: string[]) {
+async function checkExtension(debugProvider: IDebugProvider) {
+  const { requireExtensions, name } = debugProvider;
+
+  if (requireExtensions.length && existExtensions(requireExtensions)) {
+    return;
+  }
+
   let answer = await window.showWarningMessage(
     `Debugger Support for ${name} require. Please install and enable it.`,
     "Install"
   );
 
-  if (!answer) {
-    return;
-  }
+  if (answer === "Install") {
+    await window.withProgress(
+      { location: ProgressLocation.Notification },
+      async (p) => {
+        p.report({
+          message: `Installing Debugger Support for ${name} ...`,
+        });
 
-  await window.withProgress(
-    { location: ProgressLocation.Notification },
-    async (p) => {
-      p.report({
-        message: `Installing Debugger Support for ${name} ...`,
-      });
-
-      for (const id of extensionArray) {
-        await commands.executeCommand(
-          "workbench.extensions.installExtension",
-          id
-        );
+        for (const id of requireExtensions) {
+          await commands.executeCommand(
+            "workbench.extensions.installExtension",
+            id
+          );
+        }
       }
-    }
-  );
+    );
 
-  const RELOAD = "Reload Window";
-  const choice = await window.showInformationMessage(
-    `Please reload window to activate Debugger Support for ${name}.`,
-    RELOAD
-  );
-  if (choice === RELOAD) {
-    await commands.executeCommand("workbench.action.reloadWindow");
+    const RELOAD = "Reload Window";
+    const choice = await window.showInformationMessage(
+      `Please reload window to activate Debugger Support for ${name}.`,
+      RELOAD
+    );
+    if (choice === RELOAD) {
+      await commands.executeCommand("workbench.action.reloadWindow");
+    }
   }
+
+  return Promise.reject();
 }
 
-export { chooseDebugProvider, Language, checkDebuggerInstalled };
+export { chooseDebugProvider, Language, checkDebuggerDependencies };

@@ -34,7 +34,7 @@ export abstract class IDebugProvider {
     return Promise.resolve();
   }
 
-  async checkDebuggerDependent() {
+  async checkExtensionDependency() {
     return true;
   }
 
