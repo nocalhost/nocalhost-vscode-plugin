@@ -254,12 +254,7 @@
           "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
-          "command": "Nocalhost.portForwardList",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
-          "group": "1"
-        },
-        {
-          "command": "Nocalhost.portForwardList",
+          "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^(viewer:|)application-(.*)-installed/i",
           "group": "navigation"
         },
@@ -485,10 +480,6 @@
       {
         "command": "Nocalhost.portForward",
         "title": "%PortForward%"
-      },
-      {
-        "command": "Nocalhost.portForwardList",
-        "title": "%PortForwardList%"
       },
       {
         "command": "Nocalhost.cleanPvc",

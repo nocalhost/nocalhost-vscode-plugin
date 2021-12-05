@@ -39,10 +39,10 @@ export const UPGRADE_APP = "Nocalhost.upgradeApp";
 export const LOAD_RESOURCE = "Nocalhost.loadResource";
 export const EDIT_MANIFEST = "Nocalhost.editManifest";
 export const LOG = "Nocalhost.log";
-export const PORT_FORWARD = "Nocalhost.portForward";
-export const PORT_FORWARD_LIST = "Nocalhost.portForwardList";
 export const EXEC = "Nocalhost.exec";
 export const COPY_TERMINAL = "Nocalhost.copyTerminal";
+
+export const PORT_FORWARD = "Nocalhost.portForward";
 
 export const CLEAN_PVC = "Nocalhost.cleanPvc";
 export const LOAD_WORKLOADS = "Nocalhost.loadWorkloads";

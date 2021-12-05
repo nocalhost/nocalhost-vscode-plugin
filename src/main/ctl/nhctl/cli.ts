@@ -21,7 +21,7 @@ import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
 import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";
 import logger from "../../utils/logger";
-import { IDevSpaceInfo, IPortForWard } from "../../domain";
+import { IDevSpaceInfo } from "../../domain";
 import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
 import { keysToCamel } from "../../utils";
@@ -29,7 +29,7 @@ import { IPvc } from "../../domain";
 import { getBooleanValue } from "../../utils/config";
 import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
-import { Associate } from "./type";
+import { Associate, IPortForward } from "./type";
 import state from "../../state";
 
 export interface InstalledAppInfo {
@@ -451,11 +451,11 @@ export async function getAll(params: IBaseCommand) {
   }
 }
 
-export async function getPortForWardByApp(
+export async function getPortForwardList(
   props: IBaseCommand<{
     appName: string;
   }>
-): Promise<IPortForWard[]> {
+): Promise<IPortForward[]> {
   return await NhctlCommand.portForward({
     kubeConfigPath: props.kubeConfigPath,
     namespace: props.namespace,

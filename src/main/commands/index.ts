@@ -10,7 +10,6 @@ import InstallCommand from "./InstallCommand";
 import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
-import PortForwardCommand from "./PortForwardCommand";
 import ResetDevspaceCommand from "./ResetDevspaceCommand";
 import ResetCommand from "./ResetCommand";
 import SignInCommand from "./SignInCommand";
@@ -25,7 +24,6 @@ import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
 import SyncServiceCommand from "./SyncServiceCommand";
 import OverrideSyncCommand from "./OverrideSyncCommand";
-import PortForwardListCommand from "./PortForwardListCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
 import EditAppConfigCommand from "./EditAppConfigCommand";
@@ -46,6 +44,7 @@ import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
 import LocateWorkNodeCommand from "./LocateWorkNodeCommand";
+import PortForwardCommand from "./PortForwardCommand/";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -74,7 +73,6 @@ export default function initCommands(
   new EditManifestCommand(context);
   new LogCommand(context);
   new PortForwardCommand(context);
-  new PortForwardListCommand(context);
   new ExecCommand(context);
   new CopyTerminalCommand(context);
   new ResetCommand(context);
