@@ -94,7 +94,7 @@ async function checkExtension(debugProvider: IDebugProvider) {
   }
 
   let answer = await window.showWarningMessage(
-    `Debugger Support for ${name} require. Please install and enable it.`,
+    `Debugger Support for "${name}" require. Please install and enable it.`,
     "Install"
   );
 
@@ -103,7 +103,7 @@ async function checkExtension(debugProvider: IDebugProvider) {
       { location: ProgressLocation.Notification },
       async (p) => {
         p.report({
-          message: `Installing Debugger Support for ${name} ...`,
+          message: `Installing Debugger Support for "${name}" ...`,
         });
 
         for (const id of requireExtensions) {
@@ -117,7 +117,7 @@ async function checkExtension(debugProvider: IDebugProvider) {
 
     const RELOAD = "Reload Window";
     const choice = await window.showInformationMessage(
-      `Please reload window to activate Debugger Support for ${name}.`,
+      `Please reload window to activate Debugger Support for "${name}".`,
       RELOAD
     );
     if (choice === RELOAD) {
