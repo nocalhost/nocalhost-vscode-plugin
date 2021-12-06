@@ -44,6 +44,9 @@ import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
 import PortForwardCommand from "./PortForwardCommand/";
+import StartProxyModeCommand from "./StartProxyModeCommand";
+import ResumeProxyModeCommand from "./ResumeProxyModeCommand";
+import EndProxyModeCommand from "./EndProxyModeCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -102,4 +105,8 @@ export default function initCommands(
 
   new ResetPluginCommand(context);
   new StartCopyDevModeCommand(context);
+
+  new StartProxyModeCommand(context);
+  new ResumeProxyModeCommand(context);
+  new EndProxyModeCommand(context);
 }
