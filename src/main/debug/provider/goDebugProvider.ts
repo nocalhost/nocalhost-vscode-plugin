@@ -48,7 +48,7 @@ export class GoDebugProvider extends IDebugProvider {
       logger.error("stopDebug error", err);
 
       host.showErrorMessage(
-        "Stop dlv fail,please kill the dlv process in the container."
+        `Stop "dlv" fail,please kill the "dlv" process in the container.`
       );
     }
   }
@@ -60,7 +60,15 @@ export class GoDebugProvider extends IDebugProvider {
       .promise.then((res) => {
         return res.stdout
           .split("\n")
-          .map((item) => item.substring(4).split("="))
+          .map((str) => {
+            if (host.isWindow()) {
+              str = str.substring(4);
+            } else {
+              str = str.replaceAll(`"`, "");
+            }
+
+            return str.split("=");
+          })
           .reduce<GoENV>((obj, [key, value]) => {
             if (key) {
               obj[key] = value;
@@ -70,16 +78,20 @@ export class GoDebugProvider extends IDebugProvider {
           }, {});
       })
       .catch(() => {
-        return Promise.reject(Error(`Failed to run 'go env'`));
+        return Promise.reject(Error(`Failed to run "go env"`));
       });
 
     const binPath = path.join(env["GOPATH"], "bin");
-    const dlvName = "dlv" + env["GOEXE"];
+
+    let dlvName = "dlv";
+    if (host.isWindow()) {
+      dlvName += ".exe";
+    }
 
     if (!existsSync(path.join(binPath, dlvName))) {
       await host.withProgress(
         {
-          title: "Wait for dlv installation to complete ...",
+          title: `Wait for "dlv" installation to complete ...`,
           cancellable: true,
         },
         async (_, token) => {
@@ -119,7 +131,7 @@ export class GoDebugProvider extends IDebugProvider {
     const { promise, abort } = getPromiseWithAbort<void>(
       new Promise((resolve, reject) => {
         fsWatcher.on("change", (eventType, fileName) => {
-          if (eventType === "change" && fileName === dlvName) {
+          if (eventType === "rename" && fileName === dlvName) {
             resolve();
           }
         });
@@ -143,7 +155,7 @@ export class GoDebugProvider extends IDebugProvider {
     const method = `RPCServer.${command}`;
 
     return new Promise<T>((resolve, reject) => {
-      const err = new Error(`Then Call ${method} timed out.`);
+      const err = new Error(`Then Call "${method}" timed out.`);
       if (timeout) {
         setTimeout(() => {
           reject(err);

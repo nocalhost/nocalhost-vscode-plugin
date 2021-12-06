@@ -47,23 +47,23 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
 }
 
 async function checkDebuggerDependencies(debugProvider: IDebugProvider) {
-  await checkLanage(debugProvider);
+  await checkBinary(debugProvider);
 
   await checkExtension(debugProvider);
 
   await debugProvider.checkExtensionDependency();
 }
 
-async function checkLanage(debugProvider: IDebugProvider) {
-  const { name } = debugProvider;
+async function checkBinary(debugProvider: IDebugProvider) {
+  const { commandName } = debugProvider;
 
   if (!(await which(debugProvider.commandName))) {
     const choice = await window.showErrorMessage(
-      `${name} is not installed, please install and add to environment variables.`,
-      "Open Download"
+      `Failed to find the "${commandName}" binary in PATH. Check PATH, or Install Go and reload the window. `,
+      "Go to Download Page"
     );
 
-    if (choice === "Open Download") {
+    if (choice === "Go to Download Page") {
       const uri = Uri.parse(debugProvider.downloadUrl);
       env.openExternal(uri);
     }
