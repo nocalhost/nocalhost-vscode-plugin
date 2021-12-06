@@ -661,12 +661,10 @@ export async function associate(
   container?: string,
   params: "--de-associate" | "--migrate" | "" = ""
 ) {
-  const resultDir = replaceSpacePath(dir);
-
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} ${
+    `dev associate ${appName} -s "${dir}" ${
       container ? `-c ${container}` : ""
     } -t ${type} -d ${workLoadName} ${params}`
   );
@@ -1593,7 +1591,7 @@ export async function associateQuery(param: {
     param.localSync = host.getCurrentRootPath();
   }
 
-  args.push(`--local-sync ${param.localSync}`);
+  args.push(`--local-sync "${param.localSync}"`);
 
   if (param.current === true) {
     args.push("--current");
