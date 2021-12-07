@@ -161,7 +161,7 @@ export function createProcess(param: ExecParam) {
   }
 
   proc.stdout.on("data", function (data: Buffer) {
-    const str = decodeBuffer(data);
+    const str = data.toString();
     stdout += str;
 
     out && host.log(str);
