@@ -10,5 +10,6 @@ export interface IDevSpaceInfo {
   storageClass: string;
   devStartAppendCommand: Array<string>;
   spaceOwnType?: "Viewer" | "Owner" | string;
+  isAsleep?: "Sleeping" | "Unsleeping";
   [key: string]: any;
 }

@@ -107,17 +107,17 @@ export default class AccountClusterService {
   }
 
   static getServerClusterRootNodes = async (
-    newAccountCluser: AccountClusterNode
+    newAccountCluster: AccountClusterNode
   ): Promise<IRootNode[]> => {
-    if (!newAccountCluser) {
+    if (!newAccountCluster) {
       return [];
     }
     const accountClusterService = new AccountClusterService(
-      newAccountCluser.loginInfo
+      newAccountCluster.loginInfo
     );
-    accountClusterService.accountClusterNode = newAccountCluser;
-    accountClusterService.jwt = newAccountCluser.jwt;
-    accountClusterService.refreshToken = newAccountCluser.refreshToken;
+    accountClusterService.accountClusterNode = newAccountCluster;
+    accountClusterService.jwt = newAccountCluster.jwt;
+    accountClusterService.refreshToken = newAccountCluster.refreshToken;
 
     const newRootNodes: IRootNode[] = [];
 
@@ -127,9 +127,19 @@ export default class AccountClusterService {
         (serviceAccounts || []).length
       }`
     );
+    // get sleep info
+    const sleepInfo = new Map();
+    serviceAccounts.forEach((account) => {
+      account.namespacePacks.forEach((space) => {
+        sleepInfo.set(
+          space.namespace,
+          space.isAsleep ? "Sleeping" : "Unsleeping"
+        );
+      });
+    });
 
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
-      const msg = `no cluster found for ${newAccountCluser.loginInfo.baseUrl} ${newAccountCluser.loginInfo.username}`;
+      const msg = `no cluster found for ${newAccountCluster.loginInfo.baseUrl} ${newAccountCluster.loginInfo.username}`;
 
       logger.error(msg);
       throw new Error(msg);
@@ -202,13 +212,18 @@ export default class AccountClusterService {
       }
 
       const obj: IRootNode = {
-        devSpaces,
+        devSpaces: devSpaces.map((item) => {
+          return {
+            ...item,
+            isAsleep: sleepInfo.get(item.namespace),
+          };
+        }),
         applications,
-        userInfo: newAccountCluser.userInfo,
+        userInfo: newAccountCluster.userInfo,
         clusterSource: ClusterSource.server,
         accountClusterService,
-        id: newAccountCluser.id,
-        createTime: newAccountCluser.createTime,
+        id: newAccountCluster.id,
+        createTime: newAccountCluster.createTime,
         kubeConfigPath,
         state: { code: 200 },
       };
@@ -217,7 +232,7 @@ export default class AccountClusterService {
     }
 
     await AccountClusterService.cleanDiffKubeConfig(
-      newAccountCluser,
+      newAccountCluster,
       kubeConfigArr
     );
 
@@ -299,7 +314,6 @@ export default class AccountClusterService {
 
     return newAccountCluser;
   };
-
   buildAccountClusterNode = async (): Promise<AccountClusterNode> => {
     await this.login(this.loginInfo);
     const userInfo = await this.getUserInfo();
@@ -513,5 +527,21 @@ export default class AccountClusterService {
       return data;
     }
     throw new Error("Fail to fetch user infomation.");
+  }
+
+  async wakeUpSpace(id: number) {
+    const response = await this.instance.post(`/v2/dev_space/${id}/wakeup`);
+    const flag = response.data.code === 0;
+    console.log(flag);
+    if (response.status === 200 && response.data.code === 0) {
+      host.showInformationMessage("wakeUp success");
+    }
+  }
+
+  async sleepSpace(id: number) {
+    const response = await this.instance.post(`/v2/dev_space/${id}/sleep`);
+    if (response.status === 200 && response.data.code === 0) {
+      host.showInformationMessage("sleep success");
+    }
   }
 }

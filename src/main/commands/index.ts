@@ -45,6 +45,9 @@ import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
 import PortForwardCommand from "./PortForwardCommand/";
 
+import WakeUpCommand from "./SleepingCommand/WakeUp";
+import ForceSleepCommand from "./SleepingCommand/ForceSleep";
+
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
@@ -102,4 +105,7 @@ export default function initCommands(
 
   new ResetPluginCommand(context);
   new StartCopyDevModeCommand(context);
+
+  new ForceSleepCommand(context);
+  new WakeUpCommand(context);
 }

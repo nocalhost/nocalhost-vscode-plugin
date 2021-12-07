@@ -259,7 +259,9 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       treeItem.iconPath = resolveVSCodeUri("loading.gif");
     } else {
       const iconName =
-        this.info.spaceOwnType === "Viewer"
+        this.info.isAsleep === "Sleeping"
+          ? "namespace_sleep.svg"
+          : this.info.spaceOwnType === "Viewer"
           ? "devspace_viewer.svg"
           : "devspace.svg";
       treeItem.iconPath = resolveVSCodeUri(iconName);
@@ -267,7 +269,13 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
     treeItem.contextValue = this.getSpaceOwnTypeContextValue(
       `devspace-${
-        this.clusterSource === ClusterSource.local ? "local" : "server"
+        this.clusterSource === ClusterSource.local
+          ? "local"
+          : this.info.isAsleep === "Sleeping"
+          ? "server-sleeping"
+          : this.info.isAsleep === "Unsleeping"
+          ? "server-unsleeping"
+          : "server"
       }`
     );
 

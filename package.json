@@ -223,6 +223,16 @@
           "group": "2"
         },
         {
+          "command": "Nocalhost.wakeUp",
+          "when": "viewItem =~ /^devspace-server-sleeping/i",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.forceSleep",
+          "when": "viewItem =~ /^devspace-server-unsleeping/i",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.resetDevspace",
           "when": "viewItem =~ /^devspace-server/i",
           "group": "navigation"
@@ -446,6 +456,14 @@
       {
         "command": "Nocalhost.resetDevspace",
         "title": "%Reset%"
+      },
+      {
+        "command": "Nocalhost.wakeUp",
+        "title": "%wakeUp%"
+      },
+      {
+        "command": "Nocalhost.forceSleep",
+        "title": "%forceSleep%"
       },
       {
         "command": "Nocalhost.exec",
