@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as net from "net";
 import * as path from "path";
 import * as semver from "semver";
-import { existsSync, watch } from "fs";
+import { existsSync, mkdirSync, watch } from "fs";
 import { commands, DebugConfiguration } from "vscode";
 import { v4 } from "uuid";
 import { delay } from "lodash";
@@ -83,13 +83,17 @@ export class GoDebugProvider extends IDebugProvider {
 
     const binPath = path.join(env["GOPATH"], "bin");
 
+    if (!existsSync(binPath)) {
+      mkdirSync(binPath);
+    }
+
     let dlvName = "dlv";
     if (host.isWindow()) {
       dlvName += ".exe";
     }
 
     if (!existsSync(path.join(binPath, dlvName))) {
-      await host.withProgress(
+      return await host.withProgress(
         {
           title: `Wait for "dlv" installation to complete ...`,
           cancellable: true,
@@ -121,8 +125,6 @@ export class GoDebugProvider extends IDebugProvider {
         }
       );
     }
-
-    return Promise.resolve();
   }
 
   private waitForInstallSuccessful(dlvPath: string, dlvName: string) {
