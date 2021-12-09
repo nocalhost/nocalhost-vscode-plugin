@@ -82,6 +82,7 @@ export interface BaseNocalhostNode {
 export enum DeploymentStatus {
   running = "running",
   developing = "developing",
+  develop_starting = "develop_starting",
   starting = "starting",
   unknown = "unknown",
 }

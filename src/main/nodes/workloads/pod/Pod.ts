@@ -48,7 +48,7 @@ export class Pod extends ControllerResourceNode {
       return [
         this.svcProfile.develop_status === "STARTED"
           ? DeploymentStatus.developing
-          : DeploymentStatus.running,
+          : DeploymentStatus.develop_starting,
         !resource?.metadata?.ownerReferences,
       ];
     }
