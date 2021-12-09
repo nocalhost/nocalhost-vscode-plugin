@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: build test plugin
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Set up Node 1.x
         uses: actions/setup-node@v2.1.3
