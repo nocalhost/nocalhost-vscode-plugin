@@ -3,12 +3,12 @@ name: release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release-plugin:
     name: Release nocalhost-vscode-plugin
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     environment:
       name: release
     steps:
@@ -67,7 +67,7 @@ jobs:
       - name: Publish To VS Code Extension Marketplace
         uses: lannonbr/vsce-action@master
         with:
-          args: 'publish -p $VSCE_TOKEN'
+          args: "publish -p $VSCE_TOKEN"
         env:
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
 
