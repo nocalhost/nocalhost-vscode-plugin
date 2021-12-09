@@ -34,9 +34,7 @@ export abstract class IDebugProvider {
     return Promise.resolve();
   }
 
-  async checkExtensionDependency() {
-    return true;
-  }
+  checkExtensionDependency(): Promise<void> | void {}
 
   private async waitForReady(
     port: number,

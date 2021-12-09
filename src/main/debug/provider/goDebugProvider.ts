@@ -53,7 +53,7 @@ export class GoDebugProvider extends IDebugProvider {
     }
   }
 
-  async checkExtensionDependency() {
+  async checkExtensionDependency(): Promise<void> {
     type GoENV = { [key: string]: string };
 
     const env: GoENV = await exec({ command: "go env" })
@@ -122,7 +122,7 @@ export class GoDebugProvider extends IDebugProvider {
       );
     }
 
-    return true;
+    return Promise.resolve();
   }
 
   private waitForInstallSuccessful(dlvPath: string, dlvName: string) {
