@@ -2,10 +2,15 @@ import * as assert from "assert";
 import { QuickPickItem, window, commands, DebugConfiguration } from "vscode";
 
 import { DEBUG } from "../../commands/constants";
+import { ClusterSource } from "../../common/define";
 import { DISASSOCIATE_ASSOCIATE } from "../../component/syncManage";
 import { Associate, associateQuery } from "../../ctl/nhctl";
 import host from "../../host";
-import { NocalhostRootNode } from "../../nodes/NocalhostRootNode";
+import { KubeConfigNode } from "../../nodes/KubeConfigNode";
+import {
+  getClusterName,
+  NocalhostRootNode,
+} from "../../nodes/NocalhostRootNode";
 import { BaseNocalhostNode } from "../../nodes/types/nodeType";
 import logger from "../../utils/logger";
 
@@ -84,16 +89,40 @@ async function getResourceNode() {
         svc_type + "s",
         svc,
       ]
-        .reduce(async (parent, label) => {
+        .reduce(async (parent, label, index) => {
           if (token.isCancellationRequested) {
             return null;
           }
 
           const children = await (await parent).getChildren();
 
-          return children.find(
-            (item) => item.label.toLowerCase() === label.toLowerCase()
+          const promises = children.map(async (item) => {
+            let name = item.label;
+
+            if (index === 0) {
+              const node = item as KubeConfigNode;
+
+              if (node.clusterSource === ClusterSource.local) {
+                name = await getClusterName({
+                  clusterSource: ClusterSource.server,
+                  devSpaces: node.devSpaceInfos,
+                  applications: [],
+                  state: { code: 200 },
+                  kubeConfigPath: node.kubeConfigPath,
+                });
+              }
+            }
+
+            return name.toLowerCase();
+          });
+
+          const results = await Promise.all(promises);
+
+          let current = results.findIndex(
+            (name) => name === label.toLowerCase()
           );
+
+          return children[current];
         }, Promise.resolve(new NocalhostRootNode(null) as BaseNocalhostNode))
         .catch((error) => {
           logger.error("getResourceNode", error);
