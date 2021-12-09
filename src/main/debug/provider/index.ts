@@ -55,11 +55,11 @@ async function checkDebuggerDependencies(debugProvider: IDebugProvider) {
 }
 
 async function checkBinary(debugProvider: IDebugProvider) {
-  const { commandName } = debugProvider;
+  const { commandName, name } = debugProvider;
 
   if (!(await which(debugProvider.commandName))) {
     const choice = await window.showErrorMessage(
-      `Failed to find the "${commandName}" binary in PATH. Check PATH, or Install Go and reload the window. `,
+      `Failed to find the "${commandName}" binary in PATH. Check PATH, or Install ${name} and reload the window. `,
       "Go to Download Page"
     );
 
@@ -89,7 +89,7 @@ function existExtensions(extensionArray: string[]) {
 async function checkExtension(debugProvider: IDebugProvider) {
   const { requireExtensions, name } = debugProvider;
 
-  if (requireExtensions.length && existExtensions(requireExtensions)) {
+  if (existExtensions(requireExtensions)) {
     return;
   }
 
