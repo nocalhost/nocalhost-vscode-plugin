@@ -46,7 +46,8 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
         info,
         status.conditions || ((status as unknown) as string),
         description,
-        nocalhostService
+        nocalhostService,
+        item.vpn
       );
       return node;
     });

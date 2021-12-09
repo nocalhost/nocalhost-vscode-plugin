@@ -538,15 +538,18 @@
       },
       {
         "command": "Nocalhost.startProxyMode",
-        "title": "%startProxyMode%"
+        "title": "%startProxyMode%",
+        "icon": "images/icon/vpn.svg"
       },
       {
         "command": "Nocalhost.resumeProxyMode",
-        "title": "%resumeProxyMode%"
+        "title": "%resumeProxyMode%",
+        "icon": "images/icon/vpn_disconnect.svg"
       },
       {
         "command": "Nocalhost.endProxyMode",
-        "title": "%endProxyMode%"
+        "title": "%endProxyMode%",
+        "icon": "images/icon/vpn_close.svg"
       }
     ],
     "debuggers": [
