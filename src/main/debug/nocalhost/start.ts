@@ -6,6 +6,7 @@ import { ClusterSource } from "../../common/define";
 import { DISASSOCIATE_ASSOCIATE } from "../../component/syncManage";
 import { Associate, associateQuery } from "../../ctl/nhctl";
 import host from "../../host";
+import { DevSpaceNode } from "../../nodes/DevSpaceNode";
 import { KubeConfigNode } from "../../nodes/KubeConfigNode";
 import {
   getClusterName,
@@ -93,8 +94,9 @@ async function getResourceNode() {
           if (token.isCancellationRequested) {
             return null;
           }
+          let parentNode = await parent;
 
-          const children = await (await parent).getChildren();
+          const children = await parentNode.getChildren();
 
           const promises = children.map(async (item) => {
             let name = item.label;
@@ -111,6 +113,15 @@ async function getResourceNode() {
                   kubeConfigPath: node.kubeConfigPath,
                 });
               }
+            } else if (index === 1) {
+              const node = item as DevSpaceNode;
+
+              if (
+                (parentNode as KubeConfigNode).clusterSource ===
+                ClusterSource.server
+              ) {
+                name = node.info.namespace;
+              }
             }
 
             return name.toLowerCase();
@@ -122,10 +133,12 @@ async function getResourceNode() {
             (name) => name === label.toLowerCase()
           );
 
+          assert(current > -1, `label:${label},children:${results}`);
+
           return children[current];
         }, Promise.resolve(new NocalhostRootNode(null) as BaseNocalhostNode))
         .catch((error) => {
-          logger.error("getResourceNode", error);
+          logger.error("getResourceNode", associate, error);
 
           disassociate(associate);
 

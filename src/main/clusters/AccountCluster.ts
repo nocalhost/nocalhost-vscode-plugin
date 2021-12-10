@@ -14,7 +14,7 @@ import {
 } from "../domain";
 import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
-import { getAllNamespace, kubeconfig } from "../ctl/nhctl";
+import { checkCluster, getAllNamespace, kubeconfig } from "../ctl/nhctl";
 import host from "../host";
 import { getStringHash } from "../utils/common";
 import { LoginInfo } from "./interface";
@@ -210,7 +210,7 @@ export default class AccountClusterService {
         id: newAccountCluser.id,
         createTime: newAccountCluser.createTime,
         kubeConfigPath,
-        state: { code: 200 },
+        state: await checkCluster(kubeConfigPath),
       };
 
       newRootNodes.push(obj);
