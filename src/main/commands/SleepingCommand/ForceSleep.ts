@@ -15,7 +15,15 @@ export default class AddKubeconfig implements ICommand {
 
   async execCommand(node: DevSpaceNode) {
     // force sleep
-    const spaceId = node.info.spaceId;
-    node.parent.accountClusterService.sleepSpace(spaceId);
+    const res = await host.showInformationMessage(
+      "Confirm to sleep!",
+      { modal: true },
+      "yes"
+    );
+
+    if (res === "yes") {
+      const spaceId = node.info.spaceId;
+      node.parent.accountClusterService.sleepSpace(spaceId);
+    }
   }
 }
