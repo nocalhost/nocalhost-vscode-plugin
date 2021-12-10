@@ -94,7 +94,7 @@ async function getResourceNode() {
           if (token.isCancellationRequested) {
             return null;
           }
-          let parentNode = await parent;
+          const parentNode = await parent;
 
           const children = await parentNode.getChildren();
 
