@@ -118,7 +118,7 @@ export class NhctlCommand {
       `--container ${container ?? "nocalhost-dev"}`,
       `--command ${shell || "sh"}`,
       `--command -c`,
-      `--command '${commands.join(" ")}'`
+      `--command "${commands.join(" ")}"`
     );
 
     command.args = args;
@@ -1419,13 +1419,13 @@ export async function checkVersion() {
         let command = "taskkill /im nhctl.exe -f";
 
         await exec({ command }).promise.catch((e) => {
-          logger.error(e);
+          logger.error(command, e);
         });
 
         command = "tasklist | findstr nhctl.exe";
 
         const result = await exec({ command }).promise.catch((e) => {
-          logger.error(e);
+          logger.error(command, e);
         });
 
         if (!result) {
@@ -1433,7 +1433,7 @@ export async function checkVersion() {
         } else {
           logger.info("after kill has daemon");
           await exec({ command }).promise.catch((e) => {
-            logger.error(e);
+            logger.error(command, e);
           });
         }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
@@ -1451,7 +1451,7 @@ export async function checkVersion() {
     });
   } catch (err) {
     // host.log(`[update err] ${err}`, true);
-    console.error(err);
+    console.error("checkVersion", err);
     typeof err === "string" && err.indexOf("lockerror") !== -1
       ? logger.error("lockerror")
       : vscode.window.showErrorMessage(failedMessage);

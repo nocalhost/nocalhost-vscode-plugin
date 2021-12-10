@@ -115,7 +115,8 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
           );
         }
         break;
-      case "starting":
+      case DeploymentStatus.develop_starting:
+      case DeploymentStatus.starting:
         iconPath = resolveVSCodeUri("loading.gif");
         break;
       case "unknown":
@@ -214,7 +215,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     ) {
       return this.svcProfile.develop_status === "STARTED"
         ? DeploymentStatus.developing
-        : DeploymentStatus.starting;
+        : DeploymentStatus.develop_starting;
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;

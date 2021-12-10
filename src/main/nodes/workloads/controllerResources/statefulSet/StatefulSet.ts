@@ -53,7 +53,7 @@ export class StatefulSet extends ControllerResourceNode {
     ) {
       return this.svcProfile.develop_status === "STARTED"
         ? DeploymentStatus.developing
-        : DeploymentStatus.running;
+        : DeploymentStatus.develop_starting;
     }
 
     const resource = this.resource;

@@ -55,15 +55,6 @@ export async function waitForSync(node: ControllerResourceNode, name: string) {
 
     assert(profile.associate, "You need to associate the local directory");
 
-    await associate(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
-      profile.associate,
-      node.resourceType,
-      node.name
-    );
-
     if (profile.associate !== host.getCurrentRootPath()) {
       const uri = vscode.Uri.file(profile.associate);
       vscode.commands.executeCommand("vscode.openFolder", uri, true);
