@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [dev]
+    branches: [chore/build-macos]
   pull_request:
     branches: [dev]
   workflow_dispatch:
@@ -41,7 +41,9 @@ jobs:
       - name: Push to Coding Artifacts
         if: ${{ github.ref != 'refs/heads/dev' }}
         run: |
-          curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://nocalhost-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${GITHUB_SHA}"
+          BRANCH=${GITHUB_HEAD_REF:-$(git rev-parse --abbrev-ref HEAD)}
+          echo $BRANCH
+          curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://nocalhost-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${BRANCH}"
 
       - name: Push to Coding Artifacts
         if: ${{ github.ref == 'refs/heads/dev' }}
