@@ -34,7 +34,7 @@ export class JavaDebugProvider extends IDebugProvider {
       !process.env["JAVA_HOME"]
     ) {
       const choice = await vscode.window.showErrorMessage(
-        "The java debugging requires a Java 11 Development Kit to run (not the JRE!). You need to configure the 'JDK' to use",
+        "The java debugging requires a Java 11 Development Kit to run (not the JRE!). You need to configure the 'JDK'",
         "View Documents"
       );
 
