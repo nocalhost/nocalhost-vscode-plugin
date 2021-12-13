@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [chore/build-macos]
+    branches: [dev]
   pull_request:
     branches: [dev]
   workflow_dispatch:
@@ -21,7 +21,11 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set evn
-        run: echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        run: |
+          echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          BRANCH=${GITHUB_HEAD_REF:-$(git rev-parse --abbrev-ref HEAD)}
+          BRANCH=${BRANCH#/#-}
+          echo $BRANCH
 
       - name: Update the version of package.json
         env:
@@ -41,9 +45,7 @@ jobs:
       - name: Push to Coding Artifacts
         if: ${{ github.ref != 'refs/heads/dev' }}
         run: |
-          BRANCH=${GITHUB_HEAD_REF:-$(git rev-parse --abbrev-ref HEAD)}
-          echo $BRANCH
-          curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://nocalhost-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${BRANCH}"
+          curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://nocalhost-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${GITHUB_SHA}"
 
       - name: Push to Coding Artifacts
         if: ${{ github.ref == 'refs/heads/dev' }}
