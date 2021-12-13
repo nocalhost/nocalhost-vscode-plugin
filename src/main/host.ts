@@ -5,8 +5,8 @@ import {
   Progress,
   QuickPickOptions,
 } from "vscode";
-import * as shell from "./ctl/shell";
-import * as path from "path";
+import { execSync } from "child_process";
+import logger from "./utils/logger";
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -258,8 +258,8 @@ export class Host implements vscode.Disposable {
     return Promise.resolve(result);
   }
 
-  showErrorMessage(msg: string) {
-    return vscode.window.showErrorMessage(msg);
+  showErrorMessage(msg: string, ...items: string[]) {
+    return vscode.window.showErrorMessage(msg, ...items);
   }
 
   showWarnMessage(msg: string) {
@@ -305,7 +305,6 @@ export class Host implements vscode.Disposable {
   ) {
     return vscode.window.createTerminal(options);
   }
-
   log(msg: string, line?: boolean) {
     if (line) {
       this.outputChannel.appendLine(msg);
@@ -370,25 +369,6 @@ export class Host implements vscode.Disposable {
     } else {
       return path.replace(/ /g, "\\ ");
     }
-  }
-
-  async installVscodeExtension(extensionId: string): Promise<boolean> {
-    const vscodeCliPath = path.join(path.dirname(process.argv0), "bin", "code");
-    const shellResult = await shell.exec({
-      command: `"${vscodeCliPath}" --install-extension ${extensionId}`,
-    }).promise;
-
-    if (shellResult && shellResult.code === 0) {
-      const answer = await vscode.window.showInformationMessage(
-        `Extension '${extensionId}' was successfully installed. Please reload IDE to enable it.`,
-        "Reload Now"
-      );
-      if (answer === "Reload Now") {
-        await vscode.commands.executeCommand("workbench.action.reloadWindow");
-        return true;
-      }
-    }
-    return false;
   }
 }
 

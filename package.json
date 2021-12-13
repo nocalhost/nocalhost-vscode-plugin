@@ -179,7 +179,7 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting|develop_starting))/i",
           "group": "inline@0"
         },
         {
@@ -189,7 +189,7 @@
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-(developing|starting)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-(developing|develop_starting)/i",
           "group": "inline@0"
         },
         {
@@ -234,7 +234,7 @@
         },
         {
           "command": "Nocalhost.editManifest",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
+          "when": "viewItem =~ /(^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)).*(?<!duplicate-self)$/i",
           "title": "%editManifest%",
           "group": "1"
         },
@@ -249,12 +249,7 @@
           "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
-          "command": "Nocalhost.portForwardList",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
-          "group": "1"
-        },
-        {
-          "command": "Nocalhost.portForwardList",
+          "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^(viewer:|)application-(.*)-installed/i",
           "group": "navigation"
         },
@@ -477,10 +472,6 @@
         "title": "%PortForward%"
       },
       {
-        "command": "Nocalhost.portForwardList",
-        "title": "%PortForwardList%"
-      },
-      {
         "command": "Nocalhost.cleanPvc",
         "title": "%CleanPvc%"
       },
@@ -529,6 +520,41 @@
       {
         "command": "Nocalhost.disassociateAssociate",
         "title": "%disassociateAssociate%"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "nocalhost",
+        "label": "Nocalhost",
+        "languages": [
+          "javascript",
+          "go",
+          "java",
+          "python",
+          "ruby",
+          "php"
+        ],
+        "configurationAttributes": {
+          "attach": {}
+        },
+        "initialConfigurations": [
+          {
+            "type": "nocalhost",
+            "request": "attach",
+            "name": "Nocalhost Debug"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Nocalhost Debug: Attach",
+            "description": "A new configuration for 'debugging' a nocalhost.",
+            "body": {
+              "type": "nocalhost",
+              "request": "attach",
+              "name": "Nocalhost Debug"
+            }
+          }
+        ]
       }
     ]
   },
@@ -584,6 +610,7 @@
     "@types/enzyme": "^3.10.8",
     "@types/glob": "^7.1.3",
     "@types/i18next": "^13.0.0",
+    "@types/iconv-lite": "^0.0.1",
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",
     "@types/mocha": "^8.0.0",
@@ -649,6 +676,7 @@
     "fs-extra": "^10.0.0",
     "highlight.js": "^10.5.0",
     "i18next": "^20.3.5",
+    "json5": "^2.2.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
     "proper-lockfile": "^4.1.2",

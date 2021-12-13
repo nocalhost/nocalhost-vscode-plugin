@@ -1,6 +1,7 @@
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn, execSync } from "child_process";
 import * as shell from "shelljs";
 import * as path from "path";
+import * as iconv from "iconv-lite";
 import { Event } from "vscode";
 import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
@@ -111,18 +112,42 @@ export class ShellExecError extends Error {
     this.code = code;
   }
 }
+let encoding: "gbk" | "utf8";
+
+function decodeBuffer(buffer: Buffer) {
+  try {
+    if (
+      !encoding &&
+      host.isWindow() &&
+      !process.env.ComSpec.endsWith("Git\\bin\\bash.exe")
+    ) {
+      const stdout = execSync("chcp");
+
+      if (stdout.toString().includes("936")) {
+        encoding = "gbk";
+      }
+    }
+  } catch (error) {
+    logger.error("bufferToStr", error);
+
+    encoding = "utf8";
+  }
+
+  if (encoding === "gbk") {
+    return iconv.decode(buffer, encoding);
+  }
+
+  return buffer.toString();
+}
 
 export function createProcess(param: ExecParam) {
   let { command, args, output } = param;
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
+  command = getExecCommand(command);
 
   if (param.printCommand !== false) {
     logger.info(`[cmd] ${command}`);
-  }
-
-  if (host.isWindow() && env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
-    command = command.replaceAll(path.sep, "\\\\\\");
   }
 
   const proc = spawn(command, [], { shell: true, env });
@@ -144,7 +169,7 @@ export function createProcess(param: ExecParam) {
   });
 
   proc.stderr.on("data", function (data: Buffer) {
-    const str = data.toString();
+    const str = decodeBuffer(data);
     stderr += str;
 
     err && host.log(str);
@@ -238,4 +263,11 @@ export function which(name: string) {
   const result = shell.which(name);
 
   return result && result.code === 0;
+}
+
+export function getExecCommand(command: string) {
+  if (host.isWindow() && process.env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
+    command = command.replaceAll(path.sep, "\\\\\\");
+  }
+  return command;
 }

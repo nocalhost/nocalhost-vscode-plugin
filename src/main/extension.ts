@@ -54,6 +54,7 @@ import * as nls from "vscode-nls";
 import SyncServiceCommand from "./commands/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
+import { activateNocalhostDebug } from "./debug/nocalhost";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -61,8 +62,6 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
-  createSyncManage(context);
-
   await init(context);
   let appTreeProvider = new NocalhostAppProvider(context);
   initCommands(context, appTreeProvider);
@@ -150,6 +149,9 @@ export async function activate(context: vscode.ExtensionContext) {
   launchDevSpace();
 
   bindEvent();
+
+  createSyncManage(context);
+  activateNocalhostDebug(context);
 }
 function bindEvent() {
   messageBus.on("refreshTree", (value) => {

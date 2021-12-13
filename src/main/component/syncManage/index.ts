@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+
+export { DISASSOCIATE_ASSOCIATE } from "./command";
 import { registerCommand } from "./command";
 
 import { SyncManageDataProvider } from "./provider";

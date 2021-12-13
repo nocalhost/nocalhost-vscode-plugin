@@ -89,6 +89,10 @@ export const downloadNhctl = async (
       break;
     } catch (error) {
       logger.error("downloadNhctl", pkg, destinationPath, error);
+
+      if (pkg === pkgArr.slice(-1)[0]) {
+        return Promise.reject();
+      }
     }
   }
 };
