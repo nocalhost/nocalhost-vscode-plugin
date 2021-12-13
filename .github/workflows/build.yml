@@ -42,7 +42,6 @@ jobs:
         if: ${{ github.ref != 'refs/heads/dev' }}
         run: |
           curl -T nocalhost.vsix -u ${{ secrets.CODING_ARTIFACTS_USER }}:${{ secrets.CODING_ARTIFACTS_PASS }} "https://nocalhost-generic.pkg.coding.net/nocalhost/plugins/nocalhost-vscode-plugin.vsix?version=${GITHUB_SHA}"
-          echo ${GITHUB_SHA}
 
       - name: Push to Coding Artifacts
         if: ${{ github.ref == 'refs/heads/dev' }}
