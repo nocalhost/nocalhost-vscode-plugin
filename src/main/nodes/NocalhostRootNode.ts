@@ -24,7 +24,7 @@ import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 
-async function getClusterName(res: IRootNode) {
+export async function getClusterName(res: IRootNode) {
   if (!res.kubeConfigPath) {
     return "unknown";
   }
