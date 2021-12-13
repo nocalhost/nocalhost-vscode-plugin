@@ -133,7 +133,7 @@ export default class AccountClusterService {
       account.namespacePacks.forEach((space) => {
         sleepInfo.set(
           space.namespace,
-          space.isAsleep ? "Sleeping" : "Unsleeping"
+          space.sleepStatus === "asleep" ? "Sleeping" : "Unsleeping"
         );
       });
     });

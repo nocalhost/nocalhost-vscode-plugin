@@ -10,5 +10,6 @@ export interface IServiceAccountInfo {
     spacename: string;
     spaceOwnType?: "Viewer" | "Owner" | string;
     isAsleep?: boolean;
+    sleepStatus?: string;
   }>;
 }
