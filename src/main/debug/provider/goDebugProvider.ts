@@ -84,7 +84,7 @@ export class GoDebugProvider extends IDebugProvider {
     const binPath = path.join(env["GOPATH"], "bin");
 
     if (!existsSync(binPath)) {
-      mkdirSync(binPath);
+      mkdirSync(binPath, { recursive: true });
     }
 
     let dlvName = "dlv";
