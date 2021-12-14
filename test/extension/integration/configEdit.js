@@ -2,9 +2,10 @@ const puppeteer = require("puppeteer-core");
 const ncp = require("copy-paste");
 const yaml2json = require("js-yaml");
 const json2yaml = require("json2yaml");
+const robot = require("robotjs");
 
-const namespaceName = "nh115klbi";
-const clusterName = "develop";
+const namespaceName = "nh1yemm";
+const clusterName = "cls-qnzlf1u0";
 /**
  *
  * @param {puppeteer.Page} page
@@ -28,7 +29,7 @@ async function editConfig(page, browser) {
   const namespace = await sidebar.$(`div[aria-label="${namespaceName} "]`);
   // application
   await namespace.click();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(1000);
   const application = await sidebar.$(`div[aria-label="bookinfo "]`);
   // workload
   await application.click();
@@ -53,7 +54,7 @@ async function editConfig(page, browser) {
   await configEditIcon.click();
 
   // copy config
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(5000);
   await page.keyboard.down("Escape");
   await page.keyboard.up("Escape");
 
@@ -107,10 +108,13 @@ async function editConfig(page, browser) {
   await page.waitForTimeout(3000);
 
   for (i = 0; i < 6; i++) {
-    await page.keyboard.press("ArrowDown");
-    await page.waitForTimeout(200);
+    // await page.keyboard.press("ArrowDown");
+    // await page.waitForTimeout(200);
+    robot.keyTap("down");
+    robot.setKeyboardDelay(300);
   }
-  await page.keyboard.press("Enter");
+  // await page.keyboard.press("Enter");
+  robot.keyTap("enter");
 }
 
 module.exports = {
