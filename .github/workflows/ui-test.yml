@@ -13,7 +13,6 @@ jobs:
         # [windows-latest]
         # [windows-latest,ubuntu-latest]
         # [windows-latest,ubuntu-latest,macos-latest]
-
     name: Run UI Tests
     runs-on: ${{ matrix.os }}
     steps:
@@ -67,6 +66,7 @@ jobs:
           ls -al
 
       - name: Wait cluster ready
+        timeout-minutes: 10
         run: >-
           while [ ! -f "${HOME}/config" ];do
             tail -n 3 ~/cluster.log
