@@ -23,7 +23,7 @@ async function loginServer(page) {
     process.env.NOCALHOST_SERVER_SERVER
   );
   await iframe.type(
-    "[placeholder='Username']",
+    "[placeholder='Email Address']",
     process.env.NOCALHOST_SERVER_USERNAME
   );
   await iframe.type(
