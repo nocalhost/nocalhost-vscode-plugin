@@ -88,7 +88,7 @@ export default class StartDevModeCommand implements ICommand {
 
     await nhctl.NhctlCommand.authCheck({
       base: "dev",
-      args: ["start", appName, "-t" + node.resourceType, node.name],
+      args: ["start", appName, "-t " + node.resourceType, node.name],
       kubeConfigPath: kubeConfigPath,
       namespace,
     }).exec();
