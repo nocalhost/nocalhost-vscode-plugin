@@ -179,7 +179,7 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting|develop_starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting|develop_starting|vpn_))/i",
           "group": "inline@0"
         },
         {
@@ -301,17 +301,17 @@
         },
         {
           "command": "Nocalhost.startProxyMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev/i",
+          "when": "viewItem =~ /(^workload-(deployment|statefulSet)-dev-(info|warn)-(?!(developing|starting|develop_starting|vpn_)))|(^network-service-(?!vpn))/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.resumeProxyMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev/i",
+          "when": "viewItem =~ /^(workload-(deployment|statefulSet)|network-service)(.*)vpn_unhealthy/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.endProxyMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev/i",
+          "when": "viewItem =~ /^(workload-(deployment|statefulSet)|network-service)(.*)vpn/i",
           "group": "inline@0"
         }
       ]

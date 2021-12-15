@@ -1622,9 +1622,10 @@ export async function vpn(param: {
     command = "sudo -S " + command;
   }
 
-  return exec({
+  return execWithProgress({
     command,
+    title: `Waiting for vpn ${subCommand} ...`,
     output: true,
-    args: ["--workloads", `${workLoadType}/${workLoadName}`],
-  }).promise;
+    args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
+  });
 }

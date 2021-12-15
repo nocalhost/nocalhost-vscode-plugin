@@ -14,18 +14,13 @@ export default class EndProxyModeCommand implements ICommand {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(node: ControllerResourceNode) {
-    await host.withProgress(
-      { title: "Waiting for vpn disconnect ..." },
-      async () => {
-        await vpn({
-          subCommand: "disconnect",
-          baseParam: node,
-          workLoadName: node.name,
-          workLoadType: node.resourceType,
-        });
+    await vpn({
+      subCommand: "disconnect",
+      baseParam: node,
+      workLoadName: node.name,
+      workLoadType: node.resourceType,
+    });
 
-        await node.refreshParent();
-      }
-    );
+    await node.refreshParent();
   }
 }
