@@ -140,9 +140,27 @@ export function createProcess(param: ExecParam) {
     showGlobalMsg(str);
   });
 
-  proc.stderr.on("data", function (data: Buffer) {
+  proc.stderr.on("data", async function (data: Buffer) {
     const str = data.toString();
     stderr += str;
+
+    if (command.startsWith("sudo")) {
+      if (
+        [
+          "Password:",
+          "[sudo] password for",
+          "Sorry, try again",
+        ].find((keyword) => str.includes(keyword))
+      ) {
+        let password = await host.showInputBox({
+          password: true,
+          placeHolder: "please input your password",
+        });
+
+        proc.stdin.write(`${password}\n`);
+        return;
+      }
+    }
 
     err && host.log(str);
   });

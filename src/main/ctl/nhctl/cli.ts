@@ -1604,3 +1604,27 @@ export async function associateQuery(param: {
     .toJson()
     .exec();
 }
+
+export async function vpn(param: {
+  subCommand: "connect" | "disconnect" | "reconnect";
+  workLoadType: string;
+  workLoadName: string;
+  baseParam: IBaseCommand;
+}) {
+  const { subCommand, workLoadName, workLoadType, baseParam } = param;
+
+  let command = NhctlCommand.create(
+    `vpn ${subCommand}`,
+    baseParam
+  ).getCommand();
+
+  if (!host.isWindow() && subCommand !== "disconnect") {
+    command = "sudo -S " + command;
+  }
+
+  return exec({
+    command,
+    output: true,
+    args: ["--workloads", `${workLoadType}/${workLoadName}`],
+  }).promise;
+}

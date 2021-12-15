@@ -97,4 +97,14 @@ export abstract class KubernetesResourceNode implements BaseNocalhostNode {
     const appendCommands = devspace.info.devStartAppendCommand || [];
     return appendCommands.join(" ");
   }
+
+  public async refreshParent() {
+    const { parent } = this;
+
+    if (parent) {
+      await parent.updateData();
+
+      vscode.commands.executeCommand("Nocalhost.refresh", parent);
+    }
+  }
 }

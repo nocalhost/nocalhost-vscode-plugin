@@ -44,9 +44,9 @@ import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
 import PortForwardCommand from "./PortForwardCommand/";
-import StartProxyModeCommand from "./StartProxyModeCommand";
-import ResumeProxyModeCommand from "./ResumeProxyModeCommand";
-import EndProxyModeCommand from "./EndProxyModeCommand";
+import StartProxyModeCommand from "./proxy/StartProxyModeCommand";
+import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
+import EndProxyModeCommand from "./proxy/EndProxyModeCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,

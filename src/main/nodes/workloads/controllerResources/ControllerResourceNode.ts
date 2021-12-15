@@ -222,9 +222,9 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     if (vpn) {
       let vpnStatus: string = "unhealthy";
 
-      if (vpn.belongsToMe) {
+      if (!vpn.belongsToMe) {
         vpnStatus = "other";
-      } else if (vpnStatus === "healthy") {
+      } else if (vpn.status === "healthy") {
         vpnStatus = vpn.status;
       }
 
