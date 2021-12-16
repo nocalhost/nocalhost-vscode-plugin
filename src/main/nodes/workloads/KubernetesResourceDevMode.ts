@@ -15,6 +15,7 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
   const prototype: {
     [key: string]: any;
   } = targetClass.prototype;
+
   prototype.getChildren = async function getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<any>> {
@@ -52,6 +53,7 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
     });
     return this.sortResource(result);
   };
+
   prototype.updateData = async function (isInit?: boolean): Promise<any> {
     const appNode = this.getAppNode();
     // description

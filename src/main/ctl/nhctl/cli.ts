@@ -149,7 +149,7 @@ export class NhctlCommand {
 
     const nhctlCommand = NhctlCommand.create(base, rest);
     nhctlCommand.args = args;
-    nhctlCommand.execParam.output = false;
+    nhctlCommand.execParam.output = true;
 
     return nhctlCommand;
   }

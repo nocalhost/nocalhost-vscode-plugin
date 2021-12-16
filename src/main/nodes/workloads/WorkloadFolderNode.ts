@@ -67,8 +67,9 @@ export class WorkloadFolderNode extends NocalhostFolderNode {
       case "Pods":
         node = new PodFolder(this);
         break;
-      case "":
+      case "CustomResources":
         node = new CrdFolder(this);
+        break;
       default:
         throw new Error("not implement the resource");
     }
