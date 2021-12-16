@@ -1,12 +1,10 @@
 import * as vscode from "vscode";
-import { NocalhostFolderNode } from "../../../abstract/NocalhostFolderNode";
 import { BaseNocalhostNode } from "../../../types/nodeType";
 import state from "../../../../state";
 import { NhctlCommand } from "../../../../ctl/nhctl";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { CrdResource } from "../../../types/resourceType";
 import { CrdGroup } from "./CrdGroup";
-
 export class CrdFolder extends KubernetesResourceFolder {
   public label: string = "CustomResources";
   public type: string = "crd-list";
@@ -40,7 +38,15 @@ export class CrdFolder extends KubernetesResourceFolder {
 
   async getChildren(
     parent?: BaseNocalhostNode
-  ): Promise<vscode.ProviderResult<any[]>> {
+  ): Promise<vscode.ProviderResult<any>> {
+    let data = state.getData(this.getNodeStateId());
+    if (!data) {
+      data = await this.updateData();
+    }
+    return data;
+  }
+
+  async updateData(): Promise<any> {
     const appNode = this.getAppNode();
     const list: CrdResource[] = (
       (await NhctlCommand.get({
@@ -58,11 +64,8 @@ export class CrdFolder extends KubernetesResourceFolder {
       const kindItem = groupMap.get(item.Group) || [];
       groupMap.set(item.Group, [...kindItem, item]);
     });
-
-    return [...groupMap].map((item) => new CrdGroup(this, item));
-  }
-
-  updateData(): Promise<any> {
-    return Promise.resolve([]);
+    const nodeData = [...groupMap].map((item) => new CrdGroup(this, item));
+    state.setData(this.getNodeStateId(), nodeData);
+    return nodeData;
   }
 }

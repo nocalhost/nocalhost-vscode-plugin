@@ -1,10 +1,8 @@
 import * as vscode from "vscode";
 
-import { NocalhostFolderNode } from "../../../abstract/NocalhostFolderNode";
 import { BaseNocalhostNode } from "../../../types/nodeType";
 import state from "../../../../state";
 import { CrdResource } from "../../../types/resourceType";
-import { NhctlCommand } from "../../../../ctl/nhctl";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { kubernetesResourceDevMode } from "../../KubernetesResourceDevMode";
 import { CrdResources } from "./CrdResources";
@@ -21,6 +19,7 @@ export class CrdKind extends KubernetesResourceFolder {
     this.parent = parent;
     this.resourceType = `${data.Resource}.${data.Version}.${data.Group}`;
     this.data = data;
+    state.setNode(this.getNodeStateId(), this);
   }
 
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -37,19 +36,6 @@ export class CrdKind extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<any[]>> {
-    const appNode = this.getAppNode();
-
-    const list = await NhctlCommand.get({
-      kubeConfigPath: appNode.getKubeConfigPath(),
-      namespace: appNode.namespace,
-    })
-      .addArgument(
-        `${this.data.Resource}.${this.data.Version}.${this.data.Group}`
-      )
-      .addArgument("-a", appNode.name)
-      .addArgument("-o", "json")
-      .exec();
-
     return [];
   }
 }
