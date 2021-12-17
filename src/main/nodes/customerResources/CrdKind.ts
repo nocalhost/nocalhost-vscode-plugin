@@ -17,7 +17,7 @@ export class CrdKind extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode, data: CrdResource) {
     super();
     this.parent = parent;
-    this.label = `${data.Resource}`;
+    this.label = `${data.Kind}`;
     this.resourceType = `${data.Resource}.${data.Version}.${data.Group}`;
     this.data = data;
     state.setNode(this.getNodeStateId(), this);
@@ -27,7 +27,10 @@ export class CrdKind extends KubernetesResourceFolder {
     const collapseState =
       state.get(this.getNodeStateId()) ||
       vscode.TreeItemCollapsibleState.Collapsed;
-    return new vscode.TreeItem(this.data.Kind, collapseState);
+    return new vscode.TreeItem(
+      `${this.data.Kind}(${this.data.Version})`,
+      collapseState
+    );
   }
 
   getParent(element?: BaseNocalhostNode): BaseNocalhostNode {

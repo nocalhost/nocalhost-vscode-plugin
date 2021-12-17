@@ -26,7 +26,6 @@ export class CrdResources extends ControllerResourceNode {
     let treeItem = await super.getTreeItem();
     let status = "";
     try {
-      // TODO delete true
       status = await this.getStatus();
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
