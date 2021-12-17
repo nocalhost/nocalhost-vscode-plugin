@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 
-import { BaseNocalhostNode } from "../../../types/nodeType";
-import state from "../../../../state";
-import { CrdResource } from "../../../types/resourceType";
-import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
-import { kubernetesResourceDevMode } from "../../KubernetesResourceDevMode";
+import { BaseNocalhostNode } from "../types/nodeType";
+import state from "../../state";
+import { CrdResource } from "../types/resourceType";
+import { KubernetesResourceFolder } from "../abstract/KubernetesResourceFolder";
+import { kubernetesResourceDevMode } from "../workloads/KubernetesResourceDevMode";
 import { CrdResources } from "./CrdResources";
 
 @kubernetesResourceDevMode(CrdResources)

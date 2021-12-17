@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
-import { ControllerResourceNode } from "../ControllerResourceNode";
-import { checkWorkloadConfig } from "../../../../utils/checkConfig";
-import logger from "../../../../utils/logger";
+import { ControllerResourceNode } from "../workloads/controllerResources/ControllerResourceNode";
+import { checkWorkloadConfig } from "../../utils/checkConfig";
+import logger from "../../utils/logger";
 
-import { BaseNocalhostNode, SvcProfile } from "../../../types/nodeType";
-import { IK8sResource, IStatus } from ".././../../../domain/IK8sResource";
-import { NocalhostServiceConfig } from "../../../../service/configService";
+import { BaseNocalhostNode, SvcProfile } from "../types/nodeType";
+import { IK8sResource, IStatus } from "../../domain/IK8sResource";
+import { NocalhostServiceConfig } from "../../service/configService";
 
 export class CrdResources extends ControllerResourceNode {
   public type = "CRD_RESOURCES";
@@ -26,7 +26,8 @@ export class CrdResources extends ControllerResourceNode {
     let treeItem = await super.getTreeItem();
     let status = "";
     try {
-      status = await this.getStatus(false);
+      // TODO delete true
+      status = await this.getStatus();
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;

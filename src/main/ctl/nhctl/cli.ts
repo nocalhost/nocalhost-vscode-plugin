@@ -71,8 +71,12 @@ export class NhctlCommand {
   ) {
     return new NhctlCommand(base, baseParams, execParam, args);
   }
-  static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
-    const command = NhctlCommand.create("get", baseParams);
+  static get(
+    baseParams?: IBaseCommand<unknown>,
+    others?: Partial<ExecParam>,
+    ms = GLOBAL_TIMEOUT
+  ) {
+    const command = NhctlCommand.create("get", baseParams, others);
     command.execParam.timeout = ms;
 
     return command;

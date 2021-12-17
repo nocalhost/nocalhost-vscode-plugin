@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import state from "../../../../state";
-import { NocalhostFolderNode } from "../../../abstract/NocalhostFolderNode";
-import { BaseNocalhostNode } from "../../../types/nodeType";
+import state from "../../state";
+import { NocalhostFolderNode } from "../abstract/NocalhostFolderNode";
+import { BaseNocalhostNode } from "../types/nodeType";
 import { CrdKind } from "./CrdKind";
-import { CrdResource } from "../../../types/resourceType";
+import { CrdResource } from "../types/resourceType";
 
 export class CrdGroup extends NocalhostFolderNode {
   public type: string = "CRD_GROUP_FOLDER";
