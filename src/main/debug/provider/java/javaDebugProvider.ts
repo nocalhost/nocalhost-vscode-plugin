@@ -10,6 +10,9 @@ export class JavaDebugProvider extends IDebugProvider {
   name: string = "Java";
   requireExtensions: string[] = ["vscjava.vscode-java-debug", "redhat.java"];
 
+  downloadUrl: string = "https://adoptopenjdk.net/";
+  commandName: string = "java";
+
   getDebugConfiguration(
     name: string,
     port: number,
@@ -23,6 +26,27 @@ export class JavaDebugProvider extends IDebugProvider {
       hostName: "localhost",
       port,
     };
+  }
+  async checkExtensionDependency() {
+    if (
+      !vscode.workspace.getConfiguration().get("java.home") &&
+      !process.env["JDK_HOME"] &&
+      !process.env["JAVA_HOME"]
+    ) {
+      const choice = await vscode.window.showErrorMessage(
+        "The java debugging requires a Java 11 Development Kit to run (not the JRE!). You need to configure the 'JDK'",
+        "View Documents"
+      );
+
+      if (choice === "View Documents") {
+        const uri = vscode.Uri.parse(
+          "https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#setting-the-jdk"
+        );
+        vscode.env.openExternal(uri);
+      }
+
+      return Promise.reject();
+    }
   }
 
   async waitDebuggerStop() {

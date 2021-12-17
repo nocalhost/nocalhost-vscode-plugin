@@ -9,7 +9,7 @@ import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { ContainerConfig } from "../service/configService";
 import {
-  checkDebuggerInstalled,
+  checkDebuggerDependencies,
   chooseDebugProvider,
   Language,
   support,
@@ -145,10 +145,7 @@ export default class DebugCommand implements ICommand {
 
     const debugProvider = await chooseDebugProvider(type);
 
-    const isInstalled = checkDebuggerInstalled(debugProvider);
-    if (!isInstalled) {
-      return Promise.reject();
-    }
+    await checkDebuggerDependencies(debugProvider);
 
     return debugProvider;
   }

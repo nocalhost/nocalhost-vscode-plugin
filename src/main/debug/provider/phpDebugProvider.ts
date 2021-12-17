@@ -12,6 +12,9 @@ export class PhpDebugProvider extends IDebugProvider {
   name: string = "Php";
   requireExtensions: string[] = ["felixfbecker.php-debug"];
 
+  downloadUrl: string = "https://www.php.net/downloads";
+  commandName: string = "php";
+
   getDebugConfiguration(
     name: string,
     port: number,

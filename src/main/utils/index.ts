@@ -26,6 +26,21 @@ export const isArray = (a: any) => Array.isArray(a);
 export const snakeToCamel = (str: string) =>
   str.replace(/([-_]\w)/g, (g) => g[1].toUpperCase());
 
+export function getPromiseWithAbort<T>(promise: Promise<T>) {
+  let reject: (reason?: any) => void;
+
+  let p = new Promise<T>((_, rej) => {
+    reject = rej;
+  });
+
+  return {
+    promise: Promise.race<T>([p, promise]),
+    abort(err: string) {
+      reject(Error(err));
+    },
+  };
+}
+
 export async function asyncLimit<T, R>(
   array: T[],
   iteratorFn: (result: T, array: T[]) => Promise<R>,

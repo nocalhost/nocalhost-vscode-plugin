@@ -7,6 +7,9 @@ export class NodeDebugProvider extends IDebugProvider {
   name: string = "Node";
   requireExtensions: string[] = [];
 
+  downloadUrl: string = "https://nodejs.org/en/download/";
+  commandName: string = "node";
+
   getDebugConfiguration(
     name: string,
     port: number,
