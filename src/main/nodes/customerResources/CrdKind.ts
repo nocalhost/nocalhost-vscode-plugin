@@ -10,13 +10,14 @@ import { CrdResources } from "./CrdResources";
 @kubernetesResourceDevMode(CrdResources)
 export class CrdKind extends KubernetesResourceFolder {
   public type: string = "CRD_KIND_FOLDER";
-  public label: string = "crd-kind";
+  public label: string;
   public resourceType: string;
   public data: CrdResource;
 
   constructor(public parent: BaseNocalhostNode, data: CrdResource) {
     super();
     this.parent = parent;
+    this.label = `${data.Resource}`;
     this.resourceType = `${data.Resource}.${data.Version}.${data.Group}`;
     this.data = data;
     state.setNode(this.getNodeStateId(), this);
