@@ -20,11 +20,22 @@ jobs:
       - name: Check out code into the project's root directory
         uses: actions/checkout@v2
 
+      - uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install project dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn
+
       - name: Build
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
         run: |
-          yarn
           yarn build
           mv nocalhost-*.vsix nocalhost.vsix
 

@@ -17,18 +17,17 @@ if (VERSION) {
   require("./updateChangelog");
 } else {
   let env = "dev";
+  let version = packageJson.version;
 
-  const tag = execSync(
-    "git describe --tags `git rev-list --tags --max-count=1` "
-  )
+  if (process.env.CI === "true") {
+    env = "test";
+
+    execSync("git fetch --depth=30");
+  }
+  version = execSync(`git describe --tags --always --dirty="-${env}"`)
     .toString()
     .split("\n")[0];
-
-  const short = execSync("git rev-parse --short HEAD")
-    .toString()
-    .split("\n")[0];
-
-  packageJson.version = `${tag}-${short}-${env}`;
+  packageJson.version = `${version}-${env}`;
 
   packageJson.autoUpdate = false;
 }
