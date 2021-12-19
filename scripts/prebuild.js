@@ -7,18 +7,25 @@ const packageJson = JSON.parse(
   fs.readFileSync(packageJsonUri, { encoding: "utf8" })
 );
 
-const getGitVersion = () => {
+const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
+
+if (VERSION) {
+  packageJson.version = VERSION;
+
+  delete packageJson.autoUpdate;
+
+  require("./updateChangelog");
+} else {
   let env = "dev";
-  const version = execSync(
-    `git describe --tags --always --dirty="-${env}"`
-  ).toString();
 
-  return version;
-};
+  const version = execSync(`git describe --tags --always --dirty="-${env}"`)
+    .toString()
+    .split("\n")[0];
 
-const { NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
+  packageJson.version = version;
 
-packageJson.version = getGitVersion();
+  packageJson.autoUpdate = false;
+}
 
 if (MINIMUNM_VERSION_REQUIREMENT) {
   packageJson.nhctl.serverVersion = MINIMUNM_VERSION_REQUIREMENT;

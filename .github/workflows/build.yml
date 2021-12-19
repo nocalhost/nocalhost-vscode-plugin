@@ -20,24 +20,13 @@ jobs:
       - name: Check out code into the project's root directory
         uses: actions/checkout@v2
 
-      - name: Set evn
-        run: |
-          echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
-      - name: Update the version of package.json
+      - name: Build
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-        run: node scripts/gitVersion.js
-
-      - name: Update CHANGELOG
-        env:
-          VERSION: ${{ env.RELEASE_VERSION }}
-        run: node scripts/updateChangelog.js
-
-      - name: Build
         run: |
           yarn
-          yarn run vsce package --yarn -o nocalhost.vsix
+          yarn build
+          mv nocalhost-*.vsix nocalhost.vsix
 
       - name: Push to Coding Artifacts
         if: ${{ github.ref != 'refs/heads/dev' }}

@@ -50,16 +50,10 @@ jobs:
       #   with:
       # run: yarn run test:ext
 
-      - name: Set plugin version
-        run: echo "PLUGIN_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
-      - name: Update the version of package.json
+      - name: Build ext
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
           NHCTL_VERSION: dev
-        run: node scripts/gitVersion.js
-
-      - name: Build ext
         run: |
           yarn run build:ext
           rm -rf .vscode-test
