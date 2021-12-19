@@ -8,6 +8,9 @@ export class RubyDebugProvider extends IDebugProvider {
   name: string = "Ruby";
   requireExtensions: string[] = ["rebornix.Ruby"];
 
+  downloadUrl: string = "https://www.ruby-lang.org/en/downloads/";
+  commandName: string = "ruby";
+
   getDebugConfiguration(
     name: string,
     port: number,
