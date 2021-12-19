@@ -22,14 +22,19 @@ if (VERSION) {
   if (process.env.CI === "true") {
     env = "test";
 
-    execSync("git fetch --depth=30");
+    // execSync("git fetch --depth=30");
+    const rev = execSync(`git rev-parse --short HEAD`)
+      .toString()
+      .split("\n")[0];
+
+    packageJson.version = `${version}-${rev}-${env}`;
+  } else {
+    version = execSync(`git describe --tags --always --dirty="-${env}"`)
+      .toString()
+      .split("\n")[0];
+
+    packageJson.version = version;
   }
-
-  version = execSync(`git describe --tags --always --dirty="-${env}"`)
-    .toString()
-    .split("\n")[0];
-
-  packageJson.version = version;
 
   packageJson.autoUpdate = false;
 }
