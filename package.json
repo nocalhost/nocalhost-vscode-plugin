@@ -567,6 +567,7 @@
     ]
   },
   "scripts": {
+    "prebuild": "node ./scripts/prebuild.js",
     "build": "./node_modules/.bin/vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
