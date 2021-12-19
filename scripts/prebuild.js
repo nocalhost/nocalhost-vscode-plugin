@@ -16,11 +16,11 @@ if (VERSION) {
 
   require("./updateChangelog");
 } else {
-  let env = "dev";
+  let env = "alpha";
   let version = packageJson.version;
 
   if (process.env.CI === "true") {
-    env = "test";
+    env = "beta";
 
     // execSync("git fetch --depth=30");
     const rev = execSync(`git rev-parse --short HEAD`)
