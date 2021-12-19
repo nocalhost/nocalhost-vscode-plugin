@@ -18,11 +18,17 @@ if (VERSION) {
 } else {
   let env = "dev";
 
-  const version = execSync(`git describe --tags --always --dirty="-${env}"`)
+  const tag = execSync(
+    "git describe --tags `git rev-list --tags --max-count=1` "
+  )
     .toString()
     .split("\n")[0];
 
-  packageJson.version = version;
+  const short = execSync("git rev-parse --short HEAD")
+    .toString()
+    .split("\n")[0];
+
+  packageJson.version = `${tag}-${short}-${env}`;
 
   packageJson.autoUpdate = false;
 }
