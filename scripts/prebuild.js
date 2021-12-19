@@ -24,10 +24,12 @@ if (VERSION) {
 
     execSync("git fetch --depth=30");
   }
+
   version = execSync(`git describe --tags --always --dirty="-${env}"`)
     .toString()
     .split("\n")[0];
-  packageJson.version = `${version}-${env}`;
+
+  packageJson.version = version;
 
   packageJson.autoUpdate = false;
 }
