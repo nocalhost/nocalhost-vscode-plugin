@@ -18,7 +18,6 @@ import StartDevModeCommand from "./StartDevModeCommand";
 import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
-import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
 import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
 import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
@@ -54,7 +53,6 @@ export default function initCommands(
   new ClearLocalCluster(context);
   new ClustersViewCommand(context);
   new EditServiceConfigCommand(context);
-  new WriteServiceConfigCommand(context);
 
   new StartDevModeCommand(context);
   new EndDevModeCommand(context);

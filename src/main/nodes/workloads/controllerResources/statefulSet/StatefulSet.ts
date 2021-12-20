@@ -5,7 +5,6 @@ import { STATEFUL_SET } from "../../../nodeContants";
 import { IResourceStatus } from "../../../../domain";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import logger from "../../../../utils/logger";
-import { checkWorkloadConfig } from "../../../../utils/checkConfig";
 
 export class StatefulSet extends ControllerResourceNode {
   public type = STATEFUL_SET;
@@ -20,10 +19,7 @@ export class StatefulSet extends ControllerResourceNode {
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = checkWorkloadConfig(await this.config);
-      treeItem.contextValue = `${treeItem.contextValue}-dev-${
-        check ? "info" : "warn"
-      }-${status}-${mode}`;
+      treeItem.contextValue = `${treeItem.contextValue}-dev-${status}-${mode}`;
       if (this.firstRender) {
         this.firstRender = false;
       }

@@ -39,8 +39,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     public parent: BaseNocalhostNode,
     public resource: IK8sResource,
     public conditionsStatus?: Array<IStatus> | string,
-    public svcProfile?: SvcProfile | undefined | null,
-    public config?: NocalhostServiceConfig | undefined | null
+    public svcProfile?: SvcProfile | undefined | null
   ) {
     super();
     this.label = resource.metadata.name;

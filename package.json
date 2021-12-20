@@ -124,17 +124,17 @@
       "view/item/context": [
         {
           "command": "Nocalhost.openProject",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev/i",
           "group": "developing@1"
         },
         {
           "command": "Nocalhost.run",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev/i",
           "group": "developing@3"
         },
         {
           "command": "Nocalhost.debug",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev/i",
           "group": "developing@2"
         },
         {
@@ -179,12 +179,12 @@
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting|develop_starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(?!(developing|starting|develop_starting))/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(?!(developing-duplicate|developing-replace-self|starting))/i",
           "group": "navigation"
         },
         {
@@ -194,12 +194,7 @@
         },
         {
           "command": "Nocalhost.editServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-info/i",
-          "group": "inline@1"
-        },
-        {
-          "command": "Nocalhost.writeServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-warn/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev/i",
           "group": "inline@1"
         },
         {
@@ -479,11 +474,6 @@
         "command": "Nocalhost.editServiceConfig",
         "title": "%viewDevConfig%",
         "icon": "images/icon/setting_normal.svg"
-      },
-      {
-        "command": "Nocalhost.writeServiceConfig",
-        "title": "%Config%",
-        "icon": "images/icon/setting_warning.svg"
       },
       {
         "command": "Nocalhost.EditAppConfig",
