@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [chore/build-macos]
+    branches: [dev]
   pull_request:
     branches: [dev]
   workflow_dispatch:
