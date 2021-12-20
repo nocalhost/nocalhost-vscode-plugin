@@ -27,7 +27,10 @@ export class CrdResources extends ControllerResourceNode {
     let status = "";
     try {
       status = await this.getStatus();
-      const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
+      const [icon, label, mode] = await this.getIconAndLabelByStatus(
+        status,
+        "crd"
+      );
       treeItem.iconPath = icon;
       treeItem.label = label;
       const check = checkWorkloadConfig(await this.config);

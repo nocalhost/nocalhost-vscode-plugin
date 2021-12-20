@@ -76,7 +76,8 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     return false;
   }
   public async getIconAndLabelByStatus(
-    status: string
+    status: string,
+    workloadType?: string
   ): Promise<[vscode.Uri, string, string]> {
     const portForwardStatus = await this.getPortForwardStatus();
 
@@ -120,7 +121,11 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         iconPath = resolveVSCodeUri("loading.gif");
         break;
       case "unknown":
-        iconPath = resolveVSCodeUri("status_unknown.svg");
+        {
+          if (workloadType !== "crd") {
+            iconPath = resolveVSCodeUri("status_unknown.svg");
+          }
+        }
         break;
       case "failed":
         iconPath = resolveVSCodeUri("status_failed.svg");
