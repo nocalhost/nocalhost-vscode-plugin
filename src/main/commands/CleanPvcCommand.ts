@@ -97,6 +97,7 @@ export default class CleanPvcCommand implements ICommand {
         pvcs = await getPvcListByDevSpace(node as DevSpaceNode);
         break;
       case NodeType.deployment:
+      case NodeType.crd:
         const deployNode = node as Deployment;
         (appName = deployNode.getAppName()),
           (namespace = deployNode.getNameSpace()),

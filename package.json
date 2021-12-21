@@ -174,7 +174,7 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^workload-deployment/i",
+          "when": "viewItem =~ /^workload-(deployment|crd-resources)/i",
           "group": "2"
         },
         {

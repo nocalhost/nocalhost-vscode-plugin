@@ -63,7 +63,7 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
           kubeConfigPath: this.getKubeConfigPath(),
           namespace: appNode.namespace,
         },
-        { output: true }
+        30 * 1000
       )
         .addArgument(this.resourceType)
         .addArgument("-a", appNode.name)
