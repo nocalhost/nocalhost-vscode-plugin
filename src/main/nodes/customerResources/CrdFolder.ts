@@ -47,13 +47,11 @@ export class CrdFolder extends KubernetesResourceFolder {
   }
 
   async updateData(): Promise<any> {
-    const appNode = this.getAppNode();
     const list: CrdResource[] = (
       (await NhctlCommand.get({
         kubeConfigPath: this.getKubeConfigPath(),
       })
         .addArgument(this.resourceType)
-        .addArgument("-a", appNode.name)
         .addArgument("-o", "json")
         .exec()) || []
     )
