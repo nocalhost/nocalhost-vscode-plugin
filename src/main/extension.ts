@@ -43,34 +43,27 @@ import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
-import { NocalhostFolderNode } from "./nodes/abstract/NocalhostFolderNode";
 // import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
 import messageBus, { EventType } from "./utils/messageBus";
 import LocalClusterService from "./clusters/LocalCuster";
 import { DevSpaceNode } from "./nodes/DevSpaceNode";
 import { HomeWebViewProvider } from "./webview/HomePage";
-import { isExistCluster } from "./clusters/utils";
 import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
 import * as nls from "vscode-nls";
 import SyncServiceCommand from "./commands/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
+import { activateNocalhostDebug } from "./debug/nocalhost";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
-let currentContext: vscode.ExtensionContext;
-
 export async function activate(context: vscode.ExtensionContext) {
-  currentContext = context;
-
-  createSyncManage(context);
-
   await init(context);
-  let appTreeProvider = new NocalhostAppProvider();
+  let appTreeProvider = new NocalhostAppProvider(context);
   initCommands(context, appTreeProvider);
 
   // TODO: DO NOT DELETE, FOR: [webview integration]
@@ -117,11 +110,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
 
+  let isSetVisible = false;
+
   let subs = [
     host,
-    {
-      dispose: appTreeView.dispose,
-    },
+    appTreeView.onDidChangeVisibility((event) => {
+      if (!isSetVisible && event.visible) {
+        isSetVisible = true;
+        host.getOutputChannel().show(true);
+      }
+    }),
+    appTreeView,
     vscode.workspace.registerFileSystemProvider(
       "Nocalhost",
       nocalhostFileSystemProvider,
@@ -139,9 +138,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(...subs);
 
-  host.getOutputChannel().show(true);
-  // await registerYamlSchemaSupport();
-
   await vscode.commands.executeCommand(
     "setContext",
     "extensionActivated",
@@ -153,6 +149,9 @@ export async function activate(context: vscode.ExtensionContext) {
   launchDevSpace();
 
   bindEvent();
+
+  createSyncManage(context);
+  activateNocalhostDebug(context);
 }
 function bindEvent() {
   messageBus.on("refreshTree", (value) => {
@@ -412,7 +411,7 @@ process.on("unhandledRejection", (error?: string | Error | any) => {
 
   if (error instanceof Error || error instanceof ShellExecError) {
     if (
-      currentContext.extensionMode === vscode.ExtensionMode.Production &&
+      host.getContext().extensionMode === vscode.ExtensionMode.Production &&
       error.stack &&
       !error.stack.includes("nocalhost.nocalhost")
     ) {

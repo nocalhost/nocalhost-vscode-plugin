@@ -9,7 +9,7 @@ import host from "../host";
 import { DebugSession } from "../debug/debugSession";
 import { ContainerConfig } from "../service/configService";
 import {
-  checkDebuggerInstalled,
+  checkDebuggerDependencies,
   chooseDebugProvider,
   Language,
   support,
@@ -23,17 +23,21 @@ export default class DebugCommand implements ICommand {
   command: string = DEBUG;
   node: ControllerResourceNode;
   container: ContainerConfig;
-
+  configuration: vscode.DebugConfiguration;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(...rest: any[]) {
-    const [node, command] = rest as [ControllerResourceNode, string];
+    const [node, param] = rest as [
+      ControllerResourceNode,
+      { command: string; configuration: vscode.DebugConfiguration } | undefined
+    ];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
     }
 
+    this.configuration = param?.configuration;
     this.node = node;
     this.container = await getContainer(node);
 
@@ -41,12 +45,13 @@ export default class DebugCommand implements ICommand {
 
     const debugProvider = await this.getDebugProvider();
 
-    if (!command) {
+    if (!param?.command) {
       const status = await node.getStatus(true);
 
       if (status !== "developing") {
         vscode.commands.executeCommand(START_DEV_MODE, node, {
           command: DEBUG,
+          configuration: this.configuration,
         });
         return;
       }
@@ -109,8 +114,6 @@ export default class DebugCommand implements ICommand {
     node: ControllerResourceNode,
     debugProvider: IDebugProvider
   ) {
-    const debugSession = new DebugSession();
-
     const workspaceFolder = await host.showWorkspaceFolderPick();
 
     if (!workspaceFolder) {
@@ -120,12 +123,15 @@ export default class DebugCommand implements ICommand {
       return;
     }
 
-    await debugSession.launch(
+    const debugSession = new DebugSession(
       workspaceFolder,
       debugProvider,
       node,
-      this.container
+      this.container,
+      this.configuration
     );
+
+    await debugSession.launch();
   }
   async getDebugProvider(): Promise<IDebugProvider> {
     let type: Language;
@@ -139,10 +145,7 @@ export default class DebugCommand implements ICommand {
 
     const debugProvider = await chooseDebugProvider(type);
 
-    const isInstalled = checkDebuggerInstalled(debugProvider);
-    if (!isInstalled) {
-      return Promise.reject();
-    }
+    await checkDebuggerDependencies(debugProvider);
 
     return debugProvider;
   }

@@ -115,22 +115,26 @@ export default class CleanPvcCommand implements ICommand {
         });
         break;
       case NodeType.appFolder:
-        workloadName = null;
-        const appNode = node as AppNode;
-        appName = appNode.name;
-        namespace = appNode.namespace;
-        clearPvcFn = getCleanPvcOtherFn({
-          kubeConfig: node.getKubeConfigPath(),
-          namespace,
-          appName,
-          workloadName,
-        });
-        pvcs = await getPvcListByOther(
-          node.getKubeConfigPath(),
-          namespace,
-          appName,
-          workloadName
-        );
+        {
+          workloadName = null;
+          const appNode = node as AppNode;
+          namespace = appNode.namespace;
+          appName = appNode.name;
+
+          clearPvcFn = getCleanPvcOtherFn({
+            kubeConfig: node.getKubeConfigPath(),
+            namespace,
+            appName,
+            workloadName,
+          });
+          pvcs = await getPvcListByOther(
+            node.getKubeConfigPath(),
+            namespace,
+            appName,
+            workloadName
+          );
+        }
+
         break;
       default:
         host.showInformationMessage(

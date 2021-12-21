@@ -9,7 +9,7 @@ import host from "../host";
 import { ContainerConfig } from "../service/configService";
 import { LiveReload } from "../debug/liveReload";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
-import { closeTerminals, getContainer, waitForSync } from "../debug";
+import { getContainer, waitForSync } from "../debug";
 import { RemoteTerminal } from "../debug/remoteTerminal";
 import { NhctlCommand } from "../ctl/nhctl";
 import { validateData } from "../utils/validate";
@@ -38,7 +38,11 @@ export default class RunCommand implements ICommand {
   }
 
   async execCommand(...rest: any[]) {
-    const [node, command] = rest as [ControllerResourceNode, string];
+    const [node, param] = rest as [
+      ControllerResourceNode,
+      { command: string } | undefined
+    ];
+
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
       return;
@@ -49,7 +53,7 @@ export default class RunCommand implements ICommand {
 
     this.validateRunConfig(this.container);
 
-    if (!command) {
+    if (!param?.command) {
       const status = await node.getStatus(true);
 
       if (status !== "developing") {
@@ -87,8 +91,7 @@ export default class RunCommand implements ICommand {
     this.disposable.push(
       vscode.window.onDidCloseTerminal(async (e) => {
         if ((await e.processId) === (await this.terminal.processId)) {
-          this.disposable.forEach((d) => d.dispose());
-          this.disposable.length = 0;
+          this.dispose();
         }
       })
     );
@@ -105,6 +108,7 @@ export default class RunCommand implements ICommand {
       kubeConfigPath: node.getKubeConfigPath(),
       resourceType: node.resourceType,
       commands: run,
+      shell: container.dev.shell,
     }).getCommand();
 
     const terminal = await RemoteTerminal.create({
@@ -112,13 +116,25 @@ export default class RunCommand implements ICommand {
         name,
         iconPath: { id: "vm-running" },
       },
-      spawn: { command },
+      spawn: {
+        command,
+        close: () => {
+          this.dispose(false);
+        },
+      },
     });
     terminal.show();
 
     this.terminal = terminal;
+  }
 
-    this.disposable.push(this.terminal);
+  async dispose(closeTerminal: boolean = true) {
+    this.disposable.forEach((d) => d.dispose());
+    this.disposable.length = 0;
+
+    if (closeTerminal && this.terminal) {
+      this.terminal.dispose();
+    }
   }
   validateRunConfig(config: ContainerConfig) {
     const schema = {

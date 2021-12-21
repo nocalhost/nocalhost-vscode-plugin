@@ -56,7 +56,7 @@ export default class OpenProjectCommand implements ICommand {
       const uri = vscode.Uri.file(profile);
 
       if (currentUri !== uri.fsPath) {
-        vscode.commands.executeCommand("vscode.openFolder", uri);
+        vscode.commands.executeCommand("vscode.openFolder", uri, true);
       }
     } else {
       vscode.commands.executeCommand(

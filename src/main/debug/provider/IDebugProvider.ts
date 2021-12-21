@@ -6,16 +6,19 @@ import {
   workspace,
 } from "vscode";
 import * as AsyncRetry from "async-retry";
+import { merge, omit } from "lodash";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import { ContainerConfig } from "../../service/configService";
 import logger from "../../utils/logger";
-import host from "../../host";
 import { portForward } from "..";
 
 export abstract class IDebugProvider {
   abstract name: string;
   abstract requireExtensions: Array<string>;
+
+  abstract downloadUrl: string;
+  abstract commandName: string;
 
   abstract getDebugConfiguration(
     name: string,
@@ -31,11 +34,12 @@ export abstract class IDebugProvider {
     return Promise.resolve();
   }
 
-  async checkDebuggerDependent() {
-    return Promise.resolve();
-  }
+  checkExtensionDependency(): Promise<void> | void {}
 
-  async waitForReady(port: number, cancellationToken: CancellationTokenSource) {
+  private async waitForReady(
+    port: number,
+    cancellationToken: CancellationTokenSource
+  ) {
     await AsyncRetry(
       async (bail) => {
         if (cancellationToken.token.isCancellationRequested) {
@@ -72,7 +76,8 @@ export abstract class IDebugProvider {
     container: ContainerConfig,
     port: number,
     node: ControllerResourceNode,
-    cancellationToken?: CancellationTokenSource
+    cancellationToken: CancellationTokenSource,
+    config: DebugConfiguration
   ): Promise<boolean> {
     const currentFolder = (workspace.workspaceFolders || []).find(
       (folder) => folder.name === basename(workspaceFolder)
@@ -80,17 +85,20 @@ export abstract class IDebugProvider {
 
     await this.waitForReady(port, cancellationToken);
 
-    if (cancellationToken.token.isCancellationRequested) {
+    if (cancellationToken?.token.isCancellationRequested) {
       return;
     }
 
-    return await debug.startDebugging(
-      currentFolder,
-      this.getDebugConfiguration(
-        debugSessionName,
-        port,
-        container.dev.workDir ?? "/home/nocalhost-dev"
-      )
+    const otherConfig = omit(config, "type", "name", "request");
+
+    const debugConfiguration = this.getDebugConfiguration(
+      debugSessionName,
+      port,
+      container.dev.workDir ?? "/home/nocalhost-dev"
     );
+
+    config = merge(debugConfiguration, otherConfig);
+
+    return await debug.startDebugging(currentFolder, config);
   }
 }

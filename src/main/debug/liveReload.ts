@@ -9,7 +9,7 @@ import {
 
 import { Sync, SyncMsg } from "../commands/SyncServiceCommand";
 import { NhctlCommand } from "../ctl/nhctl";
-import { ShellExecError } from "../ctl/shell";
+import { getExecCommand, ShellExecError } from "../ctl/shell";
 import host from "../host";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 
@@ -61,7 +61,7 @@ export class LiveReload {
       "--watch",
     ];
 
-    const command = nhctlCmd.getCommand();
+    const command = getExecCommand(nhctlCmd.getCommand());
 
     const proc = spawn(command, [], {
       shell: true,

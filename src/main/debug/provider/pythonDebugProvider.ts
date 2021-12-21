@@ -9,12 +9,15 @@ export class PythonDebugProvider extends IDebugProvider {
   name: string = "Python";
   requireExtensions: string[] = ["ms-python.python"];
 
+  downloadUrl: string = "https://www.python.org/downloads/";
+  commandName: string = "python";
+
   getDebugConfiguration(
     name: string,
     port: number,
     remoteRoot: string
   ): DebugConfiguration {
-    // https://github.com/xdebug/vscode-php-debug
+    // https://code.visualstudio.com/docs/python/debugging
     return {
       name,
       type: "python",

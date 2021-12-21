@@ -10,7 +10,7 @@ import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
-import { APPLY_KUBERNETES_OBJECT } from "./constants";
+import { APPLY_KUBERNETES_OBJECT, REFRESH } from "./constants";
 
 export default class ApplyKubernetesObjectCommand implements ICommand {
   command: string = APPLY_KUBERNETES_OBJECT;
@@ -229,6 +229,11 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
               : `${failureMessage.join(",")}`;
         }
         const success: boolean = failureMessage.length === 0;
+
+        state.disposeNode(target, false);
+
+        vscode.commands.executeCommand(REFRESH, target);
+
         if (success) {
           vscode.window.showInformationMessage(value);
         } else {

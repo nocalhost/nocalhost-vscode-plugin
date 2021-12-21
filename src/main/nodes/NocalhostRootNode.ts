@@ -24,7 +24,7 @@ import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 
-async function getClusterName(res: IRootNode) {
+export async function getClusterName(res: IRootNode) {
   if (!res.kubeConfigPath) {
     return "unknown";
   }
@@ -291,11 +291,13 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         const kubeconfigNode = await this.getKubeConfigNode(resource);
         const children = await kubeconfigNode.getChildren();
 
-        let arryId = [kubeconfigNode.getNodeStateId()];
+        let arrayId = [kubeconfigNode.getNodeStateId()];
 
-        arryId = arryId.concat(children.map((child) => child.getNodeStateId()));
+        arrayId = arrayId.concat(
+          children.map((child) => child.getNodeStateId())
+        );
 
-        return arryId;
+        return arrayId;
       };
 
       const oldId = (await Promise.all(old.map(getId))).flat(1);

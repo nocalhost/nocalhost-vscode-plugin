@@ -15,7 +15,6 @@
   "CopyTerminal": "Copy Terminal Exec Command",
   "Logs": "View Logs",
   "PortForward": "Port Forward",
-  "PortForwardList": "Port Forward List",
   "CleanPvc": "Clear PVC",
   "loadResource": "Load Resource",
   "Config": "Config",

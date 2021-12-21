@@ -6,10 +6,12 @@ import {
 } from "./../../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
+import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
-import { exec, ExecParam, execWithProgress } from "../shell";
+
+import { exec, ExecParam, execWithProgress, getExecCommand } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
@@ -19,7 +21,7 @@ import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
 import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";
 import logger from "../../utils/logger";
-import { IDevSpaceInfo, IPortForWard } from "../../domain";
+import { IDevSpaceInfo } from "../../domain";
 import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
 import { keysToCamel } from "../../utils";
@@ -27,7 +29,7 @@ import { IPvc } from "../../domain";
 import { getBooleanValue } from "../../utils/config";
 import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
-import { Associate } from "./type";
+import { Associate, IPortForward } from "./type";
 import state from "../../state";
 
 export interface InstalledAppInfo {
@@ -99,21 +101,24 @@ export class NhctlCommand {
       name: string;
       resourceType: string;
       container?: string;
+      shell?: string;
       commands: string[];
     }>
   ) {
-    let { args, app, name, resourceType, container, commands } = params;
+    let { args, app, name, resourceType, container, commands, shell } = params;
 
     const command = NhctlCommand.create("exec", params);
 
     args = args ?? [];
-    commands.forEach((command) => args.push(`-c ${command}`));
 
     args.unshift(
       app,
       `-d ${name}`,
       `-t ${resourceType}`,
-      `--container ${container ?? "nocalhost-dev"}`
+      `--container ${container ?? "nocalhost-dev"}`,
+      `--command ${shell || "sh"}`,
+      `--command -c`,
+      `--command "${commands.join(" ")}"`
     );
 
     command.args = args;
@@ -128,13 +133,6 @@ export class NhctlCommand {
   static portForward(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("port-forward", baseParams);
   }
-  static list(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
-    const command = NhctlCommand.create("list", baseParams);
-    command.execParam.timeout = ms;
-
-    return command;
-  }
-
   static install(baseParams?: IBaseCommand<unknown>) {
     return NhctlCommand.create("install", baseParams);
   }
@@ -453,11 +451,11 @@ export async function getAll(params: IBaseCommand) {
   }
 }
 
-export async function getPortForWardByApp(
+export async function getPortForwardList(
   props: IBaseCommand<{
     appName: string;
   }>
-): Promise<IPortForWard[]> {
+): Promise<IPortForward[]> {
   return await NhctlCommand.portForward({
     kubeConfigPath: props.kubeConfigPath,
     namespace: props.namespace,
@@ -472,10 +470,11 @@ export async function getInstalledApp(
   ns: string,
   kubeconfig: string
 ): Promise<AllInstallAppInfo[]> {
-  let obj: AllInstallAppInfo[] = await NhctlCommand.list({
+  let obj: AllInstallAppInfo[] = await NhctlCommand.get({
     kubeConfigPath: kubeconfig,
   })
-    .addArgument("--yaml")
+    .addArgument("app")
+    .addArgumentStrict("-o", "yaml")
     .addArgumentStrict("-n", ns)
     .toYaml()
     .exec();
@@ -782,6 +781,8 @@ function isSudo(ports: string[] | undefined) {
 }
 
 function sudoPortForward(command: string) {
+  command = getExecCommand(command);
+
   return new Promise((resolve, reject) => {
     const env = Object.assign(process.env, { DISABLE_SPINNER: true });
     logger.info(`[cmd] ${command}`);
@@ -1304,7 +1305,11 @@ function getNhctlPath(version: string) {
   if (host.isLinux()) {
     name = `nhctl-linux-amd64`;
   } else if (host.isMac()) {
-    name = `nhctl-darwin-amd64`;
+    if (os.arch() === "arm64") {
+      name = `nhctl-darwin-arm64`;
+    } else {
+      name = `nhctl-darwin-amd64`;
+    }
   } else if (host.isWindow()) {
     name = `nhctl-windows-amd64.exe`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
@@ -1359,19 +1364,21 @@ function setUpgrade(isUpgrade: boolean) {
 }
 
 export async function checkVersion() {
-  if (!getBooleanValue("nhctl.checkVersion")) {
-    return;
-  }
-
   const requiredVersion: string = packageJson.nhctl?.version;
-
-  if (!requiredVersion) {
-    return;
-  }
+  // is dev plugin
+  const pluginVersion: string = packageJson.version;
 
   const { sourcePath, destinationPath, binPath } = getNhctlPath(
     requiredVersion
   );
+
+  if (
+    !getBooleanValue("nhctl.checkVersion") ||
+    !requiredVersion ||
+    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(binPath))
+  ) {
+    return;
+  }
 
   const currentVersion: string = await services.fetchNhctlVersion();
 
@@ -1411,32 +1418,40 @@ export async function checkVersion() {
         });
         let command = "taskkill /im nhctl.exe -f";
 
-        await exec({ command }).promise.catch(logger.error);
+        await exec({ command }).promise.catch((e) => {
+          logger.error(command, e);
+        });
 
         command = "tasklist | findstr nhctl.exe";
 
-        const result = await exec({ command }).promise.catch(logger.error);
+        const result = await exec({ command }).promise.catch((e) => {
+          logger.error(command, e);
+        });
 
         if (!result) {
           logger.info("after kill has not daemon");
         } else {
           logger.info("after kill has daemon");
-          await exec({ command }).promise.catch(logger.error);
+          await exec({ command }).promise.catch((e) => {
+            logger.error(command, e);
+          });
         }
         fs.renameSync(binPath, TEMP_NHCTL_BIN);
       }
 
       fs.renameSync(destinationPath, binPath);
 
-      if (!(await checkDownloadNhctlVersion(requiredVersion))) {
-        vscode.window.showErrorMessage(failedMessage);
-      } else {
-        vscode.window.showInformationMessage(completedMessage);
-      }
+      setTimeout(async () => {
+        if (!(await checkDownloadNhctlVersion(requiredVersion))) {
+          vscode.window.showErrorMessage(failedMessage);
+        } else {
+          vscode.window.showInformationMessage(completedMessage);
+        }
+      }, 300);
     });
   } catch (err) {
     // host.log(`[update err] ${err}`, true);
-    console.error(err);
+    console.error("checkVersion", err);
     typeof err === "string" && err.indexOf("lockerror") !== -1
       ? logger.error("lockerror")
       : vscode.window.showErrorMessage(failedMessage);
@@ -1588,19 +1603,4 @@ export async function associateQuery(param: {
     .addArgument("--json")
     .toJson()
     .exec();
-}
-// judge config is valid
-export async function isConfigValid(node: NodeInfo): Promise<boolean> {
-  try {
-    const { appName, name, resourceType, namespace, kubeConfigPath } = node;
-    const result = await NhctlCommand.create(
-      `ide config ${appName} --action check -d ${name} -t ${resourceType} -n ${namespace} --kubeconfig ${kubeConfigPath}`
-    )
-      .toJson()
-      .exec();
-
-    return !!result;
-  } catch (e) {
-    return false;
-  }
 }
