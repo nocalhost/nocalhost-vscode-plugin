@@ -6,11 +6,11 @@ import logger from "../../utils/logger";
 import { SocketDebugClient } from "../SocketDebugClient";
 
 export class PythonDebugProvider extends IDebugProvider {
-  name: string = "Python";
+  name: string = "python";
   requireExtensions: string[] = ["ms-python.python"];
 
   downloadUrl: string = "https://www.python.org/downloads/";
-  commandName: string = "python";
+  commandName: string = this.name;
 
   getDebugConfiguration(
     name: string,

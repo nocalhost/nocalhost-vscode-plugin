@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
 import * as assert from "assert";
+import * as fs from "fs";
+import * as path from "path";
 import { ValidateFunction } from "ajv";
+
+import parse = require("json5/lib/parse");
 
 import ICommand from "./ICommand";
 import { DEBUG, START_DEV_MODE } from "./constants";
@@ -12,7 +16,7 @@ import {
   checkDebuggerDependencies,
   chooseDebugProvider,
   Language,
-  support,
+  supportLanguage,
 } from "../debug/provider";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";
 import { getContainer, waitForSync } from "../debug";
@@ -134,19 +138,92 @@ export default class DebugCommand implements ICommand {
     await debugSession.launch();
   }
   async getDebugProvider(): Promise<IDebugProvider> {
-    let type: Language;
-    const { image } = this.container.dev;
+    const debugProvider = await chooseDebugProvider(await this.getLanguage());
 
-    if (image.includes("nocalhost/dev-images")) {
-      type = Object.keys(support).find((name) =>
+    await checkDebuggerDependencies(debugProvider);
+
+    this.createDebugLaunchConfig(debugProvider.name as Language);
+
+    return debugProvider;
+  }
+  async getLanguage() {
+    const { image } = this.container.dev;
+    let type: Language;
+
+    const filePath = path.join(
+      host.getCurrentRootPath(),
+      "/.vscode/launch.json"
+    );
+    if (!fs.existsSync(filePath)) {
+      const launch = parse(fs.readFileSync(filePath).toString()) as {
+        configurations: (vscode.DebugConfiguration & {
+          language: Language;
+        })[];
+      };
+      const configuration = launch.configurations.find(
+        (item) =>
+          item.name === "nocalhost" &&
+          item.language &&
+          item.request === "attach"
+      );
+
+      return configuration?.language;
+    } else if (image.includes("nocalhost/dev-images")) {
+      type = Object.keys(supportLanguage).find((name) =>
         image.includes(name)
       ) as Language;
     }
 
-    const debugProvider = await chooseDebugProvider(type);
+    return type;
+  }
 
-    await checkDebuggerDependencies(debugProvider);
+  async createDebugLaunchConfig(language: Language) {
+    const filePath = path.join(
+      host.getCurrentRootPath(),
+      "/.vscode/launch.json"
+    );
 
-    return debugProvider;
+    let launch: {
+      configurations: (vscode.DebugConfiguration & {
+        language: Language;
+      })[];
+    };
+
+    if (!fs.existsSync(filePath)) {
+      const dir = path.dirname(filePath);
+
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+      }
+
+      launch = { configurations: [] };
+    } else {
+      const str = fs.readFileSync(filePath).toString();
+
+      launch = parse(str);
+    }
+
+    if ("configurations" in launch) {
+      const configurations = launch["configurations"];
+
+      if (Array.isArray(configurations)) {
+        let index = configurations.findIndex(
+          (item) => item.type === "nocalhost" && item.language === language
+        );
+
+        if (index > -1) {
+          return;
+        }
+
+        configurations.unshift({
+          type: "nocalhost",
+          language,
+          request: "attach",
+          name: "Nocalhost Debug",
+        });
+
+        fs.writeFileSync(filePath, JSON.stringify(launch, null, 2));
+      }
+    }
   }
 }
