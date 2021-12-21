@@ -1618,14 +1618,11 @@ export async function vpn(param: {
     baseParam
   ).getCommand();
 
-  if (!host.isWindow() && subCommand !== "disconnect") {
-    command = "sudo -S " + command;
-  }
-
   return execWithProgress({
     command,
     title: `Waiting for vpn ${subCommand} ...`,
     output: true,
     args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
+    sudo: !host.isWindow(),
   });
 }

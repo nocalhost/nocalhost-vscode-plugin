@@ -83,6 +83,7 @@ export interface ExecParam {
   output?: OutPut;
   ignoreError?: boolean;
   printCommand?: boolean;
+  sudo?: boolean;
 }
 
 type OutPut = boolean | { err: boolean; out: boolean };
@@ -172,7 +173,7 @@ export function createProcess(param: ExecParam) {
     const str = decodeBuffer(data);
     stderr += str;
 
-    if (command.startsWith("sudo")) {
+    if (param.sudo) {
       if (
         [
           "Password:",
