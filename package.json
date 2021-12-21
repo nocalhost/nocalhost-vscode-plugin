@@ -124,7 +124,7 @@
       "view/item/context": [
         {
           "command": "Nocalhost.openProject",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?vpn_)/i",
           "group": "developing@1"
         },
         {
@@ -174,7 +174,7 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^workload-deployment/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!vpn_)/i",
           "group": "2"
         },
         {
@@ -184,7 +184,7 @@
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
           "group": "navigation"
         },
         {
@@ -194,7 +194,7 @@
         },
         {
           "command": "Nocalhost.editServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-info-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!vpn_)/i",
           "group": "inline@1"
         },
         {
@@ -234,7 +234,7 @@
         },
         {
           "command": "Nocalhost.editManifest",
-          "when": "viewItem =~ /(^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)).*(?<!duplicate-self)$/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!vpn_).*(?<!duplicate-self)$/i",
           "title": "%editManifest%",
           "group": "1"
         },

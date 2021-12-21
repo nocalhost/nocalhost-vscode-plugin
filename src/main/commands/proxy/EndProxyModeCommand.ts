@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { vpn } from "../../ctl/nhctl";
 
-import host from "../../host";
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
 import ICommand from "../ICommand";
 import registerCommand from "../register";

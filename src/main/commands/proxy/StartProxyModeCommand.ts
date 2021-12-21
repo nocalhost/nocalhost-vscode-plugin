@@ -4,7 +4,6 @@ import { ControllerResourceNode } from "../../nodes/workloads/controllerResource
 
 import ICommand from "../ICommand";
 import registerCommand from "../register";
-import host from "../.../../../host";
 
 export default class StartProxyModeCommand implements ICommand {
   command: string = "Nocalhost.startProxyMode";
