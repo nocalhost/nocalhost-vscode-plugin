@@ -19,7 +19,7 @@ if (VERSION) {
   let env = "alpha";
   let version = packageJson.version;
 
-  if (process.env.CI === "true") {
+  if (process.env.CI === "true" || process.platform === "win32") {
     env = "beta";
 
     // execSync("git fetch --depth=30");
