@@ -154,7 +154,7 @@ export default class DebugCommand implements ICommand {
       host.getCurrentRootPath(),
       "/.vscode/launch.json"
     );
-    if (!fs.existsSync(filePath)) {
+    if (fs.existsSync(filePath)) {
       const launch = parse(fs.readFileSync(filePath).toString()) as {
         configurations: (vscode.DebugConfiguration & {
           language: Language;
@@ -162,7 +162,7 @@ export default class DebugCommand implements ICommand {
       };
       const configuration = launch.configurations.find(
         (item) =>
-          item.name === "nocalhost" &&
+          item.type === "nocalhost" &&
           item.language &&
           item.request === "attach"
       );
