@@ -3,6 +3,8 @@ const ncp = require("copy-paste");
 const yaml2json = require("js-yaml");
 const json2yaml = require("json2yaml");
 const { expandTree } = require("./tree");
+const assert = require("assert");
+
 /**
  *
  * @param {puppeteer.Page} page
@@ -43,6 +45,8 @@ async function editConfig(page, browser) {
   const content = ncp.paste();
   const obj = yaml2json.load(content);
   obj.containers[0].dev.hotReload = !obj.containers[0].dev.hotReload;
+  // remoteDebugPort
+  // obj.containers[0].dev.debug.remoteDebugPort = "xxxx";
   const str = json2yaml.stringify(obj);
   ncp.copy(str);
 
@@ -62,7 +66,12 @@ async function editConfig(page, browser) {
 
   await page.keyboard.up("Meta");
 
-  // 调用nhctl 获取config
+  await page.waitForTimeout(5000);
+
+  const tabElement = await page.waitForSelector(
+    'div[aria-label="authors.yaml"]'
+  );
+  assert.ok(tabElement._remoteObject.description.indexOf("dirty") === -1);
 }
 
 module.exports = {

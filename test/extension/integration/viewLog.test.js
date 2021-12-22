@@ -1,6 +1,6 @@
 const { viewLog } = require("./viewLog");
 
-const viewLogTests = async () => {
+const viewLogTests = () => {
   describe("View Log", () => {
     it("save", async () => {
       await viewLog(page, browser);
