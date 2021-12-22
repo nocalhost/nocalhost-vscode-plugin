@@ -4,6 +4,8 @@ const { nhctlTests } = require("./nhctl.test");
 const { connectTests } = require("./connect.test");
 const { installTests } = require("./install.test");
 const logger = require("../lib/log");
+const { configEditTests } = require("./configEdit.test");
+const { viewLogTests } = require("./viewLog.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 
@@ -26,8 +28,10 @@ afterEach(async () => {
 });
 
 describe("nhctl", nhctlTests);
-// describe("connect", connectTests);
+describe("connect", connectTests);
 // describe("install", installTests);
+describe("config", configEditTests);
+describe("view log", viewLogTests);
 
 module.exports = {
   screenshotPath,
