@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [dev, main]
   push:
-    branches: [test/vscode-puppeteer]
+    branches: [test/vscode-puppeteer, feat/add-ui-test]
 jobs:
   test:
     strategy:

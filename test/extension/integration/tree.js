@@ -1,5 +1,8 @@
-const namespaceName = process.env.NOCALHOST_NAMESPACE ?? "nh1yemm";
-const clusterName = process.env.NOCALHOST_CLUSTER_NAME ?? "cls-qnzlf1u0";
+const namespaceName = process.env.NOCALHOST_NAMESPACE ?? "default";
+// cls-qnzlf1u0
+const clusterName = process.env.NOCALHOST_CLUSTER_NAME ?? "";
+
+const { getTreeView } = require("./index");
 /**
  *
  * @param {puppeteer.Page} page
@@ -14,9 +17,14 @@ const expandTree = async (page) => {
   });
   const sidebar = await page.waitForSelector("#workbench\\.parts\\.sidebar");
   // cluster
-  const cluster = await sidebar.$(`div[aria-label="${clusterName} Active"]`);
+  let cluster;
+  if (clusterName) {
+    cluster = await sidebar.$(`div[aria-label="${clusterName} Active"]`);
+  } else {
+    const treeView = await getTreeView(page);
+    cluster = treeView[0];
+  }
   // namespace
-
   let namespace = await sidebar.$(`div[aria-label="${namespaceName} "]`);
   if (!namespace) {
     await cluster.click();
