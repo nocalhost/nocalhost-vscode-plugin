@@ -319,7 +319,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
   public label: string = NOCALHOST;
   public type = ROOT;
-  constructor(public parent: BaseNocalhostNode | null) {
+  constructor(public parent: BaseNocalhostNode | null, public hasInit = false) {
     console.log(AppNode);
     state.setNode(this.getNodeStateId(), this);
   }
@@ -393,6 +393,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       return orderBy(nodes, ["label"]);
     });
 
+    this.hasInit = true;
     return children;
   }
 

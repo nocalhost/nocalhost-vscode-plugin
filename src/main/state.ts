@@ -92,6 +92,9 @@ class State {
       try {
         const rootNode = this.getNode("Nocalhost") as BaseNocalhostNode;
         if (rootNode) {
+          if (rootNode.hasInit === false) {
+            return;
+          }
           await rootNode.updateData(null, token).catch(() => {});
         }
 
@@ -159,7 +162,7 @@ class State {
     return this.running;
   }
 
-  async refreshTree(force = false, delay = 0) {
+  async refreshTree(force = false) {
     const isExist = isExistCluster();
 
     await vscode.commands.executeCommand(
@@ -173,10 +176,9 @@ class State {
       "Nocalhost.visibleTree",
       isExist
     );
+    await vscode.commands.executeCommand("Nocalhost.refresh");
 
-    setTimeout(() => {
-      vscode.commands.executeCommand("Nocalhost.refresh");
-    }, delay);
+    this.startAutoRefresh(force);
   }
 
   setRunning(running: boolean) {

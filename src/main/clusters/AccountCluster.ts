@@ -267,12 +267,6 @@ export default class AccountClusterService {
         serviceAddress: serviceAddress,
       });
 
-      oldProc = AccountClusterService.virtualClusterProc[serviceAddress];
-      if (oldProc?.proc.killed === false) {
-        proc.kill();
-        return oldProc.kubeconfig;
-      }
-
       host.getContext().subscriptions.push({
         dispose: proc.kill,
       });
