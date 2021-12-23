@@ -1640,7 +1640,7 @@ export async function kubeConfigRender(param: {
   }>((res, rej) => {
     const { proc, promise } = exec({
       command: commands.join(" "),
-      output: { out: false, err: true },
+      output: false,
     });
     proc.stdout.on("data", (chuck: Buffer) => {
       const str = chuck.toString();
