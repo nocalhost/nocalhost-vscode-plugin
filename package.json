@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.1",
+  "version": "v0.6.1",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -10,7 +10,7 @@
     "url": "https://github.com/nocalhost/nocalhost-vscode-plugin.git"
   },
   "engines": {
-    "vscode": "^1.52.0"
+    "vscode": "^1.58.0"
   },
   "categories": [
     "Other"
@@ -25,6 +25,14 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
   "main": "./dist/extension.js",
   "nhctl": {
     "serverVersion": "0.4.7",
@@ -559,6 +567,7 @@
     ]
   },
   "scripts": {
+    "prebuild": "node ./scripts/prebuild.js",
     "build": "./node_modules/.bin/vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
@@ -587,16 +596,6 @@
       "prettier --write",
       "git add"
     ]
-  },
-  "extensionDependencies": [],
-  "extensionKind": [
-    "ui",
-    "workspace"
-  ],
-  "capabilities": {
-    "untrustedWorkspaces": {
-      "supported": true
-    }
   },
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",

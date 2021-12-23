@@ -81,7 +81,7 @@ export async function asyncLimit<T, R>(
       executing.push(e);
 
       if (executing.length >= limit) {
-        await Promise.race(executing);
+        await Promise.race(executing).catch((_) => {});
       }
     }
   }
