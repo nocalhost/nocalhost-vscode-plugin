@@ -14,7 +14,12 @@ import {
 } from "../domain";
 import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
-import { checkCluster, getAllNamespace, kubeconfig } from "../ctl/nhctl";
+import {
+  checkCluster,
+  getAllNamespace,
+  kubeconfig,
+  kubeConfigRender,
+} from "../ctl/nhctl";
 import host from "../host";
 import { getStringHash } from "../utils/common";
 import { LoginInfo } from "./interface";
@@ -23,6 +28,7 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
 import { ClustersState } from ".";
+import { ChildProcessWithoutNullStreams } from "child_process";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -40,6 +46,7 @@ export default class AccountClusterService {
   refreshToken: string;
   lastServiceAccounts: IServiceAccountInfo[];
   isRefreshing: boolean;
+
   constructor(public loginInfo: LoginInfo) {
     var parsed = url.parse(loginInfo.baseUrl);
 
@@ -71,13 +78,13 @@ export default class AccountClusterService {
           // refresh token
           if (config.url === "/v1/token/refresh") {
             host.log(
-              `Please login again ${this.loginInfo.baseUrl || ""}：${
+              `Please login again ${this.loginInfo.baseUrl || ""}:${
                 this.loginInfo.username || ""
               }`,
               true
             );
             host.showWarnMessage(
-              `Please login again ${this.loginInfo.baseUrl || ""}：${
+              `Please login again ${this.loginInfo.baseUrl || ""}:${
                 this.loginInfo.username || ""
               }`
             );
@@ -107,19 +114,17 @@ export default class AccountClusterService {
   }
 
   static getServerClusterRootNodes = async (
-    newAccountCluser: AccountClusterNode
+    newAccountCluster: AccountClusterNode
   ): Promise<IRootNode[]> => {
-    if (!newAccountCluser) {
+    if (!newAccountCluster) {
       return [];
     }
     const accountClusterService = new AccountClusterService(
-      newAccountCluser.loginInfo
+      newAccountCluster.loginInfo
     );
-    accountClusterService.accountClusterNode = newAccountCluser;
-    accountClusterService.jwt = newAccountCluser.jwt;
-    accountClusterService.refreshToken = newAccountCluser.refreshToken;
-
-    const newRootNodes: IRootNode[] = [];
+    accountClusterService.accountClusterNode = newAccountCluster;
+    accountClusterService.jwt = newAccountCluster.jwt;
+    accountClusterService.refreshToken = newAccountCluster.refreshToken;
 
     let serviceAccounts = await accountClusterService.getServiceAccount();
     logger.info(
@@ -129,7 +134,7 @@ export default class AccountClusterService {
     );
 
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
-      const msg = `no cluster found for ${newAccountCluser.loginInfo.baseUrl} ${newAccountCluser.loginInfo.username}`;
+      const msg = `no cluster found for ${newAccountCluster.loginInfo.baseUrl} ${newAccountCluster.loginInfo.username}`;
 
       logger.error(msg);
       throw new Error(msg);
@@ -143,9 +148,16 @@ export default class AccountClusterService {
     );
 
     const kubeConfigArr: Array<string> = [];
+    const newRootNodes: IRootNode[] = [];
 
     for (const sa of serviceAccounts) {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
+
+      const kubeconfig = await AccountClusterService.vClusterProcess(sa);
+
+      if (kubeconfig) {
+        sa.kubeconfig = kubeconfig;
+      }
 
       const { id, kubeConfigPath } = await AccountClusterService.saveKubeConfig(
         sa
@@ -154,12 +166,12 @@ export default class AccountClusterService {
       kubeConfigArr.push(id);
 
       if (sa.privilege) {
-        const devs = await getAllNamespace({
+        const devArray = await getAllNamespace({
           kubeConfigPath: kubeConfigPath,
           namespace: "default",
         });
 
-        for (const dev of devs) {
+        for (const dev of devArray) {
           dev.storageClass = sa.storageClass;
           dev.devStartAppendCommand = [
             "--priority-class",
@@ -180,7 +192,7 @@ export default class AccountClusterService {
             dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
           }
         }
-        devSpaces.push(...devs);
+        devSpaces.push(...devArray);
       } else {
         for (const ns of sa.namespacePacks) {
           const devInfo: IDevSpaceInfo = {
@@ -201,29 +213,78 @@ export default class AccountClusterService {
         }
       }
 
+      const state = await checkCluster(kubeConfigPath);
       const obj: IRootNode = {
         devSpaces,
         applications,
-        userInfo: newAccountCluser.userInfo,
+        userInfo: newAccountCluster.userInfo,
         clusterSource: ClusterSource.server,
         accountClusterService,
-        id: newAccountCluser.id,
-        createTime: newAccountCluser.createTime,
+        id: newAccountCluster.id,
+        createTime: newAccountCluster.createTime,
         kubeConfigPath,
-        state: await checkCluster(kubeConfigPath),
+        state,
       };
 
       newRootNodes.push(obj);
     }
 
     await AccountClusterService.cleanDiffKubeConfig(
-      newAccountCluser,
+      newAccountCluster,
       kubeConfigArr
     );
 
     return newRootNodes;
   };
 
+  static virtualClusterProc: {
+    [key: string]: { proc: ChildProcessWithoutNullStreams; kubeconfig: string };
+  } = {};
+
+  static async vClusterProcess(sa: IServiceAccountInfo) {
+    const { virtualCluster, kubeconfigType } = sa;
+    if (
+      kubeconfigType === "vcluster" &&
+      virtualCluster.serviceType === "ClusterIP"
+    ) {
+      const {
+        serviceNamespace,
+        servicePort,
+        hostClusterContext,
+        serviceAddress,
+      } = virtualCluster;
+
+      let oldProc = AccountClusterService.virtualClusterProc[serviceAddress];
+      if (oldProc?.proc.killed === false) {
+        return oldProc.kubeconfig;
+      }
+
+      const { proc, kubeconfig } = await kubeConfigRender({
+        namespace: serviceNamespace,
+        kubeconfig: sa.kubeconfig,
+        remotePort: servicePort,
+        context: hostClusterContext,
+        serviceAddress: serviceAddress,
+      });
+
+      oldProc = AccountClusterService.virtualClusterProc[serviceAddress];
+      if (oldProc?.proc.killed === false) {
+        proc.kill();
+        return oldProc.kubeconfig;
+      }
+
+      host.getContext().subscriptions.push({
+        dispose: proc.kill,
+      });
+
+      AccountClusterService.virtualClusterProc[serviceAddress] = {
+        proc,
+        kubeconfig,
+      };
+
+      return kubeconfig;
+    }
+  }
   static async cleanDiffKubeConfig(
     accountCluser: AccountClusterNode,
     configs: Array<string>
@@ -273,7 +334,7 @@ export default class AccountClusterService {
     loginInfo: LoginInfo
   ): Promise<AccountClusterNode> => {
     const accountServer = new AccountClusterService(loginInfo);
-    const newAccountCluser = await accountServer.buildAccountClusterNode();
+    const newAccountCluster = await accountServer.buildAccountClusterNode();
 
     let globalAccountClusterList = host.getGlobalState(SERVER_CLUSTER_LIST);
     if (!Array.isArray(globalAccountClusterList)) {
@@ -285,19 +346,19 @@ export default class AccountClusterService {
     );
 
     const oldAccountIndex = globalAccountClusterList.findIndex(
-      (it: AccountClusterNode) => it.id === newAccountCluser.id
+      (it: AccountClusterNode) => it.id === newAccountCluster.id
     );
 
     if (oldAccountIndex !== -1) {
-      globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluser);
+      globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluster);
     } else {
-      globalAccountClusterList.push(newAccountCluser);
+      globalAccountClusterList.push(newAccountCluster);
     }
 
     globalAccountClusterList = uniqBy(globalAccountClusterList, "id");
     host.setGlobalState(SERVER_CLUSTER_LIST, globalAccountClusterList);
 
-    return newAccountCluser;
+    return newAccountCluster;
   };
 
   buildAccountClusterNode = async (): Promise<AccountClusterNode> => {

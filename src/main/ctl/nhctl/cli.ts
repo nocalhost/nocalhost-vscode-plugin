@@ -9,7 +9,8 @@ import * as semver from "semver";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
-import { spawn } from "child_process";
+
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import { exec, ExecParam, execWithProgress, getExecCommand } from "../shell";
 import host, { Host } from "../../host";
@@ -1603,4 +1604,57 @@ export async function associateQuery(param: {
     .addArgument("--json")
     .toJson()
     .exec();
+}
+export async function kubeConfigRender(param: {
+  serviceAddress: string;
+  namespace: string;
+  kubeconfig: string;
+  context: string;
+  remotePort: string;
+}) {
+  const {
+    namespace,
+    serviceAddress,
+    remotePort,
+    context,
+    kubeconfig: kubeconfigStr,
+  } = param;
+
+  const commands = [
+    NhctlCommand.nhctlPath,
+    "kubeconfig",
+    "render",
+    "--namespace",
+    namespace,
+    "--kubeconfig",
+    "-",
+    "--context",
+    context,
+    serviceAddress,
+    `:${remotePort}`,
+  ];
+  const END_Symbol = "EOF\n";
+  return new Promise<{
+    kubeconfig: string;
+    proc: ChildProcessWithoutNullStreams;
+  }>((res, rej) => {
+    const { proc, promise } = exec({
+      command: commands.join(" "),
+      output: { out: false, err: true },
+    });
+    proc.stdout.on("data", (chuck: Buffer) => {
+      const str = chuck.toString();
+
+      if (str.endsWith(END_Symbol)) {
+        const kubeconfig = str.substring(0, str.lastIndexOf(END_Symbol));
+        res({ kubeconfig, proc });
+        return;
+      }
+    });
+
+    proc.stdin.write(kubeconfigStr);
+    proc.stdin.end();
+
+    promise.catch(rej);
+  });
 }

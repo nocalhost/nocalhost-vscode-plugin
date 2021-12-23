@@ -144,7 +144,7 @@ export async function activate(context: vscode.ExtensionContext) {
     true
   );
 
-  await state.refreshTree();
+  state.refreshTree(false, 15_000);
 
   launchDevSpace();
 
