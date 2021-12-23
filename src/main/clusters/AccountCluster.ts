@@ -148,9 +148,8 @@ export default class AccountClusterService {
     );
 
     const kubeConfigArr: Array<string> = [];
-    const newRootNodes: IRootNode[] = [];
 
-    for (const sa of serviceAccounts) {
+    const serviceNodes = serviceAccounts.map(async (sa) => {
       let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
 
       const kubeconfig = await AccountClusterService.vClusterProcess(sa);
@@ -165,56 +164,59 @@ export default class AccountClusterService {
 
       kubeConfigArr.push(id);
 
-      if (sa.privilege) {
-        const devArray = await getAllNamespace({
-          kubeConfigPath: kubeConfigPath,
-          namespace: "default",
-        });
+      const state = await checkCluster(kubeConfigPath);
 
-        for (const dev of devArray) {
-          dev.storageClass = sa.storageClass;
-          dev.devStartAppendCommand = [
-            "--priority-class",
-            "nocalhost-container-critical",
-          ];
-          dev.kubeconfig = sa.kubeconfig;
+      if (state.code === 200) {
+        if (sa.privilege) {
+          const devArray = await getAllNamespace({
+            kubeConfigPath: kubeConfigPath,
+            namespace: "default",
+          });
 
-          const ns = sa.namespacePacks?.find(
-            (ns) => ns.namespace === dev.namespace
-          );
-
-          dev.spaceId = ns?.spaceId;
-          dev.spaceName = ns?.spacename;
-
-          if (sa.privilegeType === "CLUSTER_ADMIN") {
-            dev.spaceOwnType = "Owner";
-          } else if (sa.privilegeType === "CLUSTER_VIEWER") {
-            dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
-          }
-        }
-        devSpaces.push(...devArray);
-      } else {
-        for (const ns of sa.namespacePacks) {
-          const devInfo: IDevSpaceInfo = {
-            id: ns.spaceId,
-            spaceName: ns.spacename,
-            namespace: ns.namespace,
-            kubeconfig: sa.kubeconfig,
-            accountClusterService,
-            clusterId: sa.clusterId,
-            storageClass: sa.storageClass,
-            spaceOwnType: ns.spaceOwnType,
-            devStartAppendCommand: [
+          for (const dev of devArray) {
+            dev.storageClass = sa.storageClass;
+            dev.devStartAppendCommand = [
               "--priority-class",
               "nocalhost-container-critical",
-            ],
-          };
-          devSpaces.push(devInfo);
+            ];
+            dev.kubeconfig = sa.kubeconfig;
+
+            const ns = sa.namespacePacks?.find(
+              (ns) => ns.namespace === dev.namespace
+            );
+
+            dev.spaceId = ns?.spaceId;
+            dev.spaceName = ns?.spacename;
+
+            if (sa.privilegeType === "CLUSTER_ADMIN") {
+              dev.spaceOwnType = "Owner";
+            } else if (sa.privilegeType === "CLUSTER_VIEWER") {
+              dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
+            }
+          }
+          devSpaces.push(...devArray);
+        } else {
+          for (const ns of sa.namespacePacks) {
+            const devInfo: IDevSpaceInfo = {
+              id: ns.spaceId,
+              spaceName: ns.spacename,
+              namespace: ns.namespace,
+              kubeconfig: sa.kubeconfig,
+              accountClusterService,
+              clusterId: sa.clusterId,
+              storageClass: sa.storageClass,
+              spaceOwnType: ns.spaceOwnType,
+              devStartAppendCommand: [
+                "--priority-class",
+                "nocalhost-container-critical",
+              ],
+            };
+            devSpaces.push(devInfo);
+          }
         }
       }
 
-      const state = await checkCluster(kubeConfigPath);
-      const obj: IRootNode = {
+      return {
         devSpaces,
         applications,
         userInfo: newAccountCluster.userInfo,
@@ -225,16 +227,27 @@ export default class AccountClusterService {
         kubeConfigPath,
         state,
       };
-
-      newRootNodes.push(obj);
-    }
+    });
 
     await AccountClusterService.cleanDiffKubeConfig(
       newAccountCluster,
       kubeConfigArr
     );
 
-    return newRootNodes;
+    return await (await Promise.allSettled(serviceNodes)).map((item) => {
+      if (item.status === "fulfilled") {
+        return item.value;
+      }
+      return {
+        devSpaces: [],
+        userInfo: newAccountCluster.userInfo,
+        clusterSource: ClusterSource.server,
+        accountClusterService,
+        id: newAccountCluster.id,
+        createTime: newAccountCluster.createTime,
+        kubeConfigPath: null,
+      } as IRootNode;
+    });
   };
 
   static virtualClusterProc: {
