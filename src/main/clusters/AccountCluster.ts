@@ -3,6 +3,7 @@ import * as semver from "semver";
 import * as url from "url";
 import { uniqBy, difference } from "lodash";
 import * as path from "path";
+import { promises as fs } from "fs";
 
 import {
   IResponseData,
@@ -17,7 +18,7 @@ import { keysToCamel } from "../utils";
 import {
   checkCluster,
   getAllNamespace,
-  kubeconfig,
+  kubeconfigCommand,
   kubeConfigRender,
 } from "../ctl/nhctl";
 import host from "../host";
@@ -168,10 +169,14 @@ export default class AccountClusterService {
 
       if (state.code === 200) {
         if (sa.privilege) {
+          console.time(`getAllNamespace:${kubeConfigPath}`);
+
           const devArray = await getAllNamespace({
             kubeConfigPath: kubeConfigPath,
             namespace: "default",
           });
+
+          console.timeEnd(`getAllNamespace:${kubeConfigPath}`);
 
           for (const dev of devArray) {
             dev.storageClass = sa.storageClass;
@@ -280,8 +285,19 @@ export default class AccountClusterService {
         serviceAddress: serviceAddress,
       });
 
+      const kubeConfigPath = path.resolve(
+        KUBE_CONFIG_DIR,
+        getStringHash(kubeconfig.trim())
+      );
+
       host.getContext().subscriptions.push({
-        dispose: proc.kill,
+        dispose() {
+          proc.kill();
+
+          kubeconfigCommand(kubeConfigPath, "remove");
+
+          fs.unlink(kubeConfigPath);
+        },
       });
 
       AccountClusterService.virtualClusterProc[serviceAddress] = {
@@ -293,10 +309,10 @@ export default class AccountClusterService {
     }
   }
   static async cleanDiffKubeConfig(
-    accountCluser: AccountClusterNode,
+    accountCluster: AccountClusterNode,
     configs: Array<string>
   ) {
-    const { baseUrl, username } = accountCluser.loginInfo;
+    const { baseUrl, username } = accountCluster.loginInfo;
     const KEY = `USER_LINK:${baseUrl}@${username}`;
 
     const prevData = host.getGlobalState(KEY);
@@ -310,13 +326,9 @@ export default class AccountClusterService {
 
       await Promise.allSettled(
         diff.map((id) => {
-          return new Promise<void>(async (res) => {
-            const file = path.resolve(KUBE_CONFIG_DIR, id);
+          const file = path.resolve(KUBE_CONFIG_DIR, id);
 
-            await kubeconfig(file, "remove");
-
-            res();
-          });
+          kubeconfigCommand(file, "remove");
         })
       );
     }
@@ -332,7 +344,14 @@ export default class AccountClusterService {
     if (!(await isExist(kubeConfigPath))) {
       await writeFileLock(kubeConfigPath, accountInfo.kubeconfig);
 
-      kubeconfig(kubeConfigPath, "add");
+      kubeconfigCommand(kubeConfigPath, "add");
+
+      host.getContext().subscriptions.push({
+        dispose() {
+          kubeconfigCommand(kubeConfigPath, "remove");
+          fs.unlink(kubeConfigPath);
+        },
+      });
     }
 
     return { id, kubeConfigPath };

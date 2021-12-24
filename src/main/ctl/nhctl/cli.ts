@@ -1523,19 +1523,15 @@ export async function checkCluster(
   return result;
 }
 
-export async function kubeconfig(
+export function kubeconfigCommand(
   kubeConfigPath: string,
   command: "add" | "remove"
 ) {
-  const result = await NhctlCommand.create(`kubeconfig ${command}`, {
+  NhctlCommand.create(`kubeconfig ${command}`, {
     kubeConfigPath,
-  })
-    .toJson()
-    .exec();
+  }).exec();
 
   logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
-
-  return result;
 }
 
 export async function devTerminal(
@@ -1638,14 +1634,19 @@ export async function kubeConfigRender(param: {
     kubeconfig: string;
     proc: ChildProcessWithoutNullStreams;
   }>((res, rej) => {
+    const command = commands.join(" ");
+    console.time(command);
+
     const { proc, promise } = exec({
-      command: commands.join(" "),
+      command,
       output: false,
     });
     proc.stdout.on("data", (chuck: Buffer) => {
       const str = chuck.toString();
 
       if (str.endsWith(END_Symbol)) {
+        console.timeEnd(command);
+
         const kubeconfig = str.substring(0, str.lastIndexOf(END_Symbol));
         res({ kubeconfig, proc });
         return;
