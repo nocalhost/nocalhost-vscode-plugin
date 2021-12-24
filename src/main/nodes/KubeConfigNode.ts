@@ -23,7 +23,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   constructor(
     public parent: BaseNocalhostNode,
     public label: string,
-    rootNode: IRootNode
+    private rootNode: IRootNode
   ) {
     super();
 
@@ -41,7 +41,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   public get kubeConfigPath() {
-    return "";
+    return this.rootNode.kubeConfigPath;
   }
 
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
