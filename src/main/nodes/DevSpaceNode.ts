@@ -20,30 +20,16 @@ import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
   public type = NodeType.devSpace;
-  public info: IDevSpaceInfo;
   public hasInit: boolean;
-  public clusterSource: ClusterSource;
-  public applications: Array<IV2ApplicationInfo>;
-  public parent: BaseNocalhostNode;
-  public installedApps: {
-    name: string;
-    type: string;
-  }[] = [];
 
   constructor(
-    parent: BaseNocalhostNode,
+    public parent: BaseNocalhostNode,
     label: string,
-    info: IDevSpaceInfo,
-    applications: Array<IV2ApplicationInfo>,
-    clusterSource: ClusterSource
+    public info: IDevSpaceInfo,
+    public clusterSource: ClusterSource
   ) {
     super();
     this.hasInit = false;
-    this.parent = parent;
-    this.info = info;
-    this.applications = applications;
-    this.installedApps = [];
-    this.clusterSource = clusterSource;
 
     if (label && info.namespace !== label) {
       label += `(${info.namespace})`;
@@ -98,37 +84,6 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     return appNode;
   }
 
-  public getUninstallApps() {
-    const installedAppNames = this.installedApps.map((app) => app.name);
-    // installedAppNames.push("DEFAULT RESOURCE");
-    installedAppNames.push("default.application");
-    const arr = this.applications.filter((a) => {
-      const context = a.context;
-      let jsonObj = JSON.parse(context);
-      const appName = jsonObj["applicationName"];
-      if (installedAppNames.includes(appName)) {
-        return false;
-      } else {
-        return true;
-      }
-    });
-
-    return arr;
-  }
-
-  public getApplication(name: string) {
-    const apps = this.applications.filter((item) => {
-      const context = item.context;
-      let jsonObj = JSON.parse(context);
-      const appName = jsonObj["applicationName"];
-      if (appName === name) {
-        return true;
-      }
-    });
-
-    return apps[0];
-  }
-
   public getKubeConfigPath() {
     const node = this.getParent() as KubeConfigNode;
 
@@ -136,7 +91,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   }
 
   public async updateData(isInit?: boolean): Promise<any> {
-    let data = [];
+    let data: nhctl.InstalledAppInfo[] = [];
 
     if (!this.resetting()) {
       data = await this.getInstalledApp(
@@ -145,14 +100,13 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       );
 
       this.hasInit = true;
-      this.installedApps = data;
 
       this.cleanDiffApp(data);
     }
 
-    state.setData(this.getNodeStateId(), this.installedApps, isInit);
+    state.setData(this.getNodeStateId(), data, isInit);
 
-    return this.installedApps;
+    return data;
   }
 
   private cleanDiffApp(resources: nhctl.InstalledAppInfo[]) {
@@ -199,10 +153,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     return !!state.getAppState(this.getNodeStateId(), "resetting");
   }
   getAppNode(item: nhctl.InstalledAppInfo) {
-    let app = this.getApplication(item.name);
-    if (!app) {
-      app = this.buildApplicationInfo(item.name);
-    }
+    let app = this.buildApplicationInfo(item.name);
     return this.buildAppNode(app);
   }
 
@@ -213,15 +164,12 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
       data = await this.updateData(true);
     }
 
-    // updateData
-    // TODO: DISPLAY LOCAL APP NOT FILTER
     const nodes = data.map(this.getAppNode.bind(this));
 
     const result = nodes.filter((node) => {
-      if (node instanceof AppNode) {
-        return true;
-      }
+      return node instanceof AppNode;
     });
+
     return result as AppNode[];
   }
 

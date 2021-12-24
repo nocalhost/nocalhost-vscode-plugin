@@ -7,7 +7,6 @@ import { NhctlCommand } from "../../ctl/nhctl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
 import { AppNode } from "../AppNode";
 import { BaseNocalhostNode } from "../types/nodeType";
-import { DevSpaceNode } from "../DevSpaceNode";
 import { RefreshData } from "../impl/updateData";
 
 export abstract class KubernetesResourceFolder
@@ -117,38 +116,5 @@ export abstract class KubernetesResourceFolder
     }
 
     return false;
-  }
-
-  public filterResource(resources: Array<IK8sResource>, appNode: AppNode) {
-    // const isLocal = host.getGlobalState(IS_LOCAL);
-    // if (isLocal) {
-    //   return resources;
-    // }
-    return resources.filter((r) => {
-      if (
-        r.metadata &&
-        r.metadata["annotations"] &&
-        r.metadata["annotations"]["dev.nocalhost/application-name"] ===
-          appNode.name
-      ) {
-        return true;
-      }
-
-      if (
-        r.metadata &&
-        r.metadata["annotations"] &&
-        r.metadata["annotations"]["meta.helm.sh/release-name"] === appNode.name
-      ) {
-        return true;
-      }
-      const devspace = appNode.getParent() as DevSpaceNode;
-      const installedAppNames = devspace.installedApps.map((item) => item.name);
-
-      if (this.isOther(r, appNode.name, installedAppNames)) {
-        return true;
-      }
-
-      return false;
-    });
   }
 }

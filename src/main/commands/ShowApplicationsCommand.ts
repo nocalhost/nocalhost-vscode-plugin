@@ -22,40 +22,41 @@ export default class ShowApplicationsCommand implements ICommand {
       return;
     }
 
-    await NhctlCommand.authCheck({
-      base: "install",
-      args: ["checkApp"],
-      kubeConfigPath: node.getKubeConfigPath(),
-      namespace: node.info.namespace,
-    }).exec();
+    // TODO VCluster
+    // await NhctlCommand.authCheck({
+    //   base: "install",
+    //   args: ["checkApp"],
+    //   kubeConfigPath: node.getKubeConfigPath(),
+    //   namespace: node.info.namespace,
+    // }).exec();
 
-    if (node.clusterSource === ClusterSource.server) {
-      const accountClusterService: AccountClusterService =
-        node.parent.accountClusterService;
+    // if (node.clusterSource === ClusterSource.server) {
+    //   const accountClusterService: AccountClusterService =
+    //     node.parent.accountClusterService;
 
-      accountClusterService.checkServerVersion();
-    }
+    //   accountClusterService.checkServerVersion();
+    // }
 
-    const apps = node.getUninstallApps();
-    // show appName
-    const appNames = apps.map((app) => {
-      const context = app.context;
-      let jsonObj = JSON.parse(context);
-      const appName = jsonObj["applicationName"] as string;
-      return appName;
-    });
+    // const apps = node.getUninstallApps();
+    // // show appName
+    // const appNames = apps.map((app) => {
+    //   const context = app.context;
+    //   let jsonObj = JSON.parse(context);
+    //   const appName = jsonObj["applicationName"] as string;
+    //   return appName;
+    // });
 
-    const result = await vscode.window.showQuickPick(appNames, {
-      ignoreFocusOut: true,
-    });
-    if (!result) {
-      return;
-    }
-    const app = node.getApplication(result);
+    // const result = await vscode.window.showQuickPick(appNames, {
+    //   ignoreFocusOut: true,
+    // });
+    // if (!result) {
+    //   return;
+    // }
+    // const app = node.getApplication(result);
 
-    // build appNode
-    const appNode = node.buildAppNode(app);
+    // // build appNode
+    // const appNode = node.buildAppNode(app);
 
-    vscode.commands.executeCommand(INSTALL_APP, appNode);
+    // vscode.commands.executeCommand(INSTALL_APP, appNode);
   }
 }

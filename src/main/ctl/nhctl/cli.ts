@@ -22,7 +22,6 @@ import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
 import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";
 import logger from "../../utils/logger";
-import { IDevSpaceInfo } from "../../domain";
 import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
 import { keysToCamel } from "../../utils";
@@ -32,6 +31,7 @@ import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
 import { Associate, IPortForward } from "./type";
 import state from "../../state";
+import { ObjectMeta } from "../../nodes/types/Meta";
 
 export interface InstalledAppInfo {
   name: string;
@@ -385,55 +385,22 @@ export async function getResourceList(
     .exec();
   return (result || []).map((it: any) => ({ ...it.info }));
 }
+export async function getNamespace(kubeConfigPath: string): Promise<string[]> {
+  return await exec({
+    command: `${NhctlCommand.nhctlPath} get ns --kubeconfig ${kubeConfigPath} -o json`,
+    timeout: GLOBAL_TIMEOUT,
+  })
+    .promise.then((res) => {
+      const results: { info: { metadata: ObjectMeta } }[] = JSON.parse(
+        res.stdout
+      );
 
-export async function getAllNamespace(props: IBaseCommand<unknown>) {
-  const devspaces = new Array<IDevSpaceInfo>();
-  const kubeConfig = fs.readFileSync(props.kubeConfigPath);
-  const result = await NhctlCommand.get(props)
-    .addArgument("ns")
-    .addArgument("-o", "json")
-    .toJson()
-    .exec();
-  if (!result) {
-    const devspace: IDevSpaceInfo = {
-      id: 0,
-      userId: 0,
-      spaceName: props.namespace,
-      clusterId: 0,
-      kubeconfig: `${kubeConfig}`,
-      memory: 0,
-      cpu: 0,
-      spaceResourceLimit: "",
-      namespace: props.namespace,
-      status: 0,
-      storageClass: "",
-      devStartAppendCommand: [],
-    };
-
-    devspaces.push(devspace);
-
-    return devspaces;
-  }
-  (result || []).forEach((it: any) => {
-    const ns = it.info;
-    const devspace: IDevSpaceInfo = {
-      id: 0,
-      userId: 0,
-      spaceName: ns["metadata"]["name"],
-      clusterId: 0,
-      kubeconfig: `${kubeConfig}`,
-      memory: 0,
-      cpu: 0,
-      spaceResourceLimit: "",
-      namespace: ns["metadata"]["name"],
-      status: 0,
-      storageClass: "",
-      devStartAppendCommand: [],
-    };
-
-    devspaces.push(devspace);
-  });
-  return devspaces;
+      return results.map((item) => item.info.metadata.name);
+    })
+    .catch((err) => {
+      logger.error("getNamespace", kubeConfigPath, err);
+      return [];
+    });
 }
 
 export async function getAll(params: IBaseCommand) {
