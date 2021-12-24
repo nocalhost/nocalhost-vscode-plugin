@@ -1,3 +1,4 @@
+const { installManifestGit } = require("./install");
 const namespaceName = process.env.NOCALHOST_NAMESPACE ?? "default";
 // cls-qnzlf1u0
 const clusterName = process.env.NOCALHOST_CLUSTER_NAME ?? "";
@@ -38,6 +39,10 @@ const expandTree = async (page) => {
     await namespace.click();
     await page.waitForTimeout(1000);
     application = await sidebar.$(`div[aria-label="bookinfo "]`);
+    if (!application) {
+      await installManifestGit(page);
+      application = await sidebar.$(`div[aria-label="bookinfo "]`);
+    }
   }
 
   // workload
