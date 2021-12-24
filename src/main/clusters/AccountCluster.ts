@@ -4,11 +4,11 @@ import * as url from "url";
 import { uniqBy, difference } from "lodash";
 import * as path from "path";
 import { promises as fs } from "fs";
+import * as assert from "assert";
 
 import {
   IResponseData,
   IServiceAccountInfo,
-  IDevSpaceInfo,
   IV2ApplicationInfo,
   IUserInfo,
   IRootNode,
@@ -17,7 +17,6 @@ import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
 import {
   checkCluster,
-  getAllNamespace,
   kubeconfigCommand,
   kubeConfigRender,
 } from "../ctl/nhctl";
@@ -76,7 +75,6 @@ export default class AccountClusterService {
         const config = response.config;
         const res = response.data;
         if (res.code === 20103) {
-          // refresh token
           if (config.url === "/v1/token/refresh") {
             host.log(
               `Please login again ${this.loginInfo.baseUrl || ""}:${
@@ -102,7 +100,6 @@ export default class AccountClusterService {
         }
 
         if (res.code !== 0) {
-          // vscode.window.showErrorMessage(res.message || "");
           return Promise.reject({ source: "api", error: res });
         }
 
@@ -134,25 +131,14 @@ export default class AccountClusterService {
       }`
     );
 
-    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
-      const msg = `no cluster found for ${newAccountCluster.loginInfo.baseUrl} ${newAccountCluster.loginInfo.username}`;
-
-      logger.error(msg);
-      throw new Error(msg);
-    }
-
-    const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
-    logger.info(
-      `[getServerClusterRootNodes] applications length ${
-        (applications || []).length
-      }`
+    assert(
+      Array.isArray(serviceAccounts) && serviceAccounts.length,
+      `no cluster found for ${newAccountCluster.loginInfo.baseUrl} ${newAccountCluster.loginInfo.username}`
     );
 
     const kubeConfigArr: Array<string> = [];
 
     const serviceNodes = serviceAccounts.map(async (sa) => {
-      let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
-
       const kubeconfig = await AccountClusterService.vClusterProcess(sa);
 
       if (kubeconfig) {
@@ -167,63 +153,9 @@ export default class AccountClusterService {
 
       const state = await checkCluster(kubeConfigPath);
 
-      if (state.code === 200) {
-        if (sa.privilege) {
-          console.time(`getAllNamespace:${kubeConfigPath}`);
-
-          const devArray = await getAllNamespace({
-            kubeConfigPath: kubeConfigPath,
-            namespace: "default",
-          });
-
-          console.timeEnd(`getAllNamespace:${kubeConfigPath}`);
-
-          for (const dev of devArray) {
-            dev.storageClass = sa.storageClass;
-            dev.devStartAppendCommand = [
-              "--priority-class",
-              "nocalhost-container-critical",
-            ];
-            dev.kubeconfig = sa.kubeconfig;
-
-            const ns = sa.namespacePacks?.find(
-              (ns) => ns.namespace === dev.namespace
-            );
-
-            dev.spaceId = ns?.spaceId;
-            dev.spaceName = ns?.spacename;
-
-            if (sa.privilegeType === "CLUSTER_ADMIN") {
-              dev.spaceOwnType = "Owner";
-            } else if (sa.privilegeType === "CLUSTER_VIEWER") {
-              dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
-            }
-          }
-          devSpaces.push(...devArray);
-        } else {
-          for (const ns of sa.namespacePacks) {
-            const devInfo: IDevSpaceInfo = {
-              id: ns.spaceId,
-              spaceName: ns.spacename,
-              namespace: ns.namespace,
-              kubeconfig: sa.kubeconfig,
-              accountClusterService,
-              clusterId: sa.clusterId,
-              storageClass: sa.storageClass,
-              spaceOwnType: ns.spaceOwnType,
-              devStartAppendCommand: [
-                "--priority-class",
-                "nocalhost-container-critical",
-              ],
-            };
-            devSpaces.push(devInfo);
-          }
-        }
-      }
-
       return {
-        devSpaces,
-        applications,
+        devSpaces: [],
+        applications: [],
         userInfo: newAccountCluster.userInfo,
         clusterSource: ClusterSource.server,
         accountClusterService,
@@ -250,7 +182,6 @@ export default class AccountClusterService {
         accountClusterService,
         id: newAccountCluster.id,
         createTime: newAccountCluster.createTime,
-        kubeConfigPath: null,
       } as IRootNode;
     });
   };
@@ -308,6 +239,7 @@ export default class AccountClusterService {
       return kubeconfig;
     }
   }
+
   static async cleanDiffKubeConfig(
     accountCluster: AccountClusterNode,
     configs: Array<string>
@@ -326,9 +258,9 @@ export default class AccountClusterService {
 
       await Promise.allSettled(
         diff.map((id) => {
-          const file = path.resolve(KUBE_CONFIG_DIR, id);
+          const filePath = path.resolve(KUBE_CONFIG_DIR, id);
 
-          kubeconfigCommand(file, "remove");
+          kubeconfigCommand(filePath, "remove");
         })
       );
     }
@@ -345,13 +277,6 @@ export default class AccountClusterService {
       await writeFileLock(kubeConfigPath, accountInfo.kubeconfig);
 
       kubeconfigCommand(kubeConfigPath, "add");
-
-      host.getContext().subscriptions.push({
-        dispose() {
-          kubeconfigCommand(kubeConfigPath, "remove");
-          fs.unlink(kubeConfigPath);
-        },
-      });
     }
 
     return { id, kubeConfigPath };
@@ -429,14 +354,12 @@ export default class AccountClusterService {
       {},
       {
         headers: {
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           Reraeb: this.refreshToken || "",
         },
       }
     );
     if (response.status === 200 && response.data) {
       const {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         data: { token, refresh_token },
         code,
       } = response.data;

@@ -107,9 +107,6 @@ async function getResourceNode() {
               if (node.clusterSource === ClusterSource.local) {
                 name = await getClusterName({
                   clusterSource: ClusterSource.server,
-                  devSpaces: node.devSpaceInfos,
-                  applications: [],
-                  state: { code: 200 },
                   kubeConfigPath: node.kubeConfigPath,
                 });
               }

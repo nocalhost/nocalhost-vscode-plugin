@@ -5,10 +5,9 @@ import * as fs from "fs";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
 import { isExistSync, writeFileAsync } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
-import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
-import { checkCluster, getAllNamespace, kubeconfigCommand } from "../ctl/nhctl";
+import { checkCluster, kubeconfigCommand } from "../ctl/nhctl";
 import { ClusterSource } from "../common/define";
 import { ClustersState } from ".";
 
@@ -33,72 +32,20 @@ export default class LocalCluster {
   }
 
   static getLocalClusterRootNode = async (
-    newLocalCluster: LocalClusterNode
+    localCluster: LocalClusterNode
   ): Promise<IRootNode> => {
-    if (!newLocalCluster || !newLocalCluster.filePath) {
-      return;
-    }
-    const { filePath, createTime } = newLocalCluster;
-    let kubeConfig = "";
-    let applications: IV2ApplicationInfo[] = [];
-    let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
-    if (!isExistSync(filePath)) {
-      host.log(`no such file or directory: ${filePath}`);
-      return;
-    }
-    const kubeStr = fs.readFileSync(filePath);
-    const kubeConfigObj = yaml.parse(`${kubeStr}`);
-    kubeConfig = `${kubeStr}`;
-    const contexts = kubeConfigObj["contexts"];
-    if (!contexts || contexts.length === 0) {
-      return;
-    }
-    let defaultNamespace = contexts[0]["context"]["namespace"] || "";
-    if (kubeConfigObj["current-context"]) {
-      const currentContext = contexts.find(
-        (it: any) => it.name === kubeConfigObj["current-context"]
-      );
-      if (currentContext) {
-        defaultNamespace = currentContext.context.namespace;
-      }
-    }
-    const state = await checkCluster(filePath);
+    const { filePath, createTime } = localCluster;
 
-    if (state.code === 200) {
-      devSpaces = await getAllNamespace({
-        kubeConfigPath: filePath,
-        namespace: defaultNamespace as string,
-      });
-    }
-
-    const contextObj = {
-      applicationName: "default.application",
-      applicationUrl: "",
-      applicationConfigPath: "",
-      nocalhostConfig: "",
-      source: "",
-      resourceDir: "",
-      installType: "",
-    };
-    applications.push({
-      id: 0,
-      userId: 0,
-      public: 1,
-      editable: 1,
-      context: JSON.stringify(contextObj),
-      status: 1,
-    });
-    const obj: IRootNode = {
-      id: newLocalCluster.id,
-      devSpaces,
-      clusterName: newLocalCluster.clusterNickName,
+    return {
+      id: localCluster.id,
+      devSpaces: [],
+      clusterName: localCluster.clusterNickName,
       createTime,
       clusterSource: ClusterSource.local,
-      applications,
+      applications: [],
       kubeConfigPath: filePath,
-      state,
-    };
-    return obj;
+      state: await checkCluster(filePath),
+    } as IRootNode;
   };
 
   static verifyLocalCluster = () => {

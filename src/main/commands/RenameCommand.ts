@@ -39,7 +39,7 @@ export default class ResetCommand implements ICommand {
     const localClusterNodes =
       (host.getGlobalState(LOCAL_PATH) as LocalClusterNode[]) || [];
 
-    const kubeConfigPath = node.getKubeConfigPath();
+    const kubeConfigPath = node.kubeConfigPath;
 
     (localClusterNodes || []).forEach((it) => {
       if (it.filePath === kubeConfigPath) {

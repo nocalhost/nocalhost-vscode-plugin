@@ -132,7 +132,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public getKubeConfigPath() {
     const node = this.getParent() as KubeConfigNode;
 
-    return node.getKubeConfigPath();
+    return node.kubeConfigPath;
   }
 
   public async updateData(isInit?: boolean): Promise<any> {

@@ -18,7 +18,7 @@ export default class ViewKubeConfigCommand implements ICommand {
       return;
     }
 
-    const fsPath = node.getKubeConfigPath();
+    const fsPath = node.kubeConfigPath;
     const uri = vscode.Uri.parse(
       `Nocalhost://nh/kubeConfig/${node.label}.yaml?fsPath=${fsPath}&kubeConfigPath=${fsPath}`
     );

@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ColorThemeKind } from "vscode";
 import * as ProperLockfile from "proper-lockfile";
 import * as yaml from "yaml";
 import * as vscode from "vscode";

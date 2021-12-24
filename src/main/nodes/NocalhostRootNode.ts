@@ -1,4 +1,4 @@
-import { difference, get, orderBy } from "lodash";
+import { difference, get, orderBy, result } from "lodash";
 import * as vscode from "vscode";
 import { sortResources } from "../clusters";
 import AccountClusterService, {
@@ -24,7 +24,9 @@ import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 
-export async function getClusterName(res: IRootNode) {
+export async function getClusterName(
+  res: Pick<IRootNode, "kubeConfigPath" | "clusterSource">
+) {
   if (!res.kubeConfigPath) {
     return "unknown";
   }
@@ -64,40 +66,17 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           token?.isCancellationRequested ||
           !isExistSync(localCluster.filePath)
         ) {
-          return Promise.reject();
+          return Promise.resolve(null);
         }
 
         return LocalCusterService.getLocalClusterRootNode(localCluster);
       },
       GLOBAL_TIMEOUT
     ).then((results) => {
-      return results.map((result, index) => {
-        if (result.status === "fulfilled") {
-          return result.value;
-        }
-
-        const localCluster = localClusterNodes[index];
-
-        logger.error("get localCluster error", result.reason, localCluster);
-
-        const root: IRootNode = {
-          ...localCluster,
-          clusterSource: ClusterSource.local,
-          clusterName: localCluster.clusterNickName,
-          kubeConfigPath: localCluster.filePath,
-          devSpaces: [],
-          applications: [],
-          state: {
-            code: 201,
-            info: result.reason,
-          },
-        };
-
-        return root;
+      return results.map((result: unknown) => {
+        return (result as PromiseFulfilledResult<IRootNode>).value;
       });
     });
-
-    nodes = nodes.filter((node) => node);
 
     return nodes;
   }
@@ -144,7 +123,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
             kubeConfigPath: null,
             state: {
               code: 201,
-              info: result.reason?.message,
+              err: result.reason?.message,
             },
           };
 
@@ -177,7 +156,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     let resultData = sortResources(data.flat(1));
 
-    await this.cleanDiffDevSpace(resultData);
+    this.cleanDiffDevSpace(resultData);
 
     state.setData(this.getNodeStateId(), resultData, isInit);
 
@@ -329,20 +308,12 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   }
 
   async getKubeConfigNode(res: IRootNode) {
-    const clusterName = await getClusterName(res);
-
-    return new KubeConfigNode({
-      id: res.id,
-      label: clusterName,
-      parent: this,
-      kubeConfigPath: res.kubeConfigPath,
-      devSpaceInfos: res.devSpaces,
-      applications: res.applications,
-      userInfo: res.userInfo,
-      clusterSource: res.clusterSource,
-      accountClusterService: res.accountClusterService,
-      state: res.state,
+    const clusterName = await getClusterName(res).catch((err) => {
+      logger.error("getClusterName", err);
+      return res.clusterName;
     });
+
+    return new KubeConfigNode(this, clusterName, res);
   }
   async getChildren(
     parent?: BaseNocalhostNode
@@ -353,48 +324,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       resources = await this.updateData(true);
     }
 
-    resources = resources.filter((it) => Boolean(it));
-
-    const children = await asyncLimit(
-      resources,
-      this.getKubeConfigNode.bind(this)
-    ).then((results) => {
-      const nodes: BaseNocalhostNode[] = results.map((result, index) => {
-        if (result.status === "fulfilled") {
-          return result.value;
-        }
-
-        const res = resources[index];
-
-        let info = result.reason;
-
-        if (result.reason instanceof Error) {
-          info = result.reason.message;
-          logger.error("get serverCluster error", result.reason, res.userInfo);
-        }
-
-        return new KubeConfigNode({
-          id: res.id,
-          label: res.clusterName,
-          parent: this,
-          kubeConfigPath: res.kubeConfigPath,
-          devSpaceInfos: res.devSpaces,
-          applications: res.applications,
-          userInfo: res.userInfo,
-          clusterSource: res.clusterSource,
-          accountClusterService: res.accountClusterService,
-          state: {
-            code: 201,
-            info,
-          },
-        });
-      });
-
-      return orderBy(nodes, ["label"]);
-    });
-
+    const children = resources.map((res) => this.getKubeConfigNode(res));
     this.hasInit = true;
-    return children;
+
+    return Promise.all(children);
   }
 
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {

@@ -28,7 +28,7 @@ export default class DeleteKubeConfigCommand implements ICommand {
     const localClusterNodes: LocalClusterNode[] = host.getGlobalState(
       LOCAL_PATH
     ) as LocalClusterNode[];
-    const kubeConfigPath = node.getKubeConfigPath();
+    const kubeConfigPath = node.kubeConfigPath;
     const index = localClusterNodes.findIndex(
       (it: LocalClusterNode) => it.filePath === kubeConfigPath
     );
@@ -63,11 +63,5 @@ export default class DeleteKubeConfigCommand implements ICommand {
         fs.unlinkSync(f.filePath);
       }
     });
-
-    // if (tmpPath.length === 0) {
-    //   await vscode.commands.executeCommand(SIGN_OUT);
-    // } else {
-    //   await vscode.commands.executeCommand(REFRESH);
-    // }
   }
 }
