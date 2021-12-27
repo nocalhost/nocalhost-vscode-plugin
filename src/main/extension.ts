@@ -40,7 +40,7 @@ import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
 import TextDocumentContentProvider from "./textDocumentContentProvider";
 import { checkVersion } from "./ctl/nhctl";
-import logger from "./utils/logger";
+import logger, { loggerDebug } from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 // import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
@@ -161,7 +161,7 @@ function bindEvent() {
       return;
     }
 
-    logger.debug("refreshTree", value);
+    loggerDebug.debug("refreshTree", value);
 
     state.startAutoRefresh(true);
   });

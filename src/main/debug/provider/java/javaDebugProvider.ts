@@ -3,7 +3,7 @@ import * as assert from "assert";
 import * as AsyncRetry from "async-retry";
 
 import { IDebugProvider } from "../IDebugProvider";
-import logger from "../../../utils/logger";
+import { loggerDebug } from "../../../utils/logger";
 import { JDWP } from "./jdwp";
 
 export class JavaDebugProvider extends IDebugProvider {
@@ -68,7 +68,7 @@ export class JavaDebugProvider extends IDebugProvider {
     const result = await jdwp.getVersion();
     assert(result);
 
-    logger.debug("jdwp version", result);
+    loggerDebug.debug("jdwp version", result);
 
     await jdwp.destroy();
   }

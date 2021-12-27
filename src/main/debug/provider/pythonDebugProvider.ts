@@ -2,7 +2,7 @@ import { DebugConfiguration } from "vscode";
 import * as assert from "assert";
 
 import { IDebugProvider } from "./IDebugProvider";
-import logger from "../../utils/logger";
+import logger, { loggerDebug } from "../../utils/logger";
 import { SocketDebugClient } from "../SocketDebugClient";
 
 export class PythonDebugProvider extends IDebugProvider {
@@ -43,7 +43,7 @@ export class PythonDebugProvider extends IDebugProvider {
 
     assert(result.success);
 
-    logger.debug("debugpy debugpySystemInfo", result);
+    loggerDebug.debug("debugpy debugpySystemInfo", result);
 
     debugClient.destroy();
   }

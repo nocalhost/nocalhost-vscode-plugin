@@ -21,7 +21,7 @@ import * as packageJson from "../../../../package.json";
 import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
 import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";
-import logger from "../../utils/logger";
+import logger, { loggerDebug } from "../../utils/logger";
 import { IDevSpaceInfo } from "../../domain";
 import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
@@ -1533,7 +1533,7 @@ export async function kubeconfigCommand(
     .toJson()
     .exec();
 
-  logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
+  loggerDebug.debug(`kubeconfig ${command}:${kubeConfigPath}`);
 
   return result;
 }
@@ -1653,7 +1653,7 @@ export async function kubeConfigRender(param: {
       const str = chuck.toString();
 
       if (str.endsWith(END_Symbol)) {
-        logger.debug(command, Date.now() - time);
+        loggerDebug.debug(command, Date.now() - time);
 
         const kubeconfig = str.substring(0, str.lastIndexOf(END_Symbol));
         res({ kubeconfig, proc });

@@ -157,8 +157,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
 
     state.setData(this.getNodeStateId(), devSpaces);
 
-    this.cleanDiffDevSpace(devSpaces);
-
     return devSpaces;
   }
 

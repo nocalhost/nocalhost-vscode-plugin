@@ -7,7 +7,7 @@ import { commands, DebugConfiguration } from "vscode";
 import { v4 } from "uuid";
 import { delay } from "lodash";
 
-import logger from "../../utils/logger";
+import logger, { loggerDebug } from "../../utils/logger";
 import { getPromiseWithAbort } from "../../utils";
 import host from "../../host";
 import { IDebugProvider } from "./IDebugProvider";
@@ -215,6 +215,6 @@ export class GoDebugProvider extends IDebugProvider {
 
     assert(result);
 
-    logger.debug("dlv GetVersion", result);
+    loggerDebug.debug("dlv GetVersion", result);
   }
 }

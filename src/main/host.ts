@@ -5,8 +5,6 @@ import {
   Progress,
   QuickPickOptions,
 } from "vscode";
-import { execSync } from "child_process";
-import logger from "./utils/logger";
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -17,7 +15,7 @@ export class Host implements vscode.Disposable {
     100
   );
 
-  private devspaceDisposesMap = new Map<
+  private devSpaceDisposesMap = new Map<
     string,
     Map<
       string,
@@ -89,7 +87,7 @@ export class Host implements vscode.Disposable {
   }
 
   public disposeApp(devspaceName: string, id: string) {
-    const appMap = this.devspaceDisposesMap.get(devspaceName);
+    const appMap = this.devSpaceDisposesMap.get(devspaceName);
     if (!appMap) {
       return;
     }
@@ -107,7 +105,7 @@ export class Host implements vscode.Disposable {
   }
 
   public disposeDevspace(devspaceName: string) {
-    const appMap = this.devspaceDisposesMap.get(devspaceName);
+    const appMap = this.devSpaceDisposesMap.get(devspaceName);
     if (!appMap) {
       return;
     }
@@ -117,11 +115,11 @@ export class Host implements vscode.Disposable {
     });
 
     appMap.clear();
-    this.devspaceDisposesMap.delete(devspaceName);
+    this.devSpaceDisposesMap.delete(devspaceName);
   }
 
   public disposeWorkload(devspaceName: string, appId: string, id: string) {
-    const appMap = this.devspaceDisposesMap.get(devspaceName);
+    const appMap = this.devSpaceDisposesMap.get(devspaceName);
     if (!appMap) {
       return;
     }
@@ -147,10 +145,10 @@ export class Host implements vscode.Disposable {
     id: string,
     obj: { dispose: () => any }
   ) {
-    let appMap = this.devspaceDisposesMap.get(devspaceName);
+    let appMap = this.devSpaceDisposesMap.get(devspaceName);
     if (!appMap) {
       appMap = new Map();
-      this.devspaceDisposesMap.set(devspaceName, appMap);
+      this.devSpaceDisposesMap.set(devspaceName, appMap);
     }
     let workloadMap = appMap.get(appId);
     if (!workloadMap) {
@@ -317,10 +315,10 @@ export class Host implements vscode.Disposable {
     this.statusBar.dispose();
     this.outputChannel.dispose();
 
-    this.devspaceDisposesMap.forEach((m, key) => {
+    this.devSpaceDisposesMap.forEach((m, key) => {
       this.disposeDevspace(key);
     });
-    this.devspaceDisposesMap = new Map();
+    this.devSpaceDisposesMap = new Map();
   }
 
   getCurrentRootPath() {

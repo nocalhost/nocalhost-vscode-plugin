@@ -4,6 +4,8 @@ import * as url from "url";
 import { uniqBy, difference } from "lodash";
 import * as path from "path";
 import { promises as fs } from "fs";
+import * as assert from "assert";
+import { ChildProcessWithoutNullStreams } from "child_process";
 
 import {
   IResponseData,
@@ -12,7 +14,7 @@ import {
   IUserInfo,
   IRootNode,
 } from "../domain";
-import logger from "../utils/logger";
+import logger, { loggerDebug } from "../utils/logger";
 import { keysToCamel } from "../utils";
 import {
   checkCluster,
@@ -27,7 +29,6 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
 import { ClustersState } from ".";
-import { ChildProcessWithoutNullStreams } from "child_process";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -55,6 +56,9 @@ export function buildRootNodeForAccountCluster(
     state,
   };
 }
+const virtualClusterProcMap: {
+  [key: string]: { proc: ChildProcessWithoutNullStreams; kubeconfig: string };
+} = {};
 export default class AccountClusterService {
   instance: AxiosInstance;
   accountClusterNode: AccountClusterNode;
@@ -149,12 +153,10 @@ export default class AccountClusterService {
       }`
     );
 
-    if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
-      const msg = `no cluster found for ${newAccountCluster.loginInfo.baseUrl} ${newAccountCluster.loginInfo.username}`;
-
-      logger.error(msg);
-      throw new Error(msg);
-    }
+    assert(
+      Array.isArray(serviceAccounts) && serviceAccounts.length > 0,
+      `no cluster found for ${newAccountCluster.loginInfo.baseUrl} ${newAccountCluster.loginInfo.username}`
+    );
 
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
     logger.info(
@@ -217,10 +219,6 @@ export default class AccountClusterService {
     });
   };
 
-  static virtualClusterProc: {
-    [key: string]: { proc: ChildProcessWithoutNullStreams; kubeconfig: string };
-  } = {};
-
   static async vClusterProcess(sa: IServiceAccountInfo) {
     const { virtualCluster, kubeconfigType } = sa;
     if (
@@ -234,7 +232,7 @@ export default class AccountClusterService {
         serviceAddress,
       } = virtualCluster;
 
-      let oldProc = AccountClusterService.virtualClusterProc[serviceAddress];
+      let oldProc = virtualClusterProcMap[serviceAddress];
       if (oldProc?.proc.killed === false) {
         return oldProc.kubeconfig;
       }
@@ -254,7 +252,7 @@ export default class AccountClusterService {
 
       host.getContext().subscriptions.push({
         dispose: () => {
-          logger.debug("dispose", kubeConfigPath);
+          loggerDebug.debug("dispose", kubeConfigPath);
 
           proc.kill();
           kubeconfigCommand(kubeConfigPath, "remove");
@@ -262,7 +260,7 @@ export default class AccountClusterService {
           return fs.unlink(kubeConfigPath);
         },
       });
-      AccountClusterService.virtualClusterProc[serviceAddress] = {
+      virtualClusterProcMap[serviceAddress] = {
         proc,
         kubeconfig,
       };
@@ -458,7 +456,7 @@ export default class AccountClusterService {
     } catch (e) {
       logger.error("getServiceAccount", e);
 
-      throw new Error(
+      throw Error(
         `failed to get cluster for ${this.loginInfo.baseUrl}@${this.loginInfo.username}`
       );
     }
@@ -489,7 +487,7 @@ export default class AccountClusterService {
   async checkServerVersion(): Promise<void> {
     const res = await this.getVersion();
 
-    const log = `checkVersion serverVersion:${res.data?.version} packageVerison:${packageJson.nhctl.serverVersion}`;
+    const log = `checkVersion serverVersion:${res.data?.version} packageVersion:${packageJson.nhctl.serverVersion}`;
     logger.info(log);
 
     if (res.data?.version) {

@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { isEqual } from "lodash";
 import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
-import logger from "./utils/logger";
+import logger, { loggerDebug } from "./utils/logger";
 import { asyncLimit } from "./utils";
 import { GLOBAL_TIMEOUT } from "./constants";
 
@@ -262,7 +262,7 @@ class State {
 
     for (let key of this.stateMap.keys()) {
       if (key.startsWith(stateId)) {
-        logger.debug("stateMap", key);
+        loggerDebug.debug("stateMap", key);
         this.stateMap.delete(key);
       }
     }
@@ -273,7 +273,7 @@ class State {
 
     for (let key of this.refreshFolderMap.keys()) {
       if (key.startsWith(stateId)) {
-        logger.debug("cleanAutoRefresh", key);
+        loggerDebug.debug("cleanAutoRefresh", key);
         this.refreshFolderMap.delete(key);
       }
     }
