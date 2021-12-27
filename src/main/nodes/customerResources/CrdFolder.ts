@@ -13,6 +13,7 @@ export class CrdFolder extends KubernetesResourceFolder {
   constructor(public parent: BaseNocalhostNode) {
     super();
     this.parent = parent;
+    state.setNode(this.getNodeStateId(), this);
   }
 
   public getAppInfo() {
