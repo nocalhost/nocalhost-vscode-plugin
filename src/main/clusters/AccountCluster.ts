@@ -165,56 +165,6 @@ export default class AccountClusterService {
 
       const state = await checkCluster(kubeConfigPath);
 
-      // if (state.code === 200) {
-      //   if (sa.privilege) {
-      //     const devArray = await getAllNamespace({
-      //       kubeConfigPath: kubeConfigPath,
-      //       namespace: "default",
-      //     });
-
-      //     for (const dev of devArray) {
-      //       dev.storageClass = sa.storageClass;
-      //       dev.devStartAppendCommand = [
-      //         "--priority-class",
-      //         "nocalhost-container-critical",
-      //       ];
-      //       dev.kubeconfig = sa.kubeconfig;
-
-      //       const ns = sa.namespacePacks?.find(
-      //         (ns) => ns.namespace === dev.namespace
-      //       );
-
-      //       dev.spaceId = ns?.spaceId;
-      //       dev.spaceName = ns?.spacename;
-
-      //       if (sa.privilegeType === "CLUSTER_ADMIN") {
-      //         dev.spaceOwnType = "Owner";
-      //       } else if (sa.privilegeType === "CLUSTER_VIEWER") {
-      //         dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
-      //       }
-      //     }
-      //     devSpaces.push(...devArray);
-      //   } else {
-      //     for (const ns of sa.namespacePacks) {
-      //       const devInfo: IDevSpaceInfo = {
-      //         id: ns.spaceId,
-      //         spaceName: ns.spacename,
-      //         namespace: ns.namespace,
-      //         kubeconfig: sa.kubeconfig,
-      //         accountClusterService,
-      //         clusterId: sa.clusterId,
-      //         storageClass: sa.storageClass,
-      //         spaceOwnType: ns.spaceOwnType,
-      //         devStartAppendCommand: [
-      //           "--priority-class",
-      //           "nocalhost-container-critical",
-      //         ],
-      //       };
-      //       devSpaces.push(devInfo);
-      //     }
-      //   }
-      // }
-
       return {
         serviceAccount,
         devSpaces: [],

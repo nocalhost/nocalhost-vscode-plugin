@@ -39,37 +39,9 @@ export default class LocalCluster {
       return;
     }
     const { filePath, createTime } = newLocalCluster;
-    let kubeConfig = "";
     let applications: IV2ApplicationInfo[] = [];
-    // let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
-    // if (!isExistSync(filePath)) {
-    //   host.log(`no such file or directory: ${filePath}`);
-    //   return;
-    // }
-    // const kubeStr = fs.readFileSync(filePath);
-    // const kubeConfigObj = yaml.parse(`${kubeStr}`);
-    // kubeConfig = `${kubeStr}`;
-    // const contexts = kubeConfigObj["contexts"];
-    // if (!contexts || contexts.length === 0) {
-    //   return;
-    // }
-    // let defaultNamespace = contexts[0]["context"]["namespace"] || "";
-    // if (kubeConfigObj["current-context"]) {
-    //   const currentContext = contexts.find(
-    //     (it: any) => it.name === kubeConfigObj["current-context"]
-    //   );
-    //   if (currentContext) {
-    //     defaultNamespace = currentContext.context.namespace;
-    //   }
-    // }
-    const state = await checkCluster(filePath);
 
-    // if (state.code === 200) {
-    //   devSpaces = await getAllNamespace({
-    //     kubeConfigPath: filePath,
-    //     namespace: defaultNamespace as string,
-    //   });
-    // }
+    const state = await checkCluster(filePath);
 
     const contextObj = {
       applicationName: "default.application",

@@ -11,7 +11,7 @@ class State {
 
   private stateMap = new Map<string, any>();
   private nodeMap = new Map<string, BaseNocalhostNode>();
-  private dataMap = new Map<string, object>();
+  private dataMap = new Map<string, any>();
   public refreshFolderMap = new Map<string, boolean>();
 
   private renderTime: NodeJS.Timeout;
@@ -56,8 +56,8 @@ class State {
     }
   }
 
-  public getData(id: string) {
-    return this.dataMap.get(id);
+  public getData<T = any>(id: string) {
+    return this.dataMap.get(id) as T;
   }
 
   private autoRefreshTimeId: NodeJS.Timeout | null = null;

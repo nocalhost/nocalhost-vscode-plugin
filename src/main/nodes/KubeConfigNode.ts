@@ -155,6 +155,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       }
     }
 
+    state.setData(this.getNodeStateId(), devSpaces);
     return devSpaces;
   }
 
@@ -163,7 +164,11 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
-    const devSpaces = await this.updateData();
+    let devSpaces = state.getData<Array<IDevSpaceInfo>>(this.getNodeStateId());
+
+    if (!devSpaces) {
+      devSpaces = await this.updateData();
+    }
 
     const devSpace = devSpaces.map((devSpace) => {
       return Object.assign(
