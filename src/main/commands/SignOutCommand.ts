@@ -11,7 +11,7 @@ import host from "../host";
 import { IUserInfo } from "../domain";
 import { KubeConfigNode } from "../nodes/KubeConfigNode";
 import Bookinfo from "../common/bookinfo";
-import { kubeconfig } from "../ctl/nhctl";
+import { kubeconfigCommand } from "../ctl/nhctl";
 import { LoginInfo } from "../clusters/interface";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import messageBus from "../utils/messageBus";
@@ -73,7 +73,7 @@ export default class SignOutCommand implements ICommand {
           return new Promise<void>(async (res, rej) => {
             const file = path.resolve(KUBE_CONFIG_DIR, id);
 
-            await kubeconfig(file, "remove");
+            await kubeconfigCommand(file, "remove");
 
             res();
           });

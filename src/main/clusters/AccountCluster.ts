@@ -3,11 +3,11 @@ import * as semver from "semver";
 import * as url from "url";
 import { uniqBy, difference } from "lodash";
 import * as path from "path";
+import { promises as fs } from "fs";
 
 import {
   IResponseData,
   IServiceAccountInfo,
-  IDevSpaceInfo,
   IV2ApplicationInfo,
   IUserInfo,
   IRootNode,
@@ -16,8 +16,7 @@ import logger from "../utils/logger";
 import { keysToCamel } from "../utils";
 import {
   checkCluster,
-  getAllNamespace,
-  kubeconfig,
+  kubeconfigCommand,
   kubeConfigRender,
 } from "../ctl/nhctl";
 import host from "../host";
@@ -149,75 +148,76 @@ export default class AccountClusterService {
 
     const kubeConfigArr: Array<string> = [];
 
-    const serviceNodes = serviceAccounts.map(async (sa) => {
-      let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
-
-      const kubeconfig = await AccountClusterService.vClusterProcess(sa);
+    const serviceNodes = serviceAccounts.map(async (serviceAccount) => {
+      const kubeconfig = await AccountClusterService.vClusterProcess(
+        serviceAccount
+      );
 
       if (kubeconfig) {
-        sa.kubeconfig = kubeconfig;
+        serviceAccount.kubeconfig = kubeconfig;
       }
 
       const { id, kubeConfigPath } = await AccountClusterService.saveKubeConfig(
-        sa
+        serviceAccount
       );
 
       kubeConfigArr.push(id);
 
       const state = await checkCluster(kubeConfigPath);
 
-      if (state.code === 200) {
-        if (sa.privilege) {
-          const devArray = await getAllNamespace({
-            kubeConfigPath: kubeConfigPath,
-            namespace: "default",
-          });
+      // if (state.code === 200) {
+      //   if (sa.privilege) {
+      //     const devArray = await getAllNamespace({
+      //       kubeConfigPath: kubeConfigPath,
+      //       namespace: "default",
+      //     });
 
-          for (const dev of devArray) {
-            dev.storageClass = sa.storageClass;
-            dev.devStartAppendCommand = [
-              "--priority-class",
-              "nocalhost-container-critical",
-            ];
-            dev.kubeconfig = sa.kubeconfig;
+      //     for (const dev of devArray) {
+      //       dev.storageClass = sa.storageClass;
+      //       dev.devStartAppendCommand = [
+      //         "--priority-class",
+      //         "nocalhost-container-critical",
+      //       ];
+      //       dev.kubeconfig = sa.kubeconfig;
 
-            const ns = sa.namespacePacks?.find(
-              (ns) => ns.namespace === dev.namespace
-            );
+      //       const ns = sa.namespacePacks?.find(
+      //         (ns) => ns.namespace === dev.namespace
+      //       );
 
-            dev.spaceId = ns?.spaceId;
-            dev.spaceName = ns?.spacename;
+      //       dev.spaceId = ns?.spaceId;
+      //       dev.spaceName = ns?.spacename;
 
-            if (sa.privilegeType === "CLUSTER_ADMIN") {
-              dev.spaceOwnType = "Owner";
-            } else if (sa.privilegeType === "CLUSTER_VIEWER") {
-              dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
-            }
-          }
-          devSpaces.push(...devArray);
-        } else {
-          for (const ns of sa.namespacePacks) {
-            const devInfo: IDevSpaceInfo = {
-              id: ns.spaceId,
-              spaceName: ns.spacename,
-              namespace: ns.namespace,
-              kubeconfig: sa.kubeconfig,
-              accountClusterService,
-              clusterId: sa.clusterId,
-              storageClass: sa.storageClass,
-              spaceOwnType: ns.spaceOwnType,
-              devStartAppendCommand: [
-                "--priority-class",
-                "nocalhost-container-critical",
-              ],
-            };
-            devSpaces.push(devInfo);
-          }
-        }
-      }
+      //       if (sa.privilegeType === "CLUSTER_ADMIN") {
+      //         dev.spaceOwnType = "Owner";
+      //       } else if (sa.privilegeType === "CLUSTER_VIEWER") {
+      //         dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
+      //       }
+      //     }
+      //     devSpaces.push(...devArray);
+      //   } else {
+      //     for (const ns of sa.namespacePacks) {
+      //       const devInfo: IDevSpaceInfo = {
+      //         id: ns.spaceId,
+      //         spaceName: ns.spacename,
+      //         namespace: ns.namespace,
+      //         kubeconfig: sa.kubeconfig,
+      //         accountClusterService,
+      //         clusterId: sa.clusterId,
+      //         storageClass: sa.storageClass,
+      //         spaceOwnType: ns.spaceOwnType,
+      //         devStartAppendCommand: [
+      //           "--priority-class",
+      //           "nocalhost-container-critical",
+      //         ],
+      //       };
+      //       devSpaces.push(devInfo);
+      //     }
+      //   }
+      // }
 
       return {
-        devSpaces,
+        serviceAccount,
+        devSpaces: [],
         applications,
         userInfo: newAccountCluster.userInfo,
         clusterSource: ClusterSource.server,
@@ -229,10 +229,10 @@ export default class AccountClusterService {
       };
     });
 
-    await AccountClusterService.cleanDiffKubeConfig(
-      newAccountCluster,
-      kubeConfigArr
-    );
+    // await AccountClusterService.cleanDiffKubeConfig(
+    //   newAccountCluster,
+    //   kubeConfigArr
+    // );
 
     return await (await Promise.allSettled(serviceNodes)).map((item) => {
       if (item.status === "fulfilled") {
@@ -280,10 +280,21 @@ export default class AccountClusterService {
         serviceAddress: serviceAddress,
       });
 
-      host.getContext().subscriptions.push({
-        dispose: proc.kill,
-      });
+      const kubeConfigPath = path.resolve(
+        KUBE_CONFIG_DIR,
+        getStringHash(kubeconfig.trim())
+      );
 
+      host.getContext().subscriptions.push({
+        dispose: () => {
+          logger.debug("dispose", kubeConfigPath);
+
+          proc.kill();
+          kubeconfigCommand(kubeConfigPath, "remove");
+
+          return fs.unlink(kubeConfigPath);
+        },
+      });
       AccountClusterService.virtualClusterProc[serviceAddress] = {
         proc,
         kubeconfig,
@@ -293,16 +304,16 @@ export default class AccountClusterService {
     }
   }
   static async cleanDiffKubeConfig(
-    accountCluser: AccountClusterNode,
+    accountCluster: AccountClusterNode,
     configs: Array<string>
   ) {
-    const { baseUrl, username } = accountCluser.loginInfo;
+    const { baseUrl, username } = accountCluster.loginInfo;
     const KEY = `USER_LINK:${baseUrl}@${username}`;
 
-    const prevData = host.getGlobalState(KEY);
+    const prevData = host.getGlobalState<Array<string>>(KEY);
 
     if (prevData) {
-      const diff = difference(prevData as Array<string>, configs);
+      const diff = difference(prevData, configs);
 
       if (diff.length === 0) {
         return;
@@ -310,13 +321,9 @@ export default class AccountClusterService {
 
       await Promise.allSettled(
         diff.map((id) => {
-          return new Promise<void>(async (res) => {
-            const file = path.resolve(KUBE_CONFIG_DIR, id);
+          const file = path.resolve(KUBE_CONFIG_DIR, id);
 
-            await kubeconfig(file, "remove");
-
-            res();
-          });
+          kubeconfigCommand(file, "remove");
         })
       );
     }
@@ -332,7 +339,7 @@ export default class AccountClusterService {
     if (!(await isExist(kubeConfigPath))) {
       await writeFileLock(kubeConfigPath, accountInfo.kubeconfig);
 
-      kubeconfig(kubeConfigPath, "add");
+      kubeconfigCommand(kubeConfigPath, "add");
     }
 
     return { id, kubeConfigPath };
@@ -343,17 +350,18 @@ export default class AccountClusterService {
     const accountServer = new AccountClusterService(loginInfo);
     const newAccountCluster = await accountServer.buildAccountClusterNode();
 
-    let globalAccountClusterList = host.getGlobalState(SERVER_CLUSTER_LIST);
+    let globalAccountClusterList = host.getGlobalState<
+      Array<AccountClusterNode>
+    >(SERVER_CLUSTER_LIST);
+
     if (!Array.isArray(globalAccountClusterList)) {
       globalAccountClusterList = [];
     }
 
-    globalAccountClusterList = globalAccountClusterList.filter(
-      (it: AccountClusterNode) => it.id
-    );
+    globalAccountClusterList = globalAccountClusterList.filter((it) => it.id);
 
     const oldAccountIndex = globalAccountClusterList.findIndex(
-      (it: AccountClusterNode) => it.id === newAccountCluster.id
+      (it) => it.id === newAccountCluster.id
     );
 
     if (oldAccountIndex !== -1) {

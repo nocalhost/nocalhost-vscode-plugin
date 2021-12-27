@@ -24,7 +24,9 @@ import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 
-export async function getClusterName(res: IRootNode) {
+export async function getClusterName(
+  res: Pick<IRootNode, "kubeConfigPath" | "clusterSource">
+) {
   if (!res.kubeConfigPath) {
     return "unknown";
   }
@@ -277,7 +279,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       }
       resources = sortResources(resources);
 
-      await this.cleanDiffDevSpace(resources);
+      // await this.cleanDiffDevSpace(resources);
 
       state.setData(this.getNodeStateId(), resources, false);
     }
@@ -331,18 +333,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   async getKubeConfigNode(res: IRootNode) {
     const clusterName = await getClusterName(res);
 
-    return new KubeConfigNode({
-      id: res.id,
-      label: clusterName,
-      parent: this,
-      kubeConfigPath: res.kubeConfigPath,
-      devSpaceInfos: res.devSpaces,
-      applications: res.applications,
-      userInfo: res.userInfo,
-      clusterSource: res.clusterSource,
-      accountClusterService: res.accountClusterService,
-      state: res.state,
-    });
+    return new KubeConfigNode(res.id, this, clusterName, res);
   }
   async getChildren(
     parent?: BaseNocalhostNode
@@ -373,16 +364,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
           logger.error("get serverCluster error", result.reason, res.userInfo);
         }
 
-        return new KubeConfigNode({
-          id: res.id,
-          label: res.clusterName,
-          parent: this,
-          kubeConfigPath: res.kubeConfigPath,
-          devSpaceInfos: res.devSpaces,
-          applications: res.applications,
-          userInfo: res.userInfo,
-          clusterSource: res.clusterSource,
-          accountClusterService: res.accountClusterService,
+        return new KubeConfigNode(res.id, this, res.clusterName, {
+          ...res,
           state: {
             code: 201,
             info,

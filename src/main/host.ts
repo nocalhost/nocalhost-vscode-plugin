@@ -48,12 +48,12 @@ export class Host implements vscode.Disposable {
     this.context.globalState.update(key, state);
   }
 
-  public getGlobalState(key: string) {
+  public getGlobalState<T = any>(key: string) {
     if (!this.context) {
       throw new Error("not initialized extension");
     }
 
-    return this.context.globalState.get(key) as any;
+    return this.context.globalState.get(key) as T;
   }
 
   public removeGlobalState(key: string) {

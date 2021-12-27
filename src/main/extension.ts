@@ -55,6 +55,7 @@ import SyncServiceCommand from "./commands/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
 import { activateNocalhostDebug } from "./debug/nocalhost";
+import { KubeConfigNode } from "./nodes/KubeConfigNode";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -90,7 +91,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const node = e.element;
     if (
       node instanceof KubernetesResourceFolder ||
-      node instanceof DevSpaceNode
+      node instanceof DevSpaceNode ||
+      node instanceof KubeConfigNode
     ) {
       state.refreshFolderMap.set(node.getNodeStateId(), true);
     }
