@@ -46,7 +46,6 @@ export function buildRootNodeForAccountCluster(
 ): IRootNode {
   return {
     applications: [],
-    devSpaces: [],
     userInfo: accountCluster.userInfo,
     clusterSource: ClusterSource.server,
     accountClusterService: new AccountClusterService(accountCluster.loginInfo),
@@ -208,7 +207,6 @@ export default class AccountClusterService {
         return item.value;
       }
       return {
-        devSpaces: [],
         userInfo: newAccountCluster.userInfo,
         clusterSource: ClusterSource.server,
         accountClusterService,

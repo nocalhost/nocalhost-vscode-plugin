@@ -28,7 +28,6 @@ export function buildRootNodeForLocalCluster(
 
   return {
     id: localCluster.id,
-    devSpaces: [],
     clusterName: localCluster.clusterNickName,
     createTime,
     clusterSource: ClusterSource.local,
@@ -79,7 +78,6 @@ export default class LocalCluster {
     });
     const obj: IRootNode = {
       id: newLocalCluster.id,
-      devSpaces: [],
       clusterName: newLocalCluster.clusterNickName,
       createTime,
       clusterSource: ClusterSource.local,

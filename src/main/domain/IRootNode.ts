@@ -10,7 +10,6 @@ import { IServiceAccountInfo } from ".";
 
 export interface IRootNode {
   serviceAccount?: IServiceAccountInfo;
-  devSpaces: IDevSpaceInfo[];
   applications: IV2ApplicationInfo[];
   clusterSource?: ClusterSource;
   accountClusterService?: AccountClusterService;
