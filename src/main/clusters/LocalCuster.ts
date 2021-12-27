@@ -20,6 +20,23 @@ export class LocalClusterNode {
     public clusterNickName?: string
   ) {}
 }
+export function buildRootNodeForLocalCluster(
+  localCluster: LocalClusterNode,
+  state: ClustersState
+): IRootNode {
+  const { filePath, createTime } = localCluster;
+
+  return {
+    id: localCluster.id,
+    devSpaces: [],
+    clusterName: localCluster.clusterNickName,
+    createTime,
+    clusterSource: ClusterSource.local,
+    applications: [],
+    kubeConfigPath: filePath,
+    state,
+  };
+}
 
 export default class LocalCluster {
   static getClusterNodeByKubeConfigPath(

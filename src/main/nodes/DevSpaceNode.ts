@@ -17,6 +17,15 @@ import { StorageFolder } from "./storage/StorageFolder";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { WorkloadFolderNode } from "./workloads/WorkloadFolderNode";
 
+export function getDevSpaceLabel(info: IDevSpaceInfo) {
+  let { spaceName: label, namespace } = info;
+
+  if (label && namespace !== label) {
+    label += `(${namespace})`;
+  }
+
+  return label || namespace;
+}
 export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
   public label: string;
   public type = NodeType.devSpace;
@@ -32,7 +41,6 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
 
   constructor(
     parent: BaseNocalhostNode,
-    label: string,
     info: IDevSpaceInfo,
     applications: Array<IV2ApplicationInfo>,
     clusterSource: ClusterSource
@@ -45,10 +53,7 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
     this.installedApps = [];
     this.clusterSource = clusterSource;
 
-    if (label && info.namespace !== label) {
-      label += `(${info.namespace})`;
-    }
-    this.label = label || info.namespace;
+    this.label = getDevSpaceLabel(info);
 
     state.setNode(this.getNodeStateId(), this);
   }

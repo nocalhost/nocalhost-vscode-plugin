@@ -38,6 +38,23 @@ export class AccountClusterNode {
   refreshToken: string | null;
   state: ClustersState;
 }
+
+export function buildRootNodeForAccountCluster(
+  accountCluster: AccountClusterNode,
+  state: ClustersState
+): IRootNode {
+  return {
+    applications: [],
+    devSpaces: [],
+    userInfo: accountCluster.userInfo,
+    clusterSource: ClusterSource.server,
+    accountClusterService: new AccountClusterService(accountCluster.loginInfo),
+    id: accountCluster.id,
+    createTime: accountCluster.createTime,
+    kubeConfigPath: null,
+    state,
+  };
+}
 export default class AccountClusterService {
   instance: AxiosInstance;
   accountClusterNode: AccountClusterNode;
@@ -179,10 +196,10 @@ export default class AccountClusterService {
       };
     });
 
-    // await AccountClusterService.cleanDiffKubeConfig(
-    //   newAccountCluster,
-    //   kubeConfigArr
-    // );
+    await AccountClusterService.cleanDiffKubeConfig(
+      newAccountCluster,
+      kubeConfigArr
+    );
 
     return await (await Promise.allSettled(serviceNodes)).map((item) => {
       if (item.status === "fulfilled") {
@@ -401,9 +418,8 @@ export default class AccountClusterService {
     }
   }
 
-  // update login infoo
   updateLoginInfo() {
-    const newAccountCluser = {
+    const newAccountCluster = {
       ...this.accountClusterNode,
       jwt: this.jwt,
       refreshToken: this.refreshToken,
@@ -416,14 +432,15 @@ export default class AccountClusterService {
       (it: AccountClusterNode) => it.id
     );
     const oldAccountIndex = globalAccountClusterList.findIndex(
-      (it: AccountClusterNode) => it.id === newAccountCluser.id
+      (it: AccountClusterNode) => it.id === newAccountCluster.id
     );
     if (oldAccountIndex !== -1) {
-      globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluser);
+      globalAccountClusterList.splice(oldAccountIndex, 1, newAccountCluster);
     } else {
-      globalAccountClusterList.push(newAccountCluser);
+      globalAccountClusterList.push(newAccountCluster);
     }
     globalAccountClusterList = uniqBy(globalAccountClusterList, "id");
+
     host.setGlobalState(SERVER_CLUSTER_LIST, globalAccountClusterList);
   }
 

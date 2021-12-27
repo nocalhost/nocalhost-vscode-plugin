@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { orderBy } from "lodash";
+import { difference, orderBy } from "lodash";
 import * as fs from "fs";
 import * as yaml from "yaml";
 
@@ -20,7 +20,7 @@ import {
 import { ClustersState } from "../clusters";
 import host from "../host";
 import { getAllNamespace } from "../ctl/nhctl";
-import { DevSpaceNode } from "./DevSpaceNode";
+import { DevSpaceNode, getDevSpaceLabel } from "./DevSpaceNode";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
@@ -156,7 +156,31 @@ export class KubeConfigNode extends NocalhostFolderNode {
     }
 
     state.setData(this.getNodeStateId(), devSpaces);
+
+    this.cleanDiffDevSpace(devSpaces);
+
     return devSpaces;
+  }
+
+  private async cleanDiffDevSpace(resources: Array<IDevSpaceInfo>) {
+    const old = state.getData<Array<IDevSpaceInfo>>(this.getNodeStateId());
+
+    if (old && old.length && resources.length) {
+      const getId = (devSpace: IDevSpaceInfo) =>
+        `${this.getNodeStateId()}${ID_SPLIT}${getDevSpaceLabel(devSpace)}`;
+
+      const diff: string[] = difference(old.map(getId), resources.map(getId));
+
+      if (diff.length) {
+        diff.forEach((id) => {
+          state.disposeNode({
+            getNodeStateId() {
+              return id;
+            },
+          });
+        });
+      }
+    }
   }
 
   public getKubeConfigPath() {
@@ -164,7 +188,13 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
-    let devSpaces = state.getData<Array<IDevSpaceInfo>>(this.getNodeStateId());
+    let devSpaces = Array.of<IDevSpaceInfo>();
+
+    if (this.state.code !== 200) {
+      return [];
+    }
+
+    devSpaces = state.getData<Array<IDevSpaceInfo>>(this.getNodeStateId());
 
     if (!devSpaces) {
       devSpaces = await this.updateData();
@@ -172,13 +202,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
 
     const devSpace = devSpaces.map((devSpace) => {
       return Object.assign(
-        new DevSpaceNode(
-          this,
-          devSpace.spaceName,
-          devSpace,
-          this.applications,
-          this.clusterSource
-        ),
+        new DevSpaceNode(this, devSpace, this.applications, this.clusterSource),
         {
           order: devSpace.spaceOwnType !== "Viewer",
           isSpace: devSpace.spaceId > 0,

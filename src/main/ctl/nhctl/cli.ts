@@ -1633,24 +1633,27 @@ export async function kubeConfigRender(param: {
     serviceAddress,
     `:${remotePort}`,
   ];
+
   const END_Symbol = "EOF\n";
+
   return new Promise<{
     kubeconfig: string;
     proc: ChildProcessWithoutNullStreams;
   }>((res, rej) => {
     const command = commands.join(" ");
 
-    console.time(command);
+    const time = Date.now();
 
     const { proc, promise } = exec({
       command: commands.join(" "),
       output: false,
     });
+
     proc.stdout.on("data", (chuck: Buffer) => {
       const str = chuck.toString();
 
       if (str.endsWith(END_Symbol)) {
-        console.timeEnd(command);
+        logger.debug(command, Date.now() - time);
 
         const kubeconfig = str.substring(0, str.lastIndexOf(END_Symbol));
         res({ kubeconfig, proc });
