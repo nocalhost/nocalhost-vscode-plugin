@@ -10,6 +10,8 @@ import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import Bookinfo from "../common/bookinfo";
 import messageBus from "../utils/messageBus";
+import { KubeConfigNode } from "../nodes/KubeConfigNode";
+import AccountClusterService from "../clusters/AccountCluster";
 
 export default class ResetDevspaceCommand implements ICommand {
   command: string = RESET_DEVSPACE;
@@ -45,7 +47,9 @@ export default class ResetDevspaceCommand implements ICommand {
       node.info.namespace,
       node.info.spaceName
     ).finally(async () => {
-      await node.parent.accountClusterService.resetDevSpace(node.info.id);
+      await (node.parent as KubeConfigNode).accountClusterService?.resetDevSpace(
+        node.info.id
+      );
 
       const nocalhostRootNode = node.parent.parent as NocalhostRootNode;
 

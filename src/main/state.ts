@@ -104,7 +104,7 @@ class State {
             const node = this.getNode(id) as BaseNocalhostNode;
 
             if (!token.isCancellationRequested && node && expanded) {
-              return node.updateData();
+              return node.updateData(null, token);
             }
 
             return Promise.resolve();
@@ -264,6 +264,13 @@ class State {
       if (key.startsWith(stateId)) {
         loggerDebug.debug("stateMap", key);
         this.stateMap.delete(key);
+      }
+    }
+
+    for (let key of this.dataMap.keys()) {
+      if (key.startsWith(stateId)) {
+        loggerDebug.debug("dataMap", key);
+        this.dataMap.delete(key);
       }
     }
 

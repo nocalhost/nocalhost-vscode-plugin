@@ -60,6 +60,13 @@ export class KubeConfigNode extends NocalhostFolderNode {
 
     state.setNode(this.getNodeStateId(), this);
   }
+  get accountClusterService() {
+    if (this.clusterSource === ClusterSource.local) {
+      return null;
+    }
+
+    return new AccountClusterService(this.rootNode.loginInfo);
+  }
   async updateData() {
     if (this.state.code !== 200) {
       return [];

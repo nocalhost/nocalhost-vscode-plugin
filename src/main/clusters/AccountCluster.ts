@@ -49,7 +49,6 @@ export function buildRootNodeForAccountCluster(
     userInfo: accountCluster.userInfo,
     loginInfo: accountCluster.loginInfo,
     clusterSource: ClusterSource.server,
-    // accountClusterService: new AccountClusterService(accountCluster.loginInfo),
     id: accountCluster.id,
     createTime: accountCluster.createTime,
     kubeConfigPath: null,

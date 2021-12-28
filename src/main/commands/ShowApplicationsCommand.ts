@@ -8,6 +8,7 @@ import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import AccountClusterService from "../clusters/AccountCluster";
 import { ClusterSource } from "../common/define";
 import { NhctlCommand } from "../ctl/nhctl";
+import { KubeConfigNode } from "../nodes/KubeConfigNode";
 
 export default class ShowApplicationsCommand implements ICommand {
   command: string = SHOW_APP;
@@ -30,10 +31,7 @@ export default class ShowApplicationsCommand implements ICommand {
     }).exec();
 
     if (node.clusterSource === ClusterSource.server) {
-      const accountClusterService: AccountClusterService =
-        node.parent.accountClusterService;
-
-      accountClusterService.checkServerVersion();
+      await (node.parent as KubeConfigNode).accountClusterService?.checkServerVersion();
     }
 
     const apps = node.getUninstallApps();
