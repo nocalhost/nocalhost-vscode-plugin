@@ -550,6 +550,6 @@ export default class AccountClusterService {
       const { data } = response.data;
       return data;
     }
-    throw new Error("Fail to fetch user infomation.");
+    throw Error("Fail to fetch user information.");
   }
 }
