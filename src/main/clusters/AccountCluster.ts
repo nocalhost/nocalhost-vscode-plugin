@@ -47,15 +47,16 @@ export function buildRootNodeForAccountCluster(
   return {
     applications: [],
     userInfo: accountCluster.userInfo,
+    loginInfo: accountCluster.loginInfo,
     clusterSource: ClusterSource.server,
-    accountClusterService: new AccountClusterService(accountCluster.loginInfo),
+    // accountClusterService: new AccountClusterService(accountCluster.loginInfo),
     id: accountCluster.id,
     createTime: accountCluster.createTime,
     kubeConfigPath: null,
     state,
   };
 }
-const virtualClusterProcMap: {
+export const virtualClusterProcMap: {
   [key: string]: { proc: ChildProcessWithoutNullStreams; kubeconfig: string };
 } = {};
 export default class AccountClusterService {
@@ -66,7 +67,7 @@ export default class AccountClusterService {
   lastServiceAccounts: IServiceAccountInfo[];
   isRefreshing: boolean;
 
-  constructor(public loginInfo: LoginInfo) {
+  constructor(private loginInfo: LoginInfo) {
     var parsed = url.parse(loginInfo.baseUrl);
 
     if (!parsed.protocol) {
@@ -133,17 +134,17 @@ export default class AccountClusterService {
   }
 
   static getServerClusterRootNodes = async (
-    newAccountCluster: AccountClusterNode
+    accountCluster: AccountClusterNode
   ): Promise<IRootNode[]> => {
-    if (!newAccountCluster) {
+    if (!accountCluster) {
       return [];
     }
     const accountClusterService = new AccountClusterService(
-      newAccountCluster.loginInfo
+      accountCluster.loginInfo
     );
-    accountClusterService.accountClusterNode = newAccountCluster;
-    accountClusterService.jwt = newAccountCluster.jwt;
-    accountClusterService.refreshToken = newAccountCluster.refreshToken;
+    accountClusterService.accountClusterNode = accountCluster;
+    accountClusterService.jwt = accountCluster.jwt;
+    accountClusterService.refreshToken = accountCluster.refreshToken;
 
     let serviceAccounts = await accountClusterService.getServiceAccount();
     logger.info(
@@ -154,7 +155,7 @@ export default class AccountClusterService {
 
     assert(
       Array.isArray(serviceAccounts) && serviceAccounts.length > 0,
-      `no cluster found for ${newAccountCluster.loginInfo.baseUrl} ${newAccountCluster.loginInfo.username}`
+      `no cluster found for ${accountCluster.loginInfo.baseUrl} ${accountCluster.loginInfo.username}`
     );
 
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
@@ -167,7 +168,7 @@ export default class AccountClusterService {
     const kubeConfigArr: Array<string> = [];
 
     const serviceNodes = serviceAccounts.map(async (serviceAccount) => {
-      const kubeconfig = await AccountClusterService.vClusterProcess(
+      const kubeconfig = await AccountClusterService.startVClusterProcess(
         serviceAccount
       );
 
@@ -187,18 +188,19 @@ export default class AccountClusterService {
         serviceAccount,
         devSpaces: [],
         applications,
-        userInfo: newAccountCluster.userInfo,
+        loginInfo: accountCluster.loginInfo,
+        userInfo: accountCluster.userInfo,
         clusterSource: ClusterSource.server,
         accountClusterService,
-        id: newAccountCluster.id,
-        createTime: newAccountCluster.createTime,
+        id: accountCluster.id,
+        createTime: accountCluster.createTime,
         kubeConfigPath,
         state,
-      };
+      } as IRootNode;
     });
 
     await AccountClusterService.cleanDiffKubeConfig(
-      newAccountCluster,
+      accountCluster,
       kubeConfigArr
     );
 
@@ -207,17 +209,17 @@ export default class AccountClusterService {
         return item.value;
       }
       return {
-        userInfo: newAccountCluster.userInfo,
+        userInfo: accountCluster.userInfo,
         clusterSource: ClusterSource.server,
-        accountClusterService,
-        id: newAccountCluster.id,
-        createTime: newAccountCluster.createTime,
+        loginInfo: accountCluster.loginInfo,
+        id: accountCluster.id,
+        createTime: accountCluster.createTime,
         kubeConfigPath: null,
       } as IRootNode;
     });
   };
 
-  static async vClusterProcess(sa: IServiceAccountInfo) {
+  static async startVClusterProcess(sa: IServiceAccountInfo) {
     const { virtualCluster, kubeconfigType } = sa;
     if (
       kubeconfigType === "vcluster" &&
@@ -230,9 +232,9 @@ export default class AccountClusterService {
         serviceAddress,
       } = virtualCluster;
 
-      let oldProc = virtualClusterProcMap[serviceAddress];
-      if (oldProc?.proc.killed === false) {
-        return oldProc.kubeconfig;
+      let oldInfo = virtualClusterProcMap[serviceAddress];
+      if (oldInfo?.proc.killed === false) {
+        return oldInfo.kubeconfig;
       }
 
       const { proc, kubeconfig } = await kubeConfigRender({
@@ -282,13 +284,11 @@ export default class AccountClusterService {
         return;
       }
 
-      await Promise.allSettled(
-        diff.map((id) => {
-          const file = path.resolve(KUBE_CONFIG_DIR, id);
+      diff.map((id) => {
+        const file = path.resolve(KUBE_CONFIG_DIR, id);
 
-          kubeconfigCommand(file, "remove");
-        })
-      );
+        kubeconfigCommand(file, "remove");
+      });
     }
 
     host.setGlobalState(KEY, configs);

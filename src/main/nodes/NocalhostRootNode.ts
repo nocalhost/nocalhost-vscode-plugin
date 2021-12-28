@@ -175,7 +175,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public async addCluster(node: AccountClusterNode | LocalClusterNode) {
     let addResources: IRootNode[];
 
-    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
+    let resources = state.getData<Array<IRootNode>>(this.getNodeStateId());
 
     if (node instanceof LocalClusterNode) {
       if (
@@ -221,8 +221,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     state.setData(this.getNodeStateId(), resources, false);
   }
 
-  public async deleteCluster(info: LoginInfo | string) {
-    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
+  public deleteCluster(info: LoginInfo | string) {
+    let resources = state.getData<Array<IRootNode>>(this.getNodeStateId());
 
     if (resources) {
       if (typeof info === "string") {
@@ -234,13 +234,12 @@ export class NocalhostRootNode implements BaseNocalhostNode {
             )
         );
       } else {
-        resources = resources.filter((item: any) => {
+        resources = resources.filter((item) => {
           if (item.clusterSource === ClusterSource.local) {
             return true;
           }
 
-          const node = item as KubeConfigNode;
-          const { username, baseUrl } = node.accountClusterService?.loginInfo;
+          const { username, baseUrl } = item.loginInfo;
 
           return !(username === info.username && baseUrl === info.baseUrl);
         });

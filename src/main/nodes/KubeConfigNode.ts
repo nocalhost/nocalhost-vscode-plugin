@@ -35,24 +35,17 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }[] = [];
   public id: string;
   public kubeConfigPath: string;
-  public accountClusterService: AccountClusterService;
 
   private state: ClustersState;
   constructor(
     id: string,
     parent: NocalhostRootNode,
     label: string,
-    private rootNode: IRootNode
+    public rootNode: IRootNode
   ) {
     super();
 
-    const {
-      applications,
-      clusterSource,
-      kubeConfigPath,
-      userInfo,
-      accountClusterService,
-    } = rootNode;
+    const { applications, clusterSource, kubeConfigPath, userInfo } = rootNode;
 
     this.id = id;
     this.parent = parent;
@@ -63,7 +56,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
     this.installedApps = [];
     this.kubeConfigPath = kubeConfigPath;
     this.userInfo = userInfo;
-    this.accountClusterService = accountClusterService;
     this.state = rootNode.state;
 
     state.setNode(this.getNodeStateId(), this);
@@ -141,7 +133,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
             spaceName: ns.spacename,
             namespace: ns.namespace,
             kubeconfig: sa.kubeconfig,
-            accountClusterService: this.accountClusterService,
             clusterId: sa.clusterId,
             storageClass: sa.storageClass,
             spaceOwnType: ns.spaceOwnType,
@@ -154,6 +145,8 @@ export class KubeConfigNode extends NocalhostFolderNode {
         }
       }
     }
+
+    this.cleanDiffDevSpace(devSpaces);
 
     state.setData(this.getNodeStateId(), devSpaces);
 
@@ -228,7 +221,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
     }`;
 
     if (this.clusterSource === ClusterSource.server) {
-      const { username, baseUrl } = this.accountClusterService.loginInfo;
+      const { username, baseUrl } = this.rootNode.loginInfo;
 
       treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
     }
