@@ -24,7 +24,7 @@ const videoCapture = new VideoCapture();
  * @param {object?} options.testsEnv
  */
 const start = async (options = {}) => {
-  const userDataDir = getUserDataDir();
+  const userDataDir = await getUserDataDir();
 
   if (!options.vscodeExecutablePath) {
     options.vscodeExecutablePath = await downloadAndUnzipVSCode(
@@ -107,7 +107,7 @@ const getExtensionsDir = (isInit = false) => {
 
   return extensionsDir;
 };
-const getUserDataDir = () => {
+const getUserDataDir = async () => {
   let userDataDir = path.join(__dirname, "../../.vscode-test/user-data");
 
   if (isWindows()) {
@@ -122,22 +122,7 @@ const getUserDataDir = () => {
     fse.removeSync(userDataDir);
   }
 
-  fse.mkdirpSync(path.join(userDataDir, "User"));
-
-  let defaultSettings = {
-    "window.titleBarStyle": "custom",
-    "workbench.editor.enablePreview": false,
-    "window.restoreFullscreen": true,
-    "telemetry.enableTelemetry": false,
-    "extensions.autoUpdate": false,
-    "window.newWindowDimensions": "maximized",
-  };
-
-  fse.writeFile(
-    path.join(userDataDir, "User", "settings.json"),
-    JSON.stringify(defaultSettings, null, 2)
-  );
-
+  await fse.copy(path.join(__dirname, "./config"), userDataDir);
   return userDataDir;
 };
 

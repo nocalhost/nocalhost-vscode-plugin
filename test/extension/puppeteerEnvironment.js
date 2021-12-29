@@ -22,7 +22,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
 
     page.setDefaultTimeout(10 * 1000);
 
-    await this.startVideoCapture(page);
+    // await this.startVideoCapture(page);
 
     await openNocalhost(page);
 

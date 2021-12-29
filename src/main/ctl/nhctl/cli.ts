@@ -432,7 +432,8 @@ export async function getAllNamespace(props: IBaseCommand<unknown>) {
 
     devspaces.push(devspace);
   });
-  return devspaces;
+
+  return orderBy(devspaces, "namespace");
 }
 
 export async function getAll(params: IBaseCommand) {

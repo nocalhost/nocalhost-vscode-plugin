@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer-core");
 const assert = require("assert");
+const { promises: fs } = require("fs");
 const ncp = require("copy-paste");
 
 const { waitForMessage, initialize, setInputBox } = require("./index");
@@ -58,8 +59,7 @@ async function getIframe(page) {
 }
 
 async function copyKubeConfig() {
-  let config = process.env.NOCALHOST_KUBECONFIG;
-
+  const config = await fs.readFile(require("os").homedir() + "/.kube/config");
   await new Promise((res) => ncp.copy(config, res));
 }
 
