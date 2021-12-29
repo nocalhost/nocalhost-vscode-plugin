@@ -9,7 +9,11 @@ const { getTreeView, checkPort } = require("./index");
  * @param {string} name
  * @return {puppeteer.ElementHandle<Element>}
  */
-async function getTreeItem(page, level, name, milliseconds = 300) {
+async function getTreeItem(page, level, name) {
+  await page.waitForSelector(
+    `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
+  );
+
   const treeView = await getTreeView(page);
 
   const treeItem = await Promise.all(
@@ -30,37 +34,42 @@ async function getTreeItem(page, level, name, milliseconds = 300) {
 
   await tl.click();
 
-  await page.waitForTimeout(milliseconds);
-
   return tl;
 }
 /**
  *
  * @param {puppeteer.Page} page
+ * @param {string[]} childNames
  * @return {puppeteer.ElementHandle<Element>}
  */
-
-async function getAuthors(page) {
+async function getChild(page, ...childNames) {
   const treeView = await getTreeView(page);
 
   await treeView[0].click();
 
-  let treeItem = await getTreeItem(page, 2, "default");
+  let level = 1;
+  let treeItem;
 
-  treeItem = await getTreeItem(page, 3, "bookinfo");
+  for await (const name of childNames) {
+    treeItem = await getTreeItem(page, ++level, name);
+  }
 
-  treeItem = await getTreeItem(page, 4, "Workloads");
-
-  treeItem = await getTreeItem(page, 5, "Deployments");
-
-  return await getTreeItem(page, 6, "authors");
+  return treeItem;
 }
+
 /**
  *
  * @param {puppeteer.Page} page
  */
 async function add(page) {
-  const authors = await getAuthors(page);
+  const authors = await getChild(
+    page,
+    "default",
+    "bookinfo",
+    "Workloads",
+    "Deployments",
+    "authors"
+  );
 
   await authors.click({
     button: "right",
