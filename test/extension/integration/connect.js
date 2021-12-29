@@ -1,7 +1,6 @@
 const puppeteer = require("puppeteer-core");
 const assert = require("assert");
 const { promises: fs } = require("fs");
-const ncp = require("copy-paste");
 
 const { waitForMessage, initialize, setInputBox } = require("./index");
 /**
@@ -40,8 +39,6 @@ async function loginServer(page) {
  * @param {puppeteer.Page} page
  */
 async function getIframe(page) {
-  await page.waitForTimeout(5 * 1000);
-
   const parentHandle = await page.waitForSelector(
     "#webview-webviewview-nocalhost-home .webview.ready"
   );
@@ -56,11 +53,6 @@ async function getIframe(page) {
   await iframe.waitForSelector(".nocalhost-tab");
 
   return iframe;
-}
-
-async function copyKubeConfig() {
-  const config = await fs.readFile(require("os").homedir() + "/.kube/config");
-  await new Promise((res) => ncp.copy(config, res));
 }
 
 /**
@@ -79,18 +71,11 @@ async function pasteAsText(page) {
 
   await iframe.focus('[placeholder="KubeConfig"]');
 
-  await copyKubeConfig();
+  const config = await fs.readFile(require("os").homedir() + "/.kube/config");
 
-  await iframe.evaluateHandle(() => {
-    return new Promise(async (res) => {
-      const text = await navigator.clipboard.readText();
-
-      document.querySelector('[placeholder="KubeConfig"]').value = text;
-      res();
-    });
-  });
-
-  await iframe.waitForTimeout(1 * 1000);
+  await iframe.evaluate((config) => {
+    document.querySelector('[placeholder="KubeConfig"]').value = config;
+  }, config.toString());
 
   await iframe.type('[placeholder="KubeConfig"]', " ");
 

@@ -155,16 +155,32 @@ async function getTreeItemByChildName(page, ...childNames) {
  *
  * @param {puppeteer.Page} page
  * @param {string[]} childNames
- * @return {puppeteer.ElementHandle<Element>}
  */
 async function getItemMenu(page, menuName) {
   const context = await page.waitForSelector(
     ".context-view.monaco-menu-container.bottom.left"
   );
 
-  const itemMenu = await context.$(`.action-label[aria-label='${menuName}']`);
+  const selector = `.action-label[aria-label='${menuName}']`;
+  const itemMenu = await context.$(selector);
 
-  return (await itemMenu.getProperty("parentNode")).getProperty("parentNode");
+  const element = await (await itemMenu.getProperty("parentNode")).getProperty(
+    "parentNode"
+  );
+
+  return {
+    element,
+    click() {
+      return element.evaluate((node) => {
+        window.el = node;
+        console.error("evaluate", node);
+
+        const mouseEvents = document.createEvent("MouseEvents");
+        mouseEvents.initEvent("mouseup", true, true);
+        node.dispatchEvent(mouseEvents);
+      });
+    },
+  };
 }
 /**
  *

@@ -4,6 +4,19 @@ const { getTreeItemByChildName, checkPort, getItemMenu } = require("./index");
 /**
  *
  * @param {puppeteer.Page} page
+ * @description
+const element=document.querySelector(`#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6'`)
+const ev = document.createEvent('HTMLEvents');
+ev.initEvent('contextmenu', true, false);
+element.dispatchEvent(ev);
+
+const node=document.querySelector(`.action-label[aria-label='Port Forward']`)
+const portForward=node.parentNode.parentNode
+
+
+const mouseEvents = document.createEvent("MouseEvents");
+mouseEvents.initEvent("mouseup", true, true);
+portForward.dispatchEvent(mouseEvents);
  */
 async function add(page) {
   const authors = await getTreeItemByChildName(
@@ -20,8 +33,8 @@ async function add(page) {
   });
 
   const action = await getItemMenu(page, "Port Forward");
-  await action.click();
+  await action.element.click();
 
-  await page.waitForTimeout(10_000);
+  await page.waitForTimeout(100_000);
 }
 module.exports = { add };

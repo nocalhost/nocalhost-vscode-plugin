@@ -3,6 +3,6 @@
   "workbench.editor.enablePreview": false,
   // "window.restoreFullscreen": true,
   "telemetry.telemetryLevel": "off",
-  "extensions.autoUpdate": false,
-  "window.newWindowDimensions": "maximized"
+  "extensions.autoUpdate": false
+  // "window.newWindowDimensions": "maximized"
 }
