@@ -95,6 +95,77 @@ async function getTreeView(page) {
 
   return treeView;
 }
+
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @param {number} level
+ * @param {string} name
+ * @return {puppeteer.ElementHandle<Element>}
+ */
+async function getTreeItem(page, level, name) {
+  await page.waitForSelector(
+    `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
+  );
+
+  const treeView = await getTreeView(page);
+
+  const treeItem = await Promise.all(
+    treeView.map((item) =>
+      item.evaluate(
+        (el, level, name) =>
+          el.getAttribute("aria-level") === level.toString() &&
+          el.innerText === name,
+        level,
+        name
+      )
+    )
+  ).then((results) => {
+    return treeView.find((_, index) => results[index]);
+  });
+
+  const tl = await treeItem.$(".monaco-tl-twistie");
+
+  await tl.click();
+
+  return tl;
+}
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @param {string[]} childNames
+ * @return {puppeteer.ElementHandle<Element>}
+ */
+async function getTreeItemByChildName(page, ...childNames) {
+  const treeView = await getTreeView(page);
+
+  await treeView[0].click();
+
+  let level = 1;
+  let treeItem;
+
+  for await (const name of childNames) {
+    treeItem = await getTreeItem(page, ++level, name);
+  }
+
+  return treeItem;
+}
+
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @param {string[]} childNames
+ * @return {puppeteer.ElementHandle<Element>}
+ */
+async function getItemMenu(page, menuName) {
+  const context = await page.waitForSelector(
+    ".context-view.monaco-menu-container.bottom.left"
+  );
+
+  const itemMenu = await context.$(`.action-label[aria-label='${menuName}']`);
+
+  return (await itemMenu.getProperty("parentNode")).getProperty("parentNode");
+}
 /**
  *
  * @param {puppeteer.ElementHandle<Element>} node
@@ -234,4 +305,6 @@ module.exports = {
   setInputBox,
   quickPick,
   checkPort,
+  getTreeItemByChildName,
+  getItemMenu,
 };
