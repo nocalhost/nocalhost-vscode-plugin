@@ -9,13 +9,13 @@ const {
   setInputBox,
 } = require("./index");
 
-const productPagePath = [
+const treeItemPath = [
   "",
   "default",
   "bookinfo",
   "Workloads",
   "Deployments",
-  "productpage",
+  "ratings",
 ];
 
 let port = -1;
@@ -26,7 +26,7 @@ let port = -1;
  * @description
  */
 async function add(page) {
-  const treeItem = await getTreeItemByChildName(page, ...productPagePath);
+  const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
 
   await treeItem.hover();
 
@@ -41,9 +41,6 @@ async function add(page) {
 
   await quickPick.select(" Add port forward");
 
-  await page.waitForTimeout(500);
-  await quickPick.select(0);
-
   port = await getPort();
 
   await setInputBox(page, `${port}:9080`);
@@ -56,7 +53,7 @@ async function add(page) {
  * @param {puppeteer.Page} page
  */
 async function list(page) {
-  const treeItem = await getTreeItemByChildName(page, ...productPagePath);
+  const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
 
   await treeItem.hover();
 

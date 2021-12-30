@@ -18,8 +18,9 @@ const VideoCapture = require("./lib/videoCapture");
 
 const videoCapture = new VideoCapture();
 
+// (process.env["NH_REGION"] ?? "").toUpperCase() === "CN"
 const cloneTmpDir = () => {
-  let tmpDir = path.join(os.tmpdir(), process.pid.toString(), "bookInfo");
+  let tmpDir = path.join(os.tmpdir(), process.pid.toString(), "ratings");
 
   rimraf.sync(tmpDir);
 
@@ -31,7 +32,7 @@ const cloneTmpDir = () => {
       "clone",
       "--depth",
       "1",
-      "https://github.com/nocalhost/bookinfo.git",
+      "https://github.com/nocalhost/bookinfo-ratings.git",
       tmpDir,
     ],
     {
@@ -108,7 +109,10 @@ const start = async (options = {}) => {
     args = options.launchArgs.concat(args);
   }
 
-  const tmpDir = cloneTmpDir();
+  const { tmpDir, syncReturns: result } = cloneTmpDir();
+
+  assert(result.status === 0, result.error);
+
   args.unshift(tmpDir);
 
   const pid = await run(options.vscodeExecutablePath, args, options.testsEnv);
@@ -222,5 +226,7 @@ module.exports = {
 };
 
 (async () => {
-  await start();
+  if (require.main === module) {
+    await start();
+  }
 })();

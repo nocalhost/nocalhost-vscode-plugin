@@ -4,6 +4,7 @@ const fse = require("fs-extra");
 const os = require("os");
 const kill = require("tree-kill");
 
+const logger = require("./lib/log");
 const { videoCapture } = require(".");
 
 const DIR = path.join(
@@ -13,7 +14,7 @@ const DIR = path.join(
 );
 
 async function teardown() {
-  await videoCapture.end();
+  await videoCapture.end().catch((err) => logger.error(err));
 
   await global.__BROWSER__.disconnect();
 

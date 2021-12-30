@@ -33,6 +33,7 @@ async function setInputBox(page, text) {
 
   let input = await page.waitForSelector(".input.empty");
 
+  await input.hover();
   await input.type(text);
 
   await page.keyboard.press("Enter");
@@ -173,7 +174,6 @@ async function getTreeItem(page, level, name) {
  *
  * @param {puppeteer.Page} page
  * @param {string[]} childNames
- * @return {puppeteer.ElementHandle<Element>}
  */
 async function getTreeItemByChildName(page, ...childNames) {
   let level = 0;
@@ -182,8 +182,32 @@ async function getTreeItemByChildName(page, ...childNames) {
   for await (const name of childNames) {
     treeItem = await getTreeItem(page, ++level, name);
   }
-
   return treeItem;
+
+  return {
+    /**
+     * @returns  {puppeteer.ElementHandle<Element>}
+     */
+    treeItem,
+    /**
+     *
+     * @param {string} title
+     * @returns {puppeteer.ElementHandle<Element>}
+     */
+    async selectAction(title) {
+      await this.treeItem.hover();
+
+      const parentNode = await this.treeItem.getProperty("parentNode");
+
+      const action = await parentNode.$(
+        `a.action-label.icon[title='${title}']`
+      );
+
+      await action.click();
+
+      return action;
+    },
+  };
 }
 
 /**
@@ -296,7 +320,7 @@ async function getInstallApp(page, name) {
  * @returns {puppeteer.Page}
  */
 async function initialize() {
-  const { pid, port } = await start();
+  const { port } = await start();
 
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
     retries: 3,

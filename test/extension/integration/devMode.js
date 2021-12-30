@@ -24,8 +24,23 @@ async function start(page) {
   await action.click();
 
   await setInputBox(page, "Open associated directory");
+  // check icon devicon endbutton
+  // check sync
 
-  // await setInputBox(page, process.env.tmpDir);
+  // terminal
+  // close
+  //
 }
 
-module.exports = { start };
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @description
+ */
+async function codeSync(page) {
+  // modify code
+  // check sync
+  //icon、time
+  //exec remote shell cat file content
+}
+module.exports = { start, codeSync };
