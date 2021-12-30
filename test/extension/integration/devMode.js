@@ -25,7 +25,7 @@ async function start(page) {
 
   await setInputBox(page, "Open associated directory");
 
-  await setInputBox(page, process.env.tmpDir);
+  // await setInputBox(page, process.env.tmpDir);
 }
 
 module.exports = { start };

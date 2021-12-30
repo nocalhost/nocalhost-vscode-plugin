@@ -23,6 +23,8 @@ const cloneTmpDir = () => {
 
   rimraf.sync(tmpDir);
 
+  process.env.tmpDir = tmpDir;
+
   const syncReturns = cp.spawnSync(
     "git",
     [
@@ -37,9 +39,7 @@ const cloneTmpDir = () => {
       stdio: "inherit",
     }
   );
-  assert(syncReturns.status === 0);
-
-  return tmpDir;
+  return { syncReturns, tmpDir };
 };
 /**
  *
@@ -109,11 +109,9 @@ const start = async (options = {}) => {
   }
 
   const tmpDir = cloneTmpDir();
+  args.unshift(tmpDir);
 
-  const pid = await run(options.vscodeExecutablePath, args, {
-    ...options.testsEnv,
-    tmpDir,
-  });
+  const pid = await run(options.vscodeExecutablePath, args, options.testsEnv);
 
   return { pid, port };
 };
