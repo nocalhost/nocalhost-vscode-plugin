@@ -120,23 +120,21 @@ async function installManifestGit(page) {
 /**
  *
  * @param {puppeteer.Page} page
- * @param {string} path
  */
-async function installFromLocal(page, path) {
+async function installFromLocal(page) {
   await install(page);
 
   await setInputBox(page, "Deploy From Local Directory");
 
-  await setInputBox(page, path);
+  await setInputBox(page, process.env.tmpDir);
 }
 
 /**
  *
  * @param {puppeteer.Page} page
- * @param {string} path
  */
-async function installHelmLocal(page, path) {
-  await installFromLocal(page, path);
+async function installHelmLocal(page) {
+  await installFromLocal(page);
 
   await selectQuickPickItem(page, "config.helm.local.yaml");
 
@@ -148,10 +146,9 @@ async function installHelmLocal(page, path) {
 /**
  *
  * @param {puppeteer.Page} page
- * @param {string} path
  */
-async function installManifestLocal(page, path) {
-  await installFromLocal(page, path);
+async function installManifestLocal(page) {
+  await installFromLocal(page);
 
   await selectQuickPickItem(page, "config.manifest.local.yaml");
 
@@ -163,10 +160,9 @@ async function installManifestLocal(page, path) {
 /**
  *
  * @param {puppeteer.Page} page
- * @param {string} path
  */
-async function installKustomizeLocal(page, path) {
-  await installFromLocal(page, path);
+async function installKustomizeLocal(page) {
+  await installFromLocal(page);
 
   await selectQuickPickItem(page, "config.kustomize.local.yaml");
 

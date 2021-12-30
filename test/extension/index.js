@@ -6,6 +6,8 @@ const isWindows = require("is-windows");
 const os = require("os");
 const getPort = require("get-port");
 const axios = require("axios");
+const rimraf = require("rimraf");
+
 const {
   downloadAndUnzipVSCode,
   resolveCliPathFromVSCodeExecutablePath,
@@ -15,6 +17,30 @@ const logger = require("./lib/log");
 const VideoCapture = require("./lib/videoCapture");
 
 const videoCapture = new VideoCapture();
+
+const cloneTmpDir = () => {
+  let tmpDir = path.join(os.tmpdir(), process.pid.toString(), "bookInfo");
+
+  rimraf.sync(tmpDir);
+
+  const syncReturns = cp.spawnSync(
+    "git",
+    [
+      "clone",
+      "--depth",
+      "1",
+      "https://github.com/nocalhost/bookinfo.git",
+      tmpDir,
+    ],
+    {
+      encoding: "utf-8",
+      stdio: "inherit",
+    }
+  );
+  assert(syncReturns.status === 0);
+
+  return tmpDir;
+};
 /**
  *
  * @param {object} options
@@ -81,7 +107,13 @@ const start = async (options = {}) => {
   if (options.launchArgs) {
     args = options.launchArgs.concat(args);
   }
-  const pid = await run(options.vscodeExecutablePath, args, options.testsEnv);
+
+  const tmpDir = cloneTmpDir();
+
+  const pid = await run(options.vscodeExecutablePath, args, {
+    ...options.testsEnv,
+    tmpDir,
+  });
 
   return { pid, port };
 };

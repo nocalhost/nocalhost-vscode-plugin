@@ -1,11 +1,11 @@
 const path = require("path");
-
 const logger = require("../lib/log");
 
 const { nhctlTests } = require("./nhctl.test");
 const { connectTests } = require("./connect.test");
 const { installTests } = require("./install.test");
 const { portForwardTests } = require("./portForward.test");
+const { devModeTests } = require("./devMode.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 
@@ -27,11 +27,11 @@ afterEach(async () => {
   });
 });
 
-// describe("nhctl", nhctlTests);
+describe("nhctl", nhctlTests);
 describe("connect", connectTests);
 // describe("install", installTests);
-describe("portForward", portForwardTests);
-
+// describe("portForward", portForwardTests);
+describe("devMode", devModeTests);
 module.exports = {
   screenshotPath,
 };

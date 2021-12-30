@@ -165,6 +165,8 @@ async function getTreeItem(page, level, name) {
     await tl.click();
   }
 
+  await tl.hover();
+
   return tl;
 }
 /**
