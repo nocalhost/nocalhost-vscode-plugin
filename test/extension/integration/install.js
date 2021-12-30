@@ -5,7 +5,7 @@ const {
   isInstallSucceed,
   getInstallApp,
   setInputBox,
-  quickPick,
+  selectQuickPickItem,
   checkPort,
 } = require("./index");
 const assert = require("assert");
@@ -83,7 +83,7 @@ async function cloneFromGit(page) {
 async function installKustomizeGit(page) {
   await cloneFromGit(page);
 
-  await quickPick(page, "config.kustomize.yaml");
+  await selectQuickPickItem(page, "config.kustomize.yaml");
 
   await setInputBox(page, "Use Default");
 
@@ -97,7 +97,7 @@ async function installKustomizeGit(page) {
 async function installHelmGit(page) {
   await cloneFromGit(page);
 
-  await quickPick(page, "config.helm.yaml");
+  await selectQuickPickItem(page, "config.helm.yaml");
 
   await setInputBox(page, "Use Default");
 
@@ -111,7 +111,7 @@ async function installHelmGit(page) {
 async function installManifestGit(page) {
   await cloneFromGit(page);
 
-  await quickPick(page, "config.manifest.git.yaml");
+  await selectQuickPickItem(page, "config.manifest.git.yaml");
 
   await setInputBox(page, "Use Default");
 
@@ -138,7 +138,7 @@ async function installFromLocal(page, path) {
 async function installHelmLocal(page, path) {
   await installFromLocal(page, path);
 
-  await quickPick(page, "config.helm.local.yaml");
+  await selectQuickPickItem(page, "config.helm.local.yaml");
 
   await setInputBox(page, "Use Default");
 
@@ -153,7 +153,7 @@ async function installHelmLocal(page, path) {
 async function installManifestLocal(page, path) {
   await installFromLocal(page, path);
 
-  await quickPick(page, "config.manifest.local.yaml");
+  await selectQuickPickItem(page, "config.manifest.local.yaml");
 
   await setInputBox(page, "Use Default");
 
@@ -168,7 +168,7 @@ async function installManifestLocal(page, path) {
 async function installKustomizeLocal(page, path) {
   await installFromLocal(page, path);
 
-  await quickPick(page, "config.kustomize.local.yaml");
+  await selectQuickPickItem(page, "config.kustomize.local.yaml");
 
   await setInputBox(page, "Use Default");
 

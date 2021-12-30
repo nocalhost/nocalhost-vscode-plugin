@@ -122,7 +122,7 @@ const getUserDataDir = async () => {
     fse.removeSync(userDataDir);
   }
 
-  await fse.copy(path.join(__dirname, "./config"), userDataDir);
+  await fse.copy(path.join(__dirname, "./config/vscode"), userDataDir);
   return userDataDir;
 };
 

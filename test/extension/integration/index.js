@@ -54,23 +54,37 @@ async function selectQuickPickItem(page, text) {
 async function getQuickPick(page) {
   await page.waitForSelector(".quick-input-list-entry");
 
+  /**
+   * @returns {Promise<Array<string>>}
+   */
+  async function getItemTexts() {
+    return await Promise.all(
+      (await this.items).map((item) => item.evaluate((el) => el.textContent))
+    );
+  }
+
   return {
     get items() {
       return page.$$(".quick-input-list-entry");
     },
+    get itemTexts() {
+      return getItemTexts.call(this);
+    },
     /**
      *
-     * @param {string} text
+     * @param {string|number} key
      */
-    async select(text) {
-      const nameList = await Promise.all(
-        (await this.items).map((item) => item.evaluate((el) => el.textContent))
-      );
-      const index = items.findIndex((name) => name === text);
+    async select(key) {
+      const items = await this.items;
+      if (typeof key === "number") {
+        await items[key].click();
+      } else {
+        const itemText = await this.itemTexts;
+        const index = itemText.findIndex((name) => name === key);
 
-      logger.debug("quickPick", text, nameList, index);
+        await items[index].click();
+      }
 
-      await list[index].click();
       await page.waitForTimeout(500);
     },
   };
@@ -125,23 +139,31 @@ async function getTreeItem(page, level, name) {
 
   const treeView = await getTreeView(page);
 
-  const treeItem = await Promise.all(
-    treeView.map((item) =>
-      item.evaluate(
-        (el, level, name) =>
-          el.getAttribute("aria-level") === level.toString() &&
-          el.innerText === name,
-        level,
-        name
+  let treeItem;
+  if (level === 1) {
+    treeItem = treeView[0];
+  } else {
+    treeItem = await Promise.all(
+      treeView.map((item) =>
+        item.evaluate(
+          (el, level, name) =>
+            el.getAttribute("aria-level") === level.toString() &&
+            el.innerText === name,
+          level,
+          name
+        )
       )
-    )
-  ).then((results) => {
-    return treeView.find((_, index) => results[index]);
-  });
+    ).then((results) => {
+      return treeView.find((_, index) => results[index]);
+    });
+  }
 
   const tl = await treeItem.$(".monaco-tl-twistie");
 
-  await tl.click();
+  const className = await tl.evaluate((el) => el.getAttribute("class"));
+  if (className.includes("collapsed")) {
+    await tl.click();
+  }
 
   return tl;
 }
@@ -152,11 +174,7 @@ async function getTreeItem(page, level, name) {
  * @return {puppeteer.ElementHandle<Element>}
  */
 async function getTreeItemByChildName(page, ...childNames) {
-  const treeView = await getTreeView(page);
-
-  await treeView[0].click();
-
-  let level = 1;
+  let level = 0;
   let treeItem;
 
   for await (const name of childNames) {
@@ -177,16 +195,19 @@ async function getItemMenu(page, menuName) {
   );
 
   const selector = `.action-label[aria-label='${menuName}']`;
-  const itemMenu = await context.$(selector);
-
-  const element = await (await itemMenu.getProperty("parentNode")).getProperty(
-    "parentNode"
-  );
 
   return {
-    element,
-    click() {
-      return element.evaluate((node) => {
+    /**
+     * @return {puppeteer.ElementHandle<Element>}
+     */
+    get el() {
+      return context
+        .$(selector)
+        .then((el) => el.getProperty("parentNode"))
+        .then((el) => el.getProperty("parentNode"));
+    },
+    async click() {
+      return (await this.el).evaluate((node) => {
         window.el = node;
         console.error("evaluate", node);
 
@@ -309,19 +330,25 @@ const getPage = async (browser) => {
 /**
  *
  * @param {string} port
- * @param {number} timeout
+ * @param {object} data
  */
-async function checkPort(port) {
-  await retry(
-    async () => {
-      const connect = await isPortReachable(port, {
-        host: "127.0.0.1",
-        timeout: 1 * 1000,
-      });
-      assert(connect, "checkPort Error");
-    },
-    { randomize: false, retries: 6 }
-  );
+async function checkPort(
+  port,
+  data = {
+    timeout: 1_000,
+    error: "checkPort Error",
+    condition: (connect) => connect,
+    retryOptions: { randomize: false, retries: 6 },
+  }
+) {
+  await retry(async () => {
+    const connect = await isPortReachable(port, {
+      host: "127.0.0.1",
+      timeout: data.timeout,
+    });
+
+    assert(data.condition(connect), data.error);
+  }, data.retryOptions);
 }
 
 module.exports = {
@@ -334,7 +361,8 @@ module.exports = {
   isInstallSucceed,
   initialize,
   setInputBox,
-  quickPick: selectQuickPickItem,
+  selectQuickPickItem,
+  getQuickPick,
   checkPort,
   getTreeItemByChildName,
   getItemMenu,

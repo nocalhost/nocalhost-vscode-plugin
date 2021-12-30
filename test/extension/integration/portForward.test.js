@@ -1,12 +1,10 @@
-const { add } = require("./portForward");
+const { list, stop, add } = require("./portForward");
 
 const portForwardTests = () => {
   describe("port forward", () => {
-    it("add", async () => {
-      await add(page);
-    });
-    // it("list", async () => {});
-    // it("stop", async () => {});
+    it("add", add.bind(null, page));
+    it("list", list.bind(null, page));
+    it("stop", stop.bind(null, page));
   });
 };
 

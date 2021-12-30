@@ -249,7 +249,7 @@
         {
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
-          "group": "1"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.loadResource",
@@ -567,7 +567,7 @@
     ]
   },
   "scripts": {
-    "prebuild": "node ./scripts/prebuild.js",
+    "prebuild": "node ./scripts/pre.build.js",
     "build": "./node_modules/.bin/vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
@@ -579,6 +579,7 @@
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
     "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
     "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
+    "prebuild:ext": "node ./scripts/test.build.js",
     "build:ext": "vsce package --yarn -o nocalhost.vsix",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
     "test:watch": "jest --watch"

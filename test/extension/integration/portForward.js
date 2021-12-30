@@ -1,38 +1,87 @@
+const assert = require("assert");
 const puppeteer = require("puppeteer-core");
-const { getTreeItemByChildName, checkPort, getItemMenu } = require("./index");
+const getPort = require("get-port");
+
+const {
+  getTreeItemByChildName,
+  getQuickPick,
+  checkPort,
+  setInputBox,
+} = require("./index");
+
+const productPagePath = [
+  "",
+  "default",
+  "bookinfo",
+  "Workloads",
+  "Deployments",
+  "productpage",
+];
+
+let port = -1;
 
 /**
  *
  * @param {puppeteer.Page} page
  * @description
-const element=document.querySelector(`#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6'`)
-const ev = document.createEvent('HTMLEvents');
-ev.initEvent('contextmenu', true, false);
-element.dispatchEvent(ev);
-
-const node=document.querySelector(`.action-label[aria-label='Port Forward']`)
-const portForward=node.parentNode.parentNode
-
-
-const mouseEvents = document.createEvent("MouseEvents");
-mouseEvents.initEvent("mouseup", true, true);
-portForward.dispatchEvent(mouseEvents);
  */
 async function add(page) {
-  const authors = await getTreeItemByChildName(
-    page,
-    "default",
-    "bookinfo",
-    "Workloads",
-    "Deployments",
-    "productpage"
+  const treeItem = await getTreeItemByChildName(page, ...productPagePath);
+
+  await treeItem.hover();
+
+  const portForward = await (await treeItem.getProperty("parentNode")).$(
+    ".action-label[title='Port Forward']"
   );
+  await portForward.click();
 
-  await authors.click({
-    button: "right",
-  });
+  let quickPick = await getQuickPick(page);
 
-  const action = await getItemMenu(page, "Port Forward");
-  await action.element.click();
+  assert((await quickPick.itemTexts).includes(" Add port forward"));
+
+  await quickPick.select(" Add port forward");
+
+  await page.waitForTimeout(500);
+  await quickPick.select(0);
+
+  port = await getPort();
+
+  await setInputBox(page, `${port}:9080`);
+
+  await checkPort(port);
 }
-module.exports = { add };
+
+/**
+ *
+ * @param {puppeteer.Page} page
+ */
+async function list(page) {
+  const treeItem = await getTreeItemByChildName(page, ...productPagePath);
+
+  await treeItem.hover();
+
+  const portForward = await (await treeItem.getProperty("parentNode")).$(
+    ".action-label[title='Port Forward']"
+  );
+  await portForward.click();
+
+  const itemTexts = await (await getQuickPick(page)).itemTexts;
+
+  assert(itemTexts.includes(`${port}:9080LISTEN`));
+}
+
+/**
+ *
+ * @param {puppeteer.Page} page
+ */
+async function stop(page) {
+  const quickPick = await getQuickPick(page);
+
+  await quickPick.select(`${port}:9080LISTEN`);
+
+  await setInputBox(page, "Confirm");
+
+  await checkPort(port, { condition: (connect) => !connect });
+}
+
+module.exports = { add, list, stop };

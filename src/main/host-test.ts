@@ -30,7 +30,7 @@ export default class HostTest extends Host {
     options?: vscode.MessageOptions,
     ...items: string[]
   ): Thenable<string | undefined> {
-    if (options.modal) {
+    if (options?.modal) {
       return this.showInputBox({ title: msg, ignoreFocusOut });
     }
     return super.showInformationMessage(msg, options, ...items);
