@@ -184,7 +184,7 @@
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod|crd-resources)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
           "group": "navigation"
         },
         {
