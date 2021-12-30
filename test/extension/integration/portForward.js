@@ -25,7 +25,7 @@ async function add(page) {
     "bookinfo",
     "Workloads",
     "Deployments",
-    "authors"
+    "productpage"
   );
 
   await authors.click({
@@ -34,7 +34,5 @@ async function add(page) {
 
   const action = await getItemMenu(page, "Port Forward");
   await action.element.click();
-
-  await page.waitForTimeout(100_000);
 }
 module.exports = { add };

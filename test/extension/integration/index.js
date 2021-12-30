@@ -41,24 +41,39 @@ async function setInputBox(page, text) {
 /**
  *
  * @param {puppeteer.Page} page
- * @param {String} text
+ * @param {string} text
  */
-async function quickPick(page, text) {
+async function selectQuickPickItem(page, text) {
+  return (await getQuickPick(page)).select(text);
+}
+
+/**
+ *
+ * @param {puppeteer.Page} page
+ */
+async function getQuickPick(page) {
   await page.waitForSelector(".quick-input-list-entry");
 
-  const list = await page.$$(".quick-input-list-entry");
+  return {
+    get items() {
+      return page.$$(".quick-input-list-entry");
+    },
+    /**
+     *
+     * @param {string} text
+     */
+    async select(text) {
+      const nameList = await Promise.all(
+        (await this.items).map((item) => item.evaluate((el) => el.textContent))
+      );
+      const index = items.findIndex((name) => name === text);
 
-  const nameList = await Promise.all(
-    list.map((item) => item.evaluate((el) => el.textContent))
-  );
+      logger.debug("quickPick", text, nameList, index);
 
-  const index = nameList.findIndex((name) => name === text);
-
-  logger.debug("quickPick", text, nameList, index);
-
-  await list[index].click();
-
-  await page.waitForTimeout(500);
+      await list[index].click();
+      await page.waitForTimeout(500);
+    },
+  };
 }
 
 /**
@@ -319,7 +334,7 @@ module.exports = {
   isInstallSucceed,
   initialize,
   setInputBox,
-  quickPick,
+  quickPick: selectQuickPickItem,
   checkPort,
   getTreeItemByChildName,
   getItemMenu,
