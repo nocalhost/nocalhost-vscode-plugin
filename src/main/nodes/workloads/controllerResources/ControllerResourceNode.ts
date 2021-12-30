@@ -219,7 +219,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;
-    const conditionsStatus = resourceStatus.conditions;
+    const conditionsStatus = resourceStatus?.conditions;
     if (Array.isArray(conditionsStatus)) {
       let available = false;
       let progressing = false;
@@ -236,6 +236,11 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         status = "starting";
       }
     }
+
+    if (resourceStatus?.replicas === resourceStatus?.readyReplicas) {
+      status = "running";
+    }
+
     if (!status) {
       status = "unknown";
     }

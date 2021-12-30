@@ -132,17 +132,17 @@
       "view/item/context": [
         {
           "command": "Nocalhost.openProject",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)/i",
           "group": "developing@1"
         },
         {
           "command": "Nocalhost.run",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)/i",
           "group": "developing@3"
         },
         {
           "command": "Nocalhost.debug",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)/i",
           "group": "developing@2"
         },
         {
@@ -182,32 +182,32 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^workload-deployment/i",
+          "when": "viewItem =~ /^workload-(deployment|crd-resources)/i",
           "group": "2"
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting|develop_starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing|starting|develop_starting))/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(.+?)-(developing|develop_starting)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(.+?)-(developing|develop_starting)/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.editServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-info/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-info/i",
           "group": "inline@1"
         },
         {
           "command": "Nocalhost.writeServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-warn/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-warn/i",
           "group": "inline@1"
         },
         {
@@ -217,17 +217,17 @@
         },
         {
           "command": "Nocalhost.exec",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod)-dev/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod|crd-resources)-dev/i",
           "group": "3"
         },
         {
           "command": "Nocalhost.copyTerminal",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)/i",
           "group": "3"
         },
         {
           "command": "Nocalhost.reset",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)/i",
           "group": "2"
         },
         {
@@ -237,18 +237,18 @@
         },
         {
           "command": "Nocalhost.log",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)/i",
           "group": "1"
         },
         {
           "command": "Nocalhost.editManifest",
-          "when": "viewItem =~ /(^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod)).*(?<!duplicate-self)$/i",
+          "when": "viewItem =~ /(^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)).*(?<!duplicate-self)$/i",
           "title": "%editManifest%",
           "group": "1"
         },
         {
           "command": "Nocalhost.portForward",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)/i",
           "group": "1"
         },
         {
@@ -263,7 +263,7 @@
         },
         {
           "command": "Nocalhost.associateLocalDirectory",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)/i",
           "group": "0"
         },
         {

@@ -15,6 +15,7 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
   const prototype: {
     [key: string]: any;
   } = targetClass.prototype;
+
   prototype.getChildren = async function getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<any>> {
@@ -52,14 +53,18 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
     });
     return this.sortResource(result);
   };
+
   prototype.updateData = async function (isInit?: boolean): Promise<any> {
     const appNode = this.getAppNode();
     // description
     const list: INhCtlGetResult[] =
-      (await NhctlCommand.get({
-        kubeConfigPath: this.getKubeConfigPath(),
-        namespace: appNode.namespace,
-      })
+      (await NhctlCommand.get(
+        {
+          kubeConfigPath: this.getKubeConfigPath(),
+          namespace: appNode.namespace,
+        },
+        30 * 1000
+      )
         .addArgument(this.resourceType)
         .addArgument("-a", appNode.name)
         .addArgument("-o", "json")
@@ -75,7 +80,6 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
       appConfig,
     };
     state.setData(this.getNodeStateId(), obj, isInit);
-
     return obj;
   };
 };
