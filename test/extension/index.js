@@ -220,3 +220,7 @@ module.exports = {
   getWebSocketDebuggerUrl,
   videoCapture,
 };
+
+(async () => {
+  await start();
+})();

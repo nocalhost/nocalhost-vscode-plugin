@@ -13,7 +13,7 @@ const DIR = path.join(
 );
 
 async function teardown() {
-  // await videoCapture.end();
+  await videoCapture.end();
 
   await global.__BROWSER__.disconnect();
 

@@ -30,8 +30,8 @@ afterEach(async () => {
 describe("nhctl", nhctlTests);
 describe("connect", connectTests);
 // describe("install", installTests);
-// describe("portForward", portForwardTests);
-describe("devMode", devModeTests);
+describe("portForward", portForwardTests);
+// describe("devMode", devModeTests);
 module.exports = {
   screenshotPath,
 };
