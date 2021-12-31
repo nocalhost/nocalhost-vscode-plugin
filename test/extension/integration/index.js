@@ -145,7 +145,9 @@ async function getTreeItem(page, level, name) {
     `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
   );
 
-  const treeView = await getTreeView(page);
+  const treeView = await page.$$(
+    `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
+  );
 
   let treeItem;
   if (level === 1) {
@@ -156,7 +158,7 @@ async function getTreeItem(page, level, name) {
         item.evaluate(
           (el, level, name) =>
             el.getAttribute("aria-level") === level.toString() &&
-            el.innerText === name,
+            el.querySelector(".label-name").innerText === name,
           level,
           name
         )
@@ -175,6 +177,8 @@ async function getTreeItem(page, level, name) {
 
   await tl.hover();
 
+  logger.debug("getTreeItem", level, name);
+
   return tl;
 }
 /**
@@ -191,30 +195,30 @@ async function getTreeItemByChildName(page, ...childNames) {
   }
   return treeItem;
 
-  return {
-    /**
-     * @returns  {puppeteer.ElementHandle<Element>}
-     */
-    treeItem,
-    /**
-     *
-     * @param {string} title
-     * @returns {puppeteer.ElementHandle<Element>}
-     */
-    async selectAction(title) {
-      await this.treeItem.hover();
+  // return {
+  //   /**
+  //    * @returns  {puppeteer.ElementHandle<Element>}
+  //    */
+  //   treeItem,
+  //   /**
+  //    *
+  //    * @param {string} title
+  //    * @returns {puppeteer.ElementHandle<Element>}
+  //    */
+  //   async selectAction(title) {
+  //     await this.treeItem.hover();
 
-      const parentNode = await this.treeItem.getProperty("parentNode");
+  //     const parentNode = await this.treeItem.getProperty("parentNode");
 
-      const action = await parentNode.$(
-        `a.action-label.icon[title='${title}']`
-      );
+  //     const action = await parentNode.$(
+  //       `a.action-label.icon[title='${title}']`
+  //     );
 
-      await action.click();
+  //     await action.click();
 
-      return action;
-    },
-  };
+  //     return action;
+  //   },
+  // };
 }
 
 /**
@@ -324,10 +328,20 @@ async function getInstallApp(page, name) {
 }
 /**
  *
- * @returns {puppeteer.Page}
+ * @param {string} port
+ * @returns {{
+ *      page:puppeteer.Page,browser:puppeteer.Browser
+ * }}
  */
-async function initialize() {
-  const { port } = await start();
+async function initialize(port) {
+  if (!port) {
+    const { port: startPort } = await start({
+      testsEnv: {
+        puppeteer: true,
+      },
+    });
+    port = startPort;
+  }
 
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
     retries: 3,
@@ -342,7 +356,7 @@ async function initialize() {
 
   await openNocalhost(page);
 
-  return page;
+  return { browser, page, port };
 }
 /**
  *

@@ -28,8 +28,6 @@ let port = -1;
 async function add(page) {
   const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
 
-  await treeItem.hover();
-
   const portForward = await (await treeItem.getProperty("parentNode")).$(
     ".action-label[title='Port Forward']"
   );
@@ -37,7 +35,9 @@ async function add(page) {
 
   let quickPick = getQuickPick(page);
 
-  assert((await quickPick.itemTexts).includes(" Add port forward"));
+  // assert((await quickPick.itemTexts).includes(" Add port forward"));
+
+  await page.waitForTimeout(1_000);
 
   await quickPick.select(" Add port forward");
 
@@ -45,11 +45,13 @@ async function add(page) {
 
   port = await getPort();
 
-  await quickPick.select(0);
+  // await quickPick.select(0);
 
   await setInputBox(page, `${port}:9080`);
 
   await checkPort(port);
+
+  return port;
 }
 
 /**
@@ -58,8 +60,6 @@ async function add(page) {
  */
 async function list(page) {
   const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
-
-  await treeItem.hover();
 
   const portForward = await (await treeItem.getProperty("parentNode")).$(
     ".action-label[title='Port Forward']"

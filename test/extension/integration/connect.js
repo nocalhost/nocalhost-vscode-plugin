@@ -111,11 +111,4 @@ async function loadKubeConfig(page) {
   return await waitForMessage(page, "Success", 60 * 1000);
 }
 
-(async () => {
-  if (require.main === module) {
-    const page = await initialize();
-    await pasteAsText(page);
-  }
-})();
-
 module.exports = { pasteAsText, loadKubeConfig };
