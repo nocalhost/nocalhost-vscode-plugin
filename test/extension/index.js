@@ -6,7 +6,7 @@ const isWindows = require("is-windows");
 const os = require("os");
 const getPort = require("get-port");
 const axios = require("axios");
-const rimraf = require("rimraf");
+const { getRepository, gitCode } = require("./lib");
 
 const {
   downloadAndUnzipVSCode,
@@ -18,30 +18,6 @@ const VideoCapture = require("./lib/videoCapture");
 
 const videoCapture = new VideoCapture();
 
-// (process.env["NH_REGION"] ?? "").toUpperCase() === "CN"
-const cloneTmpDir = () => {
-  let tmpDir = path.join(os.tmpdir(), process.pid.toString(), "ratings");
-
-  rimraf.sync(tmpDir);
-
-  process.env.tmpDir = tmpDir;
-
-  const syncReturns = cp.spawnSync(
-    "git",
-    [
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/nocalhost/bookinfo-ratings.git",
-      tmpDir,
-    ],
-    {
-      encoding: "utf-8",
-      stdio: "inherit",
-    }
-  );
-  return { syncReturns, tmpDir };
-};
 /**
  *
  * @param {object} options
@@ -109,11 +85,11 @@ const start = async (options = {}) => {
     args = options.launchArgs.concat(args);
   }
 
-  const { tmpDir, syncReturns: result } = cloneTmpDir();
+  // args.unshift((await gitCode(getRepository("bookinfo-ratings.git"))).tmpDir);
 
-  assert(result.status === 0, result.error);
-
-  args.unshift(tmpDir);
+  process.env.currentPath =
+    "/Volumes/Data/project/nocalhost/bookinfo/bookinfo-ratings";
+  args.unshift(process.env.currentPath);
 
   const pid = await run(options.vscodeExecutablePath, args, options.testsEnv);
 

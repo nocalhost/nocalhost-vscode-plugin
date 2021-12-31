@@ -35,13 +35,17 @@ async function add(page) {
   );
   await portForward.click();
 
-  let quickPick = await getQuickPick(page);
+  let quickPick = getQuickPick(page);
 
   assert((await quickPick.itemTexts).includes(" Add port forward"));
 
   await quickPick.select(" Add port forward");
 
+  await page.waitForTimeout(1_000);
+
   port = await getPort();
+
+  await quickPick.select(0);
 
   await setInputBox(page, `${port}:9080`);
 

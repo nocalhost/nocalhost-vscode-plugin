@@ -1,7 +1,3 @@
-const rimraf = require("rimraf");
-const path = require("path");
-const cp = require("child_process");
-
 const {
   installHelmGit,
   installManifestGit,
@@ -11,42 +7,13 @@ const {
   installManifestLocal,
 } = require("./install");
 
-const cloneTmpDir = () => {
-  let tmpDir = path.join(os.tmpdir(), process.pid.toString(), "bookInfo");
+const { gitCode, getRepository } = require("../lib");
 
-  rimraf.sync(tmpDir);
-
-  process.env.tmpDir = tmpDir;
-
-  const syncReturns = cp.spawnSync(
-    "git",
-    [
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/nocalhost/bookinfo.git",
-      tmpDir,
-    ],
-    {
-      encoding: "utf-8",
-      stdio: "inherit",
-    }
-  );
-  return syncReturns;
-};
 const installTests = () => {
   beforeAll(async (done) => {
-    const syncReturns = cloneTmpDir();
-
-    if (syncReturns.status !== 0) {
-      done.fail(syncReturns.stderr);
-    }
-    done();
+    gitCode(getRepository("bookinfo.git")).then(done).catch(done.fail);
   });
 
-  afterAll(async () => {
-    rimraf.sync(bookInfoPath);
-  });
   describe("deploy From Local Directory", () => {
     it("kustomize", async () => {
       await installKustomizeLocal(page);

@@ -52,9 +52,7 @@ async function selectQuickPickItem(page, text) {
  *
  * @param {puppeteer.Page} page
  */
-async function getQuickPick(page) {
-  await page.waitForSelector(".quick-input-list-entry");
-
+function getQuickPick(page) {
   /**
    * @returns {Promise<Array<string>>}
    */
@@ -64,10 +62,21 @@ async function getQuickPick(page) {
     );
   }
 
+  /**
+   *
+   * @returns {Promise<Array<puppeteer.ElementHandle<Element>>}
+   */
+  async function getItems() {
+    await page.waitForSelector(".quick-input-list-entry");
+    return page.$$(".quick-input-list-entry");
+  }
   return {
     get items() {
-      return page.$$(".quick-input-list-entry");
+      return getItems();
     },
+    /**
+     * @returns {Promise<Array<string>>}
+     */
     get itemTexts() {
       return getItemTexts.call(this);
     },
@@ -85,8 +94,6 @@ async function getQuickPick(page) {
 
         await items[index].click();
       }
-
-      await page.waitForTimeout(500);
     },
   };
 }

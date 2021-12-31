@@ -14,7 +14,9 @@ const DIR = path.join(
 );
 
 async function teardown() {
-  await videoCapture.end().catch((err) => logger.error(err));
+  if (process.env.videoCapture) {
+    await videoCapture.end().catch((err) => logger.error(err));
+  }
 
   await global.__BROWSER__.disconnect();
 

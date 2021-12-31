@@ -24,6 +24,8 @@ async function start(page) {
   await action.click();
 
   await setInputBox(page, "Open associated directory");
+
+  await setInputBox(page, process.env.currentPath);
   // check icon devicon endbutton
   // check sync
 
