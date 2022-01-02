@@ -2,15 +2,10 @@ const assert = require("assert");
 const { default: Axios } = require("axios");
 const retry = require("async-retry");
 const puppeteer = require("puppeteer-core");
-const { typeTerminal } = require("../lib/components/terminal");
 
+const { tree, terminal } = require("../lib/components");
 const logger = require("../lib/log");
-const {
-  getTreeItemByChildName,
-  initialize,
-  enterShortcutKeys,
-  setInputBox,
-} = require("./index");
+const { initialize, enterShortcutKeys, setInputBox } = require("./index");
 const { add, stop, getPortForwardPort } = require("./portForward");
 
 const treeItemPath = [
@@ -96,7 +91,7 @@ async function checkSyncCompletion(page) {
  * @description
  */
 async function runCommand(page) {
-  await typeTerminal(page, "./run.sh \n");
+  await terminal.sendText(page, "./run.sh \n");
 
   const port = await add(page);
   logger.debug("start port forward");
@@ -120,9 +115,9 @@ async function runCommand(page) {
  * @description
  */
 async function start(page) {
-  const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+  const treeItem = await tree.getItem(page, ...treeItemPath);
 
-  const action = await (await treeItem.getProperty("parentNode")).$(
+  const action = await treeItem.$(
     `a.action-label.icon[title="Start Development"]`
   );
   await action.click();
@@ -162,9 +157,9 @@ async function codeSync(page) {
 
   await checkSyncCompletion(page);
 
-  await typeTerminal(page, "\x03");
+  await terminal.sendText(page, "\x03");
 
-  await typeTerminal(page, "./run.sh \n");
+  await terminal.sendText(page, "./run.sh \n");
 
   await retry(
     async () => {
@@ -186,20 +181,16 @@ async function codeSync(page) {
  * @description
  */
 async function endDevMode(page) {
-  let treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+  let treeItem = await tree.getItem(page, ...treeItemPath);
 
-  const portForward = await (await treeItem.getProperty("parentNode")).$(
-    ".action-label[title='Port Forward']"
-  );
+  const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 
   await stop(page);
 
-  treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+  treeItem = await tree.getItem(page, ...treeItemPath);
 
-  const endDevelop = await (await treeItem.getProperty("parentNode")).$(
-    ".action-label[title='End Develop']"
-  );
+  const endDevelop = await treeItem.$(".action-label[title='End Develop']");
   await endDevelop.click();
 
   await page.waitForFunction(

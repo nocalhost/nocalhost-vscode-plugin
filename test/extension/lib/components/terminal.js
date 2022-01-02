@@ -17,10 +17,10 @@ async function getTerminal(page) {
  * @param {puppeteer.Page} page
  * @param {string} text
  */
-async function typeTerminal(page, text) {
+async function sendText(page, text) {
   await getTerminal(page);
 
   await page.keyboard.type(text);
 }
 
-module.exports = { typeTerminal, getTerminal };
+module.exports = { sendText, getTerminal };

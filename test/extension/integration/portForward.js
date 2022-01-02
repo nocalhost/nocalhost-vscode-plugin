@@ -2,13 +2,8 @@ const assert = require("assert");
 const puppeteer = require("puppeteer-core");
 const getPort = require("get-port");
 
-const {
-  getTreeItemByChildName,
-  getQuickPick,
-  checkPort,
-  setInputBox,
-} = require("./index");
-const { selectAction } = require("../lib/components/dialog");
+const { getQuickPick, checkPort, setInputBox } = require("./index");
+const { dialog, tree } = require("../lib/components");
 
 const treeItemPath = [
   "",
@@ -30,11 +25,9 @@ function getPortForwardPort() {
  * @description
  */
 async function add(page) {
-  const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+  const treeItem = await tree.getItem(page, ...treeItemPath);
 
-  const portForward = await (await treeItem.getProperty("parentNode")).$(
-    ".action-label[title='Port Forward']"
-  );
+  const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 
   let quickPick = getQuickPick(page);
@@ -63,16 +56,14 @@ async function add(page) {
  * @param {puppeteer.Page} page
  */
 async function list(page) {
-  const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+  const treeItem = await tree.getItem(page, ...treeItemPath);
 
-  const portForward = await (await treeItem.getProperty("parentNode")).$(
-    ".action-label[title='Port Forward']"
-  );
+  const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 
   const itemTexts = await (await getQuickPick(page)).itemTexts;
 
-  assert(itemTexts.includes(`${port}:9080LISTEN`));
+  assert(itemTexts.includes(`${port}:9080`));
 }
 
 /**
@@ -84,7 +75,7 @@ async function stop(page) {
 
   await quickPick.select(`${port}:9080`);
 
-  await selectAction(page, "Confirm");
+  await dialog.selectAction(page, "Confirm");
 
   await checkPort(port, { condition: (connect) => !connect });
 }

@@ -11,7 +11,12 @@ const { gitCode, getRepository } = require("../lib");
 
 const installTests = () => {
   beforeAll(async (done) => {
-    gitCode(getRepository("bookinfo.git")).then(done).catch(done.fail);
+    gitCode(getRepository("bookinfo.git"))
+      .then((res) => {
+        process.env.tmpDir = res.tmpDir;
+        done();
+      })
+      .catch(done.fail);
   });
 
   describe("deploy From Local Directory", () => {

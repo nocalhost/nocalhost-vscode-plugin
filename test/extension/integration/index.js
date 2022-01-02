@@ -2,8 +2,10 @@ const puppeteer = require("puppeteer-core");
 const retry = require("async-retry");
 const isPortReachable = require("is-port-reachable");
 const assert = require("assert");
+
 const { start, getWebSocketDebuggerUrl } = require("../");
 const logger = require("../lib/log");
+const { dialog } = require("../lib/components");
 /**
  *
  * @param {puppeteer.Page} page
@@ -28,10 +30,12 @@ async function openNocalhost(page) {
  * @param {String} text
  * @return {puppeteer.ElementHandle<Element>[]}
  */
-async function setInputBox(page, text) {
-  await page.waitForTimeout(500);
-
+async function setInputBox(page, text, clean = false) {
   let input = await page.waitForSelector(".quick-input-widget .input");
+
+  if (clean) {
+    await input.evaluate((input) => (input.value = ""), input);
+  }
 
   await input.click();
   await input.type(text, { delay: 1 });
@@ -140,94 +144,6 @@ async function getTreeView(page) {
 /**
  *
  * @param {puppeteer.Page} page
- * @param {number} level
- * @param {string} name
- * @return {puppeteer.ElementHandle<Element>}
- */
-async function getTreeItem(page, level, name) {
-  await page.waitForSelector(
-    `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
-  );
-
-  const treeView = await page.$$(
-    `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
-  );
-
-  let treeItem;
-  if (level === 1) {
-    treeItem = treeView[0];
-  } else {
-    treeItem = await Promise.all(
-      treeView.map((item) =>
-        item.evaluate(
-          (el, level, name) =>
-            el.getAttribute("aria-level") === level.toString() &&
-            el.querySelector(".label-name").innerText === name,
-          level,
-          name
-        )
-      )
-    ).then((results) => {
-      return treeView.find((_, index) => results[index]);
-    });
-  }
-
-  const tl = await treeItem.$(".monaco-tl-twistie");
-
-  const className = await tl.evaluate((el) => el.getAttribute("class"));
-  if (className.includes("collapsed")) {
-    await tl.click();
-  }
-
-  await tl.hover();
-
-  // logger.debug("getTreeItem", level, name);
-
-  return tl;
-}
-/**
- *
- * @param {puppeteer.Page} page
- * @param {string[]} childNames
- */
-async function getTreeItemByChildName(page, ...childNames) {
-  let level = 0;
-  let treeItem;
-
-  for await (const name of childNames) {
-    treeItem = await getTreeItem(page, ++level, name);
-  }
-  return treeItem;
-
-  // return {
-  //   /**
-  //    * @returns  {puppeteer.ElementHandle<Element>}
-  //    */
-  //   treeItem,
-  //   /**
-  //    *
-  //    * @param {string} title
-  //    * @returns {puppeteer.ElementHandle<Element>}
-  //    */
-  //   async selectAction(title) {
-  //     await this.treeItem.hover();
-
-  //     const parentNode = await this.treeItem.getProperty("parentNode");
-
-  //     const action = await parentNode.$(
-  //       `a.action-label.icon[title='${title}']`
-  //     );
-
-  //     await action.click();
-
-  //     return action;
-  //   },
-  // };
-}
-
-/**
- *
- * @param {puppeteer.Page} page
  * @param {string[]} childNames
  */
 async function getItemMenu(page, menuName) {
@@ -268,7 +184,7 @@ async function unInstall(page, node, name) {
   await node.hover();
   await page.click(".codicon-trash");
 
-  await setInputBox(page, "OK");
+  await dialog.selectAction(page, "OK");
 
   await page.waitForFunction(
     `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`,
@@ -423,7 +339,6 @@ module.exports = {
   openNocalhost,
   getPage,
   waitForMessage,
-  getTreeView,
   getInstallApp,
   unInstall,
   isInstallSucceed,
@@ -432,7 +347,6 @@ module.exports = {
   selectQuickPickItem,
   getQuickPick,
   checkPort,
-  getTreeItemByChildName,
   getItemMenu,
   enterShortcutKeys,
 };

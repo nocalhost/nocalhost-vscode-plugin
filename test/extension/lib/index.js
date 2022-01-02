@@ -1,5 +1,4 @@
 const cp = require("child_process");
-const fse = require("fs-extra");
 const assert = require("assert");
 const path = require("path");
 const os = require("os");
