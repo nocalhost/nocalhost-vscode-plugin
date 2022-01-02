@@ -87,7 +87,7 @@ function getQuickPick(page) {
      * @param {string|number} key
      */
     async select(key) {
-      await page.waitForTimeout(1_0000);
+      await page.waitForTimeout(3_000);
 
       const items = await this.items;
       if (typeof key === "number") {

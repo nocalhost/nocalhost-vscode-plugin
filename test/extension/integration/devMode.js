@@ -27,7 +27,7 @@ const treeItemPath = [
  * @param {puppeteer.Page} page
  * @description
  */
-async function checkIcon(page) {
+async function checkStartComplete(page) {
   // check icon devIcon endButton
   await page.waitForFunction(
     (name) => {
@@ -60,7 +60,7 @@ async function checkIcon(page) {
     "ratings"
   );
 
-  await checkSync(page);
+  await checkSyncCompletion(page);
 
   logger.debug("Start Development", "ok");
 }
@@ -68,7 +68,7 @@ async function checkIcon(page) {
  *
  * @param {puppeteer.Page} page
  */
-async function checkSync(page) {
+async function checkSyncCompletion(page) {
   const statusBar = await page.$("#nocalhost\\.nocalhost");
 
   await retry(
@@ -95,7 +95,7 @@ async function checkSync(page) {
  * @param {puppeteer.Page} page
  * @description
  */
-async function checkRun(page) {
+async function runCommand(page) {
   await typeTerminal(page, "./run.sh \n");
 
   const port = await add(page);
@@ -132,14 +132,6 @@ async function start(page) {
   // await setInputBox(page, "Open associated directory");
 
   // await setInputBox(page, process.env.currentPath);
-
-  await checkIcon(page);
-
-  await checkRun(page);
-
-  await codeSync(page);
-
-  await endDevMode(page);
 }
 
 /**
@@ -148,7 +140,6 @@ async function start(page) {
  * @description
  */
 async function codeSync(page) {
-  // modify code
   await enterShortcutKeys(page, "MetaLeft", "p");
 
   await setInputBox(page, "ratings.js");
@@ -169,7 +160,7 @@ async function codeSync(page) {
 
   await page.waitForTimeout(10_000);
 
-  await checkSync(page);
+  await checkSyncCompletion(page);
 
   await typeTerminal(page, "\x03");
 
@@ -243,11 +234,18 @@ async function endDevMode(page) {
   );
 }
 
-module.exports = { start, codeSync };
+module.exports = {
+  start,
+  codeSync,
+  checkStartComplete,
+  checkSyncCompletion,
+  endDevMode,
+  runCommand,
+};
 
 (async () => {
   if (require.main === module) {
-    const port = 49617;
+    const port = null;
 
     const { page, browser, port: newPort } = await initialize(port);
 

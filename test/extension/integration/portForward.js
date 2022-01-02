@@ -8,6 +8,7 @@ const {
   checkPort,
   setInputBox,
 } = require("./index");
+const { selectAction } = require("../lib/components/dialog");
 
 const treeItemPath = [
   "",
@@ -83,7 +84,7 @@ async function stop(page) {
 
   await quickPick.select(`${port}:9080`);
 
-  await setInputBox(page, "Confirm");
+  await selectAction(page, "Confirm");
 
   await checkPort(port, { condition: (connect) => !connect });
 }

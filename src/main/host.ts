@@ -5,8 +5,6 @@ import {
   Progress,
   QuickPickOptions,
 } from "vscode";
-import { execSync } from "child_process";
-import logger from "./utils/logger";
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
@@ -372,11 +370,4 @@ export class Host implements vscode.Disposable {
   }
 }
 
-let defaultHost: Host = new Host();
-
-if (process.env.puppeteer) {
-  let hostTest = require("./host-test").default;
-  defaultHost = new hostTest();
-}
-
-export default defaultHost;
+export default new Host();
