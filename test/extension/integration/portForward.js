@@ -20,6 +20,9 @@ const treeItemPath = [
 
 let port = -1;
 
+function getPortForwardPort() {
+  return port;
+}
 /**
  *
  * @param {puppeteer.Page} page
@@ -78,11 +81,11 @@ async function list(page) {
 async function stop(page) {
   const quickPick = await getQuickPick(page);
 
-  await quickPick.select(`${port}:9080LISTEN`);
+  await quickPick.select(`${port}:9080`);
 
   await setInputBox(page, "Confirm");
 
   await checkPort(port, { condition: (connect) => !connect });
 }
 
-module.exports = { add, list, stop };
+module.exports = { add, list, stop, getPortForwardPort };

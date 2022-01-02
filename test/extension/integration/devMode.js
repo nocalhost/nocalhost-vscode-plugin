@@ -1,10 +1,17 @@
 const assert = require("assert");
 const { default: Axios } = require("axios");
+const retry = require("async-retry");
 const puppeteer = require("puppeteer-core");
+const { typeTerminal } = require("../lib/components/terminal");
 
 const logger = require("../lib/log");
-const { getTreeItemByChildName, initialize } = require("./index");
-const { add, stop } = require("./portForward");
+const {
+  getTreeItemByChildName,
+  initialize,
+  enterShortcutKeys,
+  setInputBox,
+} = require("./index");
+const { add, stop, getPortForwardPort } = require("./portForward");
 
 const treeItemPath = [
   "",
@@ -20,57 +27,60 @@ const treeItemPath = [
  * @param {puppeteer.Page} page
  * @description
  */
-async function start(page) {
-  const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+async function checkIcon(page) {
+  // check icon devIcon endButton
+  await page.waitForFunction(
+    (name) => {
+      const nodes = Array.from(
+        document.querySelectorAll(
+          "#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6']"
+        )
+      );
 
-  // const action = await (await treeItem.getProperty("parentNode")).$(
-  //   `a.action-label.icon[title="Start Development"]`
-  // );
-  // await action.click();
+      const node = nodes.find(
+        (node) => node.querySelector(".label-name").innerText === name
+      );
+      if (!node) {
+        return;
+      }
 
-  logger.debug("Start Development");
+      node.click();
 
-  // await setInputBox(page, "Open associated directory");
+      const isDevStart = !!node.querySelector(
+        `.custom-view-tree-node-item-icon[style$='v_start.svg");']`
+      );
 
-  // await setInputBox(page, process.env.currentPath);
+      const isDevEnd = !!node.querySelector(
+        `.actions [style$='dev_end.svg");']`
+      );
 
-  // check icon devicon endbutton
-  await page.waitForFunction(() => {
-    const nodes = Array.from(
-      document.querySelectorAll(
-        "#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6']"
-      )
-    );
-
-    const node = nodes.find(
-      (node) => node.querySelector(".label-name").innerText === "ratings"
-    );
-    if (!node) {
-      return;
-    }
-
-    node.click();
-
-    const isDevStart = !!node.querySelector(`[style$='v_start.svg");']`);
-
-    const isDevEnd = !!node.querySelector(`[style$='dev_end.svg");']`);
-
-    console.warn(isDevStart, isDevEnd);
-
-    return isDevStart && isDevEnd;
-  }, treeItem);
-
-  logger.debug("Start Development", "ok");
-
-  // check sync
-
-  const statusBar = await page.$("#nocalhost\\.nocalhost");
-
-  const className = await (await statusBar.$(".codicon")).evaluate(
-    (el) => el.className
+      return isDevStart && isDevEnd;
+    },
+    { timeout: 300_000 },
+    "ratings"
   );
 
-  assert(className.includes("codicon-check"));
+  await checkSync(page);
+
+  logger.debug("Start Development", "ok");
+}
+/**
+ *
+ * @param {puppeteer.Page} page
+ */
+async function checkSync(page) {
+  const statusBar = await page.$("#nocalhost\\.nocalhost");
+
+  await retry(
+    async () => {
+      const className = await (await statusBar.$(".codicon")).evaluate(
+        (el) => el.className
+      );
+
+      assert(className.includes("codicon-check"));
+    },
+    { retries: 3 }
+  );
 
   logger.debug("sync icon");
 
@@ -79,32 +89,57 @@ async function start(page) {
   assert(textContent.includes("Sync completed at:"));
 
   logger.debug("sync completed");
-
-  // terminal
-  await page.waitForTimeout(1_000);
-  await page.type(".xterm-screen", "./run.sh \n");
-
-  // start port forward
-  await page.waitForTimeout(1_000);
+}
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @description
+ */
+async function checkRun(page) {
+  await typeTerminal(page, "./run.sh \n");
 
   const port = await add(page);
   logger.debug("start port forward");
 
-  const data = await Axios.get(`http://127.0.0.1:${port}/health`);
+  await retry(
+    async () => {
+      const data = await Axios.get(`http://127.0.0.1:${port}/health`);
 
-  assert("status" in data.data && data.data.status === "Ratings is healthy");
+      assert(
+        "status" in data.data && data.data.status === "Ratings is healthy"
+      );
+    },
+    { retries: 3 }
+  );
 
   logger.debug("check health");
+}
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @description
+ */
+async function start(page) {
+  const treeItem = await getTreeItemByChildName(page, ...treeItemPath);
 
-  // close
-  await page.type(".xterm-screen", " \x03");
-
-  const portForward = await (await treeItem.getProperty("parentNode")).$(
-    ".action-label[title='Port Forward']"
+  const action = await (await treeItem.getProperty("parentNode")).$(
+    `a.action-label.icon[title="Start Development"]`
   );
-  await portForward.click();
+  await action.click();
 
-  await stop(page);
+  logger.debug("Start Development");
+
+  // await setInputBox(page, "Open associated directory");
+
+  // await setInputBox(page, process.env.currentPath);
+
+  await checkIcon(page);
+
+  await checkRun(page);
+
+  await codeSync(page);
+
+  await endDevMode(page);
 }
 
 /**
@@ -114,17 +149,111 @@ async function start(page) {
  */
 async function codeSync(page) {
   // modify code
-  // check sync
-  //icon、time
-  //exec remote shell cat file content
+  await enterShortcutKeys(page, "MetaLeft", "p");
+
+  await setInputBox(page, "ratings.js");
+
+  await page.waitForTimeout(5_00);
+  await enterShortcutKeys(page, "ControlLeft", "g");
+
+  await setInputBox(page, "207:9");
+
+  await enterShortcutKeys(page, "MetaLeft", "x");
+
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type(
+    `\n\tres.end(JSON.stringify({status: 'Ratings is healthy2'}))\n`
+  );
+
+  await enterShortcutKeys(page, "MetaLeft", "s");
+
+  await page.waitForTimeout(10_000);
+
+  await checkSync(page);
+
+  await typeTerminal(page, "\x03");
+
+  await typeTerminal(page, "./run.sh \n");
+
+  await retry(
+    async () => {
+      const data = await Axios.get(
+        `http://127.0.0.1:${getPortForwardPort()}/health`
+      );
+
+      assert(
+        "status" in data.data && data.data.status === "Ratings is healthy2"
+      );
+    },
+    { retries: 3 }
+  );
 }
+
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @description
+ */
+async function endDevMode(page) {
+  let treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+
+  const portForward = await (await treeItem.getProperty("parentNode")).$(
+    ".action-label[title='Port Forward']"
+  );
+  await portForward.click();
+
+  await stop(page);
+
+  treeItem = await getTreeItemByChildName(page, ...treeItemPath);
+
+  const endDevelop = await (await treeItem.getProperty("parentNode")).$(
+    ".action-label[title='End Develop']"
+  );
+  await endDevelop.click();
+
+  await page.waitForFunction(
+    (name) => {
+      const nodes = Array.from(
+        document.querySelectorAll(
+          "#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6']"
+        )
+      );
+
+      const node = nodes.find(
+        (node) => node.querySelector(".label-name").innerText === name
+      );
+      if (!node) {
+        return;
+      }
+
+      node.click();
+
+      const isDevStart = !!node.querySelector(
+        `.custom-view-tree-node-item-icon[style$='status_running.svg");']`
+      );
+
+      const isDevEnd = !!node.querySelector(
+        `.actions [style$='v_start.svg");']`
+      );
+
+      return isDevStart && isDevEnd;
+    },
+    { timeout: 300_000 },
+    "ratings"
+  );
+}
+
 module.exports = { start, codeSync };
 
 (async () => {
   if (require.main === module) {
-    const port = null;
+    const port = 49617;
 
     const { page, browser, port: newPort } = await initialize(port);
+
+    if (!port) {
+      return;
+    }
 
     await start(page);
 

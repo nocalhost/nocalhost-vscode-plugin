@@ -31,10 +31,10 @@ async function openNocalhost(page) {
 async function setInputBox(page, text) {
   await page.waitForTimeout(500);
 
-  let input = await page.waitForSelector(".input.empty");
+  let input = await page.waitForSelector(".quick-input-widget .input");
 
-  await input.hover();
-  await input.type(text);
+  await input.click();
+  await input.type(text, { delay: 1 });
 
   await page.keyboard.press("Enter");
 }
@@ -58,7 +58,9 @@ function getQuickPick(page) {
    */
   async function getItemTexts() {
     return await Promise.all(
-      (await this.items).map((item) => item.evaluate((el) => el.textContent))
+      (await this.items).map((item) =>
+        item.evaluate((el) => el.querySelector(".label-name").textContent)
+      )
     );
   }
 
@@ -85,6 +87,8 @@ function getQuickPick(page) {
      * @param {string|number} key
      */
     async select(key) {
+      await page.waitForTimeout(1_0000);
+
       const items = await this.items;
       if (typeof key === "number") {
         await items[key].click();
@@ -177,7 +181,7 @@ async function getTreeItem(page, level, name) {
 
   await tl.hover();
 
-  logger.debug("getTreeItem", level, name);
+  // logger.debug("getTreeItem", level, name);
 
   return tl;
 }
@@ -398,6 +402,23 @@ async function checkPort(
   }, data.retryOptions);
 }
 
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @param  {Array<puppeteer.KeyInput>} keys
+ */
+async function enterShortcutKeys(page, ...keys) {
+  for await (const key of keys) {
+    await page.keyboard.down(key);
+  }
+
+  for await (const key of keys) {
+    await page.keyboard.up(key);
+  }
+
+  await page.waitForTimeout(5_00);
+}
+
 module.exports = {
   openNocalhost,
   getPage,
@@ -413,4 +434,5 @@ module.exports = {
   checkPort,
   getTreeItemByChildName,
   getItemMenu,
+  enterShortcutKeys,
 };
