@@ -123,27 +123,6 @@ async function waitForMessage(page, message, timeout) {
 /**
  *
  * @param {puppeteer.Page} page
- * @return {puppeteer.ElementHandle<Element>[]}
- */
-async function getTreeView(page) {
-  await page.waitForFunction(function () {
-    return (
-      document
-        .querySelector("#workbench\\.parts\\.sidebar")
-        ?.querySelectorAll(".monaco-list-row")?.length > 0
-    );
-  });
-
-  const sidebar = await page.waitForSelector("#workbench\\.parts\\.sidebar");
-
-  const treeView = await sidebar.$$(".monaco-list-row");
-
-  return treeView;
-}
-
-/**
- *
- * @param {puppeteer.Page} page
  * @param {string[]} childNames
  */
 async function getItemMenu(page, menuName) {
@@ -174,77 +153,6 @@ async function getItemMenu(page, menuName) {
       });
     },
   };
-}
-/**
- *
- * @param {puppeteer.ElementHandle<Element>} node
- * @param {puppeteer.Page} page
- */
-async function unInstall(page, node, name) {
-  await node.hover();
-  await page.click(".codicon-trash");
-
-  await dialog.selectAction(page, "OK");
-
-  await page.waitForFunction(
-    `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`,
-    { timeout: 1 * 60 * 1000 }
-  );
-}
-
-/**
- *
- * @param {string} name
- * @param {puppeteer.Page} page
- */
-async function isInstallSucceed(page, name) {
-  const app = await page.waitForFunction(
-    function (text) {
-      let list =
-        document
-          .querySelector("#workbench\\.parts\\.sidebar")
-          ?.querySelectorAll(".monaco-list-row") ?? [];
-
-      if (list.length) {
-        return Array.from(list).some((node) => {
-          if (node.textContent === text) {
-            const icon = node.querySelector(".custom-view-tree-node-item-icon");
-
-            if (icon) {
-              return icon.getAttribute("style").includes("app_connected.svg");
-            }
-          }
-          return false;
-        });
-      }
-
-      return false;
-    },
-    { timeout: 5 * 60 * 1000 },
-    name
-  );
-
-  return app;
-}
-/**
- *
- * @param {string} name
- * @param {puppeteer.Page} page
- */
-async function getInstallApp(page, name) {
-  const nameList = await page.evaluate(() => {
-    return Array.from(document.querySelector(".monaco-list-rows").children).map(
-      (item) => item.innerText
-    );
-  });
-
-  const index = nameList.indexOf(name);
-
-  if (index > -1) {
-    return (await getTreeView(page))[index];
-  }
-
-  return null;
 }
 /**
  *
@@ -339,9 +247,6 @@ module.exports = {
   openNocalhost,
   getPage,
   waitForMessage,
-  getInstallApp,
-  unInstall,
-  isInstallSucceed,
   initialize,
   setInputBox,
   selectQuickPickItem,

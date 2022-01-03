@@ -1,17 +1,86 @@
 const puppeteer = require("puppeteer-core");
 const assert = require("assert");
 const {
-  unInstall,
-  isInstallSucceed,
-  getInstallApp,
   setInputBox,
   selectQuickPickItem,
   checkPort,
+  initialize,
 } = require("./index");
 
 const { dialog, file, tree } = require("../lib/components");
 const logger = require("../lib/log");
 
+/**
+ *
+ * @param {puppeteer.ElementHandle<Element>} node
+ * @param {puppeteer.Page} page
+ */
+async function unInstall(page, node, name) {
+  await node.hover();
+  await page.click(".codicon-trash");
+
+  await dialog.selectAction(page, "OK");
+
+  await page.waitForFunction(
+    `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`,
+    { timeout: 1 * 60 * 1000 }
+  );
+}
+
+/**
+ *
+ * @param {string} name
+ * @param {puppeteer.Page} page
+ */
+async function isInstallSucceed(page, name) {
+  const app = await page.waitForFunction(
+    function (text) {
+      let list =
+        document
+          .querySelector("#workbench\\.parts\\.sidebar")
+          ?.querySelectorAll(".monaco-list-row") ?? [];
+
+      if (list.length) {
+        return Array.from(list).some((node) => {
+          if (node.textContent === text) {
+            const icon = node.querySelector(".custom-view-tree-node-item-icon");
+
+            if (icon) {
+              return icon.getAttribute("style").includes("app_connected.svg");
+            }
+          }
+          return false;
+        });
+      }
+
+      return false;
+    },
+    { timeout: 5 * 60 * 1000 },
+    name
+  );
+
+  return app;
+}
+/**
+ *
+ * @param {string} name
+ * @param {puppeteer.Page} page
+ */
+async function getInstallApp(page, name) {
+  const nameList = await page.evaluate(() => {
+    return Array.from(document.querySelector(".monaco-list-rows").children).map(
+      (item) => item.innerText
+    );
+  });
+
+  const index = nameList.indexOf(name);
+
+  if (index > -1) {
+    return (await tree.getChildren(page))[index];
+  }
+
+  return null;
+}
 /**
  *
  * @param {puppeteer.Page} page
@@ -89,7 +158,7 @@ async function installManifestGit(page) {
 
   await selectQuickPickItem(page, "config.manifest.git.yaml");
 
-  await dialog.selectAction(page, "Use Default");
+  await dialog.selectAction(page, "Use Default values");
 
   await checkInstall(page);
 }
@@ -103,6 +172,8 @@ async function installFromLocal(page) {
   await dialog.selectAction(page, "Deploy From Local Directory");
 
   await file.selectPath(page, process.env.tmpDir);
+
+  await page.waitForTimeout(5_00);
 }
 
 /**
@@ -155,3 +226,19 @@ module.exports = {
   installManifestLocal,
   installKustomizeLocal,
 };
+
+(async () => {
+  if (require.main === module) {
+    const port = null;
+    process.env.tmpDir = "/Volumes/Data/project/nocalhost/bookinfo/git";
+    const { page, browser, port: newPort } = await initialize(port);
+
+    if (!port) {
+      return;
+    }
+
+    await installKustomizeLocal(page);
+
+    port && browser.disconnect();
+  }
+})();

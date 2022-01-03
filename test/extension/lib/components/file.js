@@ -8,13 +8,17 @@ const puppeteer = require("puppeteer-core");
 async function selectPath(page, path) {
   const input = await page.waitForSelector(".quick-input-widget .input");
 
-  await input.evaluate((input) => (input.value = ""), input);
+  await input.evaluate((input, path) => (input.value = path), path);
 
-  await input.click();
-  await input.type(path);
+  await input.type(" ");
+  await page.keyboard.press("Backspace");
 
-  const actions = await page.waitForSelector(".quick-input-action");
-  await (await actions.$("a")).click();
+  await page.waitForTimeout(1_00);
+
+  const action = await page.waitForSelector(
+    ".quick-input-widget .quick-input-action a"
+  );
+  await action.click();
 }
 
 module.exports = { selectPath };

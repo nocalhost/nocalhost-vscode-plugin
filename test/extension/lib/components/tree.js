@@ -64,5 +64,24 @@ async function getItem(page, ...childNames) {
 
   return parentNode;
 }
+/**
+ *
+ * @param {puppeteer.Page} page
+ * @returns
+ */
+async function getChildren(page) {
+  await page.waitForFunction(function () {
+    return (
+      document
+        .querySelector("#workbench\\.parts\\.sidebar")
+        ?.querySelectorAll(".monaco-list-row")?.length > 0
+    );
+  });
 
-module.exports = { getItem };
+  const sidebar = await page.waitForSelector("#workbench\\.parts\\.sidebar");
+
+  const treeView = await sidebar.$$(".monaco-list-row");
+
+  return treeView;
+}
+module.exports = { getItem, getChildren };
