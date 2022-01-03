@@ -13,7 +13,9 @@ async function getTerminal() {
 async function sendText(text) {
   await getTerminal(page);
 
-  await page.keyboard.type(text);
+  await page.keyboard.type(text, { delay: 10 });
+
+  await page.waitForTimeout(5_00);
 }
 
 module.exports = { sendText, getTerminal };

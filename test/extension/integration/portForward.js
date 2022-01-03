@@ -26,11 +26,11 @@ async function add() {
   const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 
+  await page.waitForTimeout(1_000);
+
   let quickPick = getQuickPick();
 
   // assert((await quickPick.itemTexts).includes(" Add port forward"));
-
-  await page.waitForTimeout(1_000);
 
   await quickPick.select(" Add port forward");
 

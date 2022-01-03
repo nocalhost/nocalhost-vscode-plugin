@@ -225,7 +225,7 @@ module.exports = {
 
 (async () => {
   if (require.main === module) {
-    const port = 55455;
+    const port = null;
 
     const { page, browser, port: newPort } = await initialize(port);
 
@@ -235,7 +235,7 @@ module.exports = {
 
     global.page = page;
 
-    await start();
+    await runCommand();
 
     port && browser.disconnect();
   }
