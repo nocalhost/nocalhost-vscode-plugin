@@ -2,7 +2,7 @@ const assert = require("assert");
 const { default: Axios } = require("axios");
 const retry = require("async-retry");
 
-const { tree, terminal } = require("../lib/components");
+const { tree, terminal, dialog, file } = require("../lib/components");
 const logger = require("../lib/log");
 const { initialize, enterShortcutKeys, setInputBox } = require("./index");
 const { add, stop, getPortForwardPort } = require("./portForward");
@@ -119,9 +119,9 @@ async function start() {
 
   logger.debug("Start Development");
 
-  // await setInputBox( "Open associated directory");
+  await dialog.selectAction("Open associated directory");
 
-  // await setInputBox( process.env.currentPath);
+  await file.selectPath(process.env.currentPath);
 }
 
 /**

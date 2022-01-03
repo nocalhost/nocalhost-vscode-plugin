@@ -85,10 +85,9 @@ const start = async (options = {}) => {
     args = options.launchArgs.concat(args);
   }
 
-  // args.unshift((await gitCode(getRepository("bookinfo-ratings.git"))).tmpDir);
-
-  process.env.currentPath =
-    "/Volumes/Data/project/nocalhost/bookinfo/bookinfo-ratings";
+  process.env.currentPath = (
+    await gitCode(getRepository("bookinfo-ratings.git"))
+  ).tmpDir;
   args.unshift(process.env.currentPath);
 
   const pid = await run(options.vscodeExecutablePath, args, options.testsEnv);
