@@ -3,7 +3,7 @@
     "module": "esnext",
     "moduleResolution": "node",
     "target": "ES6",
-    "rootDir": "./",
+    "rootDir": "../../",
     "experimentalDecorators": true,
     "noImplicitAny": true,
     "strictNullChecks": false,

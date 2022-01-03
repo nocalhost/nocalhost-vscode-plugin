@@ -6,7 +6,7 @@
     "target": "es6",
     "experimentalDecorators": true,
     "strictNullChecks": false,
-    "rootDir": "./",
+    "rootDir": "../../",
     "lib": ["es6"],
     "sourceMap": true,
     "strict": true /* enable all strict type-checking options */
@@ -15,6 +15,6 @@
     // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
     // "noUnusedParameters": true,  /* Report errors on unused parameters. */
   },
-  "include": ["."],
+  "include": ["./"],
   "exclude": ["node_modules"]
 }

@@ -571,7 +571,7 @@
     "build": "./node_modules/.bin/vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
-    "ts-compile-check": "tsc --noEmit -p build/tsconfig.extension.json",
+    "ts-compile-check": "tsc --noEmit -p src/main",
     "compile": "webpack --devtool nosources-source-map --config ./build/webpack.config.js",
     "watch": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/webpack.config.js",
     "package": "webpack --mode production --config ./build/webpack.config.js",
