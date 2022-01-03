@@ -34,6 +34,10 @@ async function getTreeItem(level, name) {
     });
   }
 
+  if (!treeItem) {
+    return null;
+  }
+
   const tl = await treeItem.$(".monaco-tl-twistie");
 
   const className = await tl.evaluate((el) => el.getAttribute("class"));
@@ -58,6 +62,11 @@ async function getItem(...childNames) {
   for await (const name of childNames) {
     treeItem = await getTreeItem(++level, name);
   }
+
+  if (!treeItem) {
+    return null;
+  }
+
   const parentNode = await treeItem.getProperty("parentNode");
 
   return parentNode;

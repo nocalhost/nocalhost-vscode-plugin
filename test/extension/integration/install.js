@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer-core");
 const assert = require("assert");
+
 const {
   setInputBox,
   selectQuickPickItem,
@@ -8,31 +9,27 @@ const {
 } = require("./index");
 
 const { dialog, file, tree } = require("../lib/components");
-const logger = require("../lib/log");
 
 /**
  *
  * @param {puppeteer.ElementHandle<Element>} node
- * @param {puppeteer.Page} page
  */
-async function unInstall(page, node, name) {
+async function unInstall(node) {
   await node.hover();
   await page.click(".codicon-trash");
 
-  await dialog.selectAction(page, "OK");
+  await dialog.selectAction("OK");
 
   await page.waitForFunction(
-    `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`,
+    `!document.querySelector(".monaco-list-rows").innerText.includes("bookinfo")`,
     { timeout: 1 * 60 * 1000 }
   );
 }
 
 /**
- *
  * @param {string} name
- * @param {puppeteer.Page} page
  */
-async function isInstallSucceed(page, name) {
+async function isInstallSucceed(name) {
   const app = await page.waitForFunction(
     function (text) {
       let list =
@@ -61,161 +58,100 @@ async function isInstallSucceed(page, name) {
 
   return app;
 }
-/**
- *
- * @param {string} name
- * @param {puppeteer.Page} page
- */
-async function getInstallApp(page, name) {
-  const nameList = await page.evaluate(() => {
-    return Array.from(document.querySelector(".monaco-list-rows").children).map(
-      (item) => item.innerText
-    );
-  });
 
-  const index = nameList.indexOf(name);
+async function install() {
+  const bookinfo = await tree.getItem("", "default", "bookinfo");
 
-  if (index > -1) {
-    return (await tree.getChildren())[index];
+  if (bookinfo) {
+    await unInstall(bookinfo);
   }
 
-  return null;
-}
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function install(page) {
-  const treeItem = await tree.getItem(page, "", "default");
-
-  const app = await getInstallApp(page, "bookinfo");
-
-  if (app) {
-    await unInstall(page, app, "bookinfo");
-  }
+  const treeItem = await tree.getItem("", "default");
 
   const install = await treeItem.$(".codicon-rocket");
 
   await install.click();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function checkInstall(page) {
-  assert(await (await isInstallSucceed(page, "bookinfo")).jsonValue());
+async function checkInstall() {
+  assert(await (await isInstallSucceed("bookinfo")).jsonValue());
   await checkPort("39080");
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function cloneFromGit(page) {
-  await install(page);
+async function cloneFromGit() {
+  await install();
 
-  await dialog.selectAction(page, "Deploy From Git Repo");
+  await dialog.selectAction("Deploy From Git Repo");
 
   await setInputBox("https://github.com/nocalhost/bookinfo.git");
 
-  await dialog.selectAction(page, "Default Branch");
-}
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installKustomizeGit(page) {
-  await cloneFromGit(page);
-
-  await selectQuickPickItem(page, "config.kustomize.yaml");
-
-  await dialog.selectAction(page, "Use Default");
-
-  await checkInstall(page);
+  await dialog.selectAction("Default Branch");
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installHelmGit(page) {
-  await cloneFromGit(page);
+async function installKustomizeGit() {
+  await cloneFromGit();
 
-  await selectQuickPickItem(page, "config.helm.yaml");
+  await selectQuickPickItem("config.kustomize.yaml");
 
-  await dialog.selectAction(page, "Use Default");
+  await dialog.selectAction("Use Default");
 
-  await checkInstall(page);
+  await checkInstall();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installManifestGit(page) {
-  await cloneFromGit(page);
+async function installHelmGit() {
+  await cloneFromGit();
 
-  await selectQuickPickItem(page, "config.manifest.git.yaml");
+  await selectQuickPickItem("config.helm.yaml");
 
-  await dialog.selectAction(page, "Use Default values");
+  await dialog.selectAction("Use Default values");
 
-  await checkInstall(page);
+  await checkInstall();
 }
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installFromLocal(page) {
-  await install(page);
 
-  await dialog.selectAction(page, "Deploy From Local Directory");
+async function installManifestGit() {
+  await cloneFromGit();
 
-  await file.selectPath(page, process.env.tmpDir);
+  await selectQuickPickItem("config.manifest.git.yaml");
+
+  await checkInstall();
+}
+
+async function installFromLocal() {
+  await install();
+
+  await dialog.selectAction("Deploy From Local Directory");
+
+  await file.selectPath(process.env.tmpDir);
 
   await page.waitForTimeout(5_00);
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installHelmLocal(page) {
-  await installFromLocal(page);
+async function installHelmLocal() {
+  await installFromLocal();
 
-  await selectQuickPickItem(page, "config.helm.local.yaml");
+  await selectQuickPickItem("config.helm.local.yaml");
 
-  await dialog.selectAction(page, "Use Default");
+  await dialog.selectAction("Use Default values");
 
-  await checkInstall(page);
+  await checkInstall();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installManifestLocal(page) {
-  await installFromLocal(page);
+async function installManifestLocal() {
+  await installFromLocal();
 
-  await selectQuickPickItem(page, "config.manifest.local.yaml");
+  await selectQuickPickItem("config.manifest.local.yaml");
 
-  await dialog.selectAction(page, "Use Default");
-
-  await checkInstall(page);
+  await checkInstall();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installKustomizeLocal(page) {
-  await installFromLocal(page);
+async function installKustomizeLocal() {
+  await installFromLocal();
 
-  await selectQuickPickItem(page, "config.kustomize.local.yaml");
+  await selectQuickPickItem("config.kustomize.local.yaml");
 
-  await dialog.selectAction(page, "Use Default");
+  await dialog.selectAction("Use Default");
 
-  await checkInstall(page);
+  await checkInstall();
 }
 
 module.exports = {
@@ -237,7 +173,9 @@ module.exports = {
       return;
     }
 
-    await installKustomizeLocal(page);
+    global.page = page;
+
+    await installHelmLocal();
 
     port && browser.disconnect();
   }

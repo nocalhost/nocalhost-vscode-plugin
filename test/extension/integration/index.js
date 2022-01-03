@@ -45,7 +45,7 @@ async function setInputBox(text, clean = false) {
  * @param {string} text
  */
 async function selectQuickPickItem(text) {
-  return (await getQuickPick()).select(text);
+  return getQuickPick().select(text);
 }
 
 /**
@@ -86,7 +86,7 @@ function getQuickPick() {
      * @param {string|number} key
      */
     async select(key) {
-      await page.waitForTimeout(3_000);
+      await page.waitForTimeout(2_000);
 
       const items = await this.items;
       if (typeof key === "number") {

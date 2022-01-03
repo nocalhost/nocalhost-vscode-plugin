@@ -13,7 +13,7 @@ async function selectAction(text) {
     button.click();
   }, text);
 
-  await page.waitForTimeout(1_000);
+  await page.waitForTimeout(500);
 }
 
 module.exports = { selectAction };
