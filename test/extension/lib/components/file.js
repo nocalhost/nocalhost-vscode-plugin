@@ -5,7 +5,7 @@ const puppeteer = require("puppeteer-core");
  * @param {puppeteer.Page} page
  * @param {string} path
  */
-async function selectPath(page, path) {
+async function selectPath(path) {
   const input = await page.waitForSelector(".quick-input-widget .input");
 
   await input.evaluate((input, path) => (input.value = path), path);

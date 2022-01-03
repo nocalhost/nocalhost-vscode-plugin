@@ -1,7 +1,6 @@
 const assert = require("assert");
 const { default: Axios } = require("axios");
 const retry = require("async-retry");
-const puppeteer = require("puppeteer-core");
 
 const { tree, terminal } = require("../lib/components");
 const logger = require("../lib/log");
@@ -19,10 +18,9 @@ const treeItemPath = [
 
 /**
  *
- * @param {puppeteer.Page} page
  * @description
  */
-async function checkStartComplete(page) {
+async function checkStartComplete() {
   // check icon devIcon endButton
   await page.waitForFunction(
     (name) => {
@@ -55,15 +53,14 @@ async function checkStartComplete(page) {
     "ratings"
   );
 
-  await checkSyncCompletion(page);
+  await checkSyncCompletion();
 
   logger.debug("Start Development", "ok");
 }
 /**
  *
- * @param {puppeteer.Page} page
  */
-async function checkSyncCompletion(page) {
+async function checkSyncCompletion() {
   const statusBar = await page.$("#nocalhost\\.nocalhost");
 
   await retry(
@@ -87,13 +84,12 @@ async function checkSyncCompletion(page) {
 }
 /**
  *
- * @param {puppeteer.Page} page
  * @description
  */
-async function runCommand(page) {
-  await terminal.sendText(page, "./run.sh \n");
+async function runCommand() {
+  await terminal.sendText("./run.sh \n");
 
-  const port = await add(page);
+  const port = await add();
   logger.debug("start port forward");
 
   await retry(
@@ -111,11 +107,10 @@ async function runCommand(page) {
 }
 /**
  *
- * @param {puppeteer.Page} page
  * @description
  */
-async function start(page) {
-  const treeItem = await tree.getItem(page, ...treeItemPath);
+async function start() {
+  const treeItem = await tree.getItem(...treeItemPath);
 
   const action = await treeItem.$(
     `a.action-label.icon[title="Start Development"]`
@@ -124,42 +119,41 @@ async function start(page) {
 
   logger.debug("Start Development");
 
-  // await setInputBox(page, "Open associated directory");
+  // await setInputBox( "Open associated directory");
 
-  // await setInputBox(page, process.env.currentPath);
+  // await setInputBox( process.env.currentPath);
 }
 
 /**
  *
- * @param {puppeteer.Page} page
  * @description
  */
-async function codeSync(page) {
-  await enterShortcutKeys(page, "MetaLeft", "p");
+async function codeSync() {
+  await enterShortcutKeys("MetaLeft", "p");
 
-  await setInputBox(page, "ratings.js");
+  await setInputBox("ratings.js");
 
   await page.waitForTimeout(5_00);
-  await enterShortcutKeys(page, "ControlLeft", "g");
+  await enterShortcutKeys("ControlLeft", "g");
 
-  await setInputBox(page, "207:9");
+  await setInputBox("207:9");
 
-  await enterShortcutKeys(page, "MetaLeft", "x");
+  await enterShortcutKeys("MetaLeft", "x");
 
   await page.keyboard.press("Backspace");
   await page.keyboard.type(
     `\n\tres.end(JSON.stringify({status: 'Ratings is healthy2'}))\n`
   );
 
-  await enterShortcutKeys(page, "MetaLeft", "s");
+  await enterShortcutKeys("MetaLeft", "s");
 
   await page.waitForTimeout(10_000);
 
-  await checkSyncCompletion(page);
+  await checkSyncCompletion();
 
-  await terminal.sendText(page, "\x03");
+  await terminal.sendText("\x03");
 
-  await terminal.sendText(page, "./run.sh \n");
+  await terminal.sendText("./run.sh \n");
 
   await retry(
     async () => {
@@ -175,20 +169,15 @@ async function codeSync(page) {
   );
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- * @description
- */
-async function endDevMode(page) {
-  let treeItem = await tree.getItem(page, ...treeItemPath);
+async function endDevMode() {
+  let treeItem = await tree.getItem(...treeItemPath);
 
   const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 
-  await stop(page);
+  await stop();
 
-  treeItem = await tree.getItem(page, ...treeItemPath);
+  treeItem = await tree.getItem(...treeItemPath);
 
   const endDevelop = await treeItem.$(".action-label[title='End Develop']");
   await endDevelop.click();
@@ -236,7 +225,7 @@ module.exports = {
 
 (async () => {
   if (require.main === module) {
-    const port = null;
+    const port = 55455;
 
     const { page, browser, port: newPort } = await initialize(port);
 
@@ -244,7 +233,9 @@ module.exports = {
       return;
     }
 
-    await start(page);
+    global.page = page;
+
+    await start();
 
     port && browser.disconnect();
   }

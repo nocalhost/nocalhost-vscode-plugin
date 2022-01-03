@@ -9,12 +9,12 @@ const {
 
 const devModeTests = () => {
   describe("devMode", () => {
-    it("start", start.bind(null, page));
-    it("startComplete", checkStartComplete.bind(null, page));
-    it("syncCompletion", checkSyncCompletion.bind(null, page));
-    it("runCommand", runCommand.bind(null, page));
-    it("codeSync", codeSync.bind(null, page));
-    it("end", endDevMode.bind(null, page));
+    it("start", start);
+    it("startComplete", checkStartComplete);
+    it("syncCompletion", checkSyncCompletion);
+    it("runCommand", runCommand);
+    it("codeSync", codeSync);
+    it("end", endDevMode);
   });
 };
 

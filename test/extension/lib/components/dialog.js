@@ -1,11 +1,8 @@
-const puppeteer = require("puppeteer-core");
-
 /**
  *
- * @param {puppeteer.Page} page
  * @param {string} text
  */
-async function selectAction(page, text) {
+async function selectAction(text) {
   const dialog = await page.waitForSelector(".dialog-buttons");
 
   await dialog.evaluate((el, text) => {

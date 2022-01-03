@@ -1,10 +1,4 @@
-const puppeteer = require("puppeteer-core");
-
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function getTerminal(page) {
+async function getTerminal() {
   await page.waitForSelector(".terminal-wrapper.active .xterm-screen");
 
   const terminal = await page.$(".terminal-wrapper.active .xterm-screen");
@@ -14,10 +8,9 @@ async function getTerminal(page) {
 }
 
 /**
- * @param {puppeteer.Page} page
  * @param {string} text
  */
-async function sendText(page, text) {
+async function sendText(text) {
   await getTerminal(page);
 
   await page.keyboard.type(text);

@@ -76,7 +76,7 @@ async function getInstallApp(page, name) {
   const index = nameList.indexOf(name);
 
   if (index > -1) {
-    return (await tree.getChildren(page))[index];
+    return (await tree.getChildren())[index];
   }
 
   return null;
@@ -117,7 +117,7 @@ async function cloneFromGit(page) {
 
   await dialog.selectAction(page, "Deploy From Git Repo");
 
-  await setInputBox(page, "https://github.com/nocalhost/bookinfo.git");
+  await setInputBox("https://github.com/nocalhost/bookinfo.git");
 
   await dialog.selectAction(page, "Default Branch");
 }

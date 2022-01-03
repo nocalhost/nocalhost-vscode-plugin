@@ -20,27 +20,15 @@ const installTests = () => {
   });
 
   describe("deploy From Local Directory", () => {
-    it("kustomize", async () => {
-      await installKustomizeLocal(page);
-    });
-    it("helm", async () => {
-      await installHelmLocal(page);
-    });
-    it("manifest", async () => {
-      await installManifestLocal(page);
-    });
+    it("kustomize", installKustomizeLocal);
+    it("helm", installHelmLocal);
+    it("manifest", installManifestLocal);
   });
 
   describe("deploy From Git Repo", () => {
-    it("kustomize", async () => {
-      await installKustomizeGit(page);
-    });
-    it("helm", async () => {
-      await installHelmGit(page);
-    });
-    it("manifest", async () => {
-      await installManifestGit(page);
-    });
+    it("kustomize", installKustomizeGit);
+    it("helm", installHelmGit);
+    it("manifest", installManifestGit);
   });
 };
 

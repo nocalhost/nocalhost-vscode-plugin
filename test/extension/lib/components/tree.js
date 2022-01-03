@@ -2,12 +2,11 @@ const puppeteer = require("puppeteer-core");
 
 /**
  *
- * @param {puppeteer.Page} page
  * @param {number} level
  * @param {string} name
  * @return {puppeteer.ElementHandle<Element>}
  */
-async function getTreeItem(page, level, name) {
+async function getTreeItem(level, name) {
   await page.waitForSelector(
     `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
   );
@@ -49,16 +48,15 @@ async function getTreeItem(page, level, name) {
 
 /**
  *
- * @param {puppeteer.Page} page
  * @param {string[]} childNames
  * @return {puppeteer.ElementHandle<Element>}
  */
-async function getItem(page, ...childNames) {
+async function getItem(...childNames) {
   let level = 0;
   let treeItem;
 
   for await (const name of childNames) {
-    treeItem = await getTreeItem(page, ++level, name);
+    treeItem = await getTreeItem(++level, name);
   }
   const parentNode = await treeItem.getProperty("parentNode");
 
@@ -66,10 +64,9 @@ async function getItem(page, ...childNames) {
 }
 /**
  *
- * @param {puppeteer.Page} page
  * @returns
  */
-async function getChildren(page) {
+async function getChildren() {
   await page.waitForFunction(function () {
     return (
       document

@@ -4,8 +4,6 @@ const isPortReachable = require("is-port-reachable");
 const assert = require("assert");
 
 const { start, getWebSocketDebuggerUrl } = require("../");
-const logger = require("../lib/log");
-const { dialog } = require("../lib/components");
 /**
  *
  * @param {puppeteer.Page} page
@@ -26,11 +24,10 @@ async function openNocalhost(page) {
 
 /**
  *
- * @param {puppeteer.Page} page
  * @param {String} text
  * @return {puppeteer.ElementHandle<Element>[]}
  */
-async function setInputBox(page, text, clean = false) {
+async function setInputBox(text, clean = false) {
   let input = await page.waitForSelector(".quick-input-widget .input");
 
   if (clean) {
@@ -45,18 +42,16 @@ async function setInputBox(page, text, clean = false) {
 
 /**
  *
- * @param {puppeteer.Page} page
  * @param {string} text
  */
-async function selectQuickPickItem(page, text) {
-  return (await getQuickPick(page)).select(text);
+async function selectQuickPickItem(text) {
+  return (await getQuickPick()).select(text);
 }
 
 /**
  *
- * @param {puppeteer.Page} page
  */
-function getQuickPick(page) {
+function getQuickPick() {
   /**
    * @returns {Promise<Array<string>>}
    */
@@ -108,11 +103,10 @@ function getQuickPick(page) {
 
 /**
  *
- * @param {puppeteer.Page} page
  * @param {string} message
  * @param {number} timeout
  */
-async function waitForMessage(page, message, timeout) {
+async function waitForMessage(message, timeout) {
   await page.waitForSelector(".notifications-toasts");
 
   return await page.waitForFunction(
@@ -228,10 +222,9 @@ async function checkPort(
 
 /**
  *
- * @param {puppeteer.Page} page
  * @param  {Array<puppeteer.KeyInput>} keys
  */
-async function enterShortcutKeys(page, ...keys) {
+async function enterShortcutKeys(...keys) {
   for await (const key of keys) {
     await page.keyboard.down(key);
   }
