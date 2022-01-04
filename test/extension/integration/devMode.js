@@ -119,7 +119,11 @@ async function start() {
 
   logger.debug("Start Development");
 
-  await dialog.selectAction("Open associated directory");
+  if ((await dialog.getActionTexts()).includes("Open another directory")) {
+    await dialog.selectAction("Open another directory");
+  } else {
+    await dialog.selectAction("Open associated directory");
+  }
 
   await file.selectPath(process.env.currentPath);
 }
@@ -225,18 +229,6 @@ module.exports = {
 
 (async () => {
   if (require.main === module) {
-    const port = null;
-
-    const { page, browser, port: newPort } = await initialize(port);
-
-    if (!port) {
-      return;
-    }
-
-    global.page = page;
-
-    await runCommand();
-
-    port && browser.disconnect();
+    await initialize(null, runCommand);
   }
 })();

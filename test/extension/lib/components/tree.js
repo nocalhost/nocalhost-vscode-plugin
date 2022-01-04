@@ -16,7 +16,7 @@ async function getTreeItem(level, name) {
   );
 
   let treeItem;
-  if (level === 1) {
+  if (level === 1 && !name) {
     treeItem = treeView[0];
   } else {
     treeItem = await Promise.all(

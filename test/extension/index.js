@@ -25,6 +25,7 @@ const videoCapture = new VideoCapture();
  * @param {string?} options.version
  * @param {string?} options.platform
  * @param {object?} options.testsEnv
+ * @returns {{pid:string,port:string}}
  */
 const start = async (options = {}) => {
   const userDataDir = await getUserDataDir();

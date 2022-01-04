@@ -151,18 +151,17 @@ async function getItemMenu(page, menuName) {
 /**
  *
  * @param {string} port
- * @returns {{
- *      page:puppeteer.Page,browser:puppeteer.Browser
- * }}
+ * @param {()=>Promise<void>} callBack
  */
-async function initialize(port) {
+async function initialize(port, callBack) {
+  let isStart = !port;
+
   if (!port) {
-    const { port: startPort } = await start({
+    await start({
       testsEnv: {
         puppeteer: true,
       },
     });
-    port = startPort;
   }
 
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
@@ -178,7 +177,15 @@ async function initialize(port) {
 
   await openNocalhost(page);
 
-  return { browser, page, port };
+  if (isStart) {
+    return;
+  }
+
+  global.page = page;
+
+  await callBack();
+
+  port && browser.disconnect();
 }
 /**
  *
