@@ -75,7 +75,7 @@ jobs:
       - name: Run tests
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
-          # LOGGER_LEVEL: DEBUG
+          VIDEO_CAPTURE: 1
         run: yarn run test:ext
 
       # - name: Destroy cluster

@@ -10,7 +10,6 @@ const {
 } = require("./index");
 
 const { dialog, file, tree, notification } = require("../lib/components");
-const logger = require("../lib/log");
 
 /**
  *
@@ -72,10 +71,10 @@ async function isInstallSucceed() {
   );
 }
 
-async function install(waitTime = 0) {
+async function install(waitTime = 0, uninstall = tree) {
   const bookinfo = await tree.getItem("", "default", "bookinfo");
 
-  if (bookinfo) {
+  if (uninstall && bookinfo) {
     await unInstall(bookinfo, waitTime);
   }
 
@@ -168,6 +167,9 @@ async function installKustomizeLocal() {
   await checkInstall();
 }
 
+function installDemo() {
+  return install(0, false);
+}
 module.exports = {
   installHelmGit,
   installManifestGit,
@@ -175,6 +177,7 @@ module.exports = {
   installHelmLocal,
   installManifestLocal,
   installKustomizeLocal,
+  installDemo,
 };
 
 (async () => {
