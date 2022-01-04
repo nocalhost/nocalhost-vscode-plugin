@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer-core");
 const assert = require("assert");
+const retry = require("async-retry");
 
 const {
   setInputBox,
@@ -8,7 +9,8 @@ const {
   initialize,
 } = require("./index");
 
-const { dialog, file, tree } = require("../lib/components");
+const { dialog, file, tree, notification } = require("../lib/components");
+const logger = require("../lib/log");
 
 /**
  *
@@ -29,34 +31,46 @@ async function unInstall(node) {
 /**
  * @param {string} name
  */
-async function isInstallSucceed(name) {
-  const app = await page.waitForFunction(
-    function (text) {
-      let list =
-        document
-          .querySelector("#workbench\\.parts\\.sidebar")
-          ?.querySelectorAll(".monaco-list-row") ?? [];
+async function isInstallSucceed() {
+  await page.waitForTimeout(2_000);
 
-      if (list.length) {
-        return Array.from(list).some((node) => {
-          if (node.textContent === text) {
-            const icon = node.querySelector(".custom-view-tree-node-item-icon");
+  await retry(
+    async () => {
+      logger.debug("waiting install", Date.now());
 
-            if (icon) {
-              return icon.getAttribute("style").includes("app_connected.svg");
-            }
-          }
-          return false;
-        });
-      }
-
-      return false;
+      const notice = await notification.getNotification({
+        message: "Installing application: bookinfo",
+      });
+      assert(!notice);
     },
-    { timeout: 5 * 60 * 1000 },
-    name
+    { retries: 6 }
   );
 
-  return app;
+  const notice = await notification.getNotification({
+    message: "Installing application: bookinfo fail",
+  });
+
+  if (notice) {
+    await notice.dismiss();
+    await page.waitForTimeout(20_000);
+
+    assert(!notice);
+  }
+
+  await retry(
+    async () => {
+      const bookinfo = await tree.getItem("", "default", "bookinfo");
+
+      assert(bookinfo);
+
+      const icon = await bookinfo.$(
+        `.custom-view-tree-node-item-icon[style$='app_connected.svg");']`
+      );
+
+      assert(icon);
+    },
+    { retries: 6 }
+  );
 }
 
 async function install() {
@@ -74,7 +88,8 @@ async function install() {
 }
 
 async function checkInstall() {
-  assert(await (await isInstallSucceed("bookinfo")).jsonValue());
+  await isInstallSucceed();
+
   await checkPort("39080");
 }
 
@@ -165,18 +180,8 @@ module.exports = {
 
 (async () => {
   if (require.main === module) {
-    const port = null;
     process.env.tmpDir = "/Volumes/Data/project/nocalhost/bookinfo/git";
-    const { page, browser, port: newPort } = await initialize(port);
 
-    if (!port) {
-      return;
-    }
-
-    global.page = page;
-
-    await installHelmLocal();
-
-    port && browser.disconnect();
+    await initialize(null, installKustomizeLocal);
   }
 })();
