@@ -71,10 +71,10 @@ async function isInstallSucceed() {
   );
 }
 
-async function install(waitTime = 0, uninstall = tree) {
+async function install(waitTime = 0) {
   const bookinfo = await tree.getItem("", "default", "bookinfo");
 
-  if (uninstall && bookinfo) {
+  if (bookinfo) {
     await unInstall(bookinfo, waitTime);
   }
 
@@ -167,8 +167,12 @@ async function installKustomizeLocal() {
   await checkInstall();
 }
 
-function installDemo() {
-  return install(0, false);
+async function installDemo() {
+  await install(0);
+
+  await dialog.selectAction("Deploy Demo");
+
+  return checkInstall();
 }
 module.exports = {
   installHelmGit,
