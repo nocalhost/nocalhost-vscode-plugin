@@ -16,7 +16,7 @@ const logger = require("../lib/log");
  *
  * @param {puppeteer.ElementHandle<Element>} node
  */
-async function unInstall(node) {
+async function unInstall(node, waitTime = 0) {
   await node.hover();
   await page.click(".codicon-trash");
 
@@ -26,6 +26,8 @@ async function unInstall(node) {
     `!document.querySelector(".monaco-list-rows").innerText.includes("bookinfo")`,
     { timeout: 1 * 60 * 1000 }
   );
+
+  waitTime && (await page.waitForTimeout(waitTime));
 }
 
 /**
@@ -36,8 +38,6 @@ async function isInstallSucceed() {
 
   await retry(
     async () => {
-      logger.debug("waiting install", Date.now());
-
       const notice = await notification.getNotification({
         message: "Installing application: bookinfo",
       });
@@ -52,7 +52,6 @@ async function isInstallSucceed() {
 
   if (notice) {
     await notice.dismiss();
-    await page.waitForTimeout(20_000);
 
     assert(!notice);
   }
@@ -73,11 +72,11 @@ async function isInstallSucceed() {
   );
 }
 
-async function install() {
+async function install(waitTime = 0) {
   const bookinfo = await tree.getItem("", "default", "bookinfo");
 
   if (bookinfo) {
-    await unInstall(bookinfo);
+    await unInstall(bookinfo, waitTime);
   }
 
   const treeItem = await tree.getItem("", "default");
@@ -93,8 +92,8 @@ async function checkInstall() {
   await checkPort("39080");
 }
 
-async function cloneFromGit() {
-  await install();
+async function cloneFromGit(waitTime = 0) {
+  await install(waitTime);
 
   await dialog.selectAction("Deploy From Git Repo");
 
@@ -114,7 +113,7 @@ async function installKustomizeGit() {
 }
 
 async function installHelmGit() {
-  await cloneFromGit();
+  await cloneFromGit(20_000);
 
   await selectQuickPickItem("config.helm.yaml");
 
@@ -132,7 +131,7 @@ async function installManifestGit() {
 }
 
 async function installFromLocal() {
-  await install();
+  await install(20_000);
 
   await dialog.selectAction("Deploy From Local Directory");
 
