@@ -5,6 +5,7 @@ const retry = require("async-retry");
 const { tree, terminal, dialog, file } = require("../lib/components");
 const logger = require("../lib/log");
 const { initialize, enterShortcutKeys, setInputBox } = require("./index");
+const { installDemo } = require("./install");
 const { add, stop, getPortForwardPort } = require("./portForward");
 
 const treeItemPath = [
@@ -217,7 +218,24 @@ async function endDevMode() {
     "ratings"
   );
 }
+async function beforeCheck() {
+  await installDemo();
 
+  await retry(
+    async () => {
+      const bookinfo = await tree.getItem(...treeItemPath);
+
+      assert(bookinfo);
+
+      const icon = await bookinfo.$(
+        `.custom-view-tree-node-item-icon[style$='status_running.svg");']`
+      );
+
+      assert(icon);
+    },
+    { retries: 6 }
+  );
+}
 module.exports = {
   start,
   codeSync,
@@ -225,6 +243,7 @@ module.exports = {
   checkSyncCompletion,
   endDevMode,
   runCommand,
+  beforeCheck,
 };
 
 (async () => {
