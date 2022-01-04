@@ -8,14 +8,12 @@ const {
 } = require("./devMode");
 
 const devModeTests = () => {
-  describe("devMode", () => {
-    it("start", start);
-    it("startComplete", checkStartComplete);
-    it("syncCompletion", checkSyncCompletion);
-    it("runCommand", runCommand);
-    it("codeSync", codeSync);
-    it("end", endDevMode);
-  });
+  it("start", start);
+  it("startComplete", checkStartComplete);
+  it("syncCompletion", checkSyncCompletion);
+  it("runCommand", runCommand);
+  it("codeSync", codeSync);
+  it("end", endDevMode);
 };
 
 module.exports = { devModeTests };
