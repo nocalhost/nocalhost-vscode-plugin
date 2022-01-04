@@ -1195,16 +1195,23 @@ export async function getTemplateConfig(
 export async function listPVC(
   props: IBaseCommand<{
     appName: string;
+    workloadType?: string;
     workloadName?: string;
   }>
 ) {
-  const { kubeConfigPath, namespace, appName, workloadName } = props;
+  const {
+    kubeConfigPath,
+    namespace,
+    appName,
+    workloadName,
+    workloadType,
+  } = props;
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
     `pvc list --app ${appName} ${
-      workloadName ? `--svc ${workloadName}` : ""
-    } --yaml`
+      workloadType ? "-t " + workloadType + " " : ""
+    } ${workloadName ? `--svc ${workloadName}` : ""} --yaml`
   );
   const result = await exec({ command }).promise;
   let pvcs: IPvc[] = [];
