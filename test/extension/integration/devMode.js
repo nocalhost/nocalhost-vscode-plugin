@@ -139,7 +139,7 @@ async function codeSync() {
   await setInputBox("ratings.js");
 
   await page.waitForTimeout(5_00);
-  await enterShortcutKeys("ControlLeft", "g");
+  await enterShortcutKeys("MetaLeft", "g");
 
   await setInputBox("207:9");
 
@@ -233,7 +233,7 @@ async function beforeCheck() {
 
       assert(icon);
     },
-    { retries: 6 }
+    { retries: 8 }
   );
 }
 module.exports = {
@@ -248,6 +248,6 @@ module.exports = {
 
 (async () => {
   if (require.main === module) {
-    await initialize(null, runCommand);
+    await initialize(55205, codeSync);
   }
 })();

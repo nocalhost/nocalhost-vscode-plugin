@@ -4,6 +4,7 @@ const isPortReachable = require("is-port-reachable");
 const assert = require("assert");
 
 const { start, getWebSocketDebuggerUrl } = require("../");
+const logger = require("../lib/log");
 /**
  *
  * @param {puppeteer.Page} page
@@ -156,17 +157,23 @@ async function getItemMenu(page, menuName) {
 async function initialize(port, callBack) {
   let isStart = !port;
 
+  let startPort = port;
+
   if (!port) {
-    await start({
+    const { port: newPort } = await start({
       testsEnv: {
         puppeteer: true,
       },
     });
+    startPort = newPort;
   }
 
-  const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
-    retries: 3,
-  });
+  const browserWSEndpoint = await retry(
+    () => getWebSocketDebuggerUrl(startPort),
+    {
+      retries: 3,
+    }
+  );
 
   const browser = await puppeteer.connect({
     browserWSEndpoint,
@@ -185,7 +192,7 @@ async function initialize(port, callBack) {
 
   await callBack();
 
-  port && browser.disconnect();
+  newPort && browser.disconnect();
 }
 /**
  *
@@ -226,18 +233,38 @@ async function checkPort(
     assert(data.condition(connect), data.error);
   }, data.retryOptions);
 }
-
+/**
+ *
+ * @param {Array<puppeteer.KeyInput>} key
+ */
+function getSystemKeys(key) {
+  if (process.platform === "darwin") {
+    switch (key) {
+      case "ControlLeft":
+        return "MetaLeft";
+      default:
+        return key;
+    }
+  } else {
+    switch (key) {
+      case "MetaLeft":
+        return "ControlLeft";
+      default:
+        return key;
+    }
+  }
+}
 /**
  *
  * @param  {Array<puppeteer.KeyInput>} keys
  */
 async function enterShortcutKeys(...keys) {
   for await (const key of keys) {
-    await page.keyboard.down(key);
+    await page.keyboard.down(getSystemKeys(key));
   }
 
   for await (const key of keys) {
-    await page.keyboard.up(key);
+    await page.keyboard.up(getSystemKeys(key));
   }
 
   await page.waitForTimeout(5_00);
