@@ -89,7 +89,7 @@ export abstract class IDebugProvider {
       return;
     }
 
-    const otherConfig = omit(config, "type", "name", "request", "language");
+    const otherConfig = omit(config, "type", "name", "request");
 
     const debugConfiguration = this.getDebugConfiguration(
       debugSessionName,
