@@ -87,7 +87,9 @@ jobs:
 
       - name: Artifact screenshot
         if: ${{ always() }}
-        run: mv .screenshot ~/.nh/screenshot
+        run: |
+          mv .screenshot ~/.nh/screenshot
+          cp ~/.kube/config  ~/.nh
 
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
@@ -104,7 +106,6 @@ jobs:
           mkdir .dependency
           cp ~/.nh/bin/nhctl .dependency/
           cp nocalhost.vsix .dependency/
-          cp ~/config .dependency/
 
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
