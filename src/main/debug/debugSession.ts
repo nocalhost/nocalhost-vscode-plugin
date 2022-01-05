@@ -1,8 +1,4 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
-
-import parse = require("json5/lib/parse");
 
 import { NhctlCommand } from "./../ctl/nhctl";
 import { ContainerConfig } from "../service/configService";
@@ -125,8 +121,6 @@ export class DebugSession {
           }
         })
       );
-
-      this.createLaunch();
     }
   }
   liveReload() {
@@ -190,50 +184,6 @@ export class DebugSession {
     this.terminal = terminal;
   }
 
-  async createLaunch() {
-    const filePath = path.join(
-      host.getCurrentRootPath(),
-      "/.vscode/launch.json"
-    );
-
-    let launch: { configurations: vscode.DebugConfiguration[] };
-
-    if (!fs.existsSync(filePath)) {
-      const dir = path.dirname(filePath);
-
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir);
-      }
-
-      launch = { configurations: [] };
-    } else {
-      const str = fs.readFileSync(filePath).toString();
-
-      launch = parse(str);
-    }
-
-    if ("configurations" in launch) {
-      const configurations = launch["configurations"];
-
-      if (
-        (Array.isArray(configurations) && configurations.length < 1) ||
-        !configurations.find(
-          (item) =>
-            item.type === "nocalhost" &&
-            item.request === "attach" &&
-            item.name === "Nocalhost Debug"
-        )
-      ) {
-        configurations.push({
-          type: "nocalhost",
-          request: "attach",
-          name: "Nocalhost Debug",
-        });
-
-        fs.writeFileSync(filePath, JSON.stringify(launch, null, 2));
-      }
-    }
-  }
   async dispose(closeTerminal: boolean = true) {
     this.disposable.forEach((d) => d.dispose());
     this.disposable.length = 0;

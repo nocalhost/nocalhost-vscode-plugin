@@ -48,6 +48,8 @@ export const CRON_JOBS_FOLDER = "CRON_JOBS_FOLDER";
 export const CRON_JOB = "CRON_JOB";
 export const PODS_FOLDER = "PODS_FOLDER";
 export const POD = "POD";
+export const CRD_FOLDER = "CRD_FOLDER";
+export const CRD = "CRD";
 
 export const KUBERNETE_RESOURCE = "KUBERNETE_RESOURCE";
 export const KUBERNETE_FOLDER_RESOURCE = "KUBERNETE_FOLDER_RESOURCE";

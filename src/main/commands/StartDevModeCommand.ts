@@ -86,12 +86,24 @@ export default class StartDevModeCommand implements ICommand {
     const namespace = node.getNameSpace();
     const kubeConfigPath = node.getKubeConfigPath();
 
-    await nhctl.NhctlCommand.authCheck({
-      base: "dev",
-      args: ["start", appName, "-t " + node.resourceType, node.name],
-      kubeConfigPath: kubeConfigPath,
-      namespace,
-    }).exec();
+    // crd workload do not check
+    if (
+      [
+        "Deployments",
+        "StatefuleSets",
+        "DaemonSets",
+        "Jobs",
+        "CronJobs",
+        "Pods",
+      ].includes(node.resourceType)
+    ) {
+      await nhctl.NhctlCommand.authCheck({
+        base: "dev",
+        args: ["start", appName, "-t" + node.resourceType, node.name],
+        kubeConfigPath: kubeConfigPath,
+        namespace,
+      }).exec();
+    }
 
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
