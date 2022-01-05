@@ -71,7 +71,9 @@ function getQuickPick() {
    * @returns {Promise<Array<puppeteer.ElementHandle<Element>>}
    */
   async function getItems() {
-    await page.waitForSelector(".quick-input-list-entry");
+    await page.waitForSelector(
+      ".quick-input-widget:not([style*='display: none']) .quick-input-list-entry"
+    );
     return page.$$(".quick-input-list-entry");
   }
   return {
@@ -89,8 +91,6 @@ function getQuickPick() {
      * @param {string|number} key
      */
     async select(key) {
-      await page.waitForTimeout(2_000);
-
       const items = await this.items;
       if (typeof key === "number") {
         await items[key].click();
@@ -100,6 +100,8 @@ function getQuickPick() {
 
         await items[index].click();
       }
+
+      await page.waitForTimeout(1_000);
     },
   };
 }

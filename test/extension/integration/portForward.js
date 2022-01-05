@@ -1,5 +1,4 @@
 const assert = require("assert");
-const puppeteer = require("puppeteer-core");
 const getPort = require("get-port");
 
 const { getQuickPick, checkPort, setInputBox } = require("./index");
@@ -26,19 +25,11 @@ async function add() {
   const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 
-  await page.waitForTimeout(1_000);
-
   let quickPick = getQuickPick();
-
-  // assert((await quickPick.itemTexts).includes(" Add port forward"));
 
   await quickPick.select(" Add port forward");
 
-  await page.waitForTimeout(1_000);
-
   port = await getPort();
-
-  // await quickPick.select(0);
 
   await setInputBox(`${port}:9080`);
 
