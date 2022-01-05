@@ -60,7 +60,7 @@ jobs:
           ls -al
 
       - name: Wait cluster ready
-        timeout-minutes: 20
+        timeout-minutes: 30
         run: >-
           while [ ! -f "${HOME}/config" ];do
             tail -n 3 ~/cluster.log

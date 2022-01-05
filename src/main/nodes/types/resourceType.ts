@@ -54,3 +54,14 @@ export interface PodResource extends Resource {
     }>;
   };
 }
+
+export interface CrdResource {
+  Group: string;
+  Kind: string;
+  Namespaced: boolean;
+  Resource: string;
+  Version: string;
+  kubeConfigPath?: string;
+  namespace?: string;
+  appName?: string;
+}

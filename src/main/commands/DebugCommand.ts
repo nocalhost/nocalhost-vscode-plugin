@@ -47,8 +47,6 @@ export default class DebugCommand implements ICommand {
 
     this.validateDebugConfig(this.container);
 
-    const debugProvider = await this.getDebugProvider();
-
     if (!param?.command) {
       const status = await node.getStatus(true);
 
@@ -60,6 +58,8 @@ export default class DebugCommand implements ICommand {
         return;
       }
     }
+
+    const debugProvider = await this.getDebugProvider();
 
     await waitForSync(node, DEBUG);
 
@@ -142,7 +142,7 @@ export default class DebugCommand implements ICommand {
 
     await checkDebuggerDependencies(debugProvider);
 
-    this.createDebugLaunchConfig(debugProvider.name as Language);
+    this.createDebugLaunchConfig();
 
     return debugProvider;
   }
@@ -150,25 +150,7 @@ export default class DebugCommand implements ICommand {
     const { image } = this.container.dev;
     let type: Language;
 
-    const filePath = path.join(
-      host.getCurrentRootPath(),
-      "/.vscode/launch.json"
-    );
-    if (fs.existsSync(filePath)) {
-      const launch = parse(fs.readFileSync(filePath).toString()) as {
-        configurations: (vscode.DebugConfiguration & {
-          language: Language;
-        })[];
-      };
-      const configuration = launch.configurations.find(
-        (item) =>
-          item.type === "nocalhost" &&
-          item.language &&
-          item.request === "attach"
-      );
-
-      return configuration?.language;
-    } else if (image.includes("nocalhost/dev-images")) {
+    if (image.includes("nocalhost/dev-images")) {
       type = Object.keys(supportLanguage).find((name) =>
         image.includes(name)
       ) as Language;
@@ -177,16 +159,14 @@ export default class DebugCommand implements ICommand {
     return type;
   }
 
-  async createDebugLaunchConfig(language: Language) {
+  async createDebugLaunchConfig() {
     const filePath = path.join(
       host.getCurrentRootPath(),
       "/.vscode/launch.json"
     );
 
     let launch: {
-      configurations: (vscode.DebugConfiguration & {
-        language: Language;
-      })[];
+      configurations: vscode.DebugConfiguration[];
     };
 
     if (!fs.existsSync(filePath)) {
@@ -208,7 +188,10 @@ export default class DebugCommand implements ICommand {
 
       if (Array.isArray(configurations)) {
         let index = configurations.findIndex(
-          (item) => item.type === "nocalhost" && item.language === language
+          (item) =>
+            item.type === "nocalhost" &&
+            item.request === "attach" &&
+            item.name === "Nocalhost Debug"
         );
 
         if (index > -1) {
@@ -217,7 +200,6 @@ export default class DebugCommand implements ICommand {
 
         configurations.unshift({
           type: "nocalhost",
-          language,
           request: "attach",
           name: "Nocalhost Debug",
         });

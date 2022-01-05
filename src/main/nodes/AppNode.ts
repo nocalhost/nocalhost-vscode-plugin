@@ -19,6 +19,7 @@ import ConfigService, { NocalhostConfig } from "../service/configService";
 import { NodeType } from "./interfact";
 import { DevSpaceNode } from "./DevSpaceNode";
 import { ClusterSource } from "../common/define";
+import { CrdFolder } from "./customerResources/CrdFolder";
 
 export class AppNode extends NocalhostFolderNode {
   public label: string;
@@ -68,7 +69,13 @@ export class AppNode extends NocalhostFolderNode {
   private getDefaultChildrenNodes(): string[] {
     return this.unInstalled()
       ? []
-      : ["Workloads", "Networks", "Configurations", "storage"];
+      : [
+          "Workloads",
+          "CustomResources",
+          "Networks",
+          "Configurations",
+          "storage",
+        ];
   }
 
   get context() {
@@ -246,6 +253,9 @@ export class AppNode extends NocalhostFolderNode {
     switch (type) {
       case "Workloads":
         node = new WorkloadFolderNode(this);
+        break;
+      case "CustomResources":
+        node = new CrdFolder(this);
         break;
       case "Networks":
         node = new NetworkFolderNode(this);

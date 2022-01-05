@@ -71,8 +71,12 @@ export class NhctlCommand {
   ) {
     return new NhctlCommand(base, baseParams, execParam, args);
   }
-  static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
-    const command = NhctlCommand.create("get", baseParams);
+  static get(
+    baseParams?: IBaseCommand<unknown>,
+    ms = GLOBAL_TIMEOUT,
+    others?: Partial<ExecParam>
+  ) {
+    const command = NhctlCommand.create("get", baseParams, others);
     command.execParam.timeout = ms;
 
     return command;
@@ -1192,16 +1196,23 @@ export async function getTemplateConfig(
 export async function listPVC(
   props: IBaseCommand<{
     appName: string;
+    workloadType?: string;
     workloadName?: string;
   }>
 ) {
-  const { kubeConfigPath, namespace, appName, workloadName } = props;
+  const {
+    kubeConfigPath,
+    namespace,
+    appName,
+    workloadName,
+    workloadType,
+  } = props;
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
     `pvc list --app ${appName} ${
-      workloadName ? `--svc ${workloadName}` : ""
-    } --yaml`
+      workloadType ? "-t " + workloadType + " " : ""
+    } ${workloadName ? `--svc ${workloadName}` : ""} --yaml`
   );
   const result = await exec({ command }).promise;
   let pvcs: IPvc[] = [];
@@ -1602,4 +1613,26 @@ export async function associateQuery(param: {
     .addArgument("--json")
     .toJson()
     .exec();
+}
+
+export async function vpn(param: {
+  subCommand: "connect" | "disconnect" | "reconnect";
+  workLoadType: string;
+  workLoadName: string;
+  baseParam: IBaseCommand;
+}) {
+  const { subCommand, workLoadName, workLoadType, baseParam } = param;
+
+  let command = NhctlCommand.create(
+    `vpn ${subCommand}`,
+    baseParam
+  ).getCommand();
+
+  return execWithProgress({
+    command,
+    title: `Waiting for vpn ${subCommand} ...`,
+    output: true,
+    args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
+    sudo: !host.isWindow(),
+  });
 }
