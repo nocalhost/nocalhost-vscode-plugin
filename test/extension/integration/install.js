@@ -15,7 +15,7 @@ const { dialog, file, tree, notification } = require("../lib/components");
  *
  * @param {puppeteer.ElementHandle<Element>} node
  */
-async function unInstall(node, waitTime = 0) {
+async function unInstall(node, waitTime) {
   await node.hover();
   await page.click(".codicon-trash");
 
@@ -26,7 +26,7 @@ async function unInstall(node, waitTime = 0) {
     { timeout: 1 * 60 * 1000 }
   );
 
-  waitTime && (await page.waitForTimeout(waitTime));
+  await page.waitForTimeout(waitTime);
 }
 
 /**
@@ -71,7 +71,7 @@ async function isInstallSucceed() {
   );
 }
 
-async function install(waitTime = 0) {
+async function install(waitTime) {
   const bookinfo = await tree.getItem("", "default", "bookinfo");
 
   if (bookinfo) {
@@ -91,7 +91,7 @@ async function checkInstall() {
   await checkPort("39080");
 }
 
-async function cloneFromGit(waitTime = 0) {
+async function cloneFromGit(waitTime) {
   await install(waitTime);
 
   await dialog.selectAction("Deploy From Git Repo");
@@ -112,7 +112,7 @@ async function installKustomizeGit() {
 }
 
 async function installHelmGit() {
-  await cloneFromGit(20_000);
+  await cloneFromGit(15_000);
 
   await selectQuickPickItem("config.helm.yaml");
 
@@ -129,8 +129,8 @@ async function installManifestGit() {
   await checkInstall();
 }
 
-async function installFromLocal() {
-  await install(20_000);
+async function installFromLocal(waitTime = 0) {
+  await install(waitTime);
 
   await dialog.selectAction("Deploy From Local Directory");
 
@@ -140,7 +140,7 @@ async function installFromLocal() {
 }
 
 async function installHelmLocal() {
-  await installFromLocal();
+  await installFromLocal(15_000);
 
   await selectQuickPickItem("config.helm.local.yaml");
 
