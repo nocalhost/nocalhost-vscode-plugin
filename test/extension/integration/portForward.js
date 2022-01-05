@@ -20,7 +20,7 @@ function getPortForwardPort() {
   return port;
 }
 
-async function waitingReading() {
+async function checkReady() {
   await retry(
     async () => {
       const bookinfo = await tree.getItem(...treeItemPath);
@@ -38,8 +38,6 @@ async function waitingReading() {
 }
 
 async function add() {
-  await waitingReading();
-
   const treeItem = await tree.getItem(...treeItemPath);
 
   const portForward = await treeItem.$(".action-label[title='Port Forward']");
@@ -82,4 +80,10 @@ async function stop() {
   await checkPort(port, { condition: (connect) => !connect });
 }
 
-module.exports = { add, list, stop, getPortForwardPort };
+module.exports = {
+  add,
+  list,
+  stop,
+  getPortForwardPort,
+  checkReady,
+};

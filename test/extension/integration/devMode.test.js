@@ -5,13 +5,14 @@ const {
   runCommand,
   checkStartComplete,
   checkSyncCompletion,
-  beforeCheck,
 } = require("./devMode");
 
+const { checkReady } = require("./portForward");
+
 const devModeTests = () => {
-  // beforeAll(async (done) => {
-  //   beforeCheck().then(done).cath(done.fail);
-  // });
+  beforeAll(async (done) => {
+    checkReady().then(done).cath(done.fail);
+  });
   it("start", start);
   it("startComplete", checkStartComplete);
   it("syncCompletion", checkSyncCompletion);
