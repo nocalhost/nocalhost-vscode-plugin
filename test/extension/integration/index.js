@@ -262,11 +262,11 @@ function getSystemKeys(key) {
  */
 async function enterShortcutKeys(...keys) {
   for await (const key of keys) {
-    await page.keyboard.down(getSystemKeys(key));
+    await page.keyboard.down(key);
   }
 
   for await (const key of keys) {
-    await page.keyboard.up(getSystemKeys(key));
+    await page.keyboard.up(key);
   }
 
   await page.waitForTimeout(5_00);

@@ -139,7 +139,7 @@ async function codeSync() {
   await setInputBox("ratings.js");
 
   await page.waitForTimeout(5_00);
-  await enterShortcutKeys("MetaLeft", "g");
+  await enterShortcutKeys("ControlLeft", "g");
 
   await setInputBox("207:9");
 
