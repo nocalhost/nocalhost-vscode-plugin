@@ -1,5 +1,6 @@
 const assert = require("assert");
 const getPort = require("get-port");
+const retry = require("async-retry");
 
 const { getQuickPick, checkPort, setInputBox } = require("./index");
 const { dialog, tree } = require("../lib/components");
@@ -19,7 +20,26 @@ function getPortForwardPort() {
   return port;
 }
 
+async function waitingReading() {
+  await retry(
+    async () => {
+      const bookinfo = await tree.getItem(...treeItemPath);
+
+      assert(bookinfo);
+
+      const icon = await bookinfo.$(
+        `.custom-view-tree-node-item-icon[style$='status_running.svg");']`
+      );
+
+      assert(icon);
+    },
+    { retries: 9 }
+  );
+}
+
 async function add() {
+  await waitingReading();
+
   const treeItem = await tree.getItem(...treeItemPath);
 
   const portForward = await treeItem.$(".action-label[title='Port Forward']");
