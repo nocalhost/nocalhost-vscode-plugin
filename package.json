@@ -132,17 +132,17 @@
       "view/item/context": [
         {
           "command": "Nocalhost.openProject",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?vpn_)/i",
           "group": "developing@1"
         },
         {
           "command": "Nocalhost.run",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "developing@3"
         },
         {
           "command": "Nocalhost.debug",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "developing@2"
         },
         {
@@ -182,17 +182,17 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "2"
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing|starting|develop_starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing|starting|develop_starting|vpn_))/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
           "group": "navigation"
         },
         {
@@ -202,7 +202,7 @@
         },
         {
           "command": "Nocalhost.editServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-info/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "inline@1"
         },
         {
@@ -217,17 +217,17 @@
         },
         {
           "command": "Nocalhost.exec",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod|crd-resources)-dev/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "3"
         },
         {
           "command": "Nocalhost.copyTerminal",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "3"
         },
         {
           "command": "Nocalhost.reset",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "2"
         },
         {
@@ -237,18 +237,18 @@
         },
         {
           "command": "Nocalhost.log",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "1"
         },
         {
           "command": "Nocalhost.editManifest",
-          "when": "viewItem =~ /(^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)).*(?<!duplicate-self)$/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(info|warn)-(?!vpn_).*(?<!duplicate-self)$/i",
           "title": "%editManifest%",
           "group": "1"
         },
         {
           "command": "Nocalhost.portForward",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "1"
         },
         {
@@ -263,7 +263,7 @@
         },
         {
           "command": "Nocalhost.associateLocalDirectory",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "0"
         },
         {
@@ -306,6 +306,21 @@
         {
           "command": "Nocalhost.overrideSync",
           "when": "viewItem =~ /^syncAssociate-(.*)override/i"
+        },
+        {
+          "command": "Nocalhost.startProxyMode",
+          "when": "viewItem =~ /(^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting|develop_starting|vpn_)))|(^network-service-(?!vpn))/i",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.resumeProxyMode",
+          "when": "viewItem =~ /^(workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)|network-service)(.*)vpn_unhealthy/i",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.endProxyMode",
+          "when": "viewItem =~ /^(workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)|network-service)(.*)vpn/i",
+          "group": "inline@0"
         }
       ]
     },
@@ -528,6 +543,21 @@
       {
         "command": "Nocalhost.disassociateAssociate",
         "title": "%disassociateAssociate%"
+      },
+      {
+        "command": "Nocalhost.startProxyMode",
+        "title": "%startProxyMode%",
+        "icon": "images/icon/vpn.svg"
+      },
+      {
+        "command": "Nocalhost.resumeProxyMode",
+        "title": "%resumeProxyMode%",
+        "icon": "images/icon/vpn_disconnect.svg"
+      },
+      {
+        "command": "Nocalhost.endProxyMode",
+        "title": "%endProxyMode%",
+        "icon": "images/icon/vpn_close.svg"
       }
     ],
     "debuggers": [

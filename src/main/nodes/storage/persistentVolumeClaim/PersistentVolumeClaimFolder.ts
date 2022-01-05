@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
+import { INhCtlGetResult } from "../../../domain";
 
 import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { PERSISTENT_VOLUME_CLAIM_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List, Resource } from "../../types/resourceType";
 import { PersistentVolumeClaim } from "./PersistentVolumeClaim";
 
 export class PersistentVolumeClaimFolder extends KubernetesResourceFolder {
@@ -23,12 +23,12 @@ export class PersistentVolumeClaimFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as Resource[];
+    let list = state.getData(this.getNodeStateId()) as INhCtlGetResult[];
     if (!list) {
       list = await this.updateData(true);
     }
     const result: PersistentVolumeClaim[] = list.map(
-      (item) =>
+      ({ info: item }) =>
         new PersistentVolumeClaim(
           this,
           item.metadata.name,

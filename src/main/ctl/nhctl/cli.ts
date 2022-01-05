@@ -1613,3 +1613,25 @@ export async function associateQuery(param: {
     .toJson()
     .exec();
 }
+
+export async function vpn(param: {
+  subCommand: "connect" | "disconnect" | "reconnect";
+  workLoadType: string;
+  workLoadName: string;
+  baseParam: IBaseCommand;
+}) {
+  const { subCommand, workLoadName, workLoadType, baseParam } = param;
+
+  let command = NhctlCommand.create(
+    `vpn ${subCommand}`,
+    baseParam
+  ).getCommand();
+
+  return execWithProgress({
+    command,
+    title: `Waiting for vpn ${subCommand} ...`,
+    output: true,
+    args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
+    sudo: !host.isWindow(),
+  });
+}
