@@ -29,7 +29,9 @@ async function openNocalhost(page) {
  * @return {puppeteer.ElementHandle<Element>[]}
  */
 async function setInputBox(text, clean = false) {
-  let input = await page.waitForSelector(".quick-input-widget .input");
+  let input = await page.waitForSelector(
+    ".quick-input-widget:not([style*='display: none']) .input"
+  );
 
   if (clean) {
     await input.evaluate((input) => (input.value = ""), input);
