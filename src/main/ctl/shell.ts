@@ -183,7 +183,8 @@ export function createProcess(param: ExecParam) {
       ) {
         let password = await host.showInputBox({
           password: true,
-          placeHolder: "please input your password",
+          placeHolder:
+            "nhctl wants to make changes. Type your admin password to allow this.",
         });
 
         proc.stdin.write(`${password}\n`);
