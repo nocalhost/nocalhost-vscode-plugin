@@ -9,9 +9,9 @@ const {
 } = require("./devMode");
 
 const devModeTests = () => {
-  beforeAll(async (done) => {
-    beforeCheck().then(done).cath(done.fail);
-  });
+  // beforeAll(async (done) => {
+  //   beforeCheck().then(done).cath(done.fail);
+  // });
   it("start", start);
   it("startComplete", checkStartComplete);
   it("syncCompletion", checkSyncCompletion);
