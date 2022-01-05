@@ -5,6 +5,8 @@ import { NhctlCommand } from "../../ctl/nhctl";
 import { KubernetesResourceFolder } from "../abstract/KubernetesResourceFolder";
 import { CrdResource } from "../types/resourceType";
 import { CrdGroup } from "./CrdGroup";
+import { orderBy, sortBy } from "lodash";
+
 export class CrdFolder extends KubernetesResourceFolder {
   public label: string = "CustomResources";
   public type: string = "crd-list";
@@ -63,7 +65,9 @@ export class CrdFolder extends KubernetesResourceFolder {
       const kindItem = groupMap.get(item.Group) || [];
       groupMap.set(item.Group, [...kindItem, item]);
     });
-    const nodeData = [...groupMap].map((item) => new CrdGroup(this, item));
+    const nodeData = sortBy([...groupMap]).map(
+      (item) => new CrdGroup(this, item)
+    );
     state.setData(this.getNodeStateId(), nodeData);
     return nodeData;
   }
