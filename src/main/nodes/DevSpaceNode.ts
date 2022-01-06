@@ -2,7 +2,7 @@ import { difference } from "lodash";
 import * as vscode from "vscode";
 import { ClusterSource } from "../common/define";
 import * as nhctl from "../ctl/nhctl";
-import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
+import { IDevSpaceInfo, IRootNode, IV2ApplicationInfo } from "../domain";
 import state from "../state";
 import { resolveVSCodeUri } from "../utils/fileUtil";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
@@ -275,6 +275,17 @@ export class DevSpaceNode extends NocalhostFolderNode implements RefreshData {
         this.clusterSource === ClusterSource.local ? "local" : "server"
       }`
     );
+
+    if ("rootNode" in this.parent) {
+      const { rootNode } = (this.parent as unknown) as { rootNode: IRootNode };
+
+      if (
+        rootNode.clusterSource === ClusterSource.server &&
+        rootNode.serviceAccount.kubeconfigType === "vcluster"
+      ) {
+        treeItem.contextValue += "-vcluster";
+      }
+    }
 
     return Promise.resolve(treeItem);
   }

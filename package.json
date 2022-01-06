@@ -232,7 +232,7 @@
         },
         {
           "command": "Nocalhost.resetDevspace",
-          "when": "viewItem =~ /^devspace-server/i",
+          "when": "viewItem =~ /^devspace-server(?<!-vcluster)$/i",
           "group": "navigation"
         },
         {
