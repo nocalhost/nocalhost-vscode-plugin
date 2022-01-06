@@ -4,19 +4,16 @@ import * as fs from "fs";
 import * as yaml from "yaml";
 
 import state from "../state";
-import AccountClusterService from "../clusters/AccountCluster";
+import AccountClusterService, {
+  AccountClusterNode,
+} from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
 import { ClusterSource } from "../common/define";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NocalhostRootNode } from "./NocalhostRootNode";
 import { isExistSync, resolveVSCodeUri } from "../utils/fileUtil";
-import {
-  IUserInfo,
-  IV2ApplicationInfo,
-  IRootNode,
-  IDevSpaceInfo,
-} from "../domain";
+import { IV2ApplicationInfo, IRootNode, IDevSpaceInfo } from "../domain";
 import { ClustersState } from "../clusters";
 import host from "../host";
 import { getAllNamespace } from "../ctl/nhctl";
@@ -25,7 +22,6 @@ import { DevSpaceNode, getDevSpaceLabel } from "./DevSpaceNode";
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
   public type = "KUBECONFIG";
-  public userInfo: IUserInfo;
   public clusterSource: ClusterSource;
   public applications: Array<IV2ApplicationInfo>;
   public parent: NocalhostRootNode;
@@ -45,7 +41,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   ) {
     super();
 
-    const { applications, clusterSource, kubeConfigPath, userInfo } = rootNode;
+    const { applications, clusterSource, kubeConfigPath } = rootNode;
 
     this.id = id;
     this.parent = parent;
@@ -55,17 +51,23 @@ export class KubeConfigNode extends NocalhostFolderNode {
     this.applications = applications;
     this.installedApps = [];
     this.kubeConfigPath = kubeConfigPath;
-    this.userInfo = userInfo;
     this.state = rootNode.state;
 
     state.setNode(this.getNodeStateId(), this);
+  }
+  get accountClusterNode() {
+    if (this.clusterSource === ClusterSource.server) {
+      return this.rootNode.clusterInfo as AccountClusterNode;
+    }
   }
   get accountClusterService() {
     if (this.clusterSource === ClusterSource.local) {
       return null;
     }
 
-    return new AccountClusterService(this.rootNode.loginInfo);
+    return new AccountClusterService(
+      this.rootNode.clusterInfo as AccountClusterNode
+    );
   }
   async updateData() {
     if (this.state.code !== 200) {
@@ -228,7 +230,8 @@ export class KubeConfigNode extends NocalhostFolderNode {
     }`;
 
     if (this.clusterSource === ClusterSource.server) {
-      const { username, baseUrl } = this.rootNode.loginInfo;
+      const { username, baseUrl } = (this.rootNode
+        .clusterInfo as AccountClusterNode).loginInfo;
 
       treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
     }

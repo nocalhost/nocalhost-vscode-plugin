@@ -8,13 +8,7 @@ import { AccountCluster as AccountClusterService } from "../clusters";
 import state from "../state";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import { NOCALHOST } from "../constants";
-
-interface LoginInfo {
-  username: string;
-  from?: "plugin";
-  password: string;
-  baseUrl: string;
-}
+import { LoginInfo } from "../clusters/interface";
 
 export default class SignInCommand implements ICommand {
   command: string = SIGN_IN;

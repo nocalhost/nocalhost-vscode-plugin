@@ -16,14 +16,18 @@ import { kubeconfigCommand } from "../ctl/nhctl";
 import { LoginInfo } from "../clusters/interface";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import messageBus from "../utils/messageBus";
-import { virtualClusterProcMap } from "../clusters/AccountCluster";
-import { getStringHash } from "../utils/common";
+import {
+  AccountClusterNode,
+  virtualClusterProcMap,
+} from "../clusters/AccountCluster";
+import { ClusterSource } from "../common/define";
 
 export default class SignOutCommand implements ICommand {
   command: string = SIGN_OUT;
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
+  loginInfo: LoginInfo;
   async execCommand(node: KubeConfigNode) {
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
@@ -53,9 +57,11 @@ export default class SignOutCommand implements ICommand {
 
       const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
 
-      this.dispose(node);
+      this.loginInfo = node.accountClusterNode.loginInfo;
 
-      rootNode.deleteCluster(node.rootNode.loginInfo);
+      this.dispose();
+
+      rootNode.deleteCluster(this.loginInfo);
 
       messageBus.emit("refreshTree", {});
     } catch (error) {
@@ -65,49 +71,51 @@ export default class SignOutCommand implements ICommand {
     }
   }
 
-  dispose(node: KubeConfigNode) {
-    this.killVClusterProcess(node);
-    this.cleanKubeConfig(node.rootNode.loginInfo);
+  dispose() {
+    this.killVClusterProcess();
+    this.cleanKubeConfig();
   }
 
-  async killVClusterProcess(node: KubeConfigNode) {
+  async killVClusterProcess() {
     const rootNode = state.getData<Array<IRootNode>>("Nocalhost");
 
-    const { username, baseUrl } = node.rootNode.loginInfo;
+    const { username, baseUrl } = this.loginInfo;
 
-    rootNode.forEach((root) => {
-      if (
-        root.loginInfo.username !== username ||
-        root.loginInfo.baseUrl !== baseUrl
-      ) {
-        return;
-      }
-      const { virtualCluster, kubeconfigType } = root.serviceAccount;
-      if (
-        kubeconfigType === "vcluster" &&
-        virtualCluster.serviceType === "ClusterIP"
-      ) {
-        const { serviceAddress } = virtualCluster;
+    rootNode
+      .filter((node) => node.clusterSource === ClusterSource.server)
+      .forEach((root) => {
+        const { loginInfo } = root.clusterInfo as AccountClusterNode;
 
-        let info = virtualClusterProcMap[serviceAddress];
-
-        if (info?.proc.killed === false) {
-          info.proc.kill();
-
-          fs.unlink(root.kubeConfigPath);
-
-          delete virtualClusterProcMap[serviceAddress];
+        if (loginInfo.username !== username || loginInfo.baseUrl !== baseUrl) {
+          return;
         }
-      }
-    });
+
+        const { virtualCluster, kubeconfigType } = root.serviceAccount;
+        if (
+          kubeconfigType === "vcluster" &&
+          virtualCluster.serviceType === "ClusterIP"
+        ) {
+          const { serviceAddress } = virtualCluster;
+
+          let info = virtualClusterProcMap[serviceAddress];
+
+          if (info?.proc.killed === false) {
+            info.proc.kill();
+
+            fs.unlink(root.kubeConfigPath);
+
+            delete virtualClusterProcMap[serviceAddress];
+          }
+        }
+      });
   }
 
   getFilePath(id: string) {
     return path.resolve(KUBE_CONFIG_DIR, id);
   }
 
-  cleanKubeConfig(loginInfo: LoginInfo) {
-    const { baseUrl, username } = loginInfo;
+  cleanKubeConfig() {
+    const { baseUrl, username } = this.loginInfo;
     const KEY = `USER_LINK:${baseUrl}@${username}`;
 
     const prevData = host.getGlobalState<Array<string>>(KEY);

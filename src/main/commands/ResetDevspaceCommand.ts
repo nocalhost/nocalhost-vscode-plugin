@@ -45,10 +45,9 @@ export default class ResetDevspaceCommand implements ICommand {
         messageBus.emit("refreshTree", {});
       })
       .finally(async () => {
-        state.deleteAppState(node.getNodeStateId(), "resetting");
-        const parent = node.parent;
+        const parent = node.parent.parent;
 
-        await node.parent.updateData();
+        await parent.updateData();
 
         vscode.commands.executeCommand("Nocalhost.refresh", parent);
 

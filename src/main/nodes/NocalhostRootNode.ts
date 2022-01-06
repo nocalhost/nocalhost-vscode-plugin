@@ -239,7 +239,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
             return true;
           }
 
-          const { username, baseUrl } = item.loginInfo;
+          const {
+            username,
+            baseUrl,
+          } = (item.clusterInfo as AccountClusterNode).loginInfo;
 
           return !(username === info.username && baseUrl === info.baseUrl);
         });
@@ -292,7 +295,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         if (result.reason instanceof Error) {
           info = result.reason.message;
-          logger.error("get serverCluster error", result.reason, res.userInfo);
+          logger.error("get cluster error", result.reason, res.clusterInfo);
         }
 
         return new KubeConfigNode(res.id, this, res.clusterName, {

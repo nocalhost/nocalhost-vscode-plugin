@@ -1,22 +1,20 @@
-import { IUserInfo } from "./IUserInfo";
-
 import { IV2ApplicationInfo } from "./IV2ApplicationInfo";
 
 import { ClusterSource } from "../common/define";
-import { ClustersState } from "../clusters";
+import { AccountClusterNode, ClustersState } from "../clusters";
 import { IServiceAccountInfo } from ".";
-import { LoginInfo } from "../clusters/interface";
+import { LocalClusterNode } from "../clusters/LocalCuster";
 
 export interface IRootNode {
   serviceAccount?: IServiceAccountInfo;
   applications: IV2ApplicationInfo[];
   clusterSource?: ClusterSource;
-  loginInfo?: LoginInfo;
   // accountClusterService?: AccountClusterService;
   id?: string;
   createTime?: number;
   clusterName?: string;
-  userInfo?: IUserInfo;
   kubeConfigPath: string;
   state: ClustersState;
+
+  clusterInfo?: AccountClusterNode | LocalClusterNode;
 }

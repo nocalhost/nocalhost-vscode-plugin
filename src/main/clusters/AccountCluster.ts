@@ -46,13 +46,12 @@ export function buildRootNodeForAccountCluster(
 ): IRootNode {
   return {
     applications: [],
-    userInfo: accountCluster.userInfo,
-    loginInfo: accountCluster.loginInfo,
     clusterSource: ClusterSource.server,
     id: accountCluster.id,
     createTime: accountCluster.createTime,
     kubeConfigPath: null,
     state,
+    clusterInfo: accountCluster,
   };
 }
 export const virtualClusterProcMap: {
@@ -60,22 +59,30 @@ export const virtualClusterProcMap: {
 } = {};
 export default class AccountClusterService {
   instance: AxiosInstance;
-  accountClusterNode: AccountClusterNode;
   jwt: string;
   refreshToken: string;
   lastServiceAccounts: IServiceAccountInfo[];
   isRefreshing: boolean;
-
-  constructor(private loginInfo: LoginInfo) {
+  loginInfo: LoginInfo;
+  constructor(private accountCluster: AccountClusterNode) {
+    const { loginInfo, jwt, refreshToken } = accountCluster;
     var parsed = url.parse(loginInfo.baseUrl);
 
     if (!parsed.protocol) {
       loginInfo.baseUrl = "http://" + loginInfo.baseUrl;
     }
 
+    this.jwt = jwt;
+    this.refreshToken = refreshToken;
     this.isRefreshing = true;
+    this.loginInfo = loginInfo;
+
+    this.initInstance();
+  }
+
+  private initInstance() {
     this.instance = axios.create({
-      baseURL: loginInfo.baseUrl,
+      baseURL: this.loginInfo.baseUrl,
       timeout: 1000 * 20,
     });
     this.instance.interceptors.request.use((config) => {
@@ -138,12 +145,7 @@ export default class AccountClusterService {
     if (!accountCluster) {
       return [];
     }
-    const accountClusterService = new AccountClusterService(
-      accountCluster.loginInfo
-    );
-    accountClusterService.accountClusterNode = accountCluster;
-    accountClusterService.jwt = accountCluster.jwt;
-    accountClusterService.refreshToken = accountCluster.refreshToken;
+    const accountClusterService = new AccountClusterService(accountCluster);
 
     let serviceAccounts = await accountClusterService.getServiceAccount();
     logger.info(
@@ -187,35 +189,35 @@ export default class AccountClusterService {
         serviceAccount,
         devSpaces: [],
         applications,
-        loginInfo: accountCluster.loginInfo,
-        userInfo: accountCluster.userInfo,
         clusterSource: ClusterSource.server,
-        accountClusterService,
         id: accountCluster.id,
         createTime: accountCluster.createTime,
         kubeConfigPath,
         state,
+        clusterInfo: accountCluster,
       } as IRootNode;
     });
+
+    const rootNodes = await (await Promise.allSettled(serviceNodes)).map(
+      (item) => {
+        if (item.status === "fulfilled") {
+          return item.value;
+        }
+        return {
+          clusterSource: ClusterSource.server,
+          id: accountCluster.id,
+          createTime: accountCluster.createTime,
+          kubeConfigPath: null,
+        } as IRootNode;
+      }
+    );
 
     await AccountClusterService.cleanDiffKubeConfig(
       accountCluster,
       kubeConfigArr
     );
 
-    return await (await Promise.allSettled(serviceNodes)).map((item) => {
-      if (item.status === "fulfilled") {
-        return item.value;
-      }
-      return {
-        userInfo: accountCluster.userInfo,
-        clusterSource: ClusterSource.server,
-        loginInfo: accountCluster.loginInfo,
-        id: accountCluster.id,
-        createTime: accountCluster.createTime,
-        kubeConfigPath: null,
-      } as IRootNode;
-    });
+    return rootNodes;
   };
 
   static async startVClusterProcess(sa: IServiceAccountInfo) {
@@ -276,6 +278,8 @@ export default class AccountClusterService {
 
     const prevData = host.getGlobalState<Array<string>>(KEY);
 
+    host.setGlobalState(KEY, configs);
+
     if (prevData) {
       const diff = difference(prevData, configs);
 
@@ -289,8 +293,6 @@ export default class AccountClusterService {
         kubeconfigCommand(file, "remove");
       });
     }
-
-    host.setGlobalState(KEY, configs);
   }
 
   static async saveKubeConfig(accountInfo: IServiceAccountInfo) {
@@ -306,10 +308,20 @@ export default class AccountClusterService {
 
     return { id, kubeConfigPath };
   }
+
   static appendClusterByLoginInfo = async (
     loginInfo: LoginInfo
   ): Promise<AccountClusterNode> => {
-    const accountServer = new AccountClusterService(loginInfo);
+    const accountServer = new AccountClusterService({
+      loginInfo,
+      userInfo: null,
+      jwt: null,
+      id: null,
+      createTime: Date.now(),
+      refreshToken: null,
+      state: { code: 200 },
+    });
+
     const newAccountCluster = await accountServer.buildAccountClusterNode();
 
     let globalAccountClusterList = host.getGlobalState<
@@ -400,11 +412,11 @@ export default class AccountClusterService {
   }
 
   deleteAccountNode() {
-    if (this.accountClusterNode) {
+    if (this.accountCluster) {
       let globalClusterRootNodes: AccountClusterNode[] =
         host.getGlobalState(SERVER_CLUSTER_LIST) || [];
       const index = globalClusterRootNodes.findIndex(
-        ({ id }) => id === this.accountClusterNode.id
+        ({ id }) => id === this.accountCluster.id
       );
       if (index !== -1) {
         globalClusterRootNodes.splice(index, 1);
@@ -415,7 +427,7 @@ export default class AccountClusterService {
 
   updateLoginInfo() {
     const newAccountCluster = {
-      ...this.accountClusterNode,
+      ...this.accountCluster,
       jwt: this.jwt,
       refreshToken: this.refreshToken,
     };
@@ -460,7 +472,7 @@ export default class AccountClusterService {
   }
 
   async getApplication() {
-    const { userInfo } = this.accountClusterNode;
+    const { userInfo } = this.accountCluster;
     try {
       const response = await this.instance.get(
         `/v1/users/${userInfo.id}/applications`
@@ -498,7 +510,7 @@ export default class AccountClusterService {
   }
 
   async getV2Application(): Promise<IV2ApplicationInfo[]> {
-    const { userInfo } = this.accountClusterNode;
+    const { userInfo } = this.accountCluster;
     const userId = userInfo.id;
     if (!userId) {
       return [];
