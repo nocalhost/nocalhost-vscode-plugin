@@ -18,7 +18,7 @@ export abstract class IDebugProvider {
   abstract requireExtensions: Array<string>;
 
   abstract downloadUrl: string;
-  abstract commandName: string;
+  abstract commandName: string | Array<string>;
 
   abstract getDebugConfiguration(
     name: string,
