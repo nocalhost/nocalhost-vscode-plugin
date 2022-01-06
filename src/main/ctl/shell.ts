@@ -83,6 +83,7 @@ export interface ExecParam {
   output?: OutPut;
   ignoreError?: boolean;
   printCommand?: boolean;
+  sudo?: boolean;
 }
 
 type OutPut = boolean | { err: boolean; out: boolean };
@@ -168,9 +169,28 @@ export function createProcess(param: ExecParam) {
     showGlobalMsg(str);
   });
 
-  proc.stderr.on("data", function (data: Buffer) {
+  proc.stderr.on("data", async function (data: Buffer) {
     const str = decodeBuffer(data);
     stderr += str;
+
+    if (param.sudo) {
+      if (
+        [
+          "Password:",
+          "[sudo] password for",
+          "Sorry, try again",
+        ].find((keyword) => str.includes(keyword))
+      ) {
+        let password = await host.showInputBox({
+          password: true,
+          placeHolder:
+            "nhctl wants to make changes. Type your admin password to allow this.",
+        });
+
+        proc.stdin.write(`${password}\n`);
+        return;
+      }
+    }
 
     err && host.log(str);
   });

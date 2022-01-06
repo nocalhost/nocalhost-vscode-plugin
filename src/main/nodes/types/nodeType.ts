@@ -62,6 +62,7 @@ export interface BaseNocalhostNode {
   label: string;
   type: string;
   hasInit?: boolean;
+  resourceType?: string;
   parent: BaseNocalhostNode | undefined | null;
   updateData?: (
     init?: boolean,

@@ -4,11 +4,11 @@ import { DebugConfiguration } from "vscode";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class NodeDebugProvider extends IDebugProvider {
-  name: string = "Node";
+  name: string = "node";
   requireExtensions: string[] = [];
 
   downloadUrl: string = "https://nodejs.org/en/download/";
-  commandName: string = "node";
+  commandName: string = this.name;
 
   getDebugConfiguration(
     name: string,

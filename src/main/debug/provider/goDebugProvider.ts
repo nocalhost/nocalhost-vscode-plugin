@@ -14,7 +14,7 @@ import { IDebugProvider } from "./IDebugProvider";
 import { exec } from "../../ctl/shell";
 
 export class GoDebugProvider extends IDebugProvider {
-  name: string = "Golang";
+  name: string = "golang";
   requireExtensions: string[] = ["golang.go"];
 
   downloadUrl: string = "https://go.dev/dl/";
