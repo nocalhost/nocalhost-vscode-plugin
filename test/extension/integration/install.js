@@ -10,6 +10,7 @@ const {
 } = require("./index");
 
 const { dialog, file, tree, notification } = require("../lib/components");
+const logger = require("../lib/log");
 
 /**
  *
@@ -88,7 +89,11 @@ async function install(waitTime) {
 async function checkInstall() {
   await isInstallSucceed();
 
-  await checkPort("39080");
+  try {
+    await checkPort("39080");
+  } catch (error) {
+    logger.error("checkPort", error);
+  }
 }
 
 async function cloneFromGit(waitTime) {
