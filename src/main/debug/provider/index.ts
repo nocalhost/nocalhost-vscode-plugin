@@ -70,7 +70,7 @@ async function checkBinary(debugProvider: IDebugProvider) {
 
   if (!isWhich) {
     const choice = await window.showErrorMessage(
-      `Failed to find the "${commandName}" binary in PATH. Check PATH, or Install ${name} and reload the window. `,
+      `Failed to find the "${defaultCommand}" binary in PATH. Check PATH, or Install ${name} and reload the window. `,
       "Go to Download Page"
     );
 
