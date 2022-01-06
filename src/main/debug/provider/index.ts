@@ -57,9 +57,20 @@ async function checkDebuggerDependencies(debugProvider: IDebugProvider) {
 async function checkBinary(debugProvider: IDebugProvider) {
   const { commandName, name } = debugProvider;
 
-  if (!(await which(debugProvider.commandName))) {
+  let defaultCommand = commandName;
+  let isWhich = false;
+
+  if (Array.isArray(commandName)) {
+    defaultCommand = commandName[0];
+
+    isWhich = commandName.map(which).includes(true);
+  } else {
+    isWhich = which(commandName);
+  }
+
+  if (!isWhich) {
     const choice = await window.showErrorMessage(
-      `Failed to find the "${commandName}" binary in PATH. Check PATH, or Install ${name} and reload the window. `,
+      `Failed to find the "${defaultCommand}" binary in PATH. Check PATH, or Install ${name} and reload the window. `,
       "Go to Download Page"
     );
 
