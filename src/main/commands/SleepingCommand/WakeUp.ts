@@ -18,11 +18,9 @@ export default class WakeUp implements ICommand {
   async execCommand(node: DevSpaceNode) {
     const spaceId = node.info.spaceId;
     const clusterInfo = node.parent?.rootNode?.clusterInfo;
-
     const service = new AccountClusterService(
       clusterInfo as AccountClusterNode
     );
     service.wakeUpSpace(spaceId);
-    console.log(spaceId);
   }
 }
