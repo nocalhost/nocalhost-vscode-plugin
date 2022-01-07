@@ -142,13 +142,17 @@ function decodeBuffer(buffer: Buffer) {
 }
 
 export function createProcess(param: ExecParam) {
-  let { command, args, output } = param;
+  let { command, args, output, sudo } = param;
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
   command = getExecCommand(command);
 
   if (param.printCommand !== false) {
     logger.info(`[cmd] ${command}`);
+  }
+
+  if (sudo) {
+    command = `sudo -p "Password:" -S ${command}`;
   }
 
   const proc = spawn(command, [], { shell: true, env });
@@ -173,14 +177,8 @@ export function createProcess(param: ExecParam) {
     const str = decodeBuffer(data);
     stderr += str;
 
-    if (param.sudo) {
-      if (
-        [
-          "Password:",
-          "[sudo] password for",
-          "Sorry, try again",
-        ].find((keyword) => str.includes(keyword))
-      ) {
+    if (sudo) {
+      if (str.includes("Password:")) {
         let password = await host.showInputBox({
           password: true,
           placeHolder:
