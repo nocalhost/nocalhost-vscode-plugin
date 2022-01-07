@@ -9,13 +9,12 @@ import * as semver from "semver";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
-import { spawn } from "child_process";
 
-import { exec, ExecParam, execWithProgress, getExecCommand } from "../shell";
+import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
-import { readYaml, replaceSpacePath } from "../../utils/fileUtil";
+import { readYaml } from "../../utils/fileUtil";
 import * as packageJson from "../../../../package.json";
 import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
@@ -769,68 +768,17 @@ export async function devStart(
 }
 
 function isSudo(ports: string[] | undefined) {
-  let sudo = false;
-  if (!ports) {
-    return sudo;
+  if (!ports && !host.isLinux()) {
+    return false;
   }
-  ports.forEach((portStr) => {
+
+  const port = ports.find((portStr) => {
     const localPort = portStr.split(":")[0];
-    if (localPort && Number(localPort) < 1024 && host.isLinux()) {
-      sudo = true;
-    }
+
+    return localPort && Number(localPort) < 1024;
   });
 
-  return sudo;
-}
-
-function sudoPortForward(command: string) {
-  command = getExecCommand(command);
-
-  return new Promise((resolve, reject) => {
-    const env = Object.assign(process.env, { DISABLE_SPINNER: true });
-    logger.info(`[cmd] ${command}`);
-    const proc = spawn(command, [], { shell: true, env });
-    let stdout = "";
-    let stderr = "";
-    let err = `execute command fail: ${command}`;
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        resolve({ stdout, stderr, code });
-      } else {
-        host.log(err, true);
-        reject(new Error(stderr || err));
-      }
-    });
-
-    proc.stdout.on("data", function (data) {
-      stdout += data;
-      host.log("" + data);
-    });
-
-    let password = "";
-
-    proc.stderr.on("data", async function (data) {
-      stderr += data;
-      host.log("" + data);
-      const line = "" + data;
-      if (line.indexOf("Sorry, try again") >= 0) {
-        password =
-          (await host.showInputBox({
-            placeHolder: "please input your password",
-          })) || "";
-      }
-      if (line.indexOf("[sudo] password for") >= 0) {
-        password =
-          (await host.showInputBox({
-            placeHolder: "please input your password",
-          })) || "";
-        proc.stdin.write(`${password}\n`, (err) => {
-          console.log("write " + password);
-        });
-      }
-    });
-  });
+  return port;
 }
 
 export async function startPortForward(
@@ -857,19 +805,12 @@ export async function startPortForward(
     } ${pod ? `--pod ${pod}` : ""}`
   );
 
-  const sudo = isSudo(ports);
-
-  if (sudo) {
-    host.log(`[cmd] ${sudo ? `sudo -S ${command}` : command}`, true);
-
-    return await sudoPortForward(`sudo -S ${command}`);
-  }
-
   const title = `Starting port-forward`;
 
   await execWithProgress({
     title,
     command,
+    sudo: !!isSudo(ports),
   }).catch(() => {
     return Promise.reject(
       new Error(`Port-forward (${appName}/${workloadName}) fail`)
@@ -893,21 +834,15 @@ export async function endPortForward(
     .addArgumentStrict("--type", resourceType)
     .getCommand();
 
-  const sudo = isSudo([port]);
-
-  if (sudo) {
-    host.log(`[cmd] sudo -S ${command}`, true);
-    await sudoPortForward(`sudo -S ${command}`);
-  } else {
-    await execWithProgress({
-      command,
-      title: `End port-forward (${appName}/${workloadName})`,
-    }).catch(() => {
-      return Promise.reject(
-        new Error(`End port-forward (${appName}/${workloadName}) fail`)
-      );
-    });
-  }
+  await execWithProgress({
+    command,
+    title: `End port-forward (${appName}/${workloadName})`,
+    sudo: !!isSudo([port]),
+  }).catch(() => {
+    return Promise.reject(
+      new Error(`End port-forward (${appName}/${workloadName}) fail`)
+    );
+  });
 }
 
 export async function syncFile(
