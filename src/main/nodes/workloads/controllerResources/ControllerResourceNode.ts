@@ -197,10 +197,6 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
   }
 
-  public checkConfig() {
-    return Promise.resolve(true);
-  }
-
   public async getStatus(refresh = false) {
     const appNode = this.getAppNode();
     let status = state.getAppState(

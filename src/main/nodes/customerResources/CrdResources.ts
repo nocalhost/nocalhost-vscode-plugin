@@ -27,7 +27,7 @@ export class CrdResources extends ControllerResourceNode {
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      treeItem.contextValue = `workload-crd-resources-dev-info-${status}-${mode}`;
+      treeItem.contextValue = `workload-crd-resources-dev-${status}-${mode}`;
     } catch (e) {
       logger.error("crd-resources getTreeItem");
       logger.error(e);

@@ -21,10 +21,7 @@ export class Job extends ControllerResourceNode {
       const [icon, label] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = await this.checkConfig();
-      treeItem.contextValue = `${treeItem.contextValue}-dev-${
-        check ? "info" : "warn"
-      }-${status}`;
+      treeItem.contextValue = `${treeItem.contextValue}-dev-${status}`;
       if (this.firstRender) {
         this.firstRender = false;
       }
