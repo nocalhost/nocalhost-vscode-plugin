@@ -232,12 +232,12 @@
         },
         {
           "command": "Nocalhost.wakeUp",
-          "when": "viewItem =~ /^devspace-server-sleeping(?!-vcluster)/i",
+          "when": "viewItem =~ /^devspace-server-sleeping(?<!-vcluster)/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.forceSleep",
-          "when": "viewItem =~ /^devspace-server-unsleeping(?!-vcluster)/i",
+          "when": "viewItem =~ /^devspace-server-unsleeping(?<!-vcluster)/i",
           "group": "navigation"
         },
         {
