@@ -268,8 +268,14 @@ export async function getPodNames(
     return podNameArr;
   }
   resArr = (resArr as Array<Resource>).filter((res) => {
-    const status = res.status as ResourceStatus;
-    return status?.phase === "Running" && !!res.metadata["deletionTimestamp"];
+    if (res.status) {
+      const status = res.status as ResourceStatus;
+      if (status.phase === "Running" && res.metadata["deletionTimestamp"]) {
+        return false;
+      }
+    }
+
+    return true;
   });
   podNameArr = (resArr as Array<Resource>).map((res) => {
     return res.metadata.name;
