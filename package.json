@@ -202,12 +202,12 @@
         },
         {
           "command": "Nocalhost.editServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-info-(?!vpn_)/i",
           "group": "inline@1"
         },
         {
           "command": "Nocalhost.writeServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-warn/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-warn-(?!vpn_)/i",
           "group": "inline@1"
         },
         {
@@ -505,7 +505,7 @@
       },
       {
         "command": "Nocalhost.writeServiceConfig",
-        "title": "%Config%",
+        "title": "%viewDevConfig%",
         "icon": "images/icon/setting_warning.svg"
       },
       {

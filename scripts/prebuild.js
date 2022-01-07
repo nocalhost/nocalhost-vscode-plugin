@@ -12,8 +12,6 @@ const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
 if (VERSION) {
   packageJson.version = VERSION;
 
-  delete packageJson.autoUpdate;
-
   require("./updateChangelog");
 } else {
   let env = "alpha";
@@ -35,8 +33,6 @@ if (VERSION) {
 
     packageJson.version = version;
   }
-
-  packageJson.autoUpdate = false;
 }
 
 if (MINIMUNM_VERSION_REQUIREMENT) {
