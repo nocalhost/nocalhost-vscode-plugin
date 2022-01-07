@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "v0.6.2-78-gd84bf0c-alpha",
+  "version": "v0.6.2-82-gd19eb2e-alpha",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",

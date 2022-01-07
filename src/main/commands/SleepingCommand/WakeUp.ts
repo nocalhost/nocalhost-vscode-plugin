@@ -24,6 +24,5 @@ export default class WakeUp implements ICommand {
     );
     service.wakeUpSpace(spaceId);
     console.log(spaceId);
-    // node.parent.accountClusterService.wakeUpSpace(spaceId);
   }
 }

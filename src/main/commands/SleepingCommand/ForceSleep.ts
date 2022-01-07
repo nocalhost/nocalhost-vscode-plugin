@@ -30,7 +30,7 @@ export default class ForceSleep implements ICommand {
       const service = new AccountClusterService(
         clusterInfo as AccountClusterNode
       );
-      service.wakeUpSpace(spaceId);
+      service.sleepSpace(spaceId);
     }
   }
 }
