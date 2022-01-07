@@ -18,5 +18,7 @@ export interface IServiceAccountInfo {
     namespace: string;
     spacename: string;
     spaceOwnType?: "Viewer" | "Owner" | string;
+    isAsleep?: boolean;
+    sleepStatus?: "wakeup" | "asleep";
   }>;
 }

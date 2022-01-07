@@ -48,6 +48,9 @@ import StartProxyModeCommand from "./proxy/StartProxyModeCommand";
 import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
 import EndProxyModeCommand from "./proxy/EndProxyModeCommand";
 
+import WakeUpCommand from "./SleepingCommand/WakeUp";
+import ForceSleepCommand from "./SleepingCommand/ForceSleep";
+
 export default function initCommands(
   context: vscode.ExtensionContext,
   appTreeProvider: NocalhostAppProvider
@@ -109,4 +112,6 @@ export default function initCommands(
   new StartProxyModeCommand(context);
   new ResumeProxyModeCommand(context);
   new EndProxyModeCommand(context);
+  new ForceSleepCommand(context);
+  new WakeUpCommand(context);
 }

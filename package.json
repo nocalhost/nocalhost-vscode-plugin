@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.9",
+  "version": "v0.6.2-78-gd84bf0c-alpha",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -229,6 +229,16 @@
           "command": "Nocalhost.reset",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "2"
+        },
+        {
+          "command": "Nocalhost.wakeUp",
+          "when": "viewItem =~ /^devspace-server-sleeping(?!-vcluster)/i",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.forceSleep",
+          "when": "viewItem =~ /^devspace-server-unsleeping(?!-vcluster)/i",
+          "group": "navigation"
         },
         {
           "command": "Nocalhost.resetDevspace",
@@ -469,6 +479,14 @@
       {
         "command": "Nocalhost.resetDevspace",
         "title": "%Reset%"
+      },
+      {
+        "command": "Nocalhost.wakeUp",
+        "title": "%wakeUp%"
+      },
+      {
+        "command": "Nocalhost.forceSleep",
+        "title": "%forceSleep%"
       },
       {
         "command": "Nocalhost.exec",
@@ -719,5 +737,6 @@
     "vscode-nls": "^5.0.0",
     "yaml": "^1.10.0"
   },
-  "publisher": "nocalhost"
+  "publisher": "nocalhost",
+  "autoUpdate": false
 }

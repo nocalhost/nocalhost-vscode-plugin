@@ -349,7 +349,6 @@ export default class AccountClusterService {
 
     return newAccountCluster;
   };
-
   buildAccountClusterNode = async (): Promise<AccountClusterNode> => {
     await this.login(this.loginInfo);
     const userInfo = await this.getUserInfo();
@@ -563,5 +562,20 @@ export default class AccountClusterService {
       return data;
     }
     throw Error("Fail to fetch user information.");
+  }
+
+  async wakeUpSpace(id: number) {
+    const response = await this.instance.post(`/v2/dev_space/${id}/wakeup`);
+    const flag = response.data.code === 0;
+    if (response.status === 200 && response.data.code === 0) {
+      host.showInformationMessage("wakeUp success");
+    }
+  }
+
+  async sleepSpace(id: number) {
+    const response = await this.instance.post(`/v2/dev_space/${id}/sleep`);
+    if (response.status === 200 && response.data.code === 0) {
+      host.showInformationMessage("sleep success");
+    }
   }
 }

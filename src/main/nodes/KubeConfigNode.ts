@@ -128,6 +128,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
 
           dev.spaceId = ns?.spaceId;
           dev.spaceName = ns?.spacename;
+          dev.isAsleep = ns?.sleepStatus;
 
           if (sa.privilegeType === "CLUSTER_ADMIN") {
             dev.spaceOwnType = "Owner";
@@ -145,6 +146,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
             clusterId: sa.clusterId,
             storageClass: sa.storageClass,
             spaceOwnType: ns.spaceOwnType,
+            isAsleep: ns.sleepStatus,
             devStartAppendCommand: [
               "--priority-class",
               "nocalhost-container-critical",
