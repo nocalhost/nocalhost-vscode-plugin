@@ -62,6 +62,7 @@ export interface BaseNocalhostNode {
   type: string;
   accountClusterService?: AccountClusterService;
   hasInit?: boolean;
+  resourceType?: string;
   parent: BaseNocalhostNode | undefined | null;
   updateData?: (
     init?: boolean,

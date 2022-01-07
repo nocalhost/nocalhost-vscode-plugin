@@ -3,7 +3,6 @@ import * as nhctl from "../../../ctl/nhctl";
 import { get as _get } from "lodash";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
-import { NocalhostServiceConfig } from "../../../service/configService";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import {
   BaseNocalhostNode,
@@ -16,6 +15,7 @@ import {
   IResourceStatus,
 } from "./../../../domain/IK8sResource";
 import { DevSpaceNode } from "../../DevSpaceNode";
+import { VPN } from "../../../domain";
 
 export abstract class ControllerResourceNode extends KubernetesResourceNode {
   public label: string;
@@ -39,7 +39,8 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     public parent: BaseNocalhostNode,
     public resource: IK8sResource,
     public conditionsStatus?: Array<IStatus> | string,
-    public svcProfile?: SvcProfile | undefined | null
+    public svcProfile?: SvcProfile | undefined | null,
+    public vpn?: VPN
   ) {
     super();
     this.label = resource.metadata.name;
@@ -84,47 +85,53 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
 
     let iconPath,
       label = this.label;
-    switch (status) {
-      case "complete":
-      case "running":
-        iconPath = resolveVSCodeUri("status_running.svg");
-        if (portForwardStatus) {
-          iconPath = resolveVSCodeUri("normal_port_forwarding.svg");
-        }
-        break;
-      case "developing":
-        iconPath = resolveVSCodeUri(
-          devModeType === "duplicate"
-            ? "dev_copy.svg"
-            : possess === false
-            ? "dev_other.svg"
-            : "dev_start.svg"
-        );
-        const container = await this.getContainer();
-        if (container) {
-          label = `${this.label}(${container})`;
-        }
-        if (portForwardStatus) {
+
+    if (status.startsWith("vpn")) {
+      iconPath = resolveVSCodeUri(`${status}.svg`);
+    } else {
+      switch (status) {
+        case "complete":
+        case "running":
+          iconPath = resolveVSCodeUri("status_running.svg");
+          if (portForwardStatus) {
+            iconPath = resolveVSCodeUri("normal_port_forwarding.svg");
+          }
+          break;
+        case "developing":
           iconPath = resolveVSCodeUri(
             devModeType === "duplicate"
-              ? "dev_copy_forwarding.svg"
+              ? "dev_copy.svg"
               : possess === false
-              ? "dev_port_forwarding_other.svg"
-              : "dev_port_forwarding.svg"
+              ? "dev_other.svg"
+              : "dev_start.svg"
           );
-        }
-        break;
-      case DeploymentStatus.develop_starting:
-      case DeploymentStatus.starting:
-        iconPath = resolveVSCodeUri("loading.gif");
-        break;
-      case "unknown":
-        iconPath = resolveVSCodeUri("status_unknown.svg");
-        break;
-      case "failed":
-        iconPath = resolveVSCodeUri("status_failed.svg");
-        break;
+          const container = await this.getContainer();
+          if (container) {
+            label = `${this.label}(${container})`;
+          }
+          if (portForwardStatus) {
+            iconPath = resolveVSCodeUri(
+              devModeType === "duplicate"
+                ? "dev_copy_forwarding.svg"
+                : possess === false
+                ? "dev_port_forwarding_other.svg"
+                : "dev_port_forwarding.svg"
+            );
+          }
+          break;
+        case DeploymentStatus.develop_starting:
+        case DeploymentStatus.starting:
+          iconPath = resolveVSCodeUri("loading.gif");
+          break;
+        case "unknown":
+          iconPath = resolveVSCodeUri("status_unknown.svg");
+          break;
+        case "failed":
+          iconPath = resolveVSCodeUri("status_failed.svg");
+          break;
+      }
     }
+
     return [iconPath, label, possess ? `${devModeType}-self` : devModeType];
   }
 
@@ -208,6 +215,20 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
       await this.refreshSvcProfile();
     }
 
+    const { vpn } = this;
+
+    if (vpn) {
+      let vpnStatus: string = "unhealthy";
+
+      if (!vpn.belongsToMe) {
+        vpnStatus = "other";
+      } else if (vpn.status === "healthy") {
+        vpnStatus = vpn.status;
+      }
+
+      return "vpn_" + vpnStatus;
+    }
+
     if (
       this.svcProfile?.develop_status &&
       this.svcProfile?.develop_status !== "NONE"
@@ -218,7 +239,7 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;
-    const conditionsStatus = resourceStatus.conditions;
+    const conditionsStatus = resourceStatus?.conditions;
     if (Array.isArray(conditionsStatus)) {
       let available = false;
       let progressing = false;
@@ -235,6 +256,11 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         status = "starting";
       }
     }
+
+    if (resourceStatus?.replicas === resourceStatus?.readyReplicas) {
+      status = "running";
+    }
+
     if (!status) {
       status = "unknown";
     }

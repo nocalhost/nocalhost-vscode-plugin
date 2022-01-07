@@ -46,9 +46,9 @@ export class CronJob extends ControllerResourceNode {
       this.svcProfile?.develop_status &&
       this.svcProfile?.develop_status !== "NONE"
     ) {
-      return this.svcProfile?.develop_status === "STARTING"
+      return this.svcProfile?.develop_status === "STARTED"
         ? DeploymentStatus.developing
-        : DeploymentStatus.running;
+        : DeploymentStatus.develop_starting;
     }
 
     return "running";

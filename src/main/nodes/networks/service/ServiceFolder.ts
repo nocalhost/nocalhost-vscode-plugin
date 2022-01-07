@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
+import { INhCtlGetResult } from "../../../domain";
 
 import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { SERVICE_FOLDER, ID_SPLIT } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List, Resource } from "../../types/resourceType";
 import { Service } from "./Service";
 
 export class ServiceFolder extends KubernetesResourceFolder {
@@ -27,12 +27,13 @@ export class ServiceFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let resource = state.getData(this.getNodeStateId()) as Resource[];
+    let resource = state.getData(this.getNodeStateId()) as INhCtlGetResult[];
     if (!resource) {
       resource = await this.updateData(true);
     }
     const result: Service[] = resource.map(
-      (item) => new Service(this, item.metadata.name, item.metadata.name, item)
+      ({ info, vpn }) =>
+        new Service(this, info.metadata.name, info.metadata.name, info, vpn)
     );
     return result;
   }

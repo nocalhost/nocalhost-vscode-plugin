@@ -16,7 +16,7 @@ import { RubyDebugProvider } from "./rubyDebugProvider";
 import { IDebugProvider } from "./IDebugProvider";
 import { which } from "../../ctl/shell";
 
-export const support = {
+export const supportLanguage = {
   node: NodeDebugProvider,
   java: JavaDebugProvider,
   golang: GoDebugProvider,
@@ -25,10 +25,10 @@ export const support = {
   ruby: RubyDebugProvider,
 };
 
-type Language = keyof typeof support;
+type Language = keyof typeof supportLanguage;
 
 async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
-  const supportType = Object.keys(support) as Array<Language>;
+  const supportType = Object.keys(supportLanguage) as Array<Language>;
 
   if (!type) {
     type = (await window.showQuickPick(supportType, {
@@ -41,7 +41,7 @@ async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
     return Promise.reject();
   }
 
-  let debugProvider = support[type];
+  let debugProvider = supportLanguage[type];
 
   return new debugProvider();
 }
@@ -57,9 +57,20 @@ async function checkDebuggerDependencies(debugProvider: IDebugProvider) {
 async function checkBinary(debugProvider: IDebugProvider) {
   const { commandName, name } = debugProvider;
 
-  if (!(await which(debugProvider.commandName))) {
+  let defaultCommand = commandName;
+  let isWhich = false;
+
+  if (Array.isArray(commandName)) {
+    defaultCommand = commandName[0];
+
+    isWhich = commandName.map(which).includes(true);
+  } else {
+    isWhich = which(commandName);
+  }
+
+  if (!isWhich) {
     const choice = await window.showErrorMessage(
-      `Failed to find the "${commandName}" binary in PATH. Check PATH, or Install ${name} and reload the window. `,
+      `Failed to find the "${defaultCommand}" binary in PATH. Check PATH, or Install ${name} and reload the window. `,
       "Go to Download Page"
     );
 

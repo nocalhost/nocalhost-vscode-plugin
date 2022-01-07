@@ -58,13 +58,15 @@ async function getPvcListByOther(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
-  workloadName: string
+  workloadName: string,
+  workloadType?: string
 ): Promise<IPvcAttr[]> {
   const pvcs = await nhctl.listPVC({
     kubeConfigPath,
     namespace,
     appName,
     workloadName,
+    workloadType,
   });
 
   return (pvcs || []).map((it: IPvc) => ({
@@ -86,6 +88,7 @@ export default class CleanPvcCommand implements ICommand {
     let clearPvcFn = null;
     let appName: string,
       workloadName: string | undefined,
+      workloadType: string = "",
       namespace: string = "";
     switch (node.type) {
       case NodeType.devSpace:
@@ -97,15 +100,24 @@ export default class CleanPvcCommand implements ICommand {
         pvcs = await getPvcListByDevSpace(node as DevSpaceNode);
         break;
       case NodeType.deployment:
+      case NodeType.crd:
+      case NodeType.statefulSet:
+      case NodeType.job:
+      case NodeType.daemonSet:
+      case NodeType.cronjob:
+      case NodeType.pod:
         const deployNode = node as Deployment;
         (appName = deployNode.getAppName()),
           (namespace = deployNode.getNameSpace()),
+          (workloadType = deployNode.resourceType),
           (workloadName = deployNode.name);
+
         pvcs = await getPvcListByOther(
           node.getKubeConfigPath(),
           namespace,
           appName,
-          workloadName
+          workloadName,
+          workloadType
         );
         clearPvcFn = getCleanPvcOtherFn({
           kubeConfig: node.getKubeConfigPath(),

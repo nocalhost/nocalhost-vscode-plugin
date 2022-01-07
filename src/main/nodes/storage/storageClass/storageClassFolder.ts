@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
+import { INhCtlGetResult } from "../../../domain";
 import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { STORAGE_CLASS_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List, Resource } from "../../types/resourceType";
 import { StorageClass } from "./storageClass";
 
 export class StorageClassFolder extends KubernetesResourceFolder {
@@ -22,12 +22,12 @@ export class StorageClassFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as Resource[];
+    let list = state.getData(this.getNodeStateId()) as INhCtlGetResult[];
     if (!list) {
       list = await this.updateData(true);
     }
     const result: StorageClass[] = list.map(
-      (item) =>
+      ({ info: item }) =>
         new StorageClass(this, item.metadata.name, item.metadata.name, item)
     );
     return result;
