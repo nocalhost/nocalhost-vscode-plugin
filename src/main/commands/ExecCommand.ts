@@ -161,6 +161,7 @@ export default class ExecCommand implements ICommand {
       }
     }
     if (!podName) {
+      host.showInformationMessage("Pods are not ready, Please try later.");
       return;
     }
 
