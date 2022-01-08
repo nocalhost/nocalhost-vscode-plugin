@@ -57,7 +57,7 @@ export default class SignOutCommand implements ICommand {
 
       const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
 
-      this.loginInfo = node.accountClusterNode.loginInfo;
+      this.loginInfo = node.getClusterNode<AccountClusterNode>().loginInfo;
 
       this.dispose();
 

@@ -18,6 +18,7 @@ import { ClustersState } from "../clusters";
 import host from "../host";
 import { getAllNamespace } from "../ctl/nhctl";
 import { DevSpaceNode, getDevSpaceLabel } from "./DevSpaceNode";
+import { LocalClusterNode } from "../clusters/LocalCuster";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
@@ -55,11 +56,11 @@ export class KubeConfigNode extends NocalhostFolderNode {
 
     state.setNode(this.getNodeStateId(), this);
   }
-  get accountClusterNode() {
-    if (this.clusterSource === ClusterSource.server) {
-      return this.rootNode.clusterInfo as AccountClusterNode;
-    }
+
+  getClusterNode<T extends AccountClusterNode | LocalClusterNode>() {
+    return this.rootNode.clusterInfo as T;
   }
+
   get accountClusterService() {
     if (this.clusterSource === ClusterSource.local) {
       return null;
