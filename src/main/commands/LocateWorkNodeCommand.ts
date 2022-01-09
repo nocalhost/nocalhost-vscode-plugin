@@ -68,11 +68,7 @@ export default class LocateWorkNodeCommand {
       }
     );
     const node = state.getNode(child.getNodeStateId());
-    await appTreeView.reveal(node, {
-      expand: true,
-      select: false,
-      focus: true,
-    });
+    await appTreeView.reveal(node);
   }
   async disassociate(associate: Associate.QueryResult) {
     const result = await host.showErrorMessage(
