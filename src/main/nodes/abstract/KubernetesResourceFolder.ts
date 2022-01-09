@@ -2,13 +2,14 @@ import state from "../../state";
 import * as vscode from "vscode";
 import { orderBy } from "lodash";
 import { ControllerResourceNode } from "../workloads/controllerResources/ControllerResourceNode";
-import { IK8sResource } from "../../domain";
 import { NhctlCommand } from "../../ctl/nhctl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
 import { AppNode } from "../AppNode";
 import { BaseNocalhostNode } from "../types/nodeType";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { RefreshData } from "../impl/updateData";
+import { IK8sResource } from "../../domain/IK8sResource";
+import { INhCtlGetResult } from "../../domain";
 
 export abstract class KubernetesResourceFolder
   extends NocalhostFolderNode
@@ -57,9 +58,9 @@ export abstract class KubernetesResourceFolder
     return orderBy(arr, ["name"]);
   }
 
-  public async updateData(isInit?: boolean): Promise<any> {
+  public async updateData(isInit?: boolean): Promise<INhCtlGetResult[]> {
     const appNode = this.getAppNode();
-    const list: IK8sResource[] = (
+    const list: INhCtlGetResult[] =
       (await NhctlCommand.get({
         kubeConfigPath: this.getKubeConfigPath(),
         namespace: appNode.namespace,
@@ -67,8 +68,7 @@ export abstract class KubernetesResourceFolder
         .addArgument(this.resourceType)
         .addArgument("-a", appNode.name)
         .addArgument("-o", "json")
-        .exec()) || []
-    ).map(({ info }: { info: IK8sResource }) => info);
+        .exec()) || [];
 
     state.setData(this.getNodeStateId(), list, isInit);
 

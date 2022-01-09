@@ -9,8 +9,11 @@ import { ContainerConfig } from "../../service/configService";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class PhpDebugProvider extends IDebugProvider {
-  name: string = "Php";
+  name: string = "php";
   requireExtensions: string[] = ["felixfbecker.php-debug"];
+
+  downloadUrl: string = "https://www.php.net/downloads";
+  commandName: string = this.name;
 
   getDebugConfiguration(
     name: string,
