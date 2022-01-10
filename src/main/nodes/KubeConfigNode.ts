@@ -239,16 +239,28 @@ export class KubeConfigNode extends NocalhostFolderNode {
       treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
     }
 
+    const clusterType = this.clusterType;
+
     treeItem.description = "Active";
-    treeItem.iconPath = resolveVSCodeUri("cluster_active.svg");
+    treeItem.iconPath = resolveVSCodeUri(`${clusterType}_active.svg`);
 
     if (this.state.code !== 200) {
       treeItem.tooltip = this.state.info;
-      treeItem.iconPath = resolveVSCodeUri("cluster_warning.svg");
+      treeItem.iconPath = resolveVSCodeUri(`${clusterType}_warning.svg`);
       treeItem.description = "Unable to Connect";
     }
 
     return Promise.resolve(treeItem);
+  }
+
+  get clusterType(): "vcluster" | "cluster" {
+    if (
+      this.clusterSource === ClusterSource.server &&
+      this.rootNode.serviceAccount?.kubeconfigType === "vcluster"
+    ) {
+      return "vcluster";
+    }
+    return "cluster";
   }
 
   getNodeStateId(): string {
