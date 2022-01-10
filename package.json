@@ -413,8 +413,8 @@
       },
       {
         "command": "Nocalhost.LocateWorkNode",
-        "title": "Locate to work node",
-        "icon": "$(collapse-all)"
+        "title": "Locate Current Service",
+        "icon": "$(location)"
       },
       {
         "command": "Nocalhost.installAppSource",
