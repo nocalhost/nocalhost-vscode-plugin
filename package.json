@@ -414,7 +414,7 @@
       {
         "command": "Nocalhost.LocateWorkNode",
         "title": "Locate Current Service",
-        "icon": "$(location)"
+        "icon": "images/icon/locate.svg"
       },
       {
         "command": "Nocalhost.installAppSource",

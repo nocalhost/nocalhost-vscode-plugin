@@ -6,6 +6,7 @@ import { DISASSOCIATE_ASSOCIATE } from "../component/syncManage";
 import { Associate, associateQuery } from "../ctl/nhctl";
 import { appTreeView } from "../extension";
 import host from "../host";
+import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { BaseNocalhostNode } from "../nodes/types/nodeType";
 import state from "../state";
 import logger from "../utils/logger";
@@ -52,9 +53,13 @@ export default class LocateWorkNodeCommand {
 
             const children = await (await parent).getChildren();
 
-            const child = children.find(
-              (item) => item.label.toLowerCase() === label.toLowerCase()
-            );
+            const child = children.find((item) => {
+              if (item instanceof DevSpaceNode) {
+                return item.info.namespace === label.toLowerCase();
+              }
+
+              return item.label.toLowerCase() === label.toLowerCase();
+            });
 
             return child;
           }, Promise.resolve(this.appTreeProvider as Pick<BaseNocalhostNode, "getChildren">))
@@ -67,6 +72,11 @@ export default class LocateWorkNodeCommand {
           });
       }
     );
+    if (!child) {
+      this.disassociate(associate);
+      return;
+    }
+
     const node = state.getNode(child.getNodeStateId());
     await appTreeView.reveal(node);
   }
