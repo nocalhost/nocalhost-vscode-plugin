@@ -143,13 +143,13 @@ export async function getContainer(node: ControllerResourceNode) {
   let serviceConfig = await node.config;
 
   if (!serviceConfig) {
-    serviceConfig = (await ConfigService.getAppConfig(
+    serviceConfig = await ConfigService.getAppConfig<NocalhostServiceConfig>(
       node.getKubeConfigPath(),
       node.getNameSpace(),
       node.getAppName(),
       node.name,
       node.resourceType
-    )) as NocalhostServiceConfig;
+    );
   }
   const containers = (serviceConfig && serviceConfig.containers) || [];
   let container: ContainerConfig;

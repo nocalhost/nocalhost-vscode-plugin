@@ -124,11 +124,11 @@ export class AppNode extends NocalhostFolderNode {
   }
 
   public async freshNocalhostConfig() {
-    this.nocalhostConfig = (await ConfigService.getAppConfig(
+    this.nocalhostConfig = await ConfigService.getAppConfig<NocalhostConfig>(
       this.getKubeConfigPath(),
       this.namespace,
       this.name
-    )) as NocalhostConfig | undefined;
+    );
     return this.nocalhostConfig;
   }
 

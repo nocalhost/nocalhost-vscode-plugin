@@ -1,10 +1,11 @@
 import Axios from "axios";
 import { DebugConfiguration } from "vscode";
+import { Language } from ".";
 
 import { IDebugProvider } from "./IDebugProvider";
 
 export class NodeDebugProvider extends IDebugProvider {
-  name: string = "node";
+  name: Language = "node";
   requireExtensions: string[] = [];
 
   downloadUrl: string = "https://nodejs.org/en/download/";
