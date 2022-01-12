@@ -27,7 +27,6 @@ jobs:
         env:
           VERSION: ${{ env.RELEASE_VERSION }}
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-          VERSION: ${{ env.RELEASE_VERSION }}
         run: |
           yarn install
           yarn build
