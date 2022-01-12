@@ -7,10 +7,21 @@ const packageJson = JSON.parse(
   fs.readFileSync(packageJsonUri, { encoding: "utf8" })
 );
 
-const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
+const { NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
 
-if (VERSION) {
-  packageJson.version = VERSION;
+let version = process.env.VERSION;
+
+if (version) {
+  console.log("> update the version to: ", version);
+
+  const matched = version.match(/\d+\.\d+\.\d+/);
+  if (!matched || matched.length !== 1) {
+    return;
+  }
+
+  version = matched[0];
+
+  packageJson.version = version;
 
   require("./updateChangelog");
 } else {
