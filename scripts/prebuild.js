@@ -22,6 +22,7 @@ if (version) {
   version = matched[0];
 
   packageJson.version = version;
+  packageJson.nhctl.version = version;
 
   require("./updateChangelog");
 } else {
@@ -31,7 +32,6 @@ if (version) {
   if (process.env.CI === "true") {
     env = "beta";
 
-    // execSync("git fetch --depth=30");
     const rev = execSync(`git rev-parse --short HEAD`)
       .toString()
       .split("\n")[0];
