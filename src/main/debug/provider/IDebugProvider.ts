@@ -17,6 +17,9 @@ export abstract class IDebugProvider {
   abstract name: string;
   abstract requireExtensions: Array<string>;
 
+  abstract downloadUrl: string;
+  abstract commandName: string | Array<string>;
+
   abstract getDebugConfiguration(
     name: string,
     port: number,
@@ -31,9 +34,7 @@ export abstract class IDebugProvider {
     return Promise.resolve();
   }
 
-  async checkDebuggerDependent() {
-    return Promise.resolve();
-  }
+  checkExtensionDependency(): Promise<void> | void {}
 
   private async waitForReady(
     port: number,

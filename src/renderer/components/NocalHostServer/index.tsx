@@ -31,7 +31,7 @@ const NocalHostServer: React.FC<IHocatHostServerProps> = (props) => {
         <input
           className="sign-in"
           type="text"
-          placeholder="Username"
+          placeholder="Email Address"
           name="u"
           value={username}
           onChange={(e) => {

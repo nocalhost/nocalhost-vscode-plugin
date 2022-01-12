@@ -5,8 +5,11 @@ import { delay } from "lodash";
 import { IDebugProvider } from "./IDebugProvider";
 
 export class RubyDebugProvider extends IDebugProvider {
-  name: string = "Ruby";
+  name: string = "ruby";
   requireExtensions: string[] = ["rebornix.Ruby"];
+
+  downloadUrl: string = "https://www.ruby-lang.org/en/downloads/";
+  commandName: string = this.name;
 
   getDebugConfiguration(
     name: string,

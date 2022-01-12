@@ -9,13 +9,12 @@ import * as semver from "semver";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
-import { spawn } from "child_process";
 
-import { exec, ExecParam, execWithProgress, getExecCommand } from "../shell";
+import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
 import { get as _get, orderBy } from "lodash";
-import { readYaml, replaceSpacePath } from "../../utils/fileUtil";
+import { readYaml } from "../../utils/fileUtil";
 import * as packageJson from "../../../../package.json";
 import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
@@ -71,8 +70,12 @@ export class NhctlCommand {
   ) {
     return new NhctlCommand(base, baseParams, execParam, args);
   }
-  static get(baseParams?: IBaseCommand<unknown>, ms = GLOBAL_TIMEOUT) {
-    const command = NhctlCommand.create("get", baseParams);
+  static get(
+    baseParams?: IBaseCommand<unknown>,
+    ms = GLOBAL_TIMEOUT,
+    others?: Partial<ExecParam>
+  ) {
+    const command = NhctlCommand.create("get", baseParams, others);
     command.execParam.timeout = ms;
 
     return command;
@@ -520,7 +523,7 @@ export async function install(props: {
   let resourcePath = "";
   if (resourceDir) {
     resourceDir.map((dir) => {
-      resourcePath += ` --resource-path ${dir}`;
+      resourcePath += ` --resource-path "${dir}"`;
     });
   }
   let command = nhctlCommand(
@@ -562,7 +565,7 @@ export async function install(props: {
       namespace,
       `install ${appName} -t ${installType} ${
         values ? "-f " + values : ""
-      } --local-path=${local && local.localPath}  --outer-config=${
+      } --local-path="${local && local.localPath}"  --outer-config=${
         local && local.config
       }`
     );
@@ -661,12 +664,10 @@ export async function associate(
   container?: string,
   params: "--de-associate" | "--migrate" | "" = ""
 ) {
-  const resultDir = replaceSpacePath(dir);
-
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
-    `dev associate ${appName} -s ${resultDir} ${
+    `dev associate ${appName} -s "${dir}" ${
       container ? `-c ${container}` : ""
     } -t ${type} -d ${workLoadName} ${params}`
   );
@@ -766,68 +767,17 @@ export async function devStart(
 }
 
 function isSudo(ports: string[] | undefined) {
-  let sudo = false;
-  if (!ports) {
-    return sudo;
+  if (!ports && !host.isLinux()) {
+    return false;
   }
-  ports.forEach((portStr) => {
+
+  const port = ports.find((portStr) => {
     const localPort = portStr.split(":")[0];
-    if (localPort && Number(localPort) < 1024 && host.isLinux()) {
-      sudo = true;
-    }
+
+    return localPort && Number(localPort) < 1024;
   });
 
-  return sudo;
-}
-
-function sudoPortForward(command: string) {
-  command = getExecCommand(command);
-
-  return new Promise((resolve, reject) => {
-    const env = Object.assign(process.env, { DISABLE_SPINNER: true });
-    logger.info(`[cmd] ${command}`);
-    const proc = spawn(command, [], { shell: true, env });
-    let stdout = "";
-    let stderr = "";
-    let err = `execute command fail: ${command}`;
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        resolve({ stdout, stderr, code });
-      } else {
-        host.log(err, true);
-        reject(new Error(stderr || err));
-      }
-    });
-
-    proc.stdout.on("data", function (data) {
-      stdout += data;
-      host.log("" + data);
-    });
-
-    let password = "";
-
-    proc.stderr.on("data", async function (data) {
-      stderr += data;
-      host.log("" + data);
-      const line = "" + data;
-      if (line.indexOf("Sorry, try again") >= 0) {
-        password =
-          (await host.showInputBox({
-            placeHolder: "please input your password",
-          })) || "";
-      }
-      if (line.indexOf("[sudo] password for") >= 0) {
-        password =
-          (await host.showInputBox({
-            placeHolder: "please input your password",
-          })) || "";
-        proc.stdin.write(`${password}\n`, (err) => {
-          console.log("write " + password);
-        });
-      }
-    });
-  });
+  return port;
 }
 
 export async function startPortForward(
@@ -854,19 +804,12 @@ export async function startPortForward(
     } ${pod ? `--pod ${pod}` : ""}`
   );
 
-  const sudo = isSudo(ports);
-
-  if (sudo) {
-    host.log(`[cmd] ${sudo ? `sudo -S ${command}` : command}`, true);
-
-    return await sudoPortForward(`sudo -S ${command}`);
-  }
-
   const title = `Starting port-forward`;
 
   await execWithProgress({
     title,
     command,
+    sudo: !!isSudo(ports),
   }).catch(() => {
     return Promise.reject(
       new Error(`Port-forward (${appName}/${workloadName}) fail`)
@@ -890,21 +833,15 @@ export async function endPortForward(
     .addArgumentStrict("--type", resourceType)
     .getCommand();
 
-  const sudo = isSudo([port]);
-
-  if (sudo) {
-    host.log(`[cmd] sudo -S ${command}`, true);
-    await sudoPortForward(`sudo -S ${command}`);
-  } else {
-    await execWithProgress({
-      command,
-      title: `End port-forward (${appName}/${workloadName})`,
-    }).catch(() => {
-      return Promise.reject(
-        new Error(`End port-forward (${appName}/${workloadName}) fail`)
-      );
-    });
-  }
+  await execWithProgress({
+    command,
+    title: `End port-forward (${appName}/${workloadName})`,
+    sudo: !!isSudo([port]),
+  }).catch(() => {
+    return Promise.reject(
+      new Error(`End port-forward (${appName}/${workloadName}) fail`)
+    );
+  });
 }
 
 export async function syncFile(
@@ -1193,16 +1130,23 @@ export async function getTemplateConfig(
 export async function listPVC(
   props: IBaseCommand<{
     appName: string;
+    workloadType?: string;
     workloadName?: string;
   }>
 ) {
-  const { kubeConfigPath, namespace, appName, workloadName } = props;
+  const {
+    kubeConfigPath,
+    namespace,
+    appName,
+    workloadName,
+    workloadType,
+  } = props;
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
     `pvc list --app ${appName} ${
-      workloadName ? `--svc ${workloadName}` : ""
-    } --yaml`
+      workloadType ? "-t " + workloadType + " " : ""
+    } ${workloadName ? `--svc ${workloadName}` : ""} --yaml`
   );
   const result = await exec({ command }).promise;
   let pvcs: IPvc[] = [];
@@ -1593,7 +1537,7 @@ export async function associateQuery(param: {
     param.localSync = host.getCurrentRootPath();
   }
 
-  args.push(`--local-sync ${param.localSync}`);
+  args.push(`--local-sync "${param.localSync}"`);
 
   if (param.current === true) {
     args.push("--current");
@@ -1603,4 +1547,26 @@ export async function associateQuery(param: {
     .addArgument("--json")
     .toJson()
     .exec();
+}
+
+export async function vpn(param: {
+  subCommand: "connect" | "disconnect" | "reconnect";
+  workLoadType: string;
+  workLoadName: string;
+  baseParam: IBaseCommand;
+}) {
+  const { subCommand, workLoadName, workLoadType, baseParam } = param;
+
+  let command = NhctlCommand.create(
+    `vpn ${subCommand}`,
+    baseParam
+  ).getCommand();
+
+  return execWithProgress({
+    command,
+    title: `Waiting for vpn ${subCommand} ...`,
+    output: true,
+    args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
+    sudo: !host.isWindow(),
+  });
 }
