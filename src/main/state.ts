@@ -87,6 +87,8 @@ class State {
 
     const refresh = async () => {
       const { token } = action;
+      let time = Date.now();
+
       try {
         const rootNode = this.getNode("Nocalhost") as BaseNocalhostNode;
         if (rootNode) {
@@ -118,6 +120,10 @@ class State {
           await this.startAutoRefresh();
         }, 10 * 1000);
       }
+
+      logger.info(
+        `refresh size:${this.refreshFolderMap.size} time:${Date.now() - time}`
+      );
     };
 
     this.cancellationToken = action;
@@ -245,7 +251,10 @@ class State {
     this.set(appId, appMap);
   }
 
-  async disposeNode(node: Pick<BaseNocalhostNode, "getNodeStateId">) {
+  async disposeNode(
+    node: Pick<BaseNocalhostNode, "getNodeStateId">,
+    deleteRefresh: boolean = true
+  ) {
     const stateId = node.getNodeStateId();
 
     for (let key of this.stateMap.keys()) {
@@ -253,6 +262,10 @@ class State {
         logger.debug("stateMap", key);
         this.stateMap.delete(key);
       }
+    }
+
+    if (!deleteRefresh) {
+      return;
     }
 
     for (let key of this.refreshFolderMap.keys()) {

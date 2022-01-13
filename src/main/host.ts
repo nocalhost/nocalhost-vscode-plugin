@@ -5,8 +5,6 @@ import {
   Progress,
   QuickPickOptions,
 } from "vscode";
-import { execSync } from "child_process";
-import logger from "./utils/logger";
 
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(

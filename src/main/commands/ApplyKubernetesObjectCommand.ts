@@ -7,10 +7,10 @@ import registerCommand from "./register";
 import services, { ServiceResult } from "../common/DataCenter/services";
 import state from "../state";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
-import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import { AppNode } from "../nodes/AppNode";
 import { NocalhostAccountNode } from "../nodes/NocalhostAccountNode";
-import { APPLY_KUBERNETES_OBJECT } from "./constants";
+import { APPLY_KUBERNETES_OBJECT, REFRESH } from "./constants";
+import host from "../host";
 
 export default class ApplyKubernetesObjectCommand implements ICommand {
   command: string = APPLY_KUBERNETES_OBJECT;
@@ -41,16 +41,6 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
           break;
       }
     }
-
-    // if (result.success) {
-    //   if (result.value) {
-    //     vscode.window.showInformationMessage(result.value);
-    //   }
-    // } else {
-    //   if (result.value) {
-    //     vscode.window.showWarningMessage(result.value);
-    //   }
-    // }
   }
 
   private async applyVirtualDocument(target: any): Promise<void> {
@@ -171,14 +161,26 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
 
   private async applyNode(target: AppNode): Promise<void> {
     const kubeConfig: string = target.getKubeConfigPath();
-    const uris: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
+
+    const options: vscode.OpenDialogOptions = {
       canSelectMany: true,
       canSelectFolders: true,
       canSelectFiles: true,
       filters: {
         yaml: ["yaml", "yml"],
       },
-    });
+    };
+
+    if (!host.isMac()) {
+      options.canSelectFiles = false;
+      options.canSelectMany = false;
+      options.filters = {};
+    }
+
+    const uris: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(
+      options
+    );
+
     if (!uris) {
       return;
     }
@@ -189,12 +191,11 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
         location: vscode.ProgressLocation.Notification,
         cancellable: false,
       },
-      async (progress) => {
+      async () => {
         const applyList: Promise<ServiceResult>[] = uris.map(
           async (uri: vscode.Uri) => {
             const path: string = uri.fsPath || uri.path;
             const namespace: string = target.namespace;
-            const isDir: boolean = fs.lstatSync(path).isDirectory();
             return await services.applyKubernetesObject(
               target.name,
               path,
@@ -229,6 +230,11 @@ export default class ApplyKubernetesObjectCommand implements ICommand {
               : `${failureMessage.join(",")}`;
         }
         const success: boolean = failureMessage.length === 0;
+
+        state.disposeNode(target, false);
+
+        vscode.commands.executeCommand(REFRESH, target);
+
         if (success) {
           vscode.window.showInformationMessage(value);
         } else {

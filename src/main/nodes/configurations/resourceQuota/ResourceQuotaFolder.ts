@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
+import { INhCtlGetResult } from "../../../domain";
 
 import state from "../../../state";
 import { KubernetesResourceFolder } from "../../abstract/KubernetesResourceFolder";
 import { RESOURCE_QUOTA_FOLDER } from "../../nodeContants";
 import { BaseNocalhostNode } from "../../types/nodeType";
-import { List, Resource } from "../../types/resourceType";
 import { ResourceQuota } from "./ResourceQuota";
 
 export class ResourceQuotaFolder extends KubernetesResourceFolder {
@@ -24,12 +24,12 @@ export class ResourceQuotaFolder extends KubernetesResourceFolder {
   async getChildren(
     parent?: BaseNocalhostNode
   ): Promise<vscode.ProviderResult<BaseNocalhostNode[]>> {
-    let list = state.getData(this.getNodeStateId()) as Resource[];
+    let list = state.getData(this.getNodeStateId()) as INhCtlGetResult[];
     if (!list) {
       list = await this.updateData(true);
     }
     const result: ResourceQuota[] = list.map(
-      (item) =>
+      ({ info: item }) =>
         new ResourceQuota(this, item.metadata.name, item.metadata.name, item)
     );
     return result;

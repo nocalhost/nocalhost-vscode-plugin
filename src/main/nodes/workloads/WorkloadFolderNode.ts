@@ -10,6 +10,7 @@ import { JobFolder } from "./controllerResources/job/JobFolder";
 import { DaemonSetFolder } from "./controllerResources/daemonSet/DaemonSetFolder";
 import { StatefulSetFolder } from "./controllerResources/statefulSet/StatefulSetFolder";
 import { CronJobFolder } from "./controllerResources/cronJob/CronJobFolder";
+import { CrdFolder } from "../customerResources/CrdFolder";
 
 export class WorkloadFolderNode extends NocalhostFolderNode {
   public label: string = "Workloads";
@@ -68,7 +69,6 @@ export class WorkloadFolderNode extends NocalhostFolderNode {
       default:
         throw new Error("not implement the resource");
     }
-
     return node;
   }
 }
