@@ -18,7 +18,6 @@
   "PortForward": "Port Forward",
   "CleanPvc": "Clear PVC",
   "loadResource": "Load Resource",
-  "Config": "Config",
   "HelmValues": "Helm Values",
   "ViewKubeConfig": "View KubeConfig",
   "AssociateLocalDir": "Associate Local DIR",
@@ -45,7 +44,8 @@
   "disassociateAssociate": "Disassociate from Current Directory",
   "overrideRemoteChang": "Override Remote Changing According to Local Files",
   "resumeSync": "Resume File Sync",
-  "startProxyMode": "Start ProxyMode（Beta）",
+
+  "startProxyMode": "Start ProxyMode(Beta)",
   "resumeProxyMode": "Resume ProxyMode",
   "endProxyMode": "Stop ProxyMode",
   "forceSleep": "Sleep",
