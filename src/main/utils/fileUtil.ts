@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ColorThemeKind } from "vscode";
 import * as ProperLockfile from "proper-lockfile";
 import * as yaml from "yaml";
 import * as vscode from "vscode";
@@ -33,7 +32,7 @@ export function readYamlSync(filePath: string) {
   }
   return yamlObj;
 }
-export async function readYaml(filePath: string) {
+export async function readYaml<T = any>(filePath: string) {
   let yamlObj = null;
 
   const result = await isExist(filePath);
@@ -46,7 +45,7 @@ export async function readYaml(filePath: string) {
   } catch (e) {
     logger.error(e);
   }
-  return yamlObj;
+  return yamlObj as T;
 }
 
 export async function readFile(filePath: string): Promise<string> {

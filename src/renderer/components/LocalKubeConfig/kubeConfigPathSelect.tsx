@@ -1,5 +1,4 @@
 import React from "react";
-import MenuItem from "@material-ui/core/MenuItem";
 import FolderOpenIcon from "@material-ui/icons/FolderOpen";
 import { postMessage, vscode } from "../../utils/index";
 import Select from "../Select";

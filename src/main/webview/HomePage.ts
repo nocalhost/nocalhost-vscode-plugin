@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
-import * as yamlUtils from "yaml";
 import * as os from "os";
 import * as path from "path";
-import NocalhostAppProvider from "../appProvider";
+import * as yaml from "yaml";
 import { SIGN_IN } from "../commands/constants";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
@@ -11,26 +10,18 @@ import host from "../host";
 import { readYaml, readFile, getYamlDefaultContext } from "../utils/fileUtil";
 import state from "../state";
 import { NOCALHOST } from "../constants";
+import { checkKubeconfig, IKubeconfig } from "../ctl/nhctl";
 
 export class HomeWebViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "Nocalhost.Home";
 
-  private _view?: vscode.WebviewView;
-  private appTreeProvider: NocalhostAppProvider;
-  constructor(
-    private readonly _extensionUri: vscode.Uri,
-    appTreeProvider: NocalhostAppProvider
-  ) {
-    this.appTreeProvider = appTreeProvider;
-  }
+  constructor(private readonly _extensionUri: vscode.Uri) {}
 
-  public resolveWebviewView(
+  resolveWebviewView(
     webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext,
+    _: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
-    this._view = webviewView;
-
     webviewView.webview.options = {
       // Allow scripts in the webview
       enableScripts: true,
@@ -53,7 +44,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
             return;
           }
           const filePath = kubeConfigUri[0].fsPath;
-          const yaml = await readYaml(filePath);
+          const yaml = await readYaml<IKubeconfig>(filePath);
           const contexts = yaml.contexts || [];
           webviewView.webview.postMessage({
             type: "kubeConfig",
@@ -69,7 +60,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
           const homeDir = os.homedir();
           try {
             const defaultKubePath = path.resolve(homeDir, ".kube", "config");
-            const yaml = await readYaml(defaultKubePath);
+            const yaml = await readYaml<IKubeconfig>(defaultKubePath);
             if (!yaml) {
               break;
             }
@@ -86,6 +77,19 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
           } catch (e) {
             break;
           }
+        }
+        case "checkKubeconfig": {
+          let { path, str, context } = data.data as {
+            context: string;
+            str?: string;
+            path?: string;
+          };
+
+          webviewView.webview.postMessage({
+            type: "checkKubeconfig",
+            payload: await checkKubeconfig({ path, str }, context),
+          });
+          break;
         }
         case "local": {
           host.showProgressing("Adding ...", async () => {

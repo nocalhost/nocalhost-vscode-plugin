@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "ES2018",
     "outDir": "../out",
     "rootDir": "../",
     "experimentalDecorators": true,
     "noImplicitAny": true,
+    "sourceMap": true,
     "strictNullChecks": false,
     "jsx": "react",
-    "lib": ["dom", "esnext"],
+    "lib": ["DOM", "ESNext"],
     "esModuleInterop": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true

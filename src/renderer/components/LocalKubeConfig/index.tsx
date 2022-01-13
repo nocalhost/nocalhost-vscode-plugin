@@ -1,24 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import { postMessage, vscode } from "../../utils/index";
-import KubeConfigPathSelect from "../kubeConfigPathSelect";
+import KubeConfigPathSelect from "./kubeConfigPathSelect";
 import TabPanel from "../TabPanel";
 import KubeConfigAsText from "../KubeConfigAsText";
 import i18n from "../../i18n";
+import { ICheckResult, KubeconfigValidation } from "./KubeconfigValidation";
+
 interface ILocalKubeConfigProps {
   oldState: {
     [key: string]: any;
   };
-}
-
-interface IContext {
-  context: {
-    cluster: string;
-    namespace: string;
-    user: string;
-  };
-  name: string;
 }
 
 const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
@@ -43,6 +36,8 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
     oldState.localContextOpts
   );
 
+  const [checkResult, setCheckResult] = useState<ICheckResult>();
+
   const handleMessage = (event: MessageEvent) => {
     const data = event.data;
     const { type, payload } = data;
@@ -50,7 +45,7 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
       case "kubeConfig": {
         setLocalPathValue(payload.path || "");
         setLocalContextOpts(
-          (payload.contexts || []).map((it: IContext) => ({
+          (payload.contexts || []).map((it: any) => ({
             label: it.name,
             value: it.name,
           }))
@@ -61,7 +56,7 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
       case "initKubePath-response": {
         const { defaultKubePath, contexts, currentContext } = payload;
         setLocalContextOpts(
-          (contexts || []).map((it: IContext) => ({
+          (contexts || []).map((it: any) => ({
             label: it.name,
             value: it.name,
           }))
@@ -70,10 +65,14 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
         setLocalPathValue(defaultKubePath || "");
         return;
       }
+      case "checkKubeconfig":
+        setCheckResult(payload);
+        return;
       default:
         return;
     }
   };
+
   useEffect(() => {
     window.addEventListener("message", handleMessage);
     if (!localPathValue) {
@@ -87,6 +86,23 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
       window.removeEventListener("message", handleMessage);
     };
   }, []);
+
+  const checkKubeconfig = useCallback(
+    (data: { str?: string; path?: string; context: string }) => {
+      postMessage({
+        type: "checkKubeconfig",
+        data,
+      });
+    },
+    []
+  );
+
+  useEffect(() => {
+    checkKubeconfig({
+      path: localPathValue,
+      context: localContextValue,
+    });
+  }, [localContextValue, localPathValue]);
 
   function submitSelectLocal(props: { context: string; localPath: string }) {
     const { context, localPath } = props;
@@ -120,14 +136,11 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
     });
   }
 
-  const loadLabel = <div>{`${i18n.t("loadKubeConfig")}`}</div>;
-  const pasteLabel = <div>{`${i18n.t("pasteAsText")}`}</div>;
-
   return (
     <div>
       <Tabs
         value={localTab}
-        onChange={(event: React.ChangeEvent<{}>, newValue: string) => {
+        onChange={(_, newValue: string) => {
           vscode.setState({
             ...oldState,
             localTab: newValue,
@@ -137,19 +150,29 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
         variant="fullWidth"
         aria-label="full width tabs"
       >
-        <Tab className="localkube_tab" label={loadLabel} value="select" />
-        <Tab label={pasteLabel} value="paste" />
+        <Tab
+          className="localkube_tab"
+          label={i18n.t("loadKubeConfig")}
+          value="select"
+        />
+        <Tab label={i18n.t("pasteAsText")} value="paste" />
       </Tabs>
       <TabPanel name="select" value={localTab}>
-        <KubeConfigPathSelect
-          onChangeContext={(v: string) => {
-            setLocalContextValue(v);
-          }}
-          onSubmit={submitSelectLocal}
-          currentContext={localContextValue}
-          value={localPathValue}
-          contextOpts={localContextOpts}
-        />
+        <KubeconfigValidation
+          checkResult={checkResult}
+          submit={submitSelectLocal}
+          context={localContextValue}
+        >
+          <KubeConfigPathSelect
+            onChangeContext={(v: string) => {
+              setLocalContextValue(v);
+            }}
+            onSubmit={submitSelectLocal}
+            currentContext={localContextValue}
+            value={localPathValue}
+            contextOpts={localContextOpts}
+          />
+        </KubeconfigValidation>
       </TabPanel>
 
       <TabPanel name="paste" value={localTab}>

@@ -28,7 +28,7 @@ import { IPvc } from "../../domain";
 import { getBooleanValue } from "../../utils/config";
 import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
-import { Associate, IPortForward } from "./type";
+import { Associate, IKubeconfig, IPortForward } from "./type";
 import state from "../../state";
 
 export interface InstalledAppInfo {
@@ -1479,6 +1479,35 @@ export async function kubeconfig(
   logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
 
   return result;
+}
+
+export async function checkKubeconfig(
+  kubeconfig: { str?: string; path?: string },
+  context: string
+) {
+  const args = ["-i", `-c ${context}`, "--kubeconfig"];
+
+  const { str, path } = kubeconfig;
+
+  if (path) {
+    args.push(path);
+  } else {
+    args.push("-");
+  }
+
+  const { promise, proc } = await exec({
+    command: `nhctl kubeconfig check`,
+    args: args,
+  });
+
+  if (str) {
+    proc.stdin.write(str);
+    proc.stdin.end();
+  }
+
+  const { stdout } = await promise;
+
+  return JSON.parse(stdout);
 }
 
 export async function devTerminal(
