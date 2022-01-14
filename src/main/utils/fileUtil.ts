@@ -5,14 +5,19 @@ import * as yaml from "yaml";
 import * as vscode from "vscode";
 import host from "../host";
 import logger from "./logger";
+import { IKubeconfig } from "../ctl/nhctl/type";
 
-export function getYamlDefaultContext(yaml: any) {
-  const contexts = yaml.contexts || [];
-  const currentContext = yaml["current-context"];
-  if (currentContext) {
-    return currentContext;
+export function getKubeconfigContext(
+  kubeconfig: IKubeconfig,
+  contextName?: string
+): IKubeconfig["contexts"][number] | undefined {
+  const contexts = kubeconfig.contexts || [];
+
+  if (!contextName) {
+    contextName = kubeconfig["current-context"];
   }
-  return contexts.length > 0 ? contexts[0].name : null;
+
+  return contexts.find((item) => item.name === contextName);
 }
 
 export function readYamlSync(filePath: string) {

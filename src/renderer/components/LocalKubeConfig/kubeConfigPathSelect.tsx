@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import FolderOpenIcon from "@material-ui/icons/FolderOpen";
-import { postMessage, vscode } from "../../utils/index";
+import { postMessage } from "../../utils/index";
 import Select from "../Select";
 
 interface IOption {
@@ -11,7 +11,6 @@ interface IOption {
 interface IKubeConfigPathSelectProps {
   contextOpts: IOption[];
   value: string;
-  onSubmit: (values: { context: string; localPath: string }) => void;
   currentContext: string;
   onChangeContext: (v: string) => void;
 }
@@ -19,33 +18,23 @@ interface IKubeConfigPathSelectProps {
 const KubeConfigPathSelect: React.FC<IKubeConfigPathSelectProps> = (
   props: IKubeConfigPathSelectProps
 ) => {
-  const {
-    onSubmit,
-    currentContext,
-    onChangeContext,
-    contextOpts,
-    value,
-  } = props;
+  const { currentContext, onChangeContext, contextOpts, value } = props;
 
-  function handleChange(value: string) {
-    onChangeContext(value);
-  }
+  const input = useRef<HTMLInputElement>();
 
-  function submit() {
-    onSubmit({
-      context: currentContext,
-      localPath: value,
-    });
-  }
+  useEffect(() => {
+    input.current.value = value;
+  }, [value]);
+
   return (
-    <div>
+    <>
       <div className="type flex">
         <input
-          value={value}
+          ref={input}
           type="text"
           placeholder="Please select kubeConfig file path"
           name="file"
-        ></input>
+        />
         <span
           onClick={() => {
             postMessage({
@@ -59,19 +48,11 @@ const KubeConfigPathSelect: React.FC<IKubeConfigPathSelectProps> = (
       </div>
       <Select
         value={currentContext}
-        onChange={handleChange}
+        onChange={onChangeContext}
         options={contextOpts}
-        className="kubeConfig-select"
+        className="kubeConfig-select pl-0"
       />
-      <button
-        className="kubeConfig-add-btn"
-        onClick={() => {
-          submit();
-        }}
-      >
-        Add Cluster
-      </button>
-    </div>
+    </>
   );
 };
 

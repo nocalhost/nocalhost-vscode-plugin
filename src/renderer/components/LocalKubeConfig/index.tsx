@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
+
 import { postMessage, vscode } from "../../utils/index";
 import KubeConfigPathSelect from "./kubeConfigPathSelect";
 import TabPanel from "../TabPanel";
-import KubeConfigAsText from "../KubeConfigAsText";
+import KubeConfigAsText from "./KubeConfigAsText";
 import i18n from "../../i18n";
 import { ICheckResult, KubeconfigValidation } from "./KubeconfigValidation";
 
@@ -66,6 +67,7 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
         return;
       }
       case "checkKubeconfig":
+        console.warn("checkKubeconfig res:", payload);
         setCheckResult(payload);
         return;
       default:
@@ -88,7 +90,8 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
   }, []);
 
   const checkKubeconfig = useCallback(
-    (data: { str?: string; path?: string; context: string }) => {
+    (data: { str?: string; path?: string; ns?: string; context: string }) => {
+      console.warn("checkKubeconfig req:", data);
       postMessage({
         type: "checkKubeconfig",
         data,
@@ -102,7 +105,7 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
       path: localPathValue,
       context: localContextValue,
     });
-  }, [localContextValue, localPathValue]);
+  }, [localContextValue]);
 
   function submitSelectLocal(props: { context: string; localPath: string }) {
     const { context, localPath } = props;
@@ -150,24 +153,23 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
         variant="fullWidth"
         aria-label="full width tabs"
       >
-        <Tab
-          className="localkube_tab"
-          label={i18n.t("loadKubeConfig")}
-          value="select"
-        />
+        <Tab label={i18n.t("loadKubeConfig")} value="select" />
         <Tab label={i18n.t("pasteAsText")} value="paste" />
       </Tabs>
       <TabPanel name="select" value={localTab}>
         <KubeconfigValidation
+          checkKubeconfig={(ns) =>
+            checkKubeconfig({
+              path: localPathValue,
+              ns,
+              context: localContextValue,
+            })
+          }
           checkResult={checkResult}
           submit={submitSelectLocal}
-          context={localContextValue}
         >
           <KubeConfigPathSelect
-            onChangeContext={(v: string) => {
-              setLocalContextValue(v);
-            }}
-            onSubmit={submitSelectLocal}
+            onChangeContext={setLocalContextValue}
             currentContext={localContextValue}
             value={localPathValue}
             contextOpts={localContextOpts}
@@ -180,12 +182,8 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
           onSubmit={submitAsText}
           contextValue={serverKubeContextValue}
           value={serverKubeConfigValue}
-          onChangeContextValue={(v) => {
-            setServerKubeContextValue(v);
-          }}
-          onChangeKubeConfig={(v) => {
-            setServerKubeConfigValue(v);
-          }}
+          onChangeContextValue={setServerKubeContextValue}
+          onChangeKubeConfig={setServerKubeConfigValue}
         />
       </TabPanel>
     </div>

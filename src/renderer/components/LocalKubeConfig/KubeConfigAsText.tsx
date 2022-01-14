@@ -1,6 +1,5 @@
 import React from "react";
 import * as yaml from "yaml";
-import { postMessage } from "../../utils/index";
 import Select from "../Select";
 
 interface IKubeConfigAsTextProps {
@@ -68,14 +67,11 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
       ></textarea>
       <Select
         value={contextValue}
-        onChange={(v) => {
-          console.log("vvv", v);
-          onChangeContextValue(v);
-        }}
+        onChange={onChangeContextValue}
         options={options}
         className="kubeConfig-select"
       />
-      <button className="kubeConfig-add-btn" onClick={() => submit()}>
+      <button className="kubeConfig-add-btn" onClick={submit}>
         Add Cluster
       </button>
     </div>

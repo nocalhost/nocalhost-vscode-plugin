@@ -1,61 +1,76 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 export interface ICheckResult {
-  status: "FAIL" | "SUCCESS";
-  tips: string;
+  ns: string;
+  result: {
+    status: "FAIL" | "SUCCESS";
+    tips: string;
+  };
 }
 
-interface IKubeconfigValidation {
+export interface IKubeconfigValidation {
   checkResult: ICheckResult;
   submit: any;
-  context: string;
+  checkKubeconfig: (ns: string) => void;
 }
 
 export const KubeconfigValidation: React.FC<IKubeconfigValidation> = ({
   checkResult,
   submit,
   children,
-  context,
+  checkKubeconfig,
 }) => {
-  const nodes = [children];
+  const input = useRef<HTMLInputElement>();
 
-  if (!checkResult || checkResult.status === "SUCCESS") {
-    nodes.push(
+  useEffect(() => {
+    if (input.current && checkResult.ns) {
+      input.current.value = checkResult.ns;
+    }
+  }, [checkResult]);
+
+  const onBlur = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (event.target.value !== checkResult?.ns) {
+        checkKubeconfig(event.target.value.trim());
+      }
+    },
+    [checkResult?.ns]
+  );
+
+  let node: React.ReactNode;
+
+  if (!checkResult || checkResult.result.status === "SUCCESS") {
+    node = (
       <button className="kubeConfig-add-btn" onClick={submit}>
         Add Cluster
       </button>
     );
   } else {
-    const input = useRef<HTMLInputElement>();
-
-    useEffect(() => {
-      input.current.value = context;
-    }, [input, context]);
-
-    nodes.push(
-      <input
-        ref={input}
-        title="Enter a namespace if you don't have cluster-level role"
-        placeholder="Enter a namespace if you don't have cluster-level role"
-        type="text"
-        defaultValue={context}
-        onChange={(event) => {}}
-        className="kubeConfig-select"
-      />,
-      <div
-        className="kubeConfig-select"
-        style={{
-          color: "rgb(226,37,58)",
-        }}
-      >
-        {checkResult?.tips}
-      </div>,
-
-      <button className="kubeConfig-add-btn" onClick={submit} disabled>
-        Add Cluster
-      </button>
+    node = (
+      <>
+        <input
+          ref={input}
+          placeholder="Enter a namespace if you don't have cluster-level role"
+          type="text"
+          onBlur={onBlur}
+          className="kubeConfig-select p-4"
+        />
+        <div className="kubeConfig-select text-red-500">
+          {checkResult?.result.tips}
+        </div>
+        <button className="kubeConfig-add-btn" onClick={submit} disabled>
+          {/* Add Cluster */}
+          <CircularProgress />
+        </button>
+      </>
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {node}
+    </>
+  );
 };

@@ -1481,33 +1481,20 @@ export async function kubeconfig(
   return result;
 }
 
-export async function checkKubeconfig(
-  kubeconfig: { str?: string; path?: string },
-  context: string
-) {
-  const args = ["-i", `-c ${context}`, "--kubeconfig"];
-
-  const { str, path } = kubeconfig;
-
-  if (path) {
-    args.push(path);
-  } else {
-    args.push("-");
-  }
+export async function checkKubeconfig(kubeconfig: string, context: string) {
+  const args = ["-i", `-c ${context}`, "--kubeconfig", "-"];
 
   const { promise, proc } = await exec({
     command: `nhctl kubeconfig check`,
     args: args,
   });
 
-  if (str) {
-    proc.stdin.write(str);
-    proc.stdin.end();
-  }
+  proc.stdin.write(kubeconfig);
+  proc.stdin.end();
 
   const { stdout } = await promise;
 
-  return JSON.parse(stdout);
+  return JSON.parse(stdout)[0];
 }
 
 export async function devTerminal(
