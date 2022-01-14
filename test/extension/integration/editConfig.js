@@ -2,6 +2,7 @@ const ncp = require("copy-paste");
 const yaml2json = require("js-yaml");
 const json2yaml = require("json2yaml");
 const { tree } = require("../lib/components");
+const assert = require("assert");
 
 const treeItemPath = [
   "",
@@ -13,8 +14,8 @@ const treeItemPath = [
 ];
 
 async function editConfig(page) {
-  const authors = tree.getItem(...treeItemPath);
-  const setting = authors.$(".action-label[title='Port Forward']");
+  const authors = await tree.getItem(...treeItemPath);
+  const setting = await authors.$(".action-label[title='View Dev Configs']");
   await setting.click();
   // copy config
   await page.waitForTimeout(5000);

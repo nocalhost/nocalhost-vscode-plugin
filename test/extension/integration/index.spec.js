@@ -33,9 +33,9 @@ afterEach(async () => {
 
 describe("nhctl", nhctlTests);
 describe("connect", connectTests);
-// describe("install", installTests);
-// describe("portForward", portForwardTests);
-// describe("devMode", devModeTests);
+describe("install", installTests);
+describe("portForward", portForwardTests);
+describe("devMode", devModeTests);
 describe("viewLog", viewLogTests);
 describe("editConfig", editConfigTests);
 
