@@ -1241,19 +1241,25 @@ export async function reconnectSync(
   });
 }
 
+function getArch() {
+  let arch = os.arch();
+
+  if (arch !== "arm64") {
+    arch = "amd64";
+  }
+
+  return arch;
+}
+
 function getNhctlPath(version: string) {
   let name = "";
   let destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
   let binPath = path.resolve(NH_BIN, "nhctl");
 
   if (host.isLinux()) {
-    name = `nhctl-linux-amd64`;
+    name = `nhctl-linux-${getArch()}`;
   } else if (host.isMac()) {
-    if (os.arch() === "arm64") {
-      name = `nhctl-darwin-arm64`;
-    } else {
-      name = `nhctl-darwin-amd64`;
-    }
+    name = `nhctl-darwin-${getArch()}`;
   } else if (host.isWindow()) {
     name = `nhctl-windows-amd64.exe`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
