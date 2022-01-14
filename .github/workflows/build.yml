@@ -19,6 +19,8 @@ jobs:
 
       - name: Check out code into the project's root directory
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 50
 
       - uses: actions/cache@v2
         id: yarn-cache

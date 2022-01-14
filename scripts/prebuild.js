@@ -10,8 +10,12 @@ const packageJson = JSON.parse(
 
 const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
 
-// release
+function getGitResult(cmd) {
+  return execSync(cmd).toString().split("\n")[0];
+}
+
 if (VERSION) {
+  //formatted version number
   const version = semver.valid(VERSION);
 
   if (version) {
@@ -25,16 +29,14 @@ if (VERSION) {
     throw Error(`version Invalid: ${VERSION}`);
   }
 } else {
-  //build
-  let version = execSync(`git describe --tags --abbrev=0`)
-    .toString()
-    .split("\n")[0];
+  // get the latest tag and short commit and environment generation version number
+  let version = getGitResult(`git describe --tags --abbrev=0`);
 
   version = semver.coerce(version);
 
   version = semver.minVersion(`>${version}`);
 
-  const rev = execSync(`git rev-parse --short HEAD`).toString().split("\n")[0];
+  const rev = getGitResult(`git rev-parse --short HEAD`);
 
   const identifier = process.env.CI === "true" ? "beta" : "alpha";
 
@@ -52,6 +54,7 @@ if (MINIMUNM_VERSION_REQUIREMENT) {
 }
 
 if (NHCTL_VERSION) {
+  // test nhctl version
   packageJson.nhctl.version = NHCTL_VERSION;
 }
 
