@@ -11,7 +11,6 @@ export const enum MessageActionType {
 export const enum Commands {
   refresh = "Nocalhost.refresh",
   editServiceConfig = "Nocalhost.editServiceConfig",
-  writeServiceConfig = "Nocalhost.writeServiceConfig",
   startDevMode = "Nocalhost.startDevMode",
   endDevMode = "Nocalhost.endDevMode",
   reset = "Nocalhost.reset",

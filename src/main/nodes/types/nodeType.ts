@@ -12,23 +12,22 @@ export interface AppInfo {
   installed: boolean;
   resourcePath: string;
 }
-
+interface RawConfig {
+  name: string;
+  serviceType: string;
+  gitUrl: string;
+  devContainerImage: string;
+  syncDirs: Array<string>;
+  persistentVolumeDirs: Array<string>;
+  devContainerShell: string;
+  ignores: Array<string>;
+  devContainerResources: any;
+  devPorts: Array<string>;
+  dependPodsLabelSelector: Array<string>;
+  syncFilePattern: [];
+  ignoreFilePattern: [];
+}
 export interface SvcProfile {
-  rawConfig: {
-    name: string;
-    serviceType: string;
-    gitUrl: string;
-    devContainerImage: string;
-    syncDirs: Array<string>;
-    persistentVolumeDirs: Array<string>;
-    devContainerShell: string;
-    ignores: Array<string>;
-    devContainerResources: any;
-    devPorts: Array<string>;
-    dependPodsLabelSelector: Array<string>;
-    syncFilePattern: [];
-    ignoreFilePattern: [];
-  };
   readyReplicas: number;
   annotationsconfigloaded?: boolean;
   cmconfigloaded: boolean;
