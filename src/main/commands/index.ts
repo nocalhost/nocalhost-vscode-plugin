@@ -18,7 +18,6 @@ import StartDevModeCommand from "./StartDevModeCommand";
 import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
-import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
 import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
 import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
@@ -43,6 +42,7 @@ import OpenProjectCommand from "./OpenProjectCommand";
 import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
+import LocateWorkNodeCommand from "./LocateWorkNodeCommand";
 import PortForwardCommand from "./PortForwardCommand/";
 import StartProxyModeCommand from "./proxy/StartProxyModeCommand";
 import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
@@ -57,7 +57,6 @@ export default function initCommands(
   new ClearLocalCluster(context);
   new ClustersViewCommand(context);
   new EditServiceConfigCommand(context);
-  new WriteServiceConfigCommand(context);
 
   new StartDevModeCommand(context);
   new EndDevModeCommand(context);
@@ -100,6 +99,7 @@ export default function initCommands(
 
   new DeleteKubeConfigCommand(context);
   new AddKubeconfig(context);
+  new LocateWorkNodeCommand(context, appTreeProvider);
   new ClearServerCluster(context);
   new InstallAppSourceCommand(context);
 

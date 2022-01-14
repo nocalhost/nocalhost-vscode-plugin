@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { DEPLOYMENT } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";
-import { checkWorkloadConfig } from "../../../../utils/checkConfig";
 import logger from "../../../../utils/logger";
 
 export class Deployment extends ControllerResourceNode {
@@ -16,10 +15,7 @@ export class Deployment extends ControllerResourceNode {
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = checkWorkloadConfig(await this.config);
-      treeItem.contextValue = `${treeItem.contextValue}-dev-${
-        check ? "info" : "warn"
-      }-${status}-${mode}`;
+      treeItem.contextValue = `${treeItem.contextValue}-dev-${status}-${mode}`;
     } catch (e) {
       logger.error("deployment getTreeItem");
       logger.error(e);
