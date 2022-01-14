@@ -136,16 +136,22 @@ export class KubeConfigNode extends NocalhostFolderNode {
     if (this.clusterSource === ClusterSource.server) {
       const { username, baseUrl } = this.accountClusterService.loginInfo;
 
-      treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
+      treeItem.tooltip = `${username} [${baseUrl}]`;
     }
 
     treeItem.description = "Active";
     treeItem.iconPath = resolveVSCodeUri("cluster_active.svg");
 
     if (this.state.code !== 200) {
-      treeItem.tooltip = this.state.info;
       treeItem.iconPath = resolveVSCodeUri("cluster_warning.svg");
-      treeItem.description = "Unable to Connect";
+
+      if (this.state.info !== "No clusters") {
+        treeItem.tooltip = this.state.info;
+        treeItem.description = "Unable to Connect";
+      } else {
+        treeItem.label = this.accountClusterService.loginInfo.username;
+        treeItem.description = "Cluster not found";
+      }
     }
 
     return Promise.resolve(treeItem);
