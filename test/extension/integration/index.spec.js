@@ -6,6 +6,7 @@ const { connectTests } = require("./connect.test");
 const { installTests } = require("./install.test");
 const { portForwardTests } = require("./portForward.test");
 const { devModeTests } = require("./devMode.test");
+const { viewLogTests } = require("./viewLog.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 
@@ -31,9 +32,10 @@ afterEach(async () => {
 
 describe("nhctl", nhctlTests);
 describe("connect", connectTests);
-describe("install", installTests);
-describe("portForward", portForwardTests);
-describe("devMode", devModeTests);
+// describe("install", installTests);
+// describe("portForward", portForwardTests);
+// describe("devMode", devModeTests);
+describe("viewLog", viewLogTests);
 
 module.exports = {
   screenshotPath,

@@ -11,6 +11,11 @@ const contextPatch = [
     when:
       "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
   },
+  {
+    command: "Nocalhost.log",
+    when:
+      "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+  },
 ];
 packageJson.contributes.menus["view/item/context"].forEach((context) => {
   if (
