@@ -32,7 +32,7 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
       const node = new resourceNode(
         this as BaseNocalhostNode,
         info,
-        status.conditions || ((status as unknown) as string),
+        status?.conditions || ((status as unknown) as string),
         description,
         item.vpn
       );
