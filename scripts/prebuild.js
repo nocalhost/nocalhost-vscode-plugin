@@ -11,7 +11,7 @@ const packageJson = JSON.parse(
 const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
 
 function getGitResult(cmd) {
-  return execSync(cmd).toString().split("\n")[0];
+  return execSync(cmd).toString().trim();
 }
 
 if (VERSION) {
