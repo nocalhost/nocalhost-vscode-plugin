@@ -1,21 +1,22 @@
+const puppeteer = require("puppeteer-core");
 const ncp = require("copy-paste");
 const yaml2json = require("js-yaml");
 const json2yaml = require("json2yaml");
-const { tree } = require("../lib/components");
+const { expandTree } = require("./tree");
+const assert = require("assert");
 
-const treeItemPath = [
-  "",
-  "default",
-  "bookinfo",
-  "Workloads",
-  "Deployments",
-  "authors",
-];
+/**
+ *
+ * @param {puppeteer.Page} page
+ */
+async function editConfig(page, browser) {
+  const authors = await expandTree(page);
 
-async function editConfig(page) {
-  const authors = tree.getItem(...treeItemPath);
-  const setting = authors.$(".action-label[title='Port Forward']");
-  await setting.click();
+  const configEditIcon = await authors.$(`a[title="View Dev Configs"]`);
+  console.log(configEditIcon);
+  // modify authors config
+  await configEditIcon.click();
+
   // copy config
   await page.waitForTimeout(5000);
   await page.keyboard.down("Escape");

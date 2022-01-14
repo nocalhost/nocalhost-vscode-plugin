@@ -7,6 +7,7 @@ const { installTests } = require("./install.test");
 const { portForwardTests } = require("./portForward.test");
 const { devModeTests } = require("./devMode.test");
 const { viewLogTests } = require("./viewLog.test");
+const { editConfigTests } = require("./editConfig.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 
@@ -36,6 +37,7 @@ describe("connect", connectTests);
 // describe("portForward", portForwardTests);
 // describe("devMode", devModeTests);
 describe("viewLog", viewLogTests);
+describe("editConfig", editConfigTests);
 
 module.exports = {
   screenshotPath,
