@@ -320,7 +320,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = NOCALHOST;
   public type = ROOT;
   constructor(public parent: BaseNocalhostNode | null) {
-    console.log(AppNode);
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -334,7 +333,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     return new KubeConfigNode({
       id: res.id,
       label: clusterName,
-      parent: this,
       kubeConfigPath: res.kubeConfigPath,
       devSpaceInfos: res.devSpaces,
       applications: res.applications,
@@ -376,7 +374,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         return new KubeConfigNode({
           id: res.id,
           label: res.clusterName,
-          parent: this,
           kubeConfigPath: res.kubeConfigPath,
           devSpaceInfos: res.devSpaces,
           applications: res.applications,

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { orderBy } from "lodash";
-import { HELM_NH_CONFIG_DIR } from "../constants";
+import { HELM_NH_CONFIG_DIR, NOCALHOST } from "../constants";
 import state from "../state";
 import AccountClusterService from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
@@ -8,7 +8,6 @@ import * as path from "path";
 import { ClusterSource } from "../common/define";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
-import { NocalhostRootNode } from "./NocalhostRootNode";
 import { resolveVSCodeUri, writeFileLock } from "../utils/fileUtil";
 import { DevSpaceNode } from "./DevSpaceNode";
 import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
@@ -16,12 +15,13 @@ import { ClustersState } from "../clusters";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
+  parent: BaseNocalhostNode = null;
+
   public type = "KUBECONFIG";
   public devSpaceInfos: IDevSpaceInfo[];
   public userInfo: IUserInfo;
   public clusterSource: ClusterSource;
   public applications: Array<IV2ApplicationInfo>;
-  public parent: NocalhostRootNode;
   public installedApps: {
     name: string;
     type: string;
@@ -33,7 +33,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
   private state: ClustersState;
   constructor(props: {
     id: string;
-    parent: NocalhostRootNode;
     label: string;
     devSpaceInfos: IDevSpaceInfo[];
     applications: Array<IV2ApplicationInfo>;
@@ -46,7 +45,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
     super();
     const {
       id,
-      parent,
       label,
       devSpaceInfos,
       applications,
@@ -56,7 +54,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
       accountClusterService,
     } = props;
     this.id = id;
-    this.parent = parent;
     this.clusterSource = clusterSource;
     this.label =
       label || (devSpaceInfos.length > 0 ? devSpaceInfos[0].namespace : "");
@@ -158,10 +155,10 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   getNodeStateId(): string {
-    return `${this.id}${this.parent.getNodeStateId()}${ID_SPLIT}${this.label}`;
+    return `${this.id}${NOCALHOST}${ID_SPLIT}${this.label}`;
   }
 
-  getParent(): NocalhostRootNode {
-    return this.parent;
+  getParent(): null {
+    return null;
   }
 }

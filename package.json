@@ -119,6 +119,11 @@
           "group": "navigation"
         },
         {
+          "command": "Nocalhost.LocateWorkNode",
+          "when": "extensionActivated && view == Nocalhost",
+          "group": "navigation"
+        },
+        {
           "command": "Nocalhost.addKubeconfig",
           "when": "extensionActivated && view == Nocalhost",
           "group": "navigation"
@@ -400,6 +405,11 @@
         "title": "Add Cluster",
         "alt": "Add Cluster",
         "icon": "$(add)"
+      },
+      {
+        "command": "Nocalhost.LocateWorkNode",
+        "title": "Locate Current Service",
+        "icon": "images/icon/locate.svg"
       },
       {
         "command": "Nocalhost.installAppSource",
