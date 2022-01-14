@@ -137,7 +137,7 @@
       "view/item/context": [
         {
           "command": "Nocalhost.openProject",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
           "group": "developing@1"
         },
         {

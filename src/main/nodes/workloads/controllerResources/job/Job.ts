@@ -57,7 +57,7 @@ export class Job extends ControllerResourceNode {
     }
 
     const resourceStatus = this.resource.status as IResourceStatus;
-    const conditionsStatus = resourceStatus.conditions;
+    const conditionsStatus = resourceStatus?.conditions;
 
     if (Array.isArray(conditionsStatus)) {
       if (conditionsStatus.findIndex(({ type }) => type === "Complete") > -1) {
