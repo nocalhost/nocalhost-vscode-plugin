@@ -27,7 +27,6 @@ jobs:
         env:
           VERSION: ${{ env.RELEASE_VERSION }}
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-          VERSION: ${{ env.RELEASE_VERSION }}
         run: |
           yarn install
           yarn build
@@ -55,11 +54,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Publish To VS Code Extension Marketplace
-        uses: lannonbr/vsce-action@master
-        with:
-          args: "publish -p $VSCE_TOKEN"
-        env:
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+        run: yarn run vsce publish -p ${{ secrets.VSCE_TOKEN }}
 
       - name: Publish openVSX
         run: yarn run ovsx publish nocalhost.vsix -p ${{ secrets.OPEN_VSX_ACCESS_TOKEN }}
