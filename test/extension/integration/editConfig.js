@@ -1,6 +1,5 @@
 const ncp = require("copy-paste");
-const yaml2json = require("js-yaml");
-const json2yaml = require("json2yaml");
+const yaml = require("yaml");
 const { tree } = require("../lib/components");
 const assert = require("assert");
 
@@ -30,10 +29,10 @@ async function editConfig(page) {
   await page.keyboard.up("Meta");
   // const content = await navigator.clipboard.readText();
   const content = ncp.paste();
-  const obj = yaml2json.load(content);
+  const obj = yaml.parse(content);
   obj.containers[0].dev.hotReload = !obj.containers[0].dev.hotReload;
 
-  const str = json2yaml.stringify(obj);
+  const str = yaml.stringify(obj);
   ncp.copy(str);
 
   await page.waitForTimeout(1000);
