@@ -1,6 +1,7 @@
 import {
   DEV_VERSION,
   GLOBAL_TIMEOUT,
+  NH_BIN_NHCTL,
   PLUGIN_TEMP_DIR,
   TEMP_NHCTL_BIN,
 } from "./../../constants";
@@ -28,7 +29,7 @@ import { IPvc } from "../../domain";
 import { getBooleanValue } from "../../utils/config";
 import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
-import { Associate, IKubeconfig, IPortForward } from "./type";
+import { Associate, IPortForward } from "./type";
 import state from "../../state";
 
 export interface InstalledAppInfo {
@@ -48,11 +49,9 @@ export interface AllInstallAppInfo {
 export class NhctlCommand {
   public baseCommand: string = null;
   private argTheTail: string = null;
-  public static nhctlPath: string = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
   private outputMethod: string = "toJson";
+
+  public static nhctlPath: string = NH_BIN_NHCTL;
 
   constructor(
     base: string,
@@ -60,7 +59,7 @@ export class NhctlCommand {
     private execParam: Omit<ExecParam, "command"> = {},
     public args: string[] = []
   ) {
-    this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
+    this.baseCommand = `${NH_BIN_NHCTL} ${base || ""}`;
   }
   static create(
     base: string,
@@ -1444,7 +1443,7 @@ export function nhctlCommand(
   namespace: string,
   baseCommand: string
 ) {
-  const command = `${NhctlCommand.nhctlPath} ${baseCommand} ${
+  const command = `${NH_BIN_NHCTL} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
   } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
   return command;
@@ -1485,7 +1484,7 @@ export async function checkKubeconfig(kubeconfig: string, context: string) {
   const args = ["-i", `-c ${context}`, "--kubeconfig", "-"];
 
   const { promise, proc } = await exec({
-    command: `nhctl kubeconfig check`,
+    command: `${NH_BIN_NHCTL} kubeconfig check`,
     args: args,
   });
 
@@ -1521,7 +1520,7 @@ export async function devTerminal(
   }
 
   const terminal = host.createTerminal({
-    shellPath: NhctlCommand.nhctlPath,
+    shellPath: NH_BIN_NHCTL,
     shellArgs,
     name: `${appName}-${workloadName}`,
     iconPath: {

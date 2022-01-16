@@ -1,13 +1,10 @@
-import React, { useEffect, useRef, useCallback } from "react";
-import CircularProgress from "@material-ui/core/CircularProgress";
-
-export interface ICheckResult {
-  ns: string;
-  result: {
-    status: "FAIL" | "SUCCESS";
-    tips: string;
-  };
-}
+import React, {
+  useEffect,
+  useRef,
+  useCallback,
+  ButtonHTMLAttributes,
+} from "react";
+import { ICheckResult } from "./status";
 
 export interface IKubeconfigValidation {
   checkResult: ICheckResult;
@@ -22,55 +19,57 @@ export const KubeconfigValidation: React.FC<IKubeconfigValidation> = ({
   checkKubeconfig,
 }) => {
   const input = useRef<HTMLInputElement>();
+  const time = useRef<number>(0);
 
   useEffect(() => {
-    if (input.current && checkResult.ns) {
-      input.current.value = checkResult.ns;
+    if (input.current) {
+      input.current.value = checkResult.namespace ?? "";
     }
   }, [checkResult]);
 
-  const onBlur = useCallback(
+  const onChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (event.target.value !== checkResult?.ns) {
-        checkKubeconfig(event.target.value.trim());
+      if (event.target.value !== checkResult?.namespace) {
+        clearTimeout(time.current);
+
+        time.current = window.setTimeout(() => {
+          checkKubeconfig(event.target.value.trim());
+        }, 500);
       }
     },
-    [checkResult?.ns]
+    [checkResult?.namespace]
   );
 
-  let node: React.ReactNode;
+  const isSuccess = checkResult?.result.status === "SUCCESS";
 
-  if (!checkResult || checkResult.result.status === "SUCCESS") {
-    node = (
-      <button className="kubeConfig-add-btn" onClick={submit}>
-        Add Cluster
-      </button>
-    );
-  } else {
-    node = (
-      <>
-        <input
-          ref={input}
-          placeholder="Enter a namespace if you don't have cluster-level role"
-          type="text"
-          onBlur={onBlur}
-          className="kubeConfig-select p-4"
-        />
-        <div className="kubeConfig-select text-red-500">
-          {checkResult?.result.tips}
-        </div>
-        <button className="kubeConfig-add-btn" onClick={submit} disabled>
-          {/* Add Cluster */}
-          <CircularProgress />
-        </button>
-      </>
-    );
+  const attributes: ButtonHTMLAttributes<HTMLButtonElement> = {};
+
+  if (!attributes) {
+    attributes.disabled = true;
   }
 
   return (
     <>
       {children}
-      {node}
+      <input
+        ref={input}
+        placeholder="Enter a namespace if you don't have cluster-level role"
+        type="text"
+        defaultValue={checkResult?.namespace}
+        onChange={onChange}
+        className="kubeConfig-select p-4"
+      />
+      <div className="kubeConfig-select vscode-errorForeground">
+        {isSuccess || checkResult?.result.tips}
+      </div>
+
+      <button
+        {...attributes}
+        className={`kubeConfig-add-btn ${isSuccess ? "" : "opacity-30"}`}
+        onClick={submit}
+      >
+        Add Cluster
+      </button>
     </>
   );
 };

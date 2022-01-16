@@ -20,13 +20,13 @@ const Select: React.FC<ISelectProps> = (props) => {
   }
   return (
     <select
-      value={value}
+      defaultValue={value || "disabled"}
       placeholder="select context"
       onChange={handleChange}
       className={className}
     >
       {!value && (
-        <option disabled selected>
+        <option disabled value="disabled">
           select context
         </option>
       )}

@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import FolderOpenIcon from "@material-ui/icons/FolderOpen";
+
 import { postMessage } from "../../utils/index";
 import Select from "../Select";
+import { ICheckResult, KubeconfigStaus } from "./status";
 
 interface IOption {
   label: string;
@@ -13,17 +15,26 @@ interface IKubeConfigPathSelectProps {
   value: string;
   currentContext: string;
   onChangeContext: (v: string) => void;
+  checkResult: ICheckResult;
 }
 
 const KubeConfigPathSelect: React.FC<IKubeConfigPathSelectProps> = (
   props: IKubeConfigPathSelectProps
 ) => {
-  const { currentContext, onChangeContext, contextOpts, value } = props;
+  const {
+    currentContext,
+    onChangeContext,
+    contextOpts,
+    value,
+    checkResult,
+  } = props;
 
   const input = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    input.current.value = value;
+    if (value) {
+      input.current.value = value;
+    }
   }, [value]);
 
   return (
@@ -39,19 +50,20 @@ const KubeConfigPathSelect: React.FC<IKubeConfigPathSelectProps> = (
           onClick={() => {
             postMessage({
               type: "selectKubeConfig",
-              data: null,
             });
           }}
         >
-          <FolderOpenIcon className="icon"></FolderOpenIcon>
+          <FolderOpenIcon className="icon" />
         </span>
       </div>
-      <Select
-        value={currentContext}
-        onChange={onChangeContext}
-        options={contextOpts}
-        className="kubeConfig-select pl-0"
-      />
+      <KubeconfigStaus staus={checkResult?.result.status || "CHECKING"}>
+        <Select
+          value={currentContext}
+          onChange={onChangeContext}
+          options={contextOpts}
+          className="pl-0"
+        />
+      </KubeconfigStaus>
     </>
   );
 };

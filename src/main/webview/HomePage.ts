@@ -2,18 +2,19 @@ import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
 import * as yaml from "yaml";
+import assert = require("assert");
+import { isObject } from "lodash";
 
 import { SIGN_IN } from "../commands/constants";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
 import { LocalCluster } from "../clusters";
 import host from "../host";
-import { readYaml, readFile, getKubeconfigContext } from "../utils/fileUtil";
+import { readYaml, getKubeconfigContext } from "../utils/fileUtil";
 import state from "../state";
 import { NOCALHOST } from "../constants";
 import { checkKubeconfig, IKubeconfig } from "../ctl/nhctl";
 import logger from "../utils/logger";
-import assert = require("assert");
 
 export class HomeWebViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "Nocalhost.Home";
@@ -35,29 +36,35 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.onDidReceiveMessage(
       async (data: { data: any; type: string }) => {
-        switch (data.type) {
+        const { type } = data;
+
+        switch (type) {
           case "connectServer": {
             vscode.commands.executeCommand(SIGN_IN, data.data);
             break;
           }
           case "selectKubeConfig": {
-            const kubeConfigUri = await host.showSelectFileDialog(
-              "select your kubeConfig"
-            );
-            if (!kubeConfigUri || kubeConfigUri.length < 1) {
-              return;
-            }
-            const filePath = kubeConfigUri[0].fsPath;
+            let { localPath } = data.data ?? {};
 
-            const yaml = await readYaml<IKubeconfig>(filePath);
+            if (!localPath) {
+              const kubeConfigUri = await host.showSelectFileDialog(
+                "select your kubeConfig"
+              );
+              if (!kubeConfigUri || kubeConfigUri.length < 1) {
+                return;
+              }
+              localPath = kubeConfigUri[0].fsPath;
+            }
+
+            const yaml = await readYaml<IKubeconfig>(localPath);
 
             assert(yaml, "The selected kubeconfig is invalid,Please check");
 
             const contexts = yaml.contexts || [];
             webviewView.webview.postMessage({
-              type: "kubeConfig",
+              type,
               payload: {
-                path: filePath,
+                localPath,
                 currentContext: getKubeconfigContext(yaml)?.name,
                 contexts,
               },
@@ -68,13 +75,16 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
             const homeDir = os.homedir();
             try {
               const defaultKubePath = path.resolve(homeDir, ".kube", "config");
+
               const yaml = await readYaml<IKubeconfig>(defaultKubePath);
               if (!yaml) {
                 break;
               }
+
               const contexts = yaml.contexts || [];
+
               webviewView.webview.postMessage({
-                type: "initKubePath-response",
+                type,
                 payload: {
                   defaultKubePath,
                   contexts,
@@ -87,39 +97,28 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
             }
           }
           case "checkKubeconfig":
-            this.checkKubeconfig(data.data, webviewView);
+            this.checkKubeconfig(type, data.data, webviewView);
             break;
 
           case "local": {
             host.showProgressing("Adding ...", async () => {
-              const localData = data.data;
+              let { kubeconfig } = await this.getKubeconfig(data.data);
 
-              const { localPath, kubeConfig, contextName } = localData;
+              let newLocalCluster = await LocalCluster.appendLocalClusterByKubeConfig(
+                kubeconfig
+              );
 
-              let newLocalCluster = null;
-              if (localPath) {
-                const str = await readFile(localPath);
-                newLocalCluster = await LocalCluster.appendLocalClusterByKubeConfig(
-                  str,
-                  contextName
-                );
-              }
-              if (kubeConfig) {
-                newLocalCluster = await LocalCluster.appendLocalClusterByKubeConfig(
-                  kubeConfig
-                );
-              }
               if (newLocalCluster) {
                 await LocalCluster.getLocalClusterRootNode(newLocalCluster);
 
                 const node = state.getNode(NOCALHOST) as NocalhostRootNode;
 
                 node && (await node.addCluster(newLocalCluster));
+
+                await state.refreshTree(true);
+
+                vscode.window.showInformationMessage("Success");
               }
-
-              await state.refreshTree(true);
-
-              vscode.window.showInformationMessage("Success");
             });
             break;
           }
@@ -127,50 +126,68 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
       }
     );
   }
-  private async checkKubeconfig(data: any, webviewView: vscode.WebviewView) {
-    let { path, str, contextName, ns } = data as {
-      contextName: string;
-      str?: string;
-      ns?: string;
-      path?: string;
-    };
-
+  private async getKubeconfig(data: {
+    contextName: string;
+    strKubeconfig?: string;
+    namespace?: string;
+    localPath?: string;
+  }) {
+    const { localPath, strKubeconfig, contextName, namespace } = data;
     let kubeconfig: IKubeconfig;
 
-    if (path) {
-      kubeconfig = await readYaml<IKubeconfig>(path);
+    if (localPath) {
+      kubeconfig = await readYaml<IKubeconfig>(localPath);
     } else {
       try {
-        kubeconfig = yaml.parse(str);
+        kubeconfig = yaml.parse(strKubeconfig);
       } catch (error) {
         logger.error("checkKubeconfig yaml parse", error);
+        return {};
       }
     }
 
-    let payload: { ns: string; result: any };
+    if (!isObject(kubeconfig)) {
+      return {};
+    }
+
+    if (namespace) {
+      kubeconfig.contexts.find(
+        (context) => context.name === contextName
+      ).context.namespace = namespace;
+    }
+
+    kubeconfig["current-context"] = contextName;
+
+    return { kubeconfig, contextName, namespace };
+  }
+
+  private async checkKubeconfig(
+    type: string,
+    data: any,
+    webviewView: vscode.WebviewView
+  ) {
+    let { kubeconfig, namespace, contextName } = await this.getKubeconfig(data);
+
+    let payload: { namespace: string; result: any };
 
     if (!kubeconfig) {
       payload = {
-        ns,
+        namespace,
         result: { status: "FAIL", tips: "Kubeconfig Invalid,Please check" },
       };
     } else {
-      if (!ns) {
-        ns = getKubeconfigContext(kubeconfig, contextName)?.context.namespace;
-      } else {
-        kubeconfig.contexts.find(
-          (context) => context.name === contextName
-        ).context.namespace = ns;
+      if (!namespace) {
+        namespace = getKubeconfigContext(kubeconfig, contextName)?.context
+          .namespace;
       }
-
       payload = {
-        ns,
-        result: await checkKubeconfig(yaml.stringify(str), contextName),
+        namespace,
+        result: await checkKubeconfig(yaml.stringify(kubeconfig), contextName),
       };
     }
 
     webviewView.webview.postMessage({
-      type: "checkKubeconfig",
+      type,
       payload,
     });
   }

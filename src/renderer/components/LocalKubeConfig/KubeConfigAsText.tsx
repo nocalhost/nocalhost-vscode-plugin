@@ -1,23 +1,25 @@
 import React from "react";
 import * as yaml from "yaml";
 import Select from "../Select";
+import { ICheckResult, KubeconfigStaus } from "./status";
 
 interface IKubeConfigAsTextProps {
-  contextValue: string;
+  strContextName: string;
   value: string;
-  onSubmit: (kubeConfigs: string) => void;
   onChangeContextValue: (v: string) => void;
   onChangeKubeConfig: (v: string) => void;
+  checkResult: ICheckResult;
 }
 
 const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
   const {
     value,
-    onSubmit,
-    contextValue,
+    strContextName,
     onChangeContextValue,
     onChangeKubeConfig,
+    checkResult,
   } = props;
+
   const options = React.useMemo(() => {
     if (!value) {
       return;
@@ -30,10 +32,11 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
       }));
       const defaultContext = opts.length > 0 ? opts[0].value : null;
       let hasUpdateContext = true;
-      if (contextValue) {
+      if (strContextName) {
         hasUpdateContext = !Boolean(
           opts.find(
-            (it: { label: string; value: string }) => it.value === contextValue
+            (it: { label: string; value: string }) =>
+              it.value === strContextName
           )
         );
       }
@@ -46,16 +49,9 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
       return [];
     }
   }, [value]);
-  function submit() {
-    if (!value || !contextValue) {
-      return;
-    }
-    const kubeObj = yaml.parse(value);
-    kubeObj["current-context"] = contextValue;
-    onSubmit(yaml.stringify(kubeObj));
-  }
+
   return (
-    <div>
+    <>
       <textarea
         value={value}
         className="type"
@@ -64,17 +60,16 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
         }}
         rows={20}
         placeholder="KubeConfig"
-      ></textarea>
-      <Select
-        value={contextValue}
-        onChange={onChangeContextValue}
-        options={options}
-        className="kubeConfig-select"
       />
-      <button className="kubeConfig-add-btn" onClick={submit}>
-        Add Cluster
-      </button>
-    </div>
+
+      <KubeconfigStaus staus={checkResult?.result.status || "CHECKING"}>
+        <Select
+          value={strContextName}
+          onChange={onChangeContextValue}
+          options={options}
+        />
+      </KubeconfigStaus>
+    </>
   );
 };
 
