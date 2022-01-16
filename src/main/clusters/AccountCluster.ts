@@ -29,6 +29,7 @@ import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
 import * as packageJson from "../../../package.json";
 import { ClustersState } from ".";
+import { kill } from "process";
 
 export class AccountClusterNode {
   userInfo: IUserInfo;
@@ -256,6 +257,8 @@ export default class AccountClusterService {
           loggerDebug.debug("dispose", kubeConfigPath);
 
           proc.kill();
+          kill(1 + proc.pid);
+
           kubeconfigCommand(kubeConfigPath, "remove");
 
           return fs.unlink(kubeConfigPath);
