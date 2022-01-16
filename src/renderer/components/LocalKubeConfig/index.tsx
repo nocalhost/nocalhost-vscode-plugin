@@ -18,7 +18,7 @@ interface ILocalKubeConfigProps {
 
 type LocalTab = "select" | "paste";
 
-const setStaus = (status: ICheckResult["result"]["status"]) => {
+const setStaus = (status: ICheckResult["result"]["status"]): ICheckResult => {
   return {
     namespace: null,
     result: { status, tips: null },
