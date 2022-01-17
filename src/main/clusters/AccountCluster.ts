@@ -257,7 +257,6 @@ export default class AccountClusterService {
           loggerDebug.debug("dispose", kubeConfigPath);
 
           proc.kill();
-          kill(1 + proc.pid);
 
           kubeconfigCommand(kubeConfigPath, "remove");
 
