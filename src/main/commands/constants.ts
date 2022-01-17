@@ -12,7 +12,6 @@ export const SHOW_CONTEXT_GLOBAL = "Nocalhost.showContextGlobal";
 export const RESET_PLUGIN = "Nocalhost.resetPlugin";
 
 export const EDIT_SERVICE_CONFIG = "Nocalhost.editServiceConfig";
-export const WRITE_SERVICE_CONFIG = "Nocalhost.writeServiceConfig";
 
 export const EDIT_APP_CONFIG = "Nocalhost.EditAppConfig";
 

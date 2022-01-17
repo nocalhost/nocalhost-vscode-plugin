@@ -3,6 +3,7 @@ import { difference, orderBy } from "lodash";
 import * as fs from "fs";
 import * as yaml from "yaml";
 
+import { NOCALHOST } from "../constants";
 import state from "../state";
 import AccountClusterService, {
   AccountClusterNode,
@@ -22,10 +23,10 @@ import { LocalClusterNode } from "../clusters/LocalCuster";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
+
   public type = "KUBECONFIG";
   public clusterSource: ClusterSource;
   public applications: Array<IV2ApplicationInfo>;
-  public parent: NocalhostRootNode;
   public installedApps: {
     name: string;
     type: string;
@@ -36,7 +37,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
   private state: ClustersState;
   constructor(
     id: string,
-    parent: NocalhostRootNode,
+    public parent: BaseNocalhostNode,
     label: string,
     public rootNode: IRootNode
   ) {
@@ -45,7 +46,6 @@ export class KubeConfigNode extends NocalhostFolderNode {
     const { applications, clusterSource, kubeConfigPath } = rootNode;
 
     this.id = id;
-    this.parent = parent;
     this.clusterSource = clusterSource;
 
     this.label = label;
@@ -236,7 +236,7 @@ export class KubeConfigNode extends NocalhostFolderNode {
       const { username, baseUrl } = (this.rootNode
         .clusterInfo as AccountClusterNode).loginInfo;
 
-      treeItem.tooltip = `${this.label} [${username} on ${baseUrl}]`;
+      treeItem.tooltip = `${username} [${baseUrl}]`;
     }
 
     const clusterType = this.clusterType;
@@ -247,7 +247,14 @@ export class KubeConfigNode extends NocalhostFolderNode {
     if (this.state.code !== 200) {
       treeItem.tooltip = this.state.info;
       treeItem.iconPath = resolveVSCodeUri(`${clusterType}_warning.svg`);
-      treeItem.description = "Unable to Connect";
+
+      if (this.state.info !== "No clusters") {
+        treeItem.tooltip = this.state.info;
+        treeItem.description = "Unable to Connect";
+      } else {
+        treeItem.label = this.accountClusterService.loginInfo.username;
+        treeItem.description = "Cluster not found";
+      }
     }
 
     return Promise.resolve(treeItem);
@@ -264,10 +271,10 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   getNodeStateId(): string {
-    return `${this.id}${this.parent.getNodeStateId()}${ID_SPLIT}${this.label}`;
+    return `${this.id}${NOCALHOST}${ID_SPLIT}${this.label}`;
   }
 
-  getParent(): NocalhostRootNode {
-    return this.parent;
+  getParent(): null {
+    return null;
   }
 }

@@ -157,7 +157,7 @@ export default class AccountClusterService {
 
     assert(
       Array.isArray(serviceAccounts) && serviceAccounts.length > 0,
-      `no cluster found for ${accountCluster.loginInfo.baseUrl} ${accountCluster.loginInfo.username}`
+      "No clusters"
     );
 
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
