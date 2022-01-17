@@ -10,7 +10,7 @@ import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
 import { LocalCluster } from "../clusters";
 import host from "../host";
-import { readYaml, getKubeconfigContext } from "../utils/fileUtil";
+import { readYaml } from "../utils/fileUtil";
 import state from "../state";
 import { NOCALHOST } from "../constants";
 import { checkKubeconfig, IKubeconfig } from "../ctl/nhctl";
@@ -43,10 +43,13 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
             vscode.commands.executeCommand(SIGN_IN, data.data);
             break;
           }
+          case "parseKubeConfig":
           case "selectKubeConfig": {
-            let { localPath } = data.data ?? {};
+            let { strKubeconfig } = data.data ?? {};
 
-            if (!localPath) {
+            let localPath: string;
+
+            if (type === "selectKubeConfig") {
               const kubeConfigUri = await host.showSelectFileDialog(
                 "select your kubeConfig"
               );
@@ -56,17 +59,22 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
               localPath = kubeConfigUri[0].fsPath;
             }
 
-            const kubeconfig = await readYaml<IKubeconfig>(localPath);
+            const { kubeconfig } = await this.getKubeconfig({
+              path: localPath,
+              strKubeconfig,
+            });
 
-            assert(
-              kubeconfig,
-              "The selected kubeconfig is invalid,Please check"
-            );
+            !strKubeconfig &&
+              assert(
+                kubeconfig,
+                "The selected kubeconfig is invalid,Please check"
+              );
 
             webviewView.webview.postMessage({
               type,
               payload: {
                 path: localPath,
+                strKubeconfig,
                 kubeconfig,
               },
             });
@@ -121,7 +129,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
     );
   }
   private async getKubeconfig(data: {
-    currentContext: string;
+    currentContext?: string;
     strKubeconfig?: string;
     namespace?: string;
     path?: string;
@@ -131,7 +139,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
 
     if (path) {
       kubeconfig = await readYaml<IKubeconfig>(path);
-    } else {
+    } else if (strKubeconfig) {
       try {
         kubeconfig = yaml.parse(strKubeconfig);
       } catch (error) {
@@ -149,8 +157,9 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
         (context) => context.name === currentContext
       ).context.namespace = namespace;
     }
-
-    kubeconfig["current-context"] = currentContext;
+    if (currentContext) {
+      kubeconfig["current-context"] = currentContext;
+    }
 
     return { kubeconfig, currentContext, namespace };
   }

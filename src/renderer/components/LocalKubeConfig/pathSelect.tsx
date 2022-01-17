@@ -1,30 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import FolderOpenIcon from "@material-ui/icons/FolderOpen";
 
-import { postMessage, vscode } from "../../utils/index";
+import { postMessage } from "../../utils/index";
 import Select from "../Select";
 import { ICheckResult, KubeconfigStatus } from "./status";
-import { Validation } from "./Validation";
+import { IKubeconfig, Validation } from "./validation";
 
-interface IKubeconfig {
-  contexts: Array<{ name: string; context: { namespace: string } }>;
-  "current-context": string;
-}
 interface State {
   kubeconfig: IKubeconfig;
   path: string;
 }
+
 const KubeConfigPathSelect: React.FC = () => {
-  const [checkResult, setCheckResult] = useState<ICheckResult["result"]>({
+  const [checkResult, setCheckResult] = useState<ICheckResult>({
     status: "DEFAULT",
   });
-  const oldState = vscode.getState();
+  const [state, setState] = useState<State>();
 
-  const [state, setState] = useState<State>(oldState.selectPath);
-
-  const [namespace, setNamespace] = useState<string>(
-    oldState.selectPathNamespace
-  );
+  const [namespace, setNamespace] = useState<string>();
 
   const input = useRef<HTMLInputElement>();
 
@@ -72,17 +65,10 @@ const KubeConfigPathSelect: React.FC = () => {
     ).context.namespace;
 
     setNamespace(namespace);
-
-    vscode.setState({
-      selectPathNamespace: namespace,
-      selectPath: state,
-    });
   }, [state]);
 
   const handleMessage = (event: MessageEvent) => {
     const { type, payload } = event.data;
-
-    console.warn("handleMessage", type, payload);
 
     switch (type) {
       case "selectKubeConfig":
@@ -125,6 +111,7 @@ const KubeConfigPathSelect: React.FC = () => {
           type="text"
           placeholder="Please select kubeConfig file path"
           name="file"
+          defaultValue={state?.path}
         />
         <span
           onClick={() => {
@@ -138,7 +125,7 @@ const KubeConfigPathSelect: React.FC = () => {
       </div>
       <KubeconfigStatus status={checkResult.status}>
         <Select
-          value={state?.kubeconfig && state.kubeconfig["current-context"]}
+          value={state?.kubeconfig?.["current-context"]}
           onChange={(currentContext) =>
             setState((prevState) => {
               const { kubeconfig } = prevState;

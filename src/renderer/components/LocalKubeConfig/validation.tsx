@@ -7,10 +7,15 @@ import React, {
 import { ICheckResult } from "./status";
 
 export interface IValidation {
-  checkResult: ICheckResult["result"];
+  checkResult: ICheckResult;
   submit: any;
   namespace: string;
   checkKubeconfig: (ns: string) => void;
+}
+
+export interface IKubeconfig {
+  contexts: Array<{ name: string; context: { namespace: string } }>;
+  "current-context": string;
 }
 
 export const Validation: React.FC<IValidation> = ({
@@ -43,6 +48,10 @@ export const Validation: React.FC<IValidation> = ({
   if (!attributes) {
     attributes.disabled = true;
   }
+
+  useEffect(() => {
+    input && (input.current.value = namespace ?? "");
+  }, [namespace]);
 
   return (
     <>

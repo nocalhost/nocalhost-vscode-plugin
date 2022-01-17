@@ -4,15 +4,12 @@ import CloseIcon from "@material-ui/icons/Close";
 import React from "react";
 
 export interface ICheckResult {
-  namespace: string;
-  result: {
-    status: "FAIL" | "SUCCESS" | "CHECKING" | "DEFAULT";
-    tips?: string;
-  };
+  status: "FAIL" | "SUCCESS" | "CHECKING" | "DEFAULT";
+  tips?: string;
 }
 
 export const KubeconfigStatus: React.FC<{
-  status: ICheckResult["result"]["status"];
+  status: ICheckResult["status"];
 }> = ({ status, children }) => {
   let icon: React.ReactNode;
 

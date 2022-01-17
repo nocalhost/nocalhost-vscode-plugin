@@ -18,7 +18,6 @@ const Select: React.FC<ISelectProps> = (props) => {
       onChange(options[selectedIndex].value);
     }
   }
-
   return (
     <select
       defaultValue={(options.length && value) || "disabled"}
