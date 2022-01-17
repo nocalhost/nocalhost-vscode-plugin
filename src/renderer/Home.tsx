@@ -1,26 +1,10 @@
-import React, { useState, useEffect } from "react";
-import FolderOpenIcon from "@material-ui/icons/FolderOpen";
-import RemoveCircleIcon from "@material-ui/icons/RemoveCircle";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
+import React, { useState } from "react";
 import NocalHostTab from "./components/Tab";
-import BottomNavigation from "@material-ui/core/BottomNavigation";
-import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
-import * as yaml from "yaml";
-import { makeStyles } from "@material-ui/core";
-import { postMessage, vscode } from "./utils/index";
+import { vscode } from "./utils/index";
 import TabPanel from "./components/TabPanel";
 import LocalKubeConfig from "./components/LocalKubeConfig";
 import NocalHostServer from "./components/NocalHostServer";
 import i18n from "./i18n";
-// const useStyles = makeStyles({
-//   localToggle: {
-//     height: 35,
-//   },
-//   kubeconfigToggle: {
-//     fontSize: 10,
-//   },
-// });
 
 const options = [
   {

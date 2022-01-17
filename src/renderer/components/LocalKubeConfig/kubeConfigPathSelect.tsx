@@ -3,7 +3,7 @@ import FolderOpenIcon from "@material-ui/icons/FolderOpen";
 
 import { postMessage } from "../../utils/index";
 import Select from "../Select";
-import { ICheckResult, KubeconfigStaus } from "./status";
+import { ICheckResult, KubeconfigStatus } from "./status";
 
 interface IOption {
   label: string;
@@ -56,14 +56,14 @@ const KubeConfigPathSelect: React.FC<IKubeConfigPathSelectProps> = (
           <FolderOpenIcon className="icon" />
         </span>
       </div>
-      <KubeconfigStaus staus={checkResult?.result.status || "CHECKING"}>
+      <KubeconfigStatus status={checkResult?.result.status || "CHECKING"}>
         <Select
           value={currentContext}
           onChange={onChangeContext}
           options={contextOpts}
           className="pl-0"
         />
-      </KubeconfigStaus>
+      </KubeconfigStatus>
     </>
   );
 };

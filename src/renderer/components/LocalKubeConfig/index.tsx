@@ -18,7 +18,7 @@ interface ILocalKubeConfigProps {
 
 type LocalTab = "select" | "paste";
 
-const setStaus = (status: ICheckResult["result"]["status"]): ICheckResult => {
+const setStatus = (status: ICheckResult["result"]["status"]): ICheckResult => {
   return {
     namespace: null,
     result: { status, tips: null },
@@ -43,11 +43,11 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
   const [contextName, setContextName] = useState<string>(oldState.contextName);
 
   const [localContextOpts, setLocalContextOpts] = useState(
-    oldState.localContextOpts
+    oldState.localContextOpts || []
   );
 
   const [checkResult, setCheckResult] = useState<ICheckResult>(
-    setStaus("DEFAULT")
+    setStatus("DEFAULT")
   );
 
   const handleMessage = (event: MessageEvent) => {
@@ -128,10 +128,9 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
     data.namespace = namespace;
 
     vscode.setState({
+      ...oldState,
       ...data,
     });
-
-    console.warn("checkKubeconfig", data);
 
     postMessage({
       type: "checkKubeconfig",
@@ -142,14 +141,14 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
   useEffect(() => {
     if (
       (localTab === "select" && contextName && localPath) ||
-      (localTab === "paste" && strKubeconfig)
+      (localTab === "paste" && strKubeconfig && strContextName)
     ) {
-      setCheckResult(setStaus("CHECKING"));
+      setCheckResult(setStatus("CHECKING"));
       checkKubeconfig();
       return;
     }
 
-    setCheckResult(setStaus("DEFAULT"));
+    setCheckResult(setStatus("DEFAULT"));
   }, [contextName, strContextName, localTab, strKubeconfig, contextName]);
 
   function submitSelectLocal() {

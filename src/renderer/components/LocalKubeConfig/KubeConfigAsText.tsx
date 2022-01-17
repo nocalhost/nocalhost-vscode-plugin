@@ -1,7 +1,7 @@
 import React from "react";
 import * as yaml from "yaml";
 import Select from "../Select";
-import { ICheckResult, KubeconfigStaus } from "./status";
+import { ICheckResult, KubeconfigStatus } from "./status";
 
 interface IKubeConfigAsTextProps {
   strContextName: string;
@@ -62,13 +62,13 @@ const KubeConfigAsText: React.FC<IKubeConfigAsTextProps> = (props) => {
         placeholder="KubeConfig"
       />
 
-      <KubeconfigStaus staus={checkResult?.result.status || "CHECKING"}>
+      <KubeconfigStatus status={checkResult?.result.status || "CHECKING"}>
         <Select
           value={strContextName}
           onChange={onChangeContextValue}
-          options={options}
+          options={options ?? []}
         />
-      </KubeconfigStaus>
+      </KubeconfigStatus>
     </>
   );
 };

@@ -12,26 +12,27 @@ interface ISelectProps {
 
 const Select: React.FC<ISelectProps> = (props) => {
   const { options, value, onChange, className } = props;
-  function handleChange(e: any) {
+  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     if (onChange) {
       const selectedIndex = e.target.options.selectedIndex;
       onChange(options[selectedIndex].value);
     }
   }
+  console.warn("defaultValue", (options.length && value) || "disabled");
   return (
     <select
-      defaultValue={value || "disabled"}
+      defaultValue={(options.length && value) || "disabled"}
       placeholder="select context"
       onChange={handleChange}
       className={className}
     >
-      {!value && (
+      {options.length === 0 && (
         <option disabled value="disabled">
           select context
         </option>
       )}
 
-      {(options || []).map((it) => {
+      {options.map((it) => {
         return (
           <option key={it.value} value={it.value}>
             {it.label}

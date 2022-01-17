@@ -11,9 +11,9 @@ export interface ICheckResult {
   };
 }
 
-export const KubeconfigStaus: React.FC<{
-  staus: ICheckResult["result"]["status"];
-}> = ({ staus, children }) => {
+export const KubeconfigStatus: React.FC<{
+  status: ICheckResult["result"]["status"];
+}> = ({ status, children }) => {
   let icon: React.ReactNode;
 
   const style: React.CSSProperties = {
@@ -23,7 +23,7 @@ export const KubeconfigStaus: React.FC<{
     display: "inline-block",
   };
 
-  switch (staus) {
+  switch (status) {
     case "CHECKING":
       icon = (
         <CircularProgress
