@@ -10,7 +10,7 @@
     "sourceMap": true,
     "strictNullChecks": false,
     "jsx": "react",
-    "lib": ["DOM", "ESNext"],
+    "lib": ["DOM"],
     "esModuleInterop": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true
