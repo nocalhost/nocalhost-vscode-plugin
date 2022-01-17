@@ -42,10 +42,6 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
 
   const [contextName, setContextName] = useState<string>(oldState.contextName);
 
-  const [localContextOpts, setLocalContextOpts] = useState(
-    oldState.localContextOpts || []
-  );
-
   const [checkResult, setCheckResult] = useState<ICheckResult>(
     setStatus("DEFAULT")
   );
@@ -56,25 +52,8 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
     switch (type) {
       case "selectKubeConfig": {
         setLocalPath(payload.localPath || "");
-        setLocalContextOpts(
-          (payload.contexts || []).map((it: any) => ({
-            label: it.name,
-            value: it.name,
-          }))
-        );
+
         setContextName(payload.currentContext);
-        return;
-      }
-      case "initKubePath": {
-        const { defaultKubePath, contexts, currentContext } = payload;
-        setLocalContextOpts(
-          (contexts || []).map((it: any) => ({
-            label: it.name,
-            value: it.name,
-          }))
-        );
-        setContextName(currentContext);
-        setLocalPath(defaultKubePath || "");
         return;
       }
       case "checkKubeconfig":
@@ -87,18 +66,6 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
-
-    if (!localPath) {
-      postMessage({
-        type: "initKubePath",
-        data: null,
-      });
-    } else {
-      postMessage({
-        type: "selectKubeConfig",
-        data: { localPath },
-      });
-    }
 
     () => {
       window.removeEventListener("message", handleMessage);
@@ -138,30 +105,6 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
     });
   };
 
-  useEffect(() => {
-    if (
-      (localTab === "select" && contextName && localPath) ||
-      (localTab === "paste" && strKubeconfig && strContextName)
-    ) {
-      setCheckResult(setStatus("CHECKING"));
-      checkKubeconfig();
-      return;
-    }
-
-    setCheckResult(setStatus("DEFAULT"));
-  }, [contextName, strContextName, localTab, strKubeconfig, contextName]);
-
-  function submitSelectLocal() {
-    postMessage({
-      type: "local",
-      data: {
-        contextName,
-        localPath,
-        namespace: checkResult.namespace,
-      },
-    });
-  }
-
   function submitAsText(kubeConfig: string) {
     postMessage({
       type: "local",
@@ -190,19 +133,7 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
         <Tab label={i18n.t("pasteAsText")} value="paste" />
       </Tabs>
       <TabPanel name="select" value={localTab}>
-        <KubeconfigValidation
-          checkKubeconfig={checkKubeconfig}
-          checkResult={checkResult}
-          submit={submitSelectLocal}
-        >
-          <KubeConfigPathSelect
-            onChangeContext={setContextName}
-            checkResult={checkResult}
-            currentContext={contextName}
-            value={localPath}
-            contextOpts={localContextOpts}
-          />
-        </KubeconfigValidation>
+        <KubeConfigPathSelect />
       </TabPanel>
 
       <TabPanel name="paste" value={localTab}>

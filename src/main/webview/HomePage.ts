@@ -56,45 +56,39 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
               localPath = kubeConfigUri[0].fsPath;
             }
 
-            const yaml = await readYaml<IKubeconfig>(localPath);
+            const kubeconfig = await readYaml<IKubeconfig>(localPath);
 
-            assert(yaml, "The selected kubeconfig is invalid,Please check");
+            assert(
+              kubeconfig,
+              "The selected kubeconfig is invalid,Please check"
+            );
 
-            const contexts = yaml.contexts || [];
             webviewView.webview.postMessage({
               type,
               payload: {
-                localPath,
-                currentContext: getKubeconfigContext(yaml)?.name,
-                contexts,
+                path: localPath,
+                kubeconfig,
               },
             });
             break;
           }
           case "initKubePath": {
             const homeDir = os.homedir();
-            try {
-              const defaultKubePath = path.resolve(homeDir, ".kube", "config");
+            const defaultKubePath = path.resolve(homeDir, ".kube", "config");
 
-              const yaml = await readYaml<IKubeconfig>(defaultKubePath);
-              if (!yaml) {
-                break;
-              }
-
-              const contexts = yaml.contexts || [];
-
-              webviewView.webview.postMessage({
-                type,
-                payload: {
-                  defaultKubePath,
-                  contexts,
-                  currentContext: getKubeconfigContext(yaml)?.name,
-                },
-              });
-              break;
-            } catch (e) {
+            const kubeconfig = await readYaml<IKubeconfig>(defaultKubePath);
+            if (!yaml) {
               break;
             }
+
+            webviewView.webview.postMessage({
+              type,
+              payload: {
+                path: defaultKubePath,
+                kubeconfig,
+              },
+            });
+            break;
           }
           case "checkKubeconfig":
             this.checkKubeconfig(type, data.data, webviewView);
@@ -127,16 +121,16 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
     );
   }
   private async getKubeconfig(data: {
-    contextName: string;
+    currentContext: string;
     strKubeconfig?: string;
     namespace?: string;
-    localPath?: string;
+    path?: string;
   }) {
-    const { localPath, strKubeconfig, contextName, namespace } = data;
+    const { path, strKubeconfig, currentContext, namespace } = data;
     let kubeconfig: IKubeconfig;
 
-    if (localPath) {
-      kubeconfig = await readYaml<IKubeconfig>(localPath);
+    if (path) {
+      kubeconfig = await readYaml<IKubeconfig>(path);
     } else {
       try {
         kubeconfig = yaml.parse(strKubeconfig);
@@ -152,13 +146,13 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
 
     if (namespace) {
       kubeconfig.contexts.find(
-        (context) => context.name === contextName
+        (context) => context.name === currentContext
       ).context.namespace = namespace;
     }
 
-    kubeconfig["current-context"] = contextName;
+    kubeconfig["current-context"] = currentContext;
 
-    return { kubeconfig, contextName, namespace };
+    return { kubeconfig, currentContext, namespace };
   }
 
   private async checkKubeconfig(
@@ -166,24 +160,17 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
     data: any,
     webviewView: vscode.WebviewView
   ) {
-    let { kubeconfig, namespace, contextName } = await this.getKubeconfig(data);
+    let { kubeconfig, currentContext } = await this.getKubeconfig(data);
 
-    let payload: { namespace: string; result: any };
+    let payload: any;
 
     if (!kubeconfig) {
-      payload = {
-        namespace,
-        result: { status: "FAIL", tips: "Kubeconfig Invalid,Please check" },
-      };
+      payload = { status: "FAIL", tips: "Kubeconfig Invalid,Please check" };
     } else {
-      if (!namespace) {
-        namespace = getKubeconfigContext(kubeconfig, contextName)?.context
-          .namespace;
-      }
-      payload = {
-        namespace,
-        result: await checkKubeconfig(yaml.stringify(kubeconfig), contextName),
-      };
+      payload = await checkKubeconfig(
+        yaml.stringify(kubeconfig),
+        currentContext
+      );
     }
 
     webviewView.webview.postMessage({

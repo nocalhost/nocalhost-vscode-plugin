@@ -7,7 +7,7 @@ export interface ICheckResult {
   namespace: string;
   result: {
     status: "FAIL" | "SUCCESS" | "CHECKING" | "DEFAULT";
-    tips: string;
+    tips?: string;
   };
 }
 
