@@ -1,60 +1,56 @@
 const fs = require("fs");
-const { execSync } = require("child_process");
 const path = require("path");
-const semver = require("semver");
+const { execSync } = require("child_process");
 
 const packageJsonUri = path.resolve(__dirname, "../package.json");
 const packageJson = JSON.parse(
   fs.readFileSync(packageJsonUri, { encoding: "utf8" })
 );
 
-const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
+const { NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
 
-function getGitResult(cmd) {
-  return execSync(cmd).toString().trim();
-}
+let version = process.env.VERSION;
 
-if (VERSION) {
-  //formatted version number
-  const version = semver.valid(VERSION);
+if (version) {
+  console.log("> update the version to: ", version);
 
-  if (version) {
-    console.log("> update the version to: ", version);
+  const matched = version.match(/\d+\.\d+\.\d+/);
+  if (!matched || matched.length !== 1) {
+    return;
+  }
+
+  version = matched[0];
+
+  packageJson.version = version;
+  packageJson.nhctl.version = version;
+
+  require("./updateChangelog");
+} else {
+  let env = "alpha";
+  let version = packageJson.version;
+
+  if (process.env.CI === "true") {
+    env = "beta";
+
+    const rev = execSync(`git rev-parse --short HEAD`)
+      .toString()
+      .split("\n")[0];
+
+    packageJson.version = `${version}-${rev}-${env}`;
+  } else {
+    version = execSync(`git describe --tags --always --dirty="-${env}"`)
+      .toString()
+      .split("\n")[0];
 
     packageJson.version = version;
-    packageJson.nhctl.version = version;
-
-    require("./updateChangelog");
-  } else {
-    throw Error(`version Invalid: ${VERSION}`);
   }
-} else {
-  // get the latest tag and short commit and environment generation version number
-  let version = getGitResult(`git describe --tags --abbrev=0`);
-
-  version = semver.coerce(version);
-
-  version = semver.minVersion(`>${version}`);
-
-  const rev = getGitResult(`git rev-parse --short HEAD`);
-
-  const identifier = process.env.CI === "true" ? "beta" : "alpha";
-
-  packageJson.version = `${version}-${identifier}.${rev}`;
 }
 
 if (MINIMUNM_VERSION_REQUIREMENT) {
-  const version = semver.valid(MINIMUNM_VERSION_REQUIREMENT);
-
-  if (version) {
-    packageJson.nhctl.serverVersion = version;
-  } else {
-    throw Error(`serverVersion Invalid: ${MINIMUNM_VERSION_REQUIREMENT}`);
-  }
+  packageJson.nhctl.serverVersion = MINIMUNM_VERSION_REQUIREMENT;
 }
 
 if (NHCTL_VERSION) {
-  // test nhctl version
   packageJson.nhctl.version = NHCTL_VERSION;
 }
 
