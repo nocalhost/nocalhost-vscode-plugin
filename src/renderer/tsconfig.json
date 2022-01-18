@@ -2,9 +2,8 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "node",
-    "target": "es5",
-    "outDir": "../out",
-    "rootDir": "../",
+    "target": "ES6",
+    "rootDir": "../../",
     "experimentalDecorators": true,
     "noImplicitAny": true,
     "strictNullChecks": false,
@@ -14,6 +13,6 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["../src/renderer"],
-  "exclude": ["../node_modules", "../.vscode-test"]
+  "include": ["./"],
+  "exclude": ["node_modules"]
 }

@@ -370,11 +370,4 @@ export class Host implements vscode.Disposable {
   }
 }
 
-let defaultHost: Host = new Host();
-
-if (process.env.puppeteer) {
-  let hostTest = require("./host-test").default;
-  defaultHost = new hostTest();
-}
-
-export default defaultHost;
+export default new Host();

@@ -2,6 +2,7 @@ const puppeteer = require("puppeteer-core");
 const retry = require("async-retry");
 const isPortReachable = require("is-port-reachable");
 const assert = require("assert");
+
 const { start, getWebSocketDebuggerUrl } = require("../");
 const logger = require("../lib/log");
 /**
@@ -24,50 +25,93 @@ async function openNocalhost(page) {
 
 /**
  *
- * @param {puppeteer.Page} page
  * @param {String} text
  * @return {puppeteer.ElementHandle<Element>[]}
  */
-async function setInputBox(page, text) {
-  await page.waitForTimeout(500);
+async function setInputBox(text, clean = false) {
+  let input = await page.waitForSelector(
+    ".quick-input-widget:not([style*='display: none']) .input"
+  );
 
-  let input = await page.waitForSelector(".input.empty");
+  if (clean) {
+    await input.evaluate((input) => (input.value = ""), input);
+  }
 
-  await input.type(text);
+  await input.click();
+  await input.type(text, { delay: 1 });
 
   await page.keyboard.press("Enter");
 }
 
 /**
  *
- * @param {puppeteer.Page} page
- * @param {String} text
+ * @param {string} text
  */
-async function quickPick(page, text) {
-  await page.waitForSelector(".quick-input-list-entry");
-
-  const list = await page.$$(".quick-input-list-entry");
-
-  const nameList = await Promise.all(
-    list.map((item) => item.evaluate((el) => el.textContent))
-  );
-
-  const index = nameList.findIndex((name) => name === text);
-
-  logger.debug("quickPick", text, nameList, index);
-
-  await list[index].click();
-
-  await page.waitForTimeout(500);
+async function selectQuickPickItem(text) {
+  return getQuickPick().select(text);
 }
 
 /**
  *
- * @param {puppeteer.Page} page
+ */
+function getQuickPick() {
+  /**
+   * @returns {Promise<Array<string>>}
+   */
+  async function getItemTexts() {
+    return await Promise.all(
+      (await this.items).map((item) =>
+        item.evaluate((el) => el.querySelector(".label-name").textContent)
+      )
+    );
+  }
+
+  /**
+   *
+   * @returns {Promise<Array<puppeteer.ElementHandle<Element>>}
+   */
+  async function getItems() {
+    await page.waitForSelector(
+      ".quick-input-widget:not([style*='display: none']) .quick-input-list-entry"
+    );
+    return page.$$(".quick-input-list-entry");
+  }
+  return {
+    get items() {
+      return getItems();
+    },
+    /**
+     * @returns {Promise<Array<string>>}
+     */
+    get itemTexts() {
+      return getItemTexts.call(this);
+    },
+    /**
+     *
+     * @param {string|number} key
+     */
+    async select(key) {
+      const items = await this.items;
+      if (typeof key === "number") {
+        await items[key].click();
+      } else {
+        const itemText = await this.itemTexts;
+        const index = itemText.findIndex((name) => name === key);
+
+        await items[index].click();
+      }
+
+      await page.waitForTimeout(1_000);
+    },
+  };
+}
+
+/**
+ *
  * @param {string} message
  * @param {number} timeout
  */
-async function waitForMessage(page, message, timeout) {
+async function waitForMessage(message, timeout) {
   await page.waitForSelector(".notifications-toasts");
 
   return await page.waitForFunction(
@@ -78,104 +122,62 @@ async function waitForMessage(page, message, timeout) {
 /**
  *
  * @param {puppeteer.Page} page
- * @return {puppeteer.ElementHandle<Element>[]}
+ * @param {string[]} childNames
  */
-async function getTreeView(page) {
-  await page.waitForFunction(function () {
-    return (
-      document
-        .querySelector("#workbench\\.parts\\.sidebar")
-        ?.querySelectorAll(".monaco-list-row")?.length > 0
-    );
-  });
-
-  const sidebar = await page.waitForSelector("#workbench\\.parts\\.sidebar");
-
-  const treeView = await sidebar.$$(".monaco-list-row");
-
-  return treeView;
-}
-/**
- *
- * @param {puppeteer.ElementHandle<Element>} node
- * @param {puppeteer.Page} page
- */
-async function unInstall(page, node, name) {
-  await node.hover();
-  await page.click(".codicon-trash");
-
-  await setInputBox(page, "OK");
-
-  await page.waitForFunction(
-    `!document.querySelector(".monaco-list-rows").innerText.includes("${name}")`,
-    { timeout: 1 * 60 * 1000 }
+async function getItemMenu(page, menuName) {
+  const context = await page.waitForSelector(
+    ".context-view.monaco-menu-container.bottom.left"
   );
-}
 
-/**
- *
- * @param {string} name
- * @param {puppeteer.Page} page
- */
-async function isInstallSucceed(page, name) {
-  const app = await page.waitForFunction(
-    function (text) {
-      let list =
-        document
-          .querySelector("#workbench\\.parts\\.sidebar")
-          ?.querySelectorAll(".monaco-list-row") ?? [];
+  const selector = `.action-label[aria-label='${menuName}']`;
 
-      if (list.length) {
-        return Array.from(list).some((node) => {
-          if (node.textContent === text) {
-            const icon = node.querySelector(".custom-view-tree-node-item-icon");
-
-            if (icon) {
-              return icon.getAttribute("style").includes("app_connected.svg");
-            }
-          }
-          return false;
-        });
-      }
-
-      return false;
+  return {
+    /**
+     * @return {puppeteer.ElementHandle<Element>}
+     */
+    get el() {
+      return context
+        .$(selector)
+        .then((el) => el.getProperty("parentNode"))
+        .then((el) => el.getProperty("parentNode"));
     },
-    { timeout: 5 * 60 * 1000 },
-    name
-  );
+    async click() {
+      return (await this.el).evaluate((node) => {
+        window.el = node;
+        console.error("evaluate", node);
 
-  return app;
+        const mouseEvents = document.createEvent("MouseEvents");
+        mouseEvents.initEvent("mouseup", true, true);
+        node.dispatchEvent(mouseEvents);
+      });
+    },
+  };
 }
 /**
  *
- * @param {string} name
- * @param {puppeteer.Page} page
+ * @param {string} port
+ * @param {()=>Promise<void>} callBack
  */
-async function getInstallApp(page, name) {
-  const nameList = await page.evaluate(() => {
-    return Array.from(document.querySelector(".monaco-list-rows").children).map(
-      (item) => item.innerText
-    );
-  });
+async function initialize(port, callBack) {
+  let isStart = !port;
 
-  const index = nameList.indexOf(name);
+  let startPort = port;
 
-  if (index > -1) {
-    return (await getTreeView(page))[index];
+  if (!port) {
+    const { port: newPort } = await start({
+      testsEnv: {
+        puppeteer: true,
+      },
+    });
+    startPort = newPort;
   }
 
-  return null;
-}
-/**
- *
- * @returns {puppeteer.Page}
- */
-async function initialize() {
-  const { pid, port } = await start();
-
-  const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
-    retries: 3,
-  });
+  const browserWSEndpoint = await retry(
+    () => getWebSocketDebuggerUrl(startPort),
+    {
+      retries: 3,
+    }
+  );
 
   const browser = await puppeteer.connect({
     browserWSEndpoint,
@@ -186,7 +188,15 @@ async function initialize() {
 
   await openNocalhost(page);
 
-  return page;
+  if (isStart) {
+    return;
+  }
+
+  global.page = page;
+
+  await callBack();
+
+  newPort && browser.disconnect();
 }
 /**
  *
@@ -207,31 +217,72 @@ const getPage = async (browser) => {
 /**
  *
  * @param {string} port
- * @param {number} timeout
+ * @param {object} data
  */
-async function checkPort(port) {
-  await retry(
-    async () => {
-      const connect = await isPortReachable(port, {
-        host: "127.0.0.1",
-        timeout: 1 * 1000,
-      });
-      assert(connect, "checkPort Error");
-    },
-    { randomize: false, retries: 6 }
-  );
+async function checkPort(
+  port,
+  data = {
+    timeout: 1_000,
+    error: "checkPort Error",
+    condition: (connect) => connect,
+    retryOptions: { randomize: false, retries: 6 },
+  }
+) {
+  await retry(async () => {
+    const connect = await isPortReachable(port, {
+      host: "127.0.0.1",
+      timeout: data.timeout,
+    });
+
+    assert(data.condition(connect), data.error);
+  }, data.retryOptions);
+}
+/**
+ *
+ * @param {Array<puppeteer.KeyInput>} key
+ */
+function getSystemKeys(key) {
+  if (process.platform === "darwin") {
+    switch (key) {
+      case "ControlLeft":
+        return "MetaLeft";
+      default:
+        return key;
+    }
+  } else {
+    switch (key) {
+      case "MetaLeft":
+        return "ControlLeft";
+      default:
+        return key;
+    }
+  }
+}
+/**
+ *
+ * @param  {Array<puppeteer.KeyInput>} keys
+ */
+async function enterShortcutKeys(...keys) {
+  for await (const key of keys) {
+    await page.keyboard.down(key);
+  }
+
+  for await (const key of keys) {
+    await page.keyboard.up(key);
+  }
+
+  await page.waitForTimeout(5_00);
 }
 
 module.exports = {
   openNocalhost,
   getPage,
   waitForMessage,
-  getTreeView,
-  getInstallApp,
-  unInstall,
-  isInstallSucceed,
   initialize,
   setInputBox,
-  quickPick,
+  selectQuickPickItem,
+  getQuickPick,
   checkPort,
+  getItemMenu,
+  enterShortcutKeys,
 };

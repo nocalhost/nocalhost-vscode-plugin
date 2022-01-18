@@ -31,7 +31,7 @@ const extensionConfig = {
         exclude: /node_modules/,
         loader: "ts-loader",
         options: {
-          configFile: path.resolve(__dirname, "./tsconfig.extension.json"),
+          configFile: path.resolve(__dirname, "../src/main/tsconfig.json"),
         },
       },
       {
@@ -77,7 +77,7 @@ const rendererConfig = {
         exclude: /node_modules/,
         loader: "ts-loader",
         options: {
-          configFile: path.resolve(__dirname, "./tsconfig.renderer.json"),
+          configFile: path.resolve(__dirname, "../src/renderer/tsconfig.json"),
         },
       },
     ],
