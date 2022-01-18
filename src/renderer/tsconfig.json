@@ -15,6 +15,6 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["../src/renderer"],
-  "exclude": ["../node_modules", "../.vscode-test"]
+  "include": ["./"],
+  "exclude": ["node_modules"]
 }
