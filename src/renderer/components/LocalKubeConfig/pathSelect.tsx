@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import FolderOpenIcon from "@material-ui/icons/FolderOpen";
 
-import { postMessage } from "../../utils/index";
+import vscode, { postMessage } from "../../utils/index";
 import Select from "../Select";
 import { ICheckResult, KubeconfigStatus } from "./status";
 import { IKubeconfig, Validation } from "./validation";
@@ -9,6 +9,8 @@ import { IKubeconfig, Validation } from "./validation";
 interface State {
   kubeconfig: IKubeconfig;
   path: string;
+  namespace: string;
+  currentContext: string;
 }
 
 const KubeConfigPathSelect: React.FC = () => {
@@ -17,27 +19,30 @@ const KubeConfigPathSelect: React.FC = () => {
   });
   const [state, setState] = useState<State>();
 
-  const [namespace, setNamespace] = useState<string>();
-
   const input = useRef<HTMLInputElement>();
 
   function submit() {
+    const { path, namespace, currentContext } = state;
     postMessage({
       type: "local",
       data: {
-        currentContext: state.kubeconfig["current-context"],
-        path: state.path,
+        currentContext,
+        path,
         namespace,
       },
     });
   }
 
-  const checkKubeconfig = (namespace?: string) => {
-    const { kubeconfig, path } = state;
+  const checkKubeconfig = () => {
+    if (!state) {
+      return;
+    }
+
+    const { path, currentContext, namespace } = state;
 
     let data = {
       path,
-      currentContext: kubeconfig["current-context"],
+      currentContext,
       namespace,
     };
 
@@ -48,24 +53,12 @@ const KubeConfigPathSelect: React.FC = () => {
       data,
     });
 
-    setNamespace(namespace);
+    vscode.setState({
+      KubeConfigPathSelect: data,
+    });
   };
 
-  useEffect(() => {
-    if (!state) {
-      return;
-    }
-
-    checkKubeconfig();
-
-    const currentContext = state.kubeconfig["current-context"];
-
-    const namespace = state.kubeconfig.contexts.find(
-      (item) => item.name === currentContext
-    ).context.namespace;
-
-    setNamespace(namespace);
-  }, [state]);
+  useEffect(checkKubeconfig, [state]);
 
   const handleMessage = (event: MessageEvent) => {
     const { type, payload } = event.data;
@@ -73,11 +66,20 @@ const KubeConfigPathSelect: React.FC = () => {
     switch (type) {
       case "selectKubeConfig":
       case "initKubePath":
-        const { kubeconfig, path }: State = payload;
+        let { kubeconfig, path, currentContext, namespace }: State = payload;
 
-        setState({ kubeconfig, path });
+        if (!currentContext) {
+          currentContext = kubeconfig?.["current-context"];
+        }
+        if (!namespace) {
+          namespace = kubeconfig?.contexts.find(
+            (item) => item.name === currentContext
+          )?.context?.namespace;
+        }
 
-        input && (input.current.value = path);
+        setState({ kubeconfig, path, currentContext, namespace });
+
+        input?.current && (input.current.value = path);
 
         return;
       case "checkKubeconfig":
@@ -91,6 +93,7 @@ const KubeConfigPathSelect: React.FC = () => {
 
     postMessage({
       type: "initKubePath",
+      data: vscode.getState("KubeConfigPathSelect"),
     });
 
     () => {
@@ -102,8 +105,12 @@ const KubeConfigPathSelect: React.FC = () => {
     <Validation
       checkResult={checkResult}
       submit={submit}
-      namespace={namespace}
-      checkKubeconfig={checkKubeconfig}
+      namespace={state?.namespace}
+      onChangeNamespace={(namespace) => {
+        setState((prevState) => {
+          return { ...prevState, namespace };
+        });
+      }}
     >
       <div className="type flex">
         <input
@@ -125,17 +132,14 @@ const KubeConfigPathSelect: React.FC = () => {
       </div>
       <KubeconfigStatus status={checkResult.status}>
         <Select
-          value={state?.kubeconfig?.["current-context"]}
+          value={state?.currentContext}
           onChange={(currentContext) =>
             setState((prevState) => {
-              const { kubeconfig } = prevState;
-              kubeconfig["current-context"] = currentContext;
-
-              return { ...prevState };
+              return { ...prevState, currentContext };
             })
           }
           options={
-            state?.kubeconfig.contexts.map((item) => {
+            state?.kubeconfig?.contexts.map((item) => {
               return {
                 label: item.name,
                 value: item.name,

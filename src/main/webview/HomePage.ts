@@ -45,7 +45,8 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
           }
           case "parseKubeConfig":
           case "selectKubeConfig": {
-            let { strKubeconfig } = data.data ?? {};
+            const payload = data.data ?? {};
+            let { strKubeconfig } = payload;
 
             let localPath: string;
 
@@ -64,15 +65,10 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
               strKubeconfig,
             });
 
-            !strKubeconfig &&
-              assert(
-                kubeconfig,
-                "The selected kubeconfig is invalid,Please check"
-              );
-
             webviewView.webview.postMessage({
               type,
               payload: {
+                ...payload,
                 path: localPath,
                 strKubeconfig,
                 kubeconfig,
@@ -81,17 +77,22 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
             break;
           }
           case "initKubePath": {
-            const homeDir = os.homedir();
-            const defaultKubePath = path.resolve(homeDir, ".kube", "config");
+            const payload = data.data ?? {};
 
-            const kubeconfig = await readYaml<IKubeconfig>(defaultKubePath);
-            if (!yaml) {
-              break;
+            let { path: defaultKubePath } = payload;
+
+            let kubeconfig: IKubeconfig;
+            if (defaultKubePath) {
+              kubeconfig = await readYaml<IKubeconfig>(defaultKubePath);
+            } else {
+              defaultKubePath = path.resolve(os.homedir(), ".kube", "config");
+              kubeconfig = await readYaml<IKubeconfig>(defaultKubePath);
             }
 
             webviewView.webview.postMessage({
               type,
               payload: {
+                ...payload,
                 path: defaultKubePath,
                 kubeconfig,
               },
@@ -153,9 +154,13 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
     }
 
     if (namespace) {
-      kubeconfig.contexts.find(
+      const context = kubeconfig.contexts.find(
         (context) => context.name === currentContext
-      ).context.namespace = namespace;
+      )?.context;
+
+      if (context) {
+        context.namespace = namespace;
+      }
     }
     if (currentContext) {
       kubeconfig["current-context"] = currentContext;

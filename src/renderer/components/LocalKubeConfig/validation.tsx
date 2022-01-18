@@ -10,7 +10,7 @@ export interface IValidation {
   checkResult: ICheckResult;
   submit: any;
   namespace: string;
-  checkKubeconfig: (ns: string) => void;
+  onChangeNamespace: (namespace: string) => void;
 }
 
 export interface IKubeconfig {
@@ -23,7 +23,7 @@ export const Validation: React.FC<IValidation> = ({
   submit,
   children,
   namespace,
-  checkKubeconfig,
+  onChangeNamespace,
 }) => {
   const input = useRef<HTMLInputElement>();
   const time = useRef<number>(0);
@@ -34,7 +34,7 @@ export const Validation: React.FC<IValidation> = ({
         clearTimeout(time.current);
 
         time.current = window.setTimeout(() => {
-          checkKubeconfig(event.target.value.trim());
+          onChangeNamespace(event.target.value.trim());
         }, 500);
       }
     },
@@ -45,7 +45,7 @@ export const Validation: React.FC<IValidation> = ({
 
   const attributes: ButtonHTMLAttributes<HTMLButtonElement> = {};
 
-  if (!attributes) {
+  if (!isSuccess) {
     attributes.disabled = true;
   }
 

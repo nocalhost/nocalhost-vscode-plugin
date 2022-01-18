@@ -2,25 +2,17 @@ import React, { useState } from "react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 
-import { vscode } from "../../utils/index";
+import { getState, setState } from "../../utils/index";
 import KubeConfigPathSelect from "./pathSelect";
 import TabPanel from "../TabPanel";
 import KubeConfigAsText from "./asText";
 import i18n from "../../i18n";
 
-interface ILocalKubeConfigProps {
-  oldState: {
-    [key: string]: any;
-  };
-}
-
 type LocalTab = "select" | "paste";
 
-const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
-  const { oldState } = props;
-
+const LocalKubeConfig: React.FC = () => {
   const [localTab, setLocalTab] = useState<LocalTab>(
-    oldState.localTab || "select"
+    getState("localTab") || "select"
   );
 
   return (
@@ -28,12 +20,9 @@ const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
       <Tabs
         value={localTab}
         onChange={(_, newValue: string) => {
-          vscode.setState({
-            ...oldState,
-            localTab: newValue,
-          });
-
           setLocalTab(newValue as LocalTab);
+
+          setState("localTab", newValue);
         }}
         variant="fullWidth"
         aria-label="full width tabs"
