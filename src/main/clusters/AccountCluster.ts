@@ -130,9 +130,9 @@ export default class AccountClusterService {
 
     if (!Array.isArray(serviceAccounts) || serviceAccounts.length === 0) {
       const msg = `no cluster found for ${newAccountCluser.loginInfo.baseUrl} ${newAccountCluser.loginInfo.username}`;
-
       logger.error(msg);
-      throw new Error(msg);
+
+      throw Error("No clusters");
     }
 
     const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();

@@ -17,10 +17,7 @@ export class CronJob extends ControllerResourceNode {
       const [icon, label] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = await this.checkConfig();
-      treeItem.contextValue = `${treeItem.contextValue}-dev-${
-        check ? "info" : "warn"
-      }-${status}`;
+      treeItem.contextValue = `${treeItem.contextValue}-dev-${status}`;
     } catch (e) {
       logger.error("cronjob getTreeItem");
       logger.error(e);
