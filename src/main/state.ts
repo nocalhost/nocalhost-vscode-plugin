@@ -87,8 +87,6 @@ class State {
 
     const refresh = async () => {
       const { token } = action;
-      let time = Date.now();
-
       try {
         const rootNode = this.getNode("Nocalhost") as BaseNocalhostNode;
         if (rootNode) {
