@@ -5,7 +5,6 @@ const retry = require("async-retry");
 const { tree, terminal, dialog, file } = require("../lib/components");
 const logger = require("../lib/log");
 const { initialize, enterShortcutKeys, setInputBox } = require("./index");
-const { installDemo } = require("./install");
 const { add, stop, getPortForwardPort } = require("./portForward");
 
 const treeItemPath = [
@@ -88,6 +87,10 @@ async function checkSyncCompletion() {
  * @description
  */
 async function runCommand() {
+  await terminal.sendText(
+    "npm config set registry http://mirrors.cloud.tencent.com/npm/ \n"
+  );
+
   await terminal.sendText("./run.sh \n");
 
   const port = await add();
