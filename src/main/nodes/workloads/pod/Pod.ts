@@ -19,10 +19,9 @@ export class Pod extends ControllerResourceNode {
       const [icon, label, mode] = await this.getIconAndLabelByStatus(status);
       treeItem.iconPath = icon;
       treeItem.label = label;
-      const check = await this.checkConfig();
-      treeItem.contextValue = `${treeItem.contextValue}-${dev ? "dev-" : ""}${
-        check ? "info" : "warn"
-      }-${status}-${mode}`;
+      treeItem.contextValue = `${treeItem.contextValue}-${
+        dev ? "dev-" : ""
+      }info-${status}-${mode}`;
     } catch (e) {
       logger.error("pod getTreeItem");
       logger.error(e);

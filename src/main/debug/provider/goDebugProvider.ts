@@ -12,13 +12,14 @@ import { getPromiseWithAbort } from "../../utils";
 import host from "../../host";
 import { IDebugProvider } from "./IDebugProvider";
 import { exec } from "../../ctl/shell";
+import { Language } from "../../service/configService";
 
 export class GoDebugProvider extends IDebugProvider {
-  name: string = "golang";
+  name: Language = "go";
   requireExtensions: string[] = ["golang.go"];
 
   downloadUrl: string = "https://go.dev/dl/";
-  commandName: string = "go";
+  commandName: string = this.name;
 
   socket: net.Socket;
 
