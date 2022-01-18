@@ -1325,7 +1325,10 @@ export async function checkVersion() {
   if (
     !getBooleanValue("nhctl.checkVersion") ||
     !requiredVersion ||
-    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(binPath))
+    (fs.existsSync(binPath) &&
+      ["beta", "alpha"].find((identifier) =>
+        pluginVersion.includes(identifier)
+      ))
   ) {
     return;
   }

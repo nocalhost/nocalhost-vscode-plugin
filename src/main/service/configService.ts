@@ -1,11 +1,14 @@
 import * as yaml from "yaml";
 import * as nhctl from "../ctl/nhctl";
+import logger from "../utils/logger";
 const lineBreakFlag = "\n";
 export interface JobConfig {
   name: string;
   path: string;
   priority?: number;
 }
+
+export type Language = "node" | "java" | "go" | "python" | "php" | "ruby";
 
 export interface NocalhostServiceConfig {
   name: string;
@@ -53,6 +56,7 @@ export interface ContainerConfig {
     };
     debug?: {
       remoteDebugPort: number;
+      language: Language;
     };
     remoteDebugPort?: number;
     useDevContainer?: boolean;
@@ -87,13 +91,13 @@ export interface NocalhostConfig {
 }
 
 export default class ConfigService {
-  static async getAppConfig(
+  static async getAppConfig<T extends NocalhostServiceConfig | NocalhostConfig>(
     kubeConfigPath: string,
     namespace: string,
     appName: string,
     workloadName?: string,
     workloadType?: string
-  ) {
+  ): Promise<T> {
     const configStr = await nhctl.getConfig(
       kubeConfigPath,
       namespace,
@@ -102,11 +106,12 @@ export default class ConfigService {
       workloadType
     );
     try {
-      const config = yaml.parse(configStr) as NocalhostConfig;
+      const config = yaml.parse(configStr) as T;
       return config;
     } catch (e) {
-      console.log(e);
-      return e;
+      logger.error("getAppConfig", e);
+
+      return Promise.reject("getAppConfig parse fail");
     }
   }
 
