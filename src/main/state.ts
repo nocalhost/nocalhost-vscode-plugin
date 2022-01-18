@@ -87,7 +87,6 @@ class State {
 
     const refresh = async () => {
       const { token } = action;
-      let time = Date.now();
 
       try {
         const rootNode = this.getNode("Nocalhost") as BaseNocalhostNode;
@@ -120,10 +119,6 @@ class State {
           await this.startAutoRefresh();
         }, 10 * 1000);
       }
-
-      logger.info(
-        `refresh size:${this.refreshFolderMap.size} time:${Date.now() - time}`
-      );
     };
 
     this.cancellationToken = action;
