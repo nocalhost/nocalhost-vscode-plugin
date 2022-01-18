@@ -120,10 +120,6 @@ class State {
           await this.startAutoRefresh();
         }, 10 * 1000);
       }
-
-      logger.info(
-        `refresh size:${this.refreshFolderMap.size} time:${Date.now() - time}`
-      );
     };
 
     this.cancellationToken = action;
