@@ -173,7 +173,7 @@ export default class DebugCommand implements ICommand {
       );
       currentContainer.dev.debug.language = debugProvider.name;
 
-      const contents = yaml.stringify(currentContainer);
+      const contents = yaml.stringify(serviceConfig);
 
       editConfig(
         node.getKubeConfigPath(),
@@ -191,16 +191,17 @@ export default class DebugCommand implements ICommand {
       debug: { language },
     } = this.container.dev;
 
-    const supportLanguages = Object.keys(supportLanguage);
-    if (language && supportLanguages.includes(language.toLowerCase())) {
-      return language.toUpperCase() as Language;
+    const supportLanguages = Object.keys(supportLanguage) as Language[];
+    if (
+      !!language &&
+      supportLanguages.includes(language.toLowerCase() as Language)
+    ) {
+      return language.toLowerCase() as Language;
     }
 
     if (image.includes("nocalhost/dev-images")) {
-      const languages = Object.keys(supportLanguage) as Language[];
-
-      return languages.find((name) =>
-        image.includes(name === "go" ? "golang" : language)
+      return supportLanguages.find((name) =>
+        image.includes(name === "go" ? "golang" : name)
       );
     }
   }
