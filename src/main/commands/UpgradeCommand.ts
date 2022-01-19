@@ -13,6 +13,7 @@ import { AppNode } from "../nodes/AppNode";
 import AccountClusterService from "../clusters/AccountCluster";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
 import { ClusterSource } from "../common/define";
+import { KubeConfigNode } from "../nodes/KubeConfigNode";
 
 export default class UpgradeCommand implements ICommand {
   command: string = UPGRADE_APP;
@@ -28,10 +29,7 @@ export default class UpgradeCommand implements ICommand {
     const devSpaceNode = appNode.parent as DevSpaceNode;
 
     if (devSpaceNode.clusterSource === ClusterSource.server) {
-      const accountClusterService: AccountClusterService =
-        devSpaceNode.parent.accountClusterService;
-
-      accountClusterService.checkServerVersion();
+      await (devSpaceNode.parent as KubeConfigNode).accountClusterService?.checkServerVersion();
     }
 
     let refOrVersion: string | undefined;

@@ -4,6 +4,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import host from "../host";
 import logger from "../utils/logger";
 import { getExecCommand } from "../ctl/shell";
+
 type SpawnClose = (code: number, signal: NodeJS.Signals) => void;
 type RemoteTerminalType = {
   terminal: {
@@ -79,9 +80,9 @@ export class RemoteTerminal implements vscode.Terminal {
     host.log(log);
     logger.info(log);
 
-    const proc = spawn(command, [], {
-      shell: true,
-    });
+    const commands = command.split(" ");
+
+    const proc = spawn(commands.shift(), commands);
 
     proc.stdout.on("data", (data: Buffer) => {
       const str = data.toString();

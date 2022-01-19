@@ -40,7 +40,7 @@ import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
 import TextDocumentContentProvider from "./textDocumentContentProvider";
 import { checkVersion } from "./ctl/nhctl";
-import logger from "./utils/logger";
+import logger, { loggerDebug } from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
 import { KubernetesResourceFolder } from "./nodes/abstract/KubernetesResourceFolder";
 // import { registerYamlSchemaSupport } from "./yaml/yamlSchema";
@@ -55,6 +55,7 @@ import SyncServiceCommand from "./commands/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
 import { activateNocalhostDebug } from "./debug/nocalhost";
+import { KubeConfigNode } from "./nodes/KubeConfigNode";
 
 // The example uses the file message format.
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -90,7 +91,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const node = e.element;
     if (
       node instanceof KubernetesResourceFolder ||
-      node instanceof DevSpaceNode
+      node instanceof DevSpaceNode ||
+      node instanceof KubeConfigNode
     ) {
       state.refreshFolderMap.set(node.getNodeStateId(), true);
     }
@@ -144,7 +146,7 @@ export async function activate(context: vscode.ExtensionContext) {
     true
   );
 
-  await state.refreshTree();
+  state.refreshTree(false);
 
   launchDevSpace();
 
@@ -159,7 +161,7 @@ function bindEvent() {
       return;
     }
 
-    logger.debug("refreshTree", value);
+    loggerDebug.debug("refreshTree", value);
 
     state.startAutoRefresh(true);
   });

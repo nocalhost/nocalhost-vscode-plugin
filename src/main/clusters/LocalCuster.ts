@@ -5,10 +5,9 @@ import * as fs from "fs";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
 import { isExistSync, writeFileAsync } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
-import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
+import { IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
-import * as yaml from "yaml";
-import { checkCluster, getAllNamespace, kubeconfig } from "../ctl/nhctl";
+import { checkCluster, kubeconfigCommand } from "../ctl/nhctl";
 import { ClusterSource } from "../common/define";
 import { ClustersState } from ".";
 
@@ -21,12 +20,29 @@ export class LocalClusterNode {
     public clusterNickName?: string
   ) {}
 }
+export function buildRootNodeForLocalCluster(
+  localCluster: LocalClusterNode,
+  state: ClustersState
+): IRootNode {
+  const { filePath, createTime } = localCluster;
+
+  return {
+    id: localCluster.id,
+    clusterName: localCluster.clusterNickName,
+    createTime,
+    clusterSource: ClusterSource.local,
+    applications: [],
+    kubeConfigPath: filePath,
+    state,
+  };
+}
 
 export default class LocalCluster {
   static getClusterNodeByKubeConfigPath(
     kubeConfigPath: string
   ): LocalClusterNode {
-    const localClusterNodes = host.getGlobalState(LOCAL_PATH) || [];
+    const localClusterNodes =
+      host.getGlobalState<Array<LocalClusterNode>>(LOCAL_PATH) || [];
     return (localClusterNodes || []).find(
       (it: LocalClusterNode) => it.filePath === kubeConfigPath
     );
@@ -39,37 +55,9 @@ export default class LocalCluster {
       return;
     }
     const { filePath, createTime } = newLocalCluster;
-    let kubeConfig = "";
     let applications: IV2ApplicationInfo[] = [];
-    let devSpaces: Array<IDevSpaceInfo> | undefined = new Array();
-    if (!isExistSync(filePath)) {
-      host.log(`no such file or directory: ${filePath}`);
-      return;
-    }
-    const kubeStr = fs.readFileSync(filePath);
-    const kubeConfigObj = yaml.parse(`${kubeStr}`);
-    kubeConfig = `${kubeStr}`;
-    const contexts = kubeConfigObj["contexts"];
-    if (!contexts || contexts.length === 0) {
-      return;
-    }
-    let defaultNamespace = contexts[0]["context"]["namespace"] || "";
-    if (kubeConfigObj["current-context"]) {
-      const currentContext = contexts.find(
-        (it: any) => it.name === kubeConfigObj["current-context"]
-      );
-      if (currentContext) {
-        defaultNamespace = currentContext.context.namespace;
-      }
-    }
-    const state = await checkCluster(filePath);
 
-    if (state.code === 200) {
-      devSpaces = await getAllNamespace({
-        kubeConfigPath: filePath,
-        namespace: defaultNamespace as string,
-      });
-    }
+    const state = await checkCluster(filePath);
 
     const contextObj = {
       applicationName: "default.application",
@@ -90,7 +78,6 @@ export default class LocalCluster {
     });
     const obj: IRootNode = {
       id: newLocalCluster.id,
-      devSpaces,
       clusterName: newLocalCluster.clusterNickName,
       createTime,
       clusterSource: ClusterSource.local,
@@ -147,7 +134,7 @@ export default class LocalCluster {
       localClusterNodes.push(newCluster);
       host.setGlobalState(LOCAL_PATH, localClusterNodes);
 
-      await kubeconfig(resultFilePath, "add");
+      await kubeconfigCommand(resultFilePath, "add");
 
       return newCluster;
     } else {

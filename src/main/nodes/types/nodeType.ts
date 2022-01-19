@@ -1,6 +1,5 @@
-import AccountClusterService from "./../../clusters/AccountCluster";
 import * as vscode from "vscode";
-
+import { IRootNode } from "../../domain";
 export interface AppInfo {
   name: string;
   releasename: string;
@@ -60,13 +59,14 @@ export interface SvcProfile {
 export interface BaseNocalhostNode {
   label: string;
   type: string;
-  accountClusterService?: AccountClusterService;
   hasInit?: boolean;
   resourceType?: string;
   parent: BaseNocalhostNode | undefined | null;
+  rootNode?: IRootNode;
   updateData?: (
     init?: boolean,
-    token?: vscode.CancellationToken
+    token?: vscode.CancellationToken,
+    isCancel?: () => boolean
   ) => Promise<any>;
   getNodeStateId(): string;
   getChildren(

@@ -40,8 +40,10 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
     });
     return this.sortResource(result);
   };
-
-  prototype.updateData = async function (isInit?: boolean): Promise<any> {
+  prototype.updateData = async function (
+    isInit?: boolean,
+    token?: vscode.CancellationToken
+  ): Promise<any> {
     const appNode = this.getAppNode();
     // description
     const list: INhCtlGetResult[] =
@@ -60,7 +62,11 @@ export const kubernetesResourceDevMode = (resourceNode: any) => (
     const obj = {
       resource: list,
     };
-    state.setData(this.getNodeStateId(), obj, isInit);
+
+    if (!token?.isCancellationRequested) {
+      state.setData(this.getNodeStateId(), obj, isInit);
+    }
+
     return obj;
   };
 };

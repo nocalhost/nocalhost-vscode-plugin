@@ -1,11 +1,16 @@
-import { difference, get, orderBy } from "lodash";
+import * as assert from "assert";
+import { get, orderBy } from "lodash";
 import * as vscode from "vscode";
 import { sortResources } from "../clusters";
 import AccountClusterService, {
   AccountClusterNode,
+  buildRootNodeForAccountCluster,
 } from "../clusters/AccountCluster";
 import { LoginInfo } from "../clusters/interface";
-import LocalCusterService, { LocalClusterNode } from "../clusters/LocalCuster";
+import LocalCusterService, {
+  buildRootNodeForLocalCluster,
+  LocalClusterNode,
+} from "../clusters/LocalCuster";
 import { ClusterSource } from "../common/define";
 import {
   GLOBAL_TIMEOUT,
@@ -24,7 +29,9 @@ import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
 
-export async function getClusterName(res: IRootNode) {
+export async function getClusterName(
+  res: Pick<IRootNode, "kubeConfigPath" | "clusterSource">
+) {
   if (!res.kubeConfigPath) {
     return "unknown";
   }
@@ -60,12 +67,14 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     let nodes = await asyncLimit(
       localClusterNodes,
       (localCluster) => {
-        if (
-          token?.isCancellationRequested ||
-          !isExistSync(localCluster.filePath)
-        ) {
+        if (token?.isCancellationRequested) {
           return Promise.reject();
         }
+
+        assert(
+          isExistSync(localCluster.filePath),
+          `kubeconfig not exist:${localCluster.filePath}`
+        );
 
         return LocalCusterService.getLocalClusterRootNode(localCluster);
       },
@@ -80,20 +89,10 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         logger.error("get localCluster error", result.reason, localCluster);
 
-        const root: IRootNode = {
-          ...localCluster,
-          clusterSource: ClusterSource.local,
-          clusterName: localCluster.clusterNickName,
-          kubeConfigPath: localCluster.filePath,
-          devSpaces: [],
-          applications: [],
-          state: {
-            code: 201,
-            info: result.reason,
-          },
-        };
-
-        return root;
+        return buildRootNodeForLocalCluster(localCluster, {
+          code: 201,
+          info: result.reason,
+        });
       });
     });
 
@@ -135,20 +134,12 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
           logger.error("get serverCluster error", result.reason, account);
 
-          const rootNode: IRootNode = {
-            ...account,
-            clusterSource: ClusterSource.server,
-            accountClusterService: new AccountClusterService(account.loginInfo),
-            devSpaces: [],
-            applications: [],
-            kubeConfigPath: null,
-            state: {
+          return [
+            buildRootNodeForAccountCluster(account, {
               code: 201,
               info: result.reason?.message,
-            },
-          };
-
-          return [rootNode];
+            }),
+          ];
         })
         .flat(1);
     });
@@ -177,8 +168,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
     let resultData = sortResources(data.flat(1));
 
-    await this.cleanDiffDevSpace(resultData);
-
     state.setData(this.getNodeStateId(), resultData, isInit);
 
     return resultData;
@@ -186,7 +175,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public async addCluster(node: AccountClusterNode | LocalClusterNode) {
     let addResources: IRootNode[];
 
-    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
+    let resources = state.getData<Array<IRootNode>>(this.getNodeStateId());
 
     if (node instanceof LocalClusterNode) {
       if (
@@ -200,18 +189,9 @@ export class NocalhostRootNode implements BaseNocalhostNode {
       }
 
       addResources = [
-        await LocalCusterService.getLocalClusterRootNode(node).catch((err) => {
-          return {
-            ...node,
-            kubeConfigPath: node.filePath,
-            devSpaces: [],
-            applications: [],
-            state: {
-              code: 201,
-              info: err.message,
-            },
-          };
-        }),
+        await LocalCusterService.getLocalClusterRootNode(node).catch((err) =>
+          buildRootNodeForLocalCluster(node, { code: 201, info: err.message })
+        ),
       ];
     } else {
       if (
@@ -225,22 +205,12 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
       addResources = await AccountClusterService.getServerClusterRootNodes(
         node
-      ).catch((err) => {
-        return [
-          {
-            ...node,
-            kubeConfigPath: null,
-            clusterSource: ClusterSource.server,
-            accountClusterService: new AccountClusterService(node.loginInfo),
-            devSpaces: [],
-            applications: [],
-            state: {
-              code: 201,
-              info: err.message,
-            },
-          },
-        ];
-      });
+      ).catch((err) => [
+        buildRootNodeForAccountCluster(node, {
+          code: 201,
+          info: err.message,
+        }),
+      ]);
     }
     if (resources) {
       resources = resources.concat(addResources);
@@ -251,8 +221,8 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     state.setData(this.getNodeStateId(), resources, false);
   }
 
-  public async deleteCluster(info: LoginInfo | string) {
-    let resources = state.getData(this.getNodeStateId()) as IRootNode[];
+  public deleteCluster(info: LoginInfo | string) {
+    let resources = state.getData<Array<IRootNode>>(this.getNodeStateId());
 
     if (resources) {
       if (typeof info === "string") {
@@ -264,56 +234,22 @@ export class NocalhostRootNode implements BaseNocalhostNode {
             )
         );
       } else {
-        resources = resources.filter((item: any) => {
+        resources = resources.filter((item) => {
           if (item.clusterSource === ClusterSource.local) {
             return true;
           }
 
-          const node = item as KubeConfigNode;
-          const { username, baseUrl } = node.accountClusterService?.loginInfo;
+          const {
+            username,
+            baseUrl,
+          } = (item.clusterInfo as AccountClusterNode).loginInfo;
 
           return !(username === info.username && baseUrl === info.baseUrl);
         });
       }
       resources = sortResources(resources);
 
-      await this.cleanDiffDevSpace(resources);
-
       state.setData(this.getNodeStateId(), resources, false);
-    }
-  }
-
-  private async cleanDiffDevSpace(resources: IRootNode[]) {
-    const old = state.getData(this.getNodeStateId()) as IRootNode[];
-
-    if (old && old.length && resources.length) {
-      const getId = async (resource: IRootNode) => {
-        const kubeconfigNode = await this.getKubeConfigNode(resource);
-        const children = await kubeconfigNode.getChildren();
-
-        let arrayId = [kubeconfigNode.getNodeStateId()];
-
-        arrayId = arrayId.concat(
-          children.map((child) => child.getNodeStateId())
-        );
-
-        return arrayId;
-      };
-
-      const oldId = (await Promise.all(old.map(getId))).flat(1);
-      const newId = (await Promise.all(resources.map(getId))).flat(1);
-
-      const diff: string[] = difference(oldId, newId);
-
-      if (diff.length) {
-        diff.forEach((id) => {
-          state.disposeNode({
-            getNodeStateId() {
-              return id;
-            },
-          });
-        });
-      }
     }
   }
 
@@ -330,17 +266,7 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   async getKubeConfigNode(res: IRootNode) {
     const clusterName = await getClusterName(res);
 
-    return new KubeConfigNode({
-      id: res.id,
-      label: clusterName,
-      kubeConfigPath: res.kubeConfigPath,
-      devSpaceInfos: res.devSpaces,
-      applications: res.applications,
-      userInfo: res.userInfo,
-      clusterSource: res.clusterSource,
-      accountClusterService: res.accountClusterService,
-      state: res.state,
-    });
+    return new KubeConfigNode(res.id, this, clusterName, res);
   }
   async getChildren(
     parent?: BaseNocalhostNode
@@ -368,18 +294,11 @@ export class NocalhostRootNode implements BaseNocalhostNode {
 
         if (result.reason instanceof Error) {
           info = result.reason.message;
-          logger.error("get serverCluster error", result.reason, res.userInfo);
+          logger.error("get cluster error", result.reason, res.clusterInfo);
         }
 
-        return new KubeConfigNode({
-          id: res.id,
-          label: res.clusterName,
-          kubeConfigPath: res.kubeConfigPath,
-          devSpaceInfos: res.devSpaces,
-          applications: res.applications,
-          userInfo: res.userInfo,
-          clusterSource: res.clusterSource,
-          accountClusterService: res.accountClusterService,
+        return new KubeConfigNode(res.id, this, res.clusterName, {
+          ...res,
           state: {
             code: 201,
             info,

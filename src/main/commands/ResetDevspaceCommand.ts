@@ -7,9 +7,9 @@ import state from "../state";
 import host, { Host } from "../host";
 import * as nhctl from "../ctl/nhctl";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";
-import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 import Bookinfo from "../common/bookinfo";
 import messageBus from "../utils/messageBus";
+import { KubeConfigNode } from "../nodes/KubeConfigNode";
 
 export default class ResetDevspaceCommand implements ICommand {
   command: string = RESET_DEVSPACE;
@@ -39,36 +39,38 @@ export default class ResetDevspaceCommand implements ICommand {
     await vscode.commands.executeCommand("Nocalhost.refresh", node);
 
     host.disposeDevspace(node.info.spaceName);
-    await this.reset(
-      host,
-      node.getKubeConfigPath(),
-      node.info.namespace,
-      node.info.spaceName
-    ).finally(async () => {
-      await node.parent.accountClusterService.resetDevSpace(node.info.id);
 
-      const nocalhostRootNode = node.parent.parent as NocalhostRootNode;
+    await this.reset(host, node)
+      .then(() => {
+        messageBus.emit("refreshTree", {});
+      })
+      .finally(async () => {
+        const parent = node.parent.parent;
 
-      await nocalhostRootNode.updateData();
+        await parent.updateData();
 
-      vscode.commands.executeCommand("Nocalhost.refresh", nocalhostRootNode);
+        vscode.commands.executeCommand("Nocalhost.refresh", parent);
 
-      state.delete(node.info.spaceName);
-    });
-
-    messageBus.emit("refreshTree", {});
+        state.delete(node.info.spaceName);
+      });
   }
 
-  private async reset(
-    host: Host,
-    kubeconfigPath: string,
-    namespace: string,
-    devspaceName: string
-  ) {
-    host.log(`Reseting devspace: ${devspaceName}`, true);
-    await nhctl.resetApp(kubeconfigPath, namespace, devspaceName);
-    host.removeGlobalState(devspaceName);
-    host.log(`Devspace ${devspaceName} reset`, true);
-    host.showInformationMessage(`Devspace ${devspaceName} reset`);
+  private async reset(host: Host, node: DevSpaceNode) {
+    const {
+      getKubeConfigPath,
+      info: { namespace, spaceName },
+    } = node;
+
+    host.log(`Resetting devspace: ${spaceName}`, true);
+
+    await nhctl.resetApp(getKubeConfigPath.call(node), namespace, spaceName);
+
+    host.removeGlobalState(spaceName);
+    host.log(`Devspace ${spaceName} reset`, true);
+    host.showInformationMessage(`Devspace ${spaceName} reset`);
+
+    await (node.parent as KubeConfigNode).accountClusterService?.resetDevSpace(
+      node.info.id
+    );
   }
 }

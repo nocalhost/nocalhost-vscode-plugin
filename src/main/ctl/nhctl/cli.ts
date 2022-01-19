@@ -10,6 +10,8 @@ import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 
+import { ChildProcessWithoutNullStreams } from "child_process";
+
 import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
@@ -19,7 +21,7 @@ import * as packageJson from "../../../../package.json";
 import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
 import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";
-import logger from "../../utils/logger";
+import logger, { loggerDebug } from "../../utils/logger";
 import { IDevSpaceInfo } from "../../domain";
 import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
@@ -1476,7 +1478,7 @@ export async function checkCluster(
   return result;
 }
 
-export async function kubeconfig(
+export async function kubeconfigCommand(
   kubeConfigPath: string,
   command: "add" | "remove"
 ) {
@@ -1486,7 +1488,7 @@ export async function kubeconfig(
     .toJson()
     .exec();
 
-  logger.debug(`kubeconfig ${command}:${kubeConfigPath}`);
+  loggerDebug.debug(`kubeconfig ${command}:${kubeConfigPath}`);
 
   return result;
 }
@@ -1557,6 +1559,68 @@ export async function associateQuery(param: {
     .addArgument("--json")
     .toJson()
     .exec();
+}
+export async function kubeConfigRender(param: {
+  serviceAddress: string;
+  namespace: string;
+  kubeconfig: string;
+  context: string;
+  remotePort: string;
+}) {
+  const {
+    namespace,
+    serviceAddress,
+    remotePort,
+    context,
+    kubeconfig: kubeconfigStr,
+  } = param;
+
+  const commands = [
+    NhctlCommand.nhctlPath,
+    "kubeconfig",
+    "render",
+    "--namespace",
+    namespace,
+    "--kubeconfig",
+    "-",
+    "--context",
+    context,
+    serviceAddress,
+    `:${remotePort}`,
+  ];
+
+  const END_Symbol = "EOF\n";
+
+  return new Promise<{
+    kubeconfig: string;
+    proc: ChildProcessWithoutNullStreams;
+  }>((res, rej) => {
+    const command = commands.join(" ");
+
+    const time = Date.now();
+
+    const { proc, promise } = exec({
+      command: commands.join(" "),
+      output: false,
+    });
+
+    proc.stdout.on("data", (chuck: Buffer) => {
+      const str = chuck.toString();
+
+      if (str.endsWith(END_Symbol)) {
+        loggerDebug.debug(command, Date.now() - time);
+
+        const kubeconfig = str.substring(0, str.lastIndexOf(END_Symbol));
+        res({ kubeconfig, proc });
+        return;
+      }
+    });
+
+    proc.stdin.write(kubeconfigStr);
+    proc.stdin.end();
+
+    promise.catch(rej);
+  });
 }
 
 export async function vpn(param: {

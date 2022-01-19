@@ -155,7 +155,9 @@ export function createProcess(param: ExecParam) {
     command = `sudo -p "Password:" -S ${command}`;
   }
 
-  const proc = spawn(command, [], { shell: true, env });
+  const commands = command.split(" ");
+
+  const proc = spawn(commands.shift(), commands, { env });
 
   const { err, out } = getOutput(output);
   let stderr = "";
@@ -287,5 +289,5 @@ export function getExecCommand(command: string) {
   if (host.isWindow() && process.env.ComSpec.endsWith("Git\\bin\\bash.exe")) {
     command = command.replaceAll(path.sep, "\\\\\\");
   }
-  return command;
+  return command.trim();
 }

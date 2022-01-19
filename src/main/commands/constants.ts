@@ -65,3 +65,7 @@ export const ADD_KUBECONFIG = "Nocalhost.addKubeconfig";
 export const CLUSTERS_VIEW = "Nocalhost.ClustersView";
 
 export const CONFIG_URI_QUERY = "_configURIQuery";
+
+// sleeping
+export const FORCE_SLEEP = "Nocalhost.forceSleep";
+export const WAKE_UP = "Nocalhost.wakeUp";

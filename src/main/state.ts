@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { isEqual } from "lodash";
 import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
-import logger from "./utils/logger";
+import logger, { loggerDebug } from "./utils/logger";
 import { asyncLimit } from "./utils";
 import { GLOBAL_TIMEOUT } from "./constants";
 
@@ -11,7 +11,7 @@ class State {
 
   private stateMap = new Map<string, any>();
   private nodeMap = new Map<string, BaseNocalhostNode>();
-  private dataMap = new Map<string, object>();
+  private dataMap = new Map<string, any>();
   public refreshFolderMap = new Map<string, boolean>();
 
   private renderTime: NodeJS.Timeout;
@@ -56,8 +56,8 @@ class State {
     }
   }
 
-  public getData(id: string) {
-    return this.dataMap.get(id);
+  public getData<T = any>(id: string) {
+    return this.dataMap.get(id) as T;
   }
 
   private autoRefreshTimeId: NodeJS.Timeout | null = null;
@@ -90,6 +90,9 @@ class State {
       try {
         const rootNode = this.getNode("Nocalhost") as BaseNocalhostNode;
         if (rootNode) {
+          if (rootNode.hasInit === false) {
+            return;
+          }
           await rootNode.updateData(null, token).catch(() => {});
         }
 
@@ -99,7 +102,7 @@ class State {
             const node = this.getNode(id) as BaseNocalhostNode;
 
             if (!token.isCancellationRequested && node && expanded) {
-              return node.updateData();
+              return node.updateData(null, token);
             }
 
             return Promise.resolve();
@@ -253,8 +256,15 @@ class State {
 
     for (let key of this.stateMap.keys()) {
       if (key.startsWith(stateId)) {
-        logger.debug("stateMap", key);
+        loggerDebug.debug("stateMap", key);
         this.stateMap.delete(key);
+      }
+    }
+
+    for (let key of this.dataMap.keys()) {
+      if (key.startsWith(stateId)) {
+        loggerDebug.debug("dataMap", key);
+        this.dataMap.delete(key);
       }
     }
 
@@ -264,7 +274,7 @@ class State {
 
     for (let key of this.refreshFolderMap.keys()) {
       if (key.startsWith(stateId)) {
-        logger.debug("cleanAutoRefresh", key);
+        loggerDebug.debug("cleanAutoRefresh", key);
         this.refreshFolderMap.delete(key);
       }
     }

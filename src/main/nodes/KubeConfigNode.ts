@@ -1,25 +1,30 @@
 import * as vscode from "vscode";
-import { orderBy } from "lodash";
-import { HELM_NH_CONFIG_DIR, NOCALHOST } from "../constants";
+import { difference, orderBy } from "lodash";
+import * as fs from "fs";
+import * as yaml from "yaml";
+
+import { NOCALHOST } from "../constants";
 import state from "../state";
-import AccountClusterService from "../clusters/AccountCluster";
+import AccountClusterService, {
+  AccountClusterNode,
+} from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
-import * as path from "path";
 import { ClusterSource } from "../common/define";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
-import { resolveVSCodeUri, writeFileLock } from "../utils/fileUtil";
-import { DevSpaceNode } from "./DevSpaceNode";
-import { IUserInfo, IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
+import { NocalhostRootNode } from "./NocalhostRootNode";
+import { isExistSync, resolveVSCodeUri } from "../utils/fileUtil";
+import { IV2ApplicationInfo, IRootNode, IDevSpaceInfo } from "../domain";
 import { ClustersState } from "../clusters";
+import host from "../host";
+import { getAllNamespace } from "../ctl/nhctl";
+import { DevSpaceNode, getDevSpaceLabel } from "./DevSpaceNode";
+import { LocalClusterNode } from "../clusters/LocalCuster";
 
 export class KubeConfigNode extends NocalhostFolderNode {
   public label: string;
-  parent: BaseNocalhostNode = null;
 
   public type = "KUBECONFIG";
-  public devSpaceInfos: IDevSpaceInfo[];
-  public userInfo: IUserInfo;
   public clusterSource: ClusterSource;
   public applications: Array<IV2ApplicationInfo>;
   public installedApps: {
@@ -28,47 +33,157 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }[] = [];
   public id: string;
   public kubeConfigPath: string;
-  public accountClusterService: AccountClusterService;
 
   private state: ClustersState;
-  constructor(props: {
-    id: string;
-    label: string;
-    devSpaceInfos: IDevSpaceInfo[];
-    applications: Array<IV2ApplicationInfo>;
-    clusterSource: ClusterSource;
-    kubeConfigPath: string;
-    userInfo: IUserInfo;
-    accountClusterService?: AccountClusterService;
-    state: ClustersState;
-  }) {
+  constructor(
+    id: string,
+    public parent: BaseNocalhostNode,
+    label: string,
+    public rootNode: IRootNode
+  ) {
     super();
-    const {
-      id,
-      label,
-      devSpaceInfos,
-      applications,
-      clusterSource,
-      kubeConfigPath,
-      userInfo,
-      accountClusterService,
-    } = props;
+
+    const { applications, clusterSource, kubeConfigPath } = rootNode;
+
     this.id = id;
     this.clusterSource = clusterSource;
-    this.label =
-      label || (devSpaceInfos.length > 0 ? devSpaceInfos[0].namespace : "");
-    this.devSpaceInfos = devSpaceInfos;
+
+    this.label = label;
     this.applications = applications;
     this.installedApps = [];
     this.kubeConfigPath = kubeConfigPath;
-    this.userInfo = userInfo;
-    this.accountClusterService = accountClusterService;
-    this.state = props.state;
+    this.state = rootNode.state;
 
     state.setNode(this.getNodeStateId(), this);
   }
-  updateData(): any {
-    return [];
+
+  getClusterNode<T extends AccountClusterNode | LocalClusterNode>() {
+    return this.rootNode.clusterInfo as T;
+  }
+
+  get accountClusterService() {
+    if (this.clusterSource === ClusterSource.local) {
+      return null;
+    }
+
+    return new AccountClusterService(
+      this.rootNode.clusterInfo as AccountClusterNode
+    );
+  }
+  async updateData() {
+    if (this.state.code !== 200) {
+      return [];
+    }
+
+    let devSpaces = Array.of<IDevSpaceInfo>();
+    const { kubeConfigPath } = this;
+
+    if (this.clusterSource === ClusterSource.local) {
+      if (!isExistSync(kubeConfigPath)) {
+        host.log(`no such file or directory: ${kubeConfigPath}`);
+        return;
+      }
+
+      const kubeStr = fs.readFileSync(kubeConfigPath);
+      const kubeConfigObj = yaml.parse(`${kubeStr}`);
+      const contexts = kubeConfigObj["contexts"];
+      if (!contexts || contexts.length === 0) {
+        return;
+      }
+
+      let namespace = contexts[0]["context"]["namespace"] || "";
+
+      if (kubeConfigObj["current-context"]) {
+        const currentContext = contexts.find(
+          (it: any) => it.name === kubeConfigObj["current-context"]
+        );
+        if (currentContext) {
+          namespace = currentContext.context.namespace;
+        }
+      }
+
+      devSpaces = await getAllNamespace({
+        kubeConfigPath: kubeConfigPath,
+        namespace,
+      });
+    } else {
+      const sa = this.rootNode.serviceAccount;
+
+      if (sa.privilege) {
+        devSpaces = await getAllNamespace({
+          kubeConfigPath: kubeConfigPath,
+          namespace: "default",
+        });
+
+        for (const dev of devSpaces) {
+          dev.storageClass = sa.storageClass;
+          dev.devStartAppendCommand = [
+            "--priority-class",
+            "nocalhost-container-critical",
+          ];
+          dev.kubeconfig = sa.kubeconfig;
+
+          const ns = sa.namespacePacks?.find(
+            (ns) => ns.namespace === dev.namespace
+          );
+
+          dev.spaceId = ns?.spaceId;
+          dev.spaceName = ns?.spacename;
+          dev.isAsleep = ns?.sleepStatus;
+
+          if (sa.privilegeType === "CLUSTER_ADMIN") {
+            dev.spaceOwnType = "Owner";
+          } else if (sa.privilegeType === "CLUSTER_VIEWER") {
+            dev.spaceOwnType = ns?.spaceOwnType ?? "Viewer";
+          }
+        }
+      } else {
+        for (const ns of sa.namespacePacks) {
+          const devInfo: IDevSpaceInfo = {
+            id: ns.spaceId,
+            spaceName: ns.spacename,
+            namespace: ns.namespace,
+            kubeconfig: sa.kubeconfig,
+            clusterId: sa.clusterId,
+            storageClass: sa.storageClass,
+            spaceOwnType: ns.spaceOwnType,
+            isAsleep: ns.sleepStatus,
+            devStartAppendCommand: [
+              "--priority-class",
+              "nocalhost-container-critical",
+            ],
+          };
+          devSpaces.push(devInfo);
+        }
+      }
+    }
+
+    this.cleanDiffDevSpace(devSpaces);
+
+    state.setData(this.getNodeStateId(), devSpaces);
+
+    return devSpaces;
+  }
+
+  private async cleanDiffDevSpace(resources: Array<IDevSpaceInfo>) {
+    const old = state.getData<Array<IDevSpaceInfo>>(this.getNodeStateId());
+
+    if (old && old.length && resources.length) {
+      const getId = (devSpace: IDevSpaceInfo) =>
+        `${this.getNodeStateId()}${ID_SPLIT}${getDevSpaceLabel(devSpace)}`;
+
+      const diff: string[] = difference(old.map(getId), resources.map(getId));
+
+      if (diff.length) {
+        diff.forEach((id) => {
+          state.disposeNode({
+            getNodeStateId() {
+              return id;
+            },
+          });
+        });
+      }
+    }
   }
 
   public getKubeConfigPath() {
@@ -76,43 +191,30 @@ export class KubeConfigNode extends NocalhostFolderNode {
   }
 
   async getChildren(parent?: BaseNocalhostNode): Promise<BaseNocalhostNode[]> {
-    let res = {
-      devSpaces: this.devSpaceInfos,
-      applications: this.applications,
-    };
-    const devs: (DevSpaceNode & { order?: boolean; isSpace?: boolean })[] = [];
+    let devSpaces = Array.of<IDevSpaceInfo>();
 
-    res.applications.forEach(async (app) => {
-      let context = app.context;
-      const obj = {
-        nocalhostConfig: "",
-      };
-      if (context) {
-        let jsonObj = JSON.parse(context);
-        obj.nocalhostConfig = jsonObj["nocalhostConfig"];
-      }
-
-      const nhConfigPath = path.resolve(HELM_NH_CONFIG_DIR, `${app.id}_config`);
-      await writeFileLock(nhConfigPath, obj.nocalhostConfig || "");
-    });
-    for (const d of res.devSpaces) {
-      const node = new DevSpaceNode(
-        this,
-        d.spaceName,
-        d,
-        res.applications,
-        this.clusterSource
-      );
-      devs.push(
-        Object.assign(node, {
-          order: d.spaceOwnType !== "Viewer",
-          isSpace: d.spaceId > 0,
-        })
-      );
+    if (this.state.code !== 200) {
+      return [];
     }
 
+    devSpaces = state.getData<Array<IDevSpaceInfo>>(this.getNodeStateId());
+
+    if (!devSpaces) {
+      devSpaces = await this.updateData();
+    }
+
+    const devSpace = devSpaces.map((devSpace) => {
+      return Object.assign(
+        new DevSpaceNode(this, devSpace, this.applications, this.clusterSource),
+        {
+          order: devSpace.spaceOwnType !== "Viewer",
+          isSpace: devSpace.spaceId > 0,
+        }
+      );
+    });
+
     return orderBy(
-      devs,
+      devSpace,
       ["order", "isSpace", "label"],
       ["desc", "desc", "asc"]
     );
@@ -131,16 +233,20 @@ export class KubeConfigNode extends NocalhostFolderNode {
     }`;
 
     if (this.clusterSource === ClusterSource.server) {
-      const { username, baseUrl } = this.accountClusterService.loginInfo;
+      const { username, baseUrl } = (this.rootNode
+        .clusterInfo as AccountClusterNode).loginInfo;
 
       treeItem.tooltip = `${username} [${baseUrl}]`;
     }
 
+    const clusterType = this.clusterType;
+
     treeItem.description = "Active";
-    treeItem.iconPath = resolveVSCodeUri("cluster_active.svg");
+    treeItem.iconPath = resolveVSCodeUri(`${clusterType}_active.svg`);
 
     if (this.state.code !== 200) {
-      treeItem.iconPath = resolveVSCodeUri("cluster_warning.svg");
+      treeItem.tooltip = this.state.info;
+      treeItem.iconPath = resolveVSCodeUri(`${clusterType}_warning.svg`);
 
       if (this.state.info !== "No clusters") {
         treeItem.tooltip = this.state.info;
@@ -152,6 +258,16 @@ export class KubeConfigNode extends NocalhostFolderNode {
     }
 
     return Promise.resolve(treeItem);
+  }
+
+  get clusterType(): "vcluster" | "cluster" {
+    if (
+      this.clusterSource === ClusterSource.server &&
+      this.rootNode.serviceAccount?.kubeconfigType === "vcluster"
+    ) {
+      return "vcluster";
+    }
+    return "cluster";
   }
 
   getNodeStateId(): string {
