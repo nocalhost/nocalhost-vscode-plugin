@@ -1322,13 +1322,14 @@ export async function checkVersion() {
     requiredVersion
   );
 
+  const isTest =
+    host.getContext().extensionMode === vscode.ExtensionMode.Development ||
+    ["beta", "alpha"].find((identifier) => pluginVersion.includes(identifier));
+
   if (
-    !getBooleanValue("nhctl.checkVersion") ||
     !requiredVersion ||
-    (fs.existsSync(binPath) &&
-      ["beta", "alpha"].find((identifier) =>
-        pluginVersion.includes(identifier)
-      ))
+    !getBooleanValue("nhctl.checkVersion") ||
+    (fs.existsSync(binPath) && isTest)
   ) {
     return;
   }
