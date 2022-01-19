@@ -92,10 +92,6 @@ async function loadKubeConfig() {
 
   await iframe.click(".MuiSvgIcon-root.icon");
 
-  await setInputBox(process.env.KUBECONFIG_PATH);
-
-  await iframe.waitForTimeout(1 * 1000);
-
   await iframe.click(".kubeConfig-add-btn");
 
   return await waitForMessage("Success", 60 * 1000);
