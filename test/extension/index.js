@@ -6,6 +6,8 @@ const isWindows = require("is-windows");
 const os = require("os");
 const getPort = require("get-port");
 const axios = require("axios");
+const { getRepository, gitCode } = require("./lib");
+
 const {
   downloadAndUnzipVSCode,
   resolveCliPathFromVSCodeExecutablePath,
@@ -15,6 +17,7 @@ const logger = require("./lib/log");
 const VideoCapture = require("./lib/videoCapture");
 
 const videoCapture = new VideoCapture();
+
 /**
  *
  * @param {object} options
@@ -22,9 +25,10 @@ const videoCapture = new VideoCapture();
  * @param {string?} options.version
  * @param {string?} options.platform
  * @param {object?} options.testsEnv
+ * @returns {{pid:string,port:string}}
  */
 const start = async (options = {}) => {
-  const userDataDir = getUserDataDir();
+  const userDataDir = await getUserDataDir();
 
   if (!options.vscodeExecutablePath) {
     options.vscodeExecutablePath = await downloadAndUnzipVSCode(
@@ -81,6 +85,12 @@ const start = async (options = {}) => {
   if (options.launchArgs) {
     args = options.launchArgs.concat(args);
   }
+
+  process.env.currentPath = (
+    await gitCode(getRepository("bookinfo-ratings.git"))
+  ).tmpDir;
+  args.unshift(process.env.currentPath);
+
   const pid = await run(options.vscodeExecutablePath, args, options.testsEnv);
 
   return { pid, port };
@@ -107,7 +117,7 @@ const getExtensionsDir = (isInit = false) => {
 
   return extensionsDir;
 };
-const getUserDataDir = () => {
+const getUserDataDir = async () => {
   let userDataDir = path.join(__dirname, "../../.vscode-test/user-data");
 
   if (isWindows()) {
@@ -122,22 +132,7 @@ const getUserDataDir = () => {
     fse.removeSync(userDataDir);
   }
 
-  fse.mkdirpSync(path.join(userDataDir, "User"));
-
-  let defaultSettings = {
-    "window.titleBarStyle": "custom",
-    "workbench.editor.enablePreview": false,
-    "window.restoreFullscreen": true,
-    "telemetry.enableTelemetry": false,
-    "extensions.autoUpdate": false,
-    "window.newWindowDimensions": "maximized",
-  };
-
-  fse.writeFile(
-    path.join(userDataDir, "User", "settings.json"),
-    JSON.stringify(defaultSettings, null, 2)
-  );
-
+  await fse.copy(path.join(__dirname, "./config/vscode"), userDataDir);
   return userDataDir;
 };
 
@@ -205,3 +200,9 @@ module.exports = {
   getWebSocketDebuggerUrl,
   videoCapture,
 };
+
+(async () => {
+  if (require.main === module) {
+    await start();
+  }
+})();

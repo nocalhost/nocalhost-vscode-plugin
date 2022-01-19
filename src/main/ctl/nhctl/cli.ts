@@ -435,7 +435,8 @@ export async function getAllNamespace(props: IBaseCommand<unknown>) {
 
     devspaces.push(devspace);
   });
-  return devspaces;
+
+  return orderBy(devspaces, "namespace");
 }
 
 export async function getAll(params: IBaseCommand) {
@@ -1325,7 +1326,10 @@ export async function checkVersion() {
   if (
     !getBooleanValue("nhctl.checkVersion") ||
     !requiredVersion ||
-    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(binPath))
+    (fs.existsSync(binPath) &&
+      ["beta", "alpha"].find((identifier) =>
+        pluginVersion.includes(identifier)
+      ))
   ) {
     return;
   }

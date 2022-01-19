@@ -140,13 +140,13 @@ export async function waitForSync(node: ControllerResourceNode, name: string) {
 }
 
 export async function getContainer(node: ControllerResourceNode) {
-  let serviceConfig = (await ConfigService.getAppConfig(
+  let serviceConfig = await ConfigService.getAppConfig<NocalhostServiceConfig>(
     node.getKubeConfigPath(),
     node.getNameSpace(),
     node.getAppName(),
     node.name,
     node.resourceType
-  )) as NocalhostServiceConfig;
+  );
 
   const containers = (serviceConfig && serviceConfig.containers) || [];
   let container: ContainerConfig;

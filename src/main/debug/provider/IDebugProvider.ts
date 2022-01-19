@@ -9,12 +9,12 @@ import * as AsyncRetry from "async-retry";
 import { merge, omit } from "lodash";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
-import { ContainerConfig } from "../../service/configService";
+import { ContainerConfig, Language } from "../../service/configService";
 import logger from "../../utils/logger";
 import { portForward } from "..";
 
 export abstract class IDebugProvider {
-  abstract name: string;
+  abstract name: Language;
   abstract requireExtensions: Array<string>;
 
   abstract downloadUrl: string;

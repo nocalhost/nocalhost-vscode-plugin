@@ -5,9 +5,10 @@ import * as AsyncRetry from "async-retry";
 import { IDebugProvider } from "../IDebugProvider";
 import logger from "../../../utils/logger";
 import { JDWP } from "./jdwp";
+import { Language } from "../../../service/configService";
 
 export class JavaDebugProvider extends IDebugProvider {
-  name: string = "Java";
+  name: Language = "java";
   requireExtensions: string[] = ["vscjava.vscode-java-debug", "redhat.java"];
 
   downloadUrl: string = "https://adoptopenjdk.net/";

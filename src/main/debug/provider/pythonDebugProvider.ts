@@ -4,9 +4,10 @@ import * as assert from "assert";
 import { IDebugProvider } from "./IDebugProvider";
 import logger from "../../utils/logger";
 import { SocketDebugClient } from "../SocketDebugClient";
+import { Language } from ".";
 
 export class PythonDebugProvider extends IDebugProvider {
-  name: string = "python";
+  name: Language = "python";
   requireExtensions: string[] = ["ms-python.python"];
 
   downloadUrl: string = "https://www.python.org/downloads/";

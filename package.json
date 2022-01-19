@@ -597,11 +597,11 @@
     ]
   },
   "scripts": {
-    "prebuild": "node ./scripts/prebuild.js",
+    "prebuild": "node ./scripts/pre.build.js",
     "build": "./node_modules/.bin/vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
-    "ts-compile-check": "tsc --noEmit -p build/tsconfig.extension.json",
+    "ts-compile-check": "tsc --noEmit -p src/main",
     "compile": "webpack --devtool nosources-source-map --config ./build/webpack.config.js",
     "watch": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/webpack.config.js",
     "package": "webpack --mode production --config ./build/webpack.config.js",
@@ -609,6 +609,7 @@
     "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
     "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
     "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
+    "prebuild:ext": "node ./scripts/test.build.js",
     "build:ext": "vsce package --yarn -o nocalhost.vsix",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
     "test:watch": "jest --watch"
