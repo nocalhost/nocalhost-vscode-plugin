@@ -11,9 +11,13 @@ const vscode = acquireVsCodeApi() as {
 
 export const postMessage = vscode.postMessage;
 
-let state = vscode.getState() || {};
+let state: State;
 
 export const getState = <T = unknown>(key: string): T => {
+  if (!state) {
+    state = vscode.getState() || {};
+  }
+
   return state[key] as T;
 };
 
