@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.14-alpha.d03c2cc",
+  "version": "0.6.14-alpha.578f7cb",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -594,7 +594,7 @@
   },
   "scripts": {
     "prebuild": "node ./scripts/pre.build.js",
-    "build": "./node_modules/.bin/vsce package",
+    "build": "vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
     "ts-compile-check": "tsc --noEmit -p src/main",
