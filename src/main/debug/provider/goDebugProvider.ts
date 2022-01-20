@@ -55,30 +55,15 @@ export class GoDebugProvider extends IDebugProvider {
   }
 
   async checkExtensionDependency(): Promise<void> {
-    type GoENV = { [key: string]: string };
-
-    const env: GoENV = await exec({ command: "go env" })
+    const env = await exec({
+      command: "go",
+      args: ["env", "-json", "GOPATH"],
+    })
       .promise.then((res) => {
-        return res.stdout
-          .split("\n")
-          .map((str) => {
-            if (host.isWindow()) {
-              str = str.substring(4);
-            } else {
-              str = str.replaceAll(`"`, "");
-            }
-
-            return str.split("=");
-          })
-          .reduce<GoENV>((obj, [key, value]) => {
-            if (key) {
-              obj[key] = value;
-            }
-
-            return obj;
-          }, {});
+        return JSON.parse(res.stdout) as { GOPATH: string };
       })
-      .catch(() => {
+      .catch((err) => {
+        logger.error("checkExtensionDependency", err);
         return Promise.reject(Error(`Failed to run "go env"`));
       });
 

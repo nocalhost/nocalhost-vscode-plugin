@@ -18,7 +18,6 @@ import StartDevModeCommand from "./StartDevModeCommand";
 import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
-import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
 import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
 import SyncServiceCommand from "./SyncServiceCommand";
@@ -79,7 +78,6 @@ export default function initCommands(
   new ResetCommand(context);
   new CleanPvcCommand(context);
   new ResetDevspaceCommand(context);
-  new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
   new AssociateLocalDirxectoryCommand(context);
 

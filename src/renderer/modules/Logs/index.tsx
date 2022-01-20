@@ -1,14 +1,18 @@
 import React, { useContext, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import qs from "qs";
-import hljs from "highlight.js";
+import hljs from "highlight.js/lib/core";
+import haskell from "highlight.js/lib/languages/haskell";
 import { createStyles, makeStyles } from "@material-ui/core";
-import { Skeleton } from "@material-ui/lab";
+import Skeleton from "@material-ui/lab/Skeleton";
+
 import { store } from "../../store/store";
 import { CustomThemeOptions } from "../../themes";
 import { ThemeType, LOG_TAIL_COUNT } from "../../constants";
 import fetchLogs from "../../services/fetchLogs";
 import useInterval from "../../hooks/useInterval";
+
+hljs.registerLanguage("haskell", haskell);
 
 const useStyles = makeStyles((theme: CustomThemeOptions) =>
   createStyles({
