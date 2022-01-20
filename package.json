@@ -368,10 +368,6 @@
         "title": "%rename%"
       },
       {
-        "command": "Nocalhost.loadWorkloads",
-        "title": "Load Workloads"
-      },
-      {
         "command": "Nocalhost.applyKubernetesObject",
         "title": "Apply New Manifest"
       },
@@ -598,7 +594,7 @@
   },
   "scripts": {
     "prebuild": "node ./scripts/pre.build.js",
-    "build": "./node_modules/.bin/vsce package",
+    "build": "vsce package",
     "vscode:prepublish": "yarn run package",
     "vscode:uninstall": "node ./dist/cleanup.js",
     "ts-compile-check": "tsc --noEmit -p src/main",
@@ -696,7 +692,6 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
-    "@dineug/vscode-google-analytics": "^0.1.2",
     "@types/proper-lockfile": "^4.1.1",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
