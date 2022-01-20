@@ -25,7 +25,7 @@ const LocalKubeConfig: React.FC = () => {
 
   useMessage(["selectKubeConfig", "initKubePath", "parseKubeConfig"], setState);
 
-  useMessage<ICheckResult>("checkKubeconfig", setCheckResult);
+  useMessage("checkKubeconfig", setCheckResult);
 
   return (
     <div>
