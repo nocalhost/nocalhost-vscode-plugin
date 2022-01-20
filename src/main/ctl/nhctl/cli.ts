@@ -8,6 +8,7 @@ import { delay } from "lodash";
 import {
   DEV_VERSION,
   GLOBAL_TIMEOUT,
+  NH_BIN_NHCTL,
   PLUGIN_TEMP_DIR,
   TEMP_NHCTL_BIN,
 } from "./../../constants";
@@ -1348,9 +1349,8 @@ export async function checkVersion() {
     ["beta", "alpha"].find((identifier) => pluginVersion.includes(identifier));
 
   if (
-    !requiredVersion ||
-    !getBooleanValue("nhctl.checkVersion") ||
-    (fs.existsSync(binPath) && isTest)
+    fs.existsSync(binPath) &&
+    (!getBooleanValue("nhctl.checkVersion") || isTest)
   ) {
     return;
   }
