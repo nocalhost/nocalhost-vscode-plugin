@@ -1,23 +1,39 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-type MessageData<T> = MessageEvent<{ type: string; payload: T }>;
+type Data<T> = { type: string; payload: T };
+type MessageData<T> = MessageEvent<Data<T>>;
 
-export default function useMessage<T>(
-  type: string,
-  listener: (data: MessageData<T>) => void,
+export default function useMessage<T = unknown>(
+  eventName: string | Array<string>,
+  handler: (payload: Data<T>["payload"], eventName: Data<T>["type"]) => void,
   conditions: any[] = []
-): void {
+) {
+  let eventsName = Array.of<string>();
+
+  if (!Array.isArray(eventName)) {
+    eventsName.push(eventName);
+  } else {
+    eventsName = eventName;
+  }
+
   useEffect(() => {
     let isMounted = true;
-    window.addEventListener("message", (data: MessageData<T>) => {
-      if (type === data.type && isMounted) {
-        listener.call(null, data);
+
+    const eventListener = (event: MessageData<T>) => {
+      const {
+        data: { type, payload },
+      } = event;
+
+      if (isMounted && eventsName.includes(type)) {
+        handler.call(null, payload, type);
       }
-    });
+    };
+
+    window.addEventListener("message", eventListener);
 
     () => {
       isMounted = false;
-      window.removeEventListener("message", listener);
+      window.removeEventListener("message", eventListener);
     };
-  }, conditions);
+  }, [eventName, conditions]);
 }

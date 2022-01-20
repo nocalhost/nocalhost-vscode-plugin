@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 
-import { getState, setState } from "../../utils/index";
+import vscode, { getState } from "../../utils/index";
 import KubeConfigPathSelect from "./pathSelect";
 import TabPanel from "../TabPanel";
 import KubeConfigAsText from "./asText";
 import i18n from "../../i18n";
+import useMessage from "../../hooks/vscode";
+import { ICheckResult } from "./status";
 
 type LocalTab = "select" | "paste";
 
@@ -15,6 +17,16 @@ const LocalKubeConfig: React.FC = () => {
     getState("localTab") || "select"
   );
 
+  const [checkResult, setCheckResult] = useState<ICheckResult>({
+    status: "DEFAULT",
+  });
+
+  const [state, setState] = useState();
+
+  useMessage(["selectKubeConfig", "initKubePath", "parseKubeConfig"], setState);
+
+  useMessage<ICheckResult>("checkKubeconfig", setCheckResult);
+
   return (
     <div>
       <Tabs
@@ -22,7 +34,9 @@ const LocalKubeConfig: React.FC = () => {
         onChange={(_, newValue: string) => {
           setLocalTab(newValue as LocalTab);
 
-          setState("localTab", newValue);
+          setCheckResult({ status: "DEFAULT" });
+
+          vscode.setState("localTab", newValue);
         }}
         variant="fullWidth"
         aria-label="full width tabs"
@@ -31,11 +45,11 @@ const LocalKubeConfig: React.FC = () => {
         <Tab label={i18n.t("pasteAsText")} value="paste" />
       </Tabs>
       <TabPanel name="select" value={localTab}>
-        <KubeConfigPathSelect />
+        <KubeConfigPathSelect checkResult={checkResult} state={state} />
       </TabPanel>
 
       <TabPanel name="paste" value={localTab}>
-        <KubeConfigAsText />
+        <KubeConfigAsText checkResult={checkResult} state={state} />
       </TabPanel>
     </div>
   );

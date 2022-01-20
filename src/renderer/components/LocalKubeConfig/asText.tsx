@@ -13,11 +13,43 @@ interface State {
   namespace: string;
 }
 
-const KubeConfigAsText: React.FC = () => {
-  const [checkResult, setCheckResult] = useState<ICheckResult>({
-    status: "DEFAULT",
-  });
+const KubeConfigAsText: React.FC<{
+  checkResult: ICheckResult;
+  state: State;
+}> = (props) => {
+  const [checkResult, setCheckResult] = useState<ICheckResult>(
+    props.checkResult
+  );
+  useEffect(() => {
+    setCheckResult(props.checkResult);
+  }, [props.checkResult]);
+
   const [state, setState] = useState<State>();
+
+  useEffect(() => {
+    if (!props.state) {
+      return;
+    }
+
+    let { kubeconfig, strKubeconfig, currentContext, namespace } = props.state;
+
+    if (kubeconfig) {
+      if (!currentContext) {
+        currentContext = kubeconfig["current-context"];
+      }
+      if (!namespace) {
+        namespace = kubeconfig.contexts?.find(
+          (item) => item.name === currentContext
+        )?.context?.namespace;
+      }
+    } else {
+      currentContext = namespace = null;
+    }
+
+    setState({ kubeconfig, strKubeconfig, namespace, currentContext });
+
+    input?.current && (input.current.value = strKubeconfig);
+  }, [props.state]);
 
   const input = useRef<HTMLInputElement>();
 
@@ -60,44 +92,6 @@ const KubeConfigAsText: React.FC = () => {
   };
 
   useEffect(checkKubeconfig, [state]);
-
-  useMessage<State>("parseKubeConfig", ({ data: { payload } }) => {
-    let {
-      kubeconfig,
-      strKubeconfig,
-      currentContext,
-      namespace,
-    }: State = payload;
-
-    if (kubeconfig) {
-      if (!currentContext) {
-        currentContext = kubeconfig["current-context"];
-      }
-      if (!namespace) {
-        namespace = kubeconfig.contexts?.find(
-          (item) => item.name === currentContext
-        )?.context?.namespace;
-      }
-    } else {
-      currentContext = namespace = null;
-    }
-
-    setState({ kubeconfig, strKubeconfig, namespace, currentContext });
-
-    input?.current && (input.current.value = strKubeconfig);
-  });
-  // useMessage("checkKubeconfig", () => {});
-  const handleMessage = (event: MessageEvent) => {
-    const { type, payload } = event.data;
-
-    switch (type) {
-      case "parseKubeConfig":
-        return;
-      case "checkKubeconfig":
-        setCheckResult(payload);
-        return;
-    }
-  };
 
   useEffect(() => {
     postMessage({

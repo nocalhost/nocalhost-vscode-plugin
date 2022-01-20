@@ -13,11 +13,51 @@ interface State {
   currentContext: string;
 }
 
-const KubeConfigPathSelect: React.FC = () => {
-  const [checkResult, setCheckResult] = useState<ICheckResult>({
-    status: "DEFAULT",
-  });
+const KubeConfigPathSelect: React.FC<{
+  checkResult: ICheckResult;
+  state: State;
+}> = (props) => {
+  const [checkResult, setCheckResult] = useState<ICheckResult>(
+    props.checkResult
+  );
+
+  useEffect(() => {
+    setCheckResult(props.checkResult);
+  }, [props.checkResult]);
+
   const [state, setState] = useState<State>();
+
+  useEffect(() => {
+    if (!props.state) {
+      return;
+    }
+
+    let { kubeconfig, path, currentContext, namespace } = props.state;
+
+    if (kubeconfig) {
+      if (!currentContext) {
+        currentContext = kubeconfig["current-context"];
+      }
+      if (!namespace) {
+        namespace = kubeconfig.contexts?.find(
+          (item) => item.name === currentContext
+        )?.context?.namespace;
+      }
+    } else {
+      currentContext = namespace = null;
+    }
+
+    setState({ kubeconfig, path, currentContext, namespace });
+
+    input?.current && (input.current.value = path);
+  }, [props.state]);
+
+  useEffect(() => {
+    postMessage({
+      type: "initKubePath",
+      data: vscode.getState("KubeConfigPathSelect"),
+    });
+  }, []);
 
   const input = useRef<HTMLInputElement>();
 
@@ -34,7 +74,7 @@ const KubeConfigPathSelect: React.FC = () => {
   }
 
   const checkKubeconfig = () => {
-    if (!state) {
+    if (!state || !state.path) {
       return;
     }
 
@@ -59,55 +99,6 @@ const KubeConfigPathSelect: React.FC = () => {
   };
 
   useEffect(checkKubeconfig, [state]);
-
-  const handleMessage = (event: MessageEvent) => {
-    const { type, payload } = event.data;
-
-    switch (type) {
-      case "selectKubeConfig":
-      case "initKubePath":
-        let { kubeconfig, path, currentContext, namespace }: State = payload;
-
-        if (kubeconfig) {
-          if (!currentContext) {
-            currentContext = kubeconfig["current-context"];
-          }
-          if (!namespace) {
-            namespace = kubeconfig.contexts?.find(
-              (item) => item.name === currentContext
-            )?.context?.namespace;
-          }
-        } else {
-          currentContext = namespace = null;
-        }
-
-        setState({ kubeconfig, path, currentContext, namespace });
-
-        input?.current && (input.current.value = path);
-
-        return;
-      case "checkKubeconfig":
-        setCheckResult(payload);
-        return;
-    }
-  };
-
-  useEffect(() => {
-    let isMounted = true;
-    window.addEventListener("message", (data) => {
-      isMounted && handleMessage(data);
-    });
-
-    postMessage({
-      type: "initKubePath",
-      data: vscode.getState("KubeConfigPathSelect"),
-    });
-
-    () => {
-      isMounted = false;
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
 
   const time = useRef<number>(-1);
 
