@@ -322,11 +322,6 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@dineug/vscode-google-analytics@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@dineug/vscode-google-analytics/-/vscode-google-analytics-0.1.2.tgz#03243673d41bc22eb6d247d3ad619708b428c72b"
-  integrity sha512-M7/Hc9GBh08vUm0W3rqxlAYyByrX/YVcolhknqUvcQ5mGje/FzgWhmfpb6VOthoEsFsYEB+xdT5h8C86w6hfbQ==
-
 "@emotion/hash@^0.8.0":
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/@emotion/hash/-/hash-0.8.0.tgz#bbbff68978fefdbe68ccb533bc8cbe1d1afb5413"
