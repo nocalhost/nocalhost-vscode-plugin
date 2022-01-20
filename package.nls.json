@@ -33,7 +33,6 @@
   "deployHelm": "Deploy From Helm Repo",
   "deployDemo": "Deploy Demo",
   "uninstallApp": "Uninstall Application",
-  "developConfig": "Development Configs",
   "upgradeApp": "Upgrade Application",
   "nocalhostProfile": "Nocalhost Profile",
   "viewDevConfig": "View Dev Configs",

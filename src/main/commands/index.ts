@@ -24,7 +24,6 @@ import SyncServiceCommand from "./SyncServiceCommand";
 import OverrideSyncCommand from "./OverrideSyncCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
-import EditAppConfigCommand from "./EditAppConfigCommand";
 import ShowApplicationsCommand from "./ShowApplicationsCommand";
 import ReconnectSyncCommand from "./ReconnectSyncCommand";
 import DebugCommand from "./DebugCommand";
@@ -86,7 +85,6 @@ export default function initCommands(
   new SyncServiceCommand(context);
   new OverrideSyncCommand(context);
   new UpgradeCommand(context);
-  new EditAppConfigCommand(context);
   new ShowApplicationsCommand(context);
   new ReconnectSyncCommand(context);
 

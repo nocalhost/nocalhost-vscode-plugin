@@ -47,7 +47,7 @@ export default class DataCenter {
       const shellObj = await shell.exec({ command }).promise;
       success = true;
       value = shellObj.stdout;
-    } catch (e) {
+    } catch (e: any) {
       if (e.message) {
         value = e.message;
       }

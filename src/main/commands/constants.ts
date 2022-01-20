@@ -13,8 +13,6 @@ export const RESET_PLUGIN = "Nocalhost.resetPlugin";
 
 export const EDIT_SERVICE_CONFIG = "Nocalhost.editServiceConfig";
 
-export const EDIT_APP_CONFIG = "Nocalhost.EditAppConfig";
-
 export const START_DEV_MODE = "Nocalhost.startDevMode";
 export const START_COPY_DEV_MODE = "Nocalhost.startCopyDevMode";
 export const END_DEV_MODE = "Nocalhost.endDevMode";
@@ -35,7 +33,6 @@ export const UNINSTALL_APP = "Nocalhost.uninstallApp";
 export const RESET_DEVSPACE = "Nocalhost.resetDevspace";
 export const UPGRADE_APP = "Nocalhost.upgradeApp";
 
-export const LOAD_RESOURCE = "Nocalhost.loadResource";
 export const EDIT_MANIFEST = "Nocalhost.editManifest";
 export const LOG = "Nocalhost.log";
 export const EXEC = "Nocalhost.exec";
