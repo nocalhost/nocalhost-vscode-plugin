@@ -470,10 +470,6 @@
         "title": "%CopyTerminal%"
       },
       {
-        "command": "Nocalhost.loadResource",
-        "title": "%nocalhostProfile%"
-      },
-      {
         "command": "Nocalhost.editManifest",
         "title": "%editManifest%"
       },
