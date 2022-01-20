@@ -50,7 +50,7 @@ export const Validation: React.FC<IValidation> = ({
   }
 
   useEffect(() => {
-    input && (input.current.value = namespace ?? "");
+    input?.current && (input.current.value = namespace ?? "");
   }, [namespace]);
 
   return (
@@ -64,7 +64,10 @@ export const Validation: React.FC<IValidation> = ({
         onChange={onChange}
         className="kubeConfig-select p-4"
       />
-      <div className="kubeConfig-select vscode-errorForeground">
+      <div
+        className="kubeConfig-select vscode-errorForeground"
+        style={{ wordBreak: "break-word" }}
+      >
         {isSuccess || checkResult.tips}
       </div>
 

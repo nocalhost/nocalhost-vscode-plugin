@@ -1512,16 +1512,23 @@ export async function kubeconfig(
   return result;
 }
 
-export async function checkKubeconfig(kubeconfig: string, context: string) {
-  const args = ["-i", `-c ${context}`, "--kubeconfig", "-"];
+export async function checkKubeconfig(
+  kubeconfig: { str?: string; path?: string },
+  context: string
+) {
+  const { path, str } = kubeconfig;
+
+  const args = ["-i", `-c ${context}`, "--kubeconfig", str ? "-" : path];
 
   const { promise, proc } = await exec({
     command: `${NH_BIN_NHCTL} kubeconfig check`,
     args: args,
   });
 
-  proc.stdin.write(kubeconfig);
-  proc.stdin.end();
+  if (str) {
+    proc.stdin.write(str);
+    proc.stdin.end();
+  }
 
   const { stdout } = await promise;
 

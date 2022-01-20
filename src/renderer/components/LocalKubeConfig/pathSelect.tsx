@@ -68,13 +68,17 @@ const KubeConfigPathSelect: React.FC = () => {
       case "initKubePath":
         let { kubeconfig, path, currentContext, namespace }: State = payload;
 
-        if (!currentContext) {
-          currentContext = kubeconfig?.["current-context"];
-        }
-        if (!namespace) {
-          namespace = kubeconfig?.contexts.find(
-            (item) => item.name === currentContext
-          )?.context?.namespace;
+        if (kubeconfig) {
+          if (!currentContext) {
+            currentContext = kubeconfig["current-context"];
+          }
+          if (!namespace) {
+            namespace = kubeconfig.contexts?.find(
+              (item) => item.name === currentContext
+            )?.context?.namespace;
+          }
+        } else {
+          currentContext = namespace = null;
         }
 
         setState({ kubeconfig, path, currentContext, namespace });
@@ -89,7 +93,10 @@ const KubeConfigPathSelect: React.FC = () => {
   };
 
   useEffect(() => {
-    window.addEventListener("message", handleMessage);
+    let isMounted = true;
+    window.addEventListener("message", (data) => {
+      isMounted && handleMessage(data);
+    });
 
     postMessage({
       type: "initKubePath",
@@ -97,9 +104,12 @@ const KubeConfigPathSelect: React.FC = () => {
     });
 
     () => {
+      isMounted = false;
       window.removeEventListener("message", handleMessage);
     };
   }, []);
+
+  const time = useRef<number>(-1);
 
   return (
     <Validation
@@ -119,6 +129,20 @@ const KubeConfigPathSelect: React.FC = () => {
           placeholder="Please select kubeConfig file path"
           name="file"
           defaultValue={state?.path}
+          onChange={(el) => {
+            clearTimeout(time.current);
+
+            const path = el.currentTarget.value;
+
+            time.current = window.setTimeout(() => {
+              postMessage({
+                type: "selectKubeConfig",
+                data: {
+                  path,
+                },
+              });
+            }, 500);
+          }}
         />
         <span
           onClick={() => {
@@ -134,12 +158,17 @@ const KubeConfigPathSelect: React.FC = () => {
         <Select
           value={state?.currentContext}
           onChange={(currentContext) =>
-            setState((prevState) => {
-              return { ...prevState, currentContext };
+            postMessage({
+              type: "selectKubeConfig",
+              data: {
+                ...state,
+                currentContext,
+                namespace: undefined,
+              },
             })
           }
           options={
-            state?.kubeconfig?.contexts.map((item) => {
+            state?.kubeconfig?.contexts?.map((item) => {
               return {
                 label: item.name,
                 value: item.name,

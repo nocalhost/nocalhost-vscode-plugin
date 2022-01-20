@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 interface ISelectProps {
   className?: string;
@@ -18,8 +18,17 @@ const Select: React.FC<ISelectProps> = (props) => {
       onChange(options[selectedIndex].value);
     }
   }
+  const input = useRef<HTMLSelectElement>();
+
+  useEffect(() => {
+    if (input?.current) {
+      input.current.value = value ?? "disabled";
+    }
+  }, [value]);
+
   return (
     <select
+      ref={input}
       defaultValue={(options.length && value) || "disabled"}
       placeholder="select context"
       onChange={handleChange}

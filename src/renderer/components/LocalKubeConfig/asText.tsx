@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import useMessage from "../../hooks/vscode";
 
 import vscode, { postMessage } from "../../utils/index";
 import Select from "../Select";
@@ -60,32 +61,37 @@ const KubeConfigAsText: React.FC = () => {
 
   useEffect(checkKubeconfig, [state]);
 
+  useMessage<State>("parseKubeConfig", ({ data: { payload } }) => {
+    let {
+      kubeconfig,
+      strKubeconfig,
+      currentContext,
+      namespace,
+    }: State = payload;
+
+    if (kubeconfig) {
+      if (!currentContext) {
+        currentContext = kubeconfig["current-context"];
+      }
+      if (!namespace) {
+        namespace = kubeconfig.contexts?.find(
+          (item) => item.name === currentContext
+        )?.context?.namespace;
+      }
+    } else {
+      currentContext = namespace = null;
+    }
+
+    setState({ kubeconfig, strKubeconfig, namespace, currentContext });
+
+    input?.current && (input.current.value = strKubeconfig);
+  });
+  // useMessage("checkKubeconfig", () => {});
   const handleMessage = (event: MessageEvent) => {
     const { type, payload } = event.data;
 
     switch (type) {
       case "parseKubeConfig":
-        let {
-          kubeconfig,
-          strKubeconfig,
-          currentContext,
-          namespace,
-        }: State = payload;
-
-        if (kubeconfig) {
-          if (!currentContext) {
-            currentContext = kubeconfig?.["current-context"];
-          }
-          if (!namespace) {
-            namespace = kubeconfig.contexts.find(
-              (item) => item.name === currentContext
-            )?.context?.namespace;
-          }
-        }
-
-        setState({ kubeconfig, strKubeconfig, namespace, currentContext });
-
-        input?.current && (input.current.value = strKubeconfig);
         return;
       case "checkKubeconfig":
         setCheckResult(payload);
@@ -94,16 +100,10 @@ const KubeConfigAsText: React.FC = () => {
   };
 
   useEffect(() => {
-    window.addEventListener("message", handleMessage);
-
     postMessage({
       type: "parseKubeConfig",
       data: vscode.getState("KubeConfigAsText"),
     });
-
-    () => {
-      window.removeEventListener("message", handleMessage);
-    };
   }, []);
 
   return (
@@ -145,13 +145,14 @@ const KubeConfigAsText: React.FC = () => {
       <KubeconfigStatus status={checkResult?.status}>
         <Select
           value={state?.currentContext}
-          onChange={(currentContext) =>
-            setState((prevState) => {
-              return { ...prevState, currentContext };
-            })
-          }
+          onChange={(currentContext) => {
+            postMessage({
+              type: "parseKubeConfig",
+              data: { ...state, currentContext, namespace: undefined },
+            });
+          }}
           options={
-            state?.kubeconfig?.contexts.map((item) => {
+            state?.kubeconfig?.contexts?.map((item) => {
               return {
                 label: item.name,
                 value: item.name,

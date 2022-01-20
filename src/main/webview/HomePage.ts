@@ -46,11 +46,9 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
           case "parseKubeConfig":
           case "selectKubeConfig": {
             const payload = data.data ?? {};
-            let { strKubeconfig } = payload;
+            let { strKubeconfig, path: localPath } = payload;
 
-            let localPath: string;
-
-            if (type === "selectKubeConfig") {
+            if (type === "selectKubeConfig" && !localPath) {
               const kubeConfigUri = await host.showSelectFileDialog(
                 "select your kubeConfig"
               );
@@ -145,28 +143,25 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
         kubeconfig = yaml.parse(strKubeconfig);
       } catch (error) {
         logger.error("checkKubeconfig yaml parse", error);
-        return {};
       }
     }
 
-    if (!isObject(kubeconfig)) {
-      return {};
-    }
+    if (kubeconfig) {
+      if (namespace) {
+        const context = kubeconfig.contexts?.find(
+          (context) => context.name === currentContext
+        )?.context;
 
-    if (namespace) {
-      const context = kubeconfig.contexts.find(
-        (context) => context.name === currentContext
-      )?.context;
-
-      if (context) {
-        context.namespace = namespace;
+        if (context) {
+          context.namespace = namespace;
+        }
+      }
+      if (currentContext) {
+        kubeconfig["current-context"] = currentContext;
       }
     }
-    if (currentContext) {
-      kubeconfig["current-context"] = currentContext;
-    }
 
-    return { kubeconfig, currentContext, namespace };
+    return { kubeconfig, currentContext, namespace, path, strKubeconfig };
   }
 
   private async checkKubeconfig(
@@ -174,18 +169,20 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
     data: any,
     webviewView: vscode.WebviewView
   ) {
-    let { kubeconfig, currentContext } = await this.getKubeconfig(data);
+    let {
+      kubeconfig,
+      currentContext,
+      path,
+      strKubeconfig,
+    } = await this.getKubeconfig(data);
 
-    let payload: any;
+    let str: string = strKubeconfig;
 
-    if (!kubeconfig) {
-      payload = { status: "FAIL", tips: "Kubeconfig Invalid,Please check" };
-    } else {
-      payload = await checkKubeconfig(
-        yaml.stringify(kubeconfig),
-        currentContext
-      );
+    if (kubeconfig) {
+      str = yaml.stringify(kubeconfig);
     }
+
+    let payload = await checkKubeconfig({ path, str }, currentContext);
 
     webviewView.webview.postMessage({
       type,
