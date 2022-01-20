@@ -890,48 +890,17 @@ export async function endDevMode(
   });
 }
 
-export async function loadResource(
-  host: Host,
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string
-) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `describe ${appName}`
-  );
-  const result = await exec({ command }).promise;
-  return result.stdout;
-}
-
-export async function getAppInfo(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string
-) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `describe ${appName}`
-  );
-
-  const result = await exec({ command }).promise;
-
-  return result.stdout;
-}
-
 export async function getServiceConfig(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
   workloadName: string,
-  type?: string
+  type: string
 ) {
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `describe ${appName} -d ${workloadName} ${type ? `--type ${type}` : ""}`
+    `get ${type} ${workloadName} -a ${appName} -o yaml`
   );
 
   const result = await exec({ command }).promise;
@@ -939,7 +908,8 @@ export async function getServiceConfig(
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {
     try {
-      svcProfile = yaml.parse(result.stdout) as SvcProfile;
+      svcProfile = yaml.parse(result.stdout).description as SvcProfile;
+      console.log(svcProfile);
     } catch (error) {
       logger.info("command: " + command + "result: ", result.stdout);
       throw error;

@@ -7,7 +7,6 @@ import EndDevModeCommand from "./EndDevModeCommand";
 import ExecCommand from "./ExecCommand";
 import RefreshCommand from "./RefreshCommand";
 import InstallCommand from "./InstallCommand";
-import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import ResetDevspaceCommand from "./ResetDevspaceCommand";
@@ -70,7 +69,6 @@ export default function initCommands(
   new RefreshCommand(context, appTreeProvider);
   new InstallCommand(context);
   new UninstallCommand(context);
-  new LoadResourceCommand(context);
   new EditManifestCommand(context);
   new LogCommand(context);
   new PortForwardCommand(context);

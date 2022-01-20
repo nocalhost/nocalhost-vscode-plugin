@@ -37,7 +37,7 @@ export default class EditManifestCommand implements ICommand {
       }
       const kubeconfig = node.getKubeConfigPath();
       let uri: vscode.Uri = vscode.Uri.parse(
-        `${scheme}://k8s/loadResource/${kind}/${name}.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${node.getKubeConfigPath()}&namespace=${node.getNameSpace()}`
+        `${scheme}://k8s/editManifest/${kind}/${name}.yaml?id=${node.getNodeStateId()}&kubeConfigPath=${kubeconfig}&namespace=${node.getNameSpace()}`
       );
       const doc: vscode.TextDocument = await vscode.workspace.openTextDocument(
         uri
@@ -60,7 +60,7 @@ export default class EditManifestCommand implements ICommand {
       }
       const name: string = node.name;
       const uri: vscode.Uri = vscode.Uri.parse(
-        `nhtext://loadresource/${name}.yaml?type=nh&name=${name}&kubeConfigPath=${node.getKubeConfigPath()}`
+        `nhtext://editManifest/${name}.yaml?type=nh&name=${name}&kubeConfigPath=${node.getKubeConfigPath()}`
       );
       let doc = await vscode.workspace.openTextDocument(uri);
       await vscode.window.showTextDocument(doc, { preview: true });

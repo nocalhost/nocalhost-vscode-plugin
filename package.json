@@ -252,11 +252,6 @@
           "group": "1"
         },
         {
-          "command": "Nocalhost.loadResource",
-          "title": "%loadResource%",
-          "when": "viewItem =~ /^application-nodefault-installed/i"
-        },
-        {
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^(viewer:|)application-(.*)-installed/i",
           "group": "navigation"

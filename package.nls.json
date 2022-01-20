@@ -17,7 +17,6 @@
   "Logs": "View Logs",
   "PortForward": "Port Forward",
   "CleanPvc": "Clear PVC",
-  "loadResource": "Load Resource",
   "HelmValues": "Helm Values",
   "ViewKubeConfig": "View KubeConfig",
   "AssociateLocalDir": "Associate Local DIR",
