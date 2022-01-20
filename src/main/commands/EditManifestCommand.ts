@@ -53,18 +53,6 @@ export default class EditManifestCommand implements ICommand {
 
       const eventCeneter: EventCenter = EventCenter.getInstance();
       eventCeneter.addSaveTextDocumentListener(this.handleSaveTextDocument);
-    } else if (node instanceof AppNode) {
-      if (!node.installed()) {
-        host.showInformationMessage(`${node.label} is not installed.`);
-        return;
-      }
-      const name: string = node.name;
-      const uri: vscode.Uri = vscode.Uri.parse(
-        `nhtext://editManifest/${name}.yaml?type=nh&name=${name}&kubeConfigPath=${node.getKubeConfigPath()}`
-      );
-      let doc = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(doc, { preview: true });
-      TextDocumentContentProvider.getInstance().update(uri);
     }
   }
 
