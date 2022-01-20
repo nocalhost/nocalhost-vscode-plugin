@@ -1,15 +1,16 @@
+import * as vscode from "vscode";
+import * as semver from "semver";
+import * as os from "os";
+import * as path from "path";
+import * as fs from "fs";
+import { delay } from "lodash";
+
 import {
   DEV_VERSION,
   GLOBAL_TIMEOUT,
   PLUGIN_TEMP_DIR,
   TEMP_NHCTL_BIN,
 } from "./../../constants";
-import * as vscode from "vscode";
-import * as semver from "semver";
-import * as os from "os";
-import * as path from "path";
-import * as fs from "fs";
-
 import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
@@ -811,11 +812,32 @@ export async function startPortForward(
     title,
     command,
     sudo: !!isSudo(ports),
-  }).catch(() => {
-    return Promise.reject(
-      new Error(`Port-forward (${appName}/${workloadName}) fail`)
-    );
-  });
+  })
+    .catch(() => {
+      return Promise.reject(
+        Error(`Port-forward (${appName}/${workloadName}) fail`)
+      );
+    })
+    .then(() => {
+      if (
+        host.getContext().extension.extensionKind === vscode.ExtensionKind.UI
+      ) {
+        return;
+      }
+
+      const localPort = ports[0].split(":")[0];
+
+      const terminal = host.createTerminal({
+        name: "forwarding",
+        shellPath: "/bin/sh",
+        shellArgs: [
+          "-c",
+          `echo Automatic forwarding tcp://:127.0.0.1:${localPort}`,
+        ],
+      });
+
+      delay(terminal.dispose, 1000);
+    });
 }
 
 export async function endPortForward(

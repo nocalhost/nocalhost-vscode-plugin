@@ -49,9 +49,9 @@ export default class NocalhostWebviewPanel {
     if (Object.keys(query).length > 0) {
       url = `${url}?${qs.stringify(query)}`;
     }
-    const panel:
-      | NocalhostWebviewPanel
-      | undefined = NocalhostWebviewPanel.getPanelByURL(url);
+    const panel: NocalhostWebviewPanel = NocalhostWebviewPanel.getPanelByURL(
+      url
+    );
     if (panel) {
       NocalhostWebviewPanel.openOnExistPanel(panel, url, title, column);
     } else {
@@ -263,7 +263,7 @@ export default class NocalhostWebviewPanel {
     const fontPath: vscode.Uri = webview.asWebviewUri(
       vscode.Uri.file(path.join(extensionPath, "dist", `DroidSansMono_v1.ttf`))
     );
-    const lang = vscode.env.language;
+
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -280,15 +280,6 @@ export default class NocalhostWebviewPanel {
               font-style: normal;
             }
           </style>
-          <script>
-            window.process = {
-              env: {
-                NODE_ENV: "production",
-                
-              },
-              lang: ${lang}
-            }
-          </script>
         </head>
         <body>
           <div id="root"></div>

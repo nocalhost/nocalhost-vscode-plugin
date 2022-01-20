@@ -6,7 +6,7 @@
     "target": "es6",
     "experimentalDecorators": true,
     "strictNullChecks": false,
-    "rootDir": "../../",
+    "rootDir": "./",
     "lib": ["es6"],
     "sourceMap": true,
     "strict": true /* enable all strict type-checking options */

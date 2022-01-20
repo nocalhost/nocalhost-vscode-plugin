@@ -2,13 +2,15 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "node",
+    "typeRoots": ["./typings"],
     "target": "ES6",
-    "rootDir": "../../",
+    "rootDir": "./",
     "experimentalDecorators": true,
     "noImplicitAny": true,
     "strictNullChecks": false,
     "jsx": "react",
     "lib": ["dom", "esnext"],
+    "types": ["@types/jest", "highlight.js/types"],
     "esModuleInterop": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true
