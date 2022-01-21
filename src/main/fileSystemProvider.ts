@@ -108,7 +108,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
           namespace = query.namespace as string;
         }
         const type = paths[1];
-        if (type === "loadResource") {
+        if (type === "editManifest") {
           const kind = paths[2];
           const names = paths[3].split(".");
           const name = names[0];
@@ -159,15 +159,7 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
         const kubeConfigPath = query.kubeConfigPath as string;
         const namespace = query.namespace as string;
         const workloadType = query.workloadType as string;
-        if (type === "loadResource") {
-          const name = paths[2];
-          result = await nhctl.loadResource(
-            host,
-            kubeConfigPath,
-            namespace,
-            name
-          );
-        } else if (type === "config") {
+        if (type === "config") {
           const configType = paths[2];
           if (configType === "app") {
             const appName = paths[3];

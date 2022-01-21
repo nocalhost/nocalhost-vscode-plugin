@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { IMessage } from "..";
 import fetchLogs from "./fetchLogs";
-import fetchDeployments from "./fetchDeployments";
 import updateURL from "./updateURL";
 
 export default function (message: IMessage, id: number) {
@@ -12,8 +11,6 @@ export default function (message: IMessage, id: number) {
       return vscode.commands.executeCommand(message.payload?.command);
     case "logs/fetch":
       return fetchLogs(message, id);
-    case "deployments/fetch":
-      return fetchDeployments(message, id);
     case "url/update": {
       return updateURL(message, id);
     }

@@ -19,18 +19,6 @@ async function fetchApplicationMeta(
   return await DataCenter.execCommand(command);
 }
 
-async function describeApplication(
-  kubeConfigPath: string,
-  name: string
-): Promise<ServiceResult> {
-  const nhctlPath = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
-  const command: string = `${nhctlPath} describe ${name} --kubeconfig ${kubeConfigPath}`;
-  return await DataCenter.execCommand(command);
-}
-
 async function fetchApplicationConfig(
   kubeConfigPath: string,
   name: string
@@ -160,7 +148,6 @@ export default {
   fetchDeployments,
   fetchKubernetesResource,
   fetchApplicationConfig,
-  describeApplication,
   applyKubernetesObject,
   deleteKubernetesObject,
 };

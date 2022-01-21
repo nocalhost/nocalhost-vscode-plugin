@@ -32,7 +32,7 @@ export default class TextDocumentContentProvider
     const authority: string = uri.authority;
     const query: string = uri.query;
     let content: string = "";
-    if (authority === "loadresource") {
+    if (authority === "editManifest") {
       const queryObj: querystring.ParsedUrlQuery = querystring.parse(query);
       const type: string = queryObj.type as string;
       const kind: string = queryObj.kind as string;
@@ -44,18 +44,6 @@ export default class TextDocumentContentProvider
             kind,
             name,
             kubeConfig
-          );
-          if (!result.success) {
-            host.showErrorMessage(result.value);
-          } else {
-            content = result.value;
-          }
-          break;
-        }
-        case "nh": {
-          const result: ServiceResult = await services.describeApplication(
-            kubeConfig,
-            name
           );
           if (!result.success) {
             host.showErrorMessage(result.value);

@@ -34,9 +34,11 @@ const LocalKubeConfig: React.FC = () => {
         onChange={(_, newValue: string) => {
           setLocalTab(newValue as LocalTab);
 
-          setCheckResult({ status: "DEFAULT" });
-
           vscode.setState("localTab", newValue);
+
+          if (newValue !== localTab) {
+            setCheckResult({ status: "DEFAULT" });
+          }
         }}
         variant="fullWidth"
         aria-label="full width tabs"

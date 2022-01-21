@@ -97,25 +97,6 @@ export class AppNode extends NocalhostFolderNode {
     return devSpace.info.namespace;
   }
 
-  public async getApplicationInfo() {
-    if (this.nhctlAppInfo) {
-      return this.nhctlAppInfo;
-    }
-    return this.freshApplicationInfo();
-  }
-
-  public async freshApplicationInfo() {
-    let info = {} as AppInfo;
-    const infoStr = await nhctl
-      .getAppInfo(this.getKubeConfigPath(), this.namespace, this.name)
-      .catch((err) => {});
-    if (infoStr) {
-      info = yaml.parse(infoStr as string);
-    }
-    this.nhctlAppInfo = info;
-    return this.nhctlAppInfo;
-  }
-
   public async getNocalhostConfig() {
     if (this.nocalhostConfig) {
       return this.nocalhostConfig;
