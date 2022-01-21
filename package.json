@@ -375,6 +375,10 @@
         "icon": "$(sign-in)"
       },
       {
+        "command": "Nocalhost.statusBarSync",
+        "title": "statusBarSync"
+      },
+      {
         "command": "Nocalhost.syncManage.refresh",
         "title": "Refresh",
         "alt": "Refresh",

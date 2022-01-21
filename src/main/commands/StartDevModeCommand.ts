@@ -36,7 +36,7 @@ import { appTreeView } from "../extension";
 import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
 import { getContainer } from "../utils/getContainer";
-import SyncServiceCommand from "./SyncServiceCommand";
+import SyncServiceCommand from "./sync/SyncServiceCommand";
 import { getContainers } from "../ctl/nhctl";
 
 export interface ControllerNodeApi {
