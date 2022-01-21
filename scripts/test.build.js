@@ -16,6 +16,11 @@ const contextPatch = [
     when:
       "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(?!vpn_)/i",
   },
+  {
+    command: "Nocalhost.startCopyDevMode",
+    when:
+      "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
+  },
 ];
 packageJson.contributes.menus["view/item/context"].forEach((context) => {
   if (
