@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "node",
-    "typeRoots": ["./typings"],
-    "target": "ES6",
+    "target": "ES2018",
+    "outDir": "../out",
     "rootDir": "./",
+    "typeRoots": ["./typings"],
     "experimentalDecorators": true,
     "noImplicitAny": true,
+    "sourceMap": true,
     "strictNullChecks": false,
     "jsx": "react",
     "lib": ["dom", "esnext"],

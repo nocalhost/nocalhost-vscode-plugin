@@ -44,3 +44,8 @@ export interface IPortForward {
   svcName: string;
   updated: string;
 }
+
+export interface IKubeconfig {
+  contexts: Array<{ name: string; context: { namespace: string } }>;
+  "current-context": string;
+}

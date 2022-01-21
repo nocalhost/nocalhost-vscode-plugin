@@ -1,169 +1,55 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
-import { postMessage, vscode } from "../../utils/index";
-import KubeConfigPathSelect from "../kubeConfigPathSelect";
+
+import vscode, { getState } from "../../utils/index";
+import KubeConfigPathSelect from "./pathSelect";
 import TabPanel from "../TabPanel";
-import KubeConfigAsText from "../KubeConfigAsText";
+import KubeConfigAsText from "./asText";
 import i18n from "../../i18n";
-interface ILocalKubeConfigProps {
-  oldState: {
-    [key: string]: any;
-  };
-}
+import useMessage from "../../hooks/vscode";
+import { ICheckResult } from "./status";
 
-interface IContext {
-  context: {
-    cluster: string;
-    namespace: string;
-    user: string;
-  };
-  name: string;
-}
+type LocalTab = "select" | "paste";
 
-const LocalKubeConfig: React.FC<ILocalKubeConfigProps> = (props) => {
-  const { oldState } = props;
-
-  const [serverKubeConfigValue, setServerKubeConfigValue] = useState<string>(
-    oldState.serverKubeConfigValue
-  );
-  const [localTab, setLocalTab] = useState<string>(
-    oldState.localTab || "select"
-  );
-  const [serverKubeContextValue, setServerKubeContextValue] = useState<string>(
-    oldState.serverKubeContextValue
-  );
-  const [localPathValue, setLocalPathValue] = useState<string>(
-    oldState.localPathValue
-  );
-  const [localContextValue, setLocalContextValue] = useState<string>(
-    oldState.localContextValue
-  );
-  const [localContextOpts, setLocalContextOpts] = useState(
-    oldState.localContextOpts
+const LocalKubeConfig: React.FC = () => {
+  const [localTab, setLocalTab] = useState<LocalTab>(
+    getState("localTab") || "select"
   );
 
-  const handleMessage = (event: MessageEvent) => {
-    const data = event.data;
-    const { type, payload } = data;
-    switch (type) {
-      case "kubeConfig": {
-        setLocalPathValue(payload.path || "");
-        setLocalContextOpts(
-          (payload.contexts || []).map((it: IContext) => ({
-            label: it.name,
-            value: it.name,
-          }))
-        );
-        setLocalContextValue(payload.currentContext);
-        return;
-      }
-      case "initKubePath-response": {
-        const { defaultKubePath, contexts, currentContext } = payload;
-        setLocalContextOpts(
-          (contexts || []).map((it: IContext) => ({
-            label: it.name,
-            value: it.name,
-          }))
-        );
-        setLocalContextValue(currentContext);
-        setLocalPathValue(defaultKubePath || "");
-        return;
-      }
-      default:
-        return;
-    }
-  };
-  useEffect(() => {
-    window.addEventListener("message", handleMessage);
-    if (!localPathValue) {
-      postMessage({
-        type: "initKubePath",
-        data: null,
-      });
-    }
+  const [checkResult, setCheckResult] = useState<ICheckResult>({
+    status: "DEFAULT",
+  });
 
-    () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
+  const [state, setState] = useState();
 
-  function submitSelectLocal(props: { context: string; localPath: string }) {
-    const { context, localPath } = props;
-    if (!localPath || !context) {
-      return;
-    }
-    postMessage({
-      type: "local",
-      data: {
-        contextName: context,
-        localPath: localPath,
-      },
-    });
-    vscode.setState({
-      ...oldState,
-      localContextOpts,
-      localPathValue: localPath,
-      localContextValue: context,
-    });
-  }
+  useMessage(["selectKubeConfig", "initKubePath", "parseKubeConfig"], setState);
 
-  function submitAsText(kubeConfig: string) {
-    vscode.setState({
-      ...oldState,
-    });
-    postMessage({
-      type: "local",
-      data: {
-        kubeConfig,
-      },
-    });
-  }
-
-  const loadLabel = <div>{`${i18n.t("loadKubeConfig")}`}</div>;
-  const pasteLabel = <div>{`${i18n.t("pasteAsText")}`}</div>;
+  useMessage("checkKubeconfig", setCheckResult);
 
   return (
     <div>
       <Tabs
         value={localTab}
-        onChange={(event: React.ChangeEvent<{}>, newValue: string) => {
-          vscode.setState({
-            ...oldState,
-            localTab: newValue,
-          });
-          setLocalTab(newValue);
+        onChange={(_, newValue: string) => {
+          setLocalTab(newValue as LocalTab);
+
+          setCheckResult({ status: "DEFAULT" });
+
+          vscode.setState("localTab", newValue);
         }}
         variant="fullWidth"
         aria-label="full width tabs"
       >
-        <Tab className="localkube_tab" label={loadLabel} value="select" />
-        <Tab label={pasteLabel} value="paste" />
+        <Tab label={i18n.t("loadKubeConfig")} value="select" />
+        <Tab label={i18n.t("pasteAsText")} value="paste" />
       </Tabs>
       <TabPanel name="select" value={localTab}>
-        <KubeConfigPathSelect
-          onChangeContext={(v: string) => {
-            setLocalContextValue(v);
-          }}
-          onSubmit={submitSelectLocal}
-          currentContext={localContextValue}
-          value={localPathValue}
-          contextOpts={localContextOpts}
-        />
+        <KubeConfigPathSelect checkResult={checkResult} state={state} />
       </TabPanel>
 
       <TabPanel name="paste" value={localTab}>
-        <KubeConfigAsText
-          onSubmit={submitAsText}
-          contextValue={serverKubeContextValue}
-          value={serverKubeConfigValue}
-          onChangeContextValue={(v) => {
-            setServerKubeContextValue(v);
-          }}
-          onChangeKubeConfig={(v) => {
-            setServerKubeConfigValue(v);
-          }}
-        />
+        <KubeConfigAsText checkResult={checkResult} state={state} />
       </TabPanel>
     </div>
   );

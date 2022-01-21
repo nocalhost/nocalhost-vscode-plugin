@@ -1,19 +1,23 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ColorThemeKind } from "vscode";
 import * as ProperLockfile from "proper-lockfile";
 import * as yaml from "yaml";
 import * as vscode from "vscode";
 import host from "../host";
 import logger from "./logger";
+import { IKubeconfig } from "../ctl/nhctl/type";
 
-export function getYamlDefaultContext(yaml: any) {
-  const contexts = yaml.contexts || [];
-  const currentContext = yaml["current-context"];
-  if (currentContext) {
-    return currentContext;
+export function getKubeconfigContext(
+  kubeconfig: IKubeconfig,
+  contextName?: string
+): IKubeconfig["contexts"][number] | undefined {
+  const contexts = kubeconfig.contexts || [];
+
+  if (!contextName) {
+    contextName = kubeconfig["current-context"];
   }
-  return contexts.length > 0 ? contexts[0].name : null;
+
+  return contexts.find((item) => item.name === contextName);
 }
 
 export function readYamlSync(filePath: string) {
@@ -33,7 +37,7 @@ export function readYamlSync(filePath: string) {
   }
   return yamlObj;
 }
-export async function readYaml(filePath: string) {
+export async function readYaml<T = any>(filePath: string) {
   let yamlObj = null;
 
   const result = await isExist(filePath);
@@ -46,7 +50,7 @@ export async function readYaml(filePath: string) {
   } catch (e) {
     logger.error(e);
   }
-  return yamlObj;
+  return yamlObj as T;
 }
 
 export async function readFile(filePath: string): Promise<string> {
