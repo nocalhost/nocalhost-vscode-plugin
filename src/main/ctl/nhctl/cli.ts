@@ -930,7 +930,7 @@ export async function getServiceConfig(
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {
     try {
-      svcProfile = yaml.parse(result.stdout).description as SvcProfile;
+      svcProfile = (yaml.parse(result.stdout).description ?? {}) as SvcProfile;
       console.log(svcProfile);
     } catch (error) {
       logger.info("command: " + command + "result: ", result.stdout);
