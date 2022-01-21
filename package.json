@@ -211,11 +211,6 @@
           "group": "inline@1"
         },
         {
-          "command": "Nocalhost.EditAppConfig",
-          "when": "viewItem =~ /^application-nodefault-installed/i",
-          "group": "inline@0"
-        },
-        {
           "command": "Nocalhost.exec",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "3"
@@ -250,11 +245,6 @@
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(?!vpn_)/i",
           "group": "1"
-        },
-        {
-          "command": "Nocalhost.loadResource",
-          "title": "%loadResource%",
-          "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
           "command": "Nocalhost.portForward",
@@ -480,10 +470,6 @@
         "title": "%CopyTerminal%"
       },
       {
-        "command": "Nocalhost.loadResource",
-        "title": "%nocalhostProfile%"
-      },
-      {
         "command": "Nocalhost.editManifest",
         "title": "%editManifest%"
       },
@@ -502,11 +488,6 @@
       {
         "command": "Nocalhost.editServiceConfig",
         "title": "%viewDevConfig%",
-        "icon": "images/icon/setting_normal.svg"
-      },
-      {
-        "command": "Nocalhost.EditAppConfig",
-        "title": "%developConfig%",
         "icon": "images/icon/setting_normal.svg"
       },
       {

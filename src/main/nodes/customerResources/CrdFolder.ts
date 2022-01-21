@@ -18,15 +18,6 @@ export class CrdFolder extends KubernetesResourceFolder {
     state.setNode(this.getNodeStateId(), this);
   }
 
-  public getAppInfo() {
-    const appNode = this.getAppNode();
-    return {
-      kubeconfigPath: appNode.getKubeConfigPath(),
-      appName: appNode.name,
-      namespace: appNode.namespace,
-    };
-  }
-
   getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
     const collapseState =
       state.get(this.getNodeStateId()) ||

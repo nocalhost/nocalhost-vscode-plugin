@@ -47,7 +47,7 @@ export default class DataCenter {
       const shellObj = await shell.exec({ command }).promise;
       success = true;
       value = shellObj.stdout;
-    } catch (e) {
+    } catch (e: any) {
       if (e.message) {
         value = e.message;
       }
@@ -82,10 +82,7 @@ export default class DataCenter {
           nocalhostConfig: contextObj["nocalhostConfig"] || "",
         };
         // await this.fetchApplicationMeta(context.applicationName);
-        await this.fetchApplicationDescribe(
-          this.getKubeConfigPath(result.id, result.devspaceId),
-          context.applicationName
-        );
+
         await this.fetchApplicationConfig(
           this.getKubeConfigPath(result.id, result.devspaceId),
           context.applicationName
@@ -180,78 +177,6 @@ export default class DataCenter {
     meta: IApplicationMeta
   ): void {
     this.dataStore.applicationMetas.set(applicationName, meta);
-  }
-
-  private async fetchApplicationDescribe(
-    kubeConfigPath: string,
-    applicationName: string
-  ): Promise<void> {
-    const result: ServiceResult = await services.describeApplication(
-      kubeConfigPath,
-      applicationName
-    );
-    const rawData: string = result.success ? result.value : "";
-    if (rawData) {
-      const data: any = yaml.parse(rawData);
-      if (typeof data !== "string") {
-        const svcProfile: IApplicationDescribeSvcProfile[] = [];
-        if (data.svcProfile && Array.isArray(data.svcProfile)) {
-          data.svcProfile.forEach((profile: any) => {
-            const rawConfig: IApplicationDescribeSvcProfileRawConfig = {
-              name: profile.rawConfig.name || "",
-              serviceType: profile.rawConfig.serviceType || "",
-              gitUrl: profile.rawConfig.gitUrl || "",
-              devContainerImage: profile.rawConfig.devContainerImage || "",
-              workDir: profile.rawConfig.workDir || "",
-              persistentVolumeDirs:
-                profile.rawConfig.persistentVolumeDirs || [],
-              runCommand: profile.rawConfig.runCommand || [],
-              hotReloadRunCommand: profile.rawConfig.hotReloadRunCommand || [],
-              devContainerShell: profile.rawConfig.devContainerShell || "",
-              ignores: profile.rawConfig.ignores || [],
-              devContainerResources:
-                profile.rawConfig.devContainerResources || "",
-              devPorts: profile.rawConfig.devPorts || [],
-              dependJobsLabelSelector:
-                profile.rawConfig.dependJobsLabelSelector || [],
-              syncFilePattern: profile.rawConfig.syncFilePattern || [],
-              ignoreFilePattern: profile.rawConfig.ignoreFilePattern || [],
-            };
-            svcProfile.push({
-              rawConfig,
-              actualName: profile.actualName || "",
-              developing: profile.developing || false,
-              portForwarded: profile.portForwarded || false,
-              syncing: profile.syncing || false,
-              remoteSyncthingPort: profile.remoteSyncthingPort,
-              remoteSyncthingGUIPort: profile.remoteSyncthingGUIPort,
-              syncthingSecret: profile.syncthingSecret || "",
-              localSyncthingPort: profile.localSyncthingPort,
-              localSyncthingGUIPort: profile.localSyncthingGUIPort,
-              localAbsoluteSyncDirFromDevStartPlugin:
-                profile.localAbsoluteSyncDirFromDevStartPlugin || [],
-              devPortList: profile.devPortList || [],
-              portForwardStatusList: profile.portForwardStatusList || [],
-              portForwardPidList: profile.portForwardPidList || [],
-              syncFilePattern: profile.syncFilePattern || [],
-              ignoreFilePattern: profile.ignoreFilePattern || [],
-            });
-          });
-        }
-        const describeInfo: IApplicationDescribe = {
-          name: data.name || "",
-          releasename: data.releasename || "",
-          namespace: data.namespace || "",
-          kubeConfig: data.kubeconfig || "",
-          dependencyConfigMapName: data.dependencyConfigMapName || "",
-          appType: data.appType || "",
-          svcProfile: svcProfile,
-          installed: data.installed || false,
-          resourcePath: data.resourcePath || [],
-        };
-        this.setApplicationDescribe(applicationName, describeInfo);
-      }
-    }
   }
 
   private setApplicationDescribe(
