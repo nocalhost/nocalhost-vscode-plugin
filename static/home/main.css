@@ -2,6 +2,18 @@ body {
     background-color: transparent;
 }
 
+.pl-0{
+    padding-left: 0;
+}
+.opacity-30	{opacity: .3;}
+
+.vscode-errorForeground{
+    color:var(--vscode-errorForeground)
+}
+.vscode-icon-foreground{
+    color:var(--vscode-icon-foreground)
+
+}
 .nocalhost-tab-item {
     width: 50%;
     height: 50px;

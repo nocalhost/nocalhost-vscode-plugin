@@ -29,15 +29,12 @@ const useStyles = makeStyles((theme: CustomThemeOptions) =>
 const Welcome: React.FC = () => {
   const classes = useStyles();
   const onSignIn = () => {
-    postMessage(
-      {
-        type: MessageActionType.executeCommand,
-        payload: {
-          command: Commands.signin,
-        },
+    postMessage({
+      type: MessageActionType.executeCommand,
+      payload: {
+        command: Commands.signin,
       },
-      "*"
-    );
+    });
   };
 
   return (
