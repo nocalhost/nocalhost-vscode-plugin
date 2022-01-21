@@ -8,6 +8,7 @@ import { delay } from "lodash";
 import {
   DEV_VERSION,
   GLOBAL_TIMEOUT,
+  NH_BIN_NHCTL,
   PLUGIN_TEMP_DIR,
   TEMP_NHCTL_BIN,
 } from "./../../constants";
@@ -49,11 +50,9 @@ export interface AllInstallAppInfo {
 export class NhctlCommand {
   public baseCommand: string = null;
   private argTheTail: string = null;
-  public static nhctlPath: string = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
   private outputMethod: string = "toJson";
+
+  public static nhctlPath: string = NH_BIN_NHCTL;
 
   constructor(
     base: string,
@@ -61,7 +60,7 @@ export class NhctlCommand {
     private execParam: Omit<ExecParam, "command"> = {},
     public args: string[] = []
   ) {
-    this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
+    this.baseCommand = `${NH_BIN_NHCTL} ${base || ""}`;
   }
   static create(
     base: string,
@@ -1345,13 +1344,13 @@ export async function checkVersion() {
     requiredVersion
   );
 
+  const isTest =
+    host.getContext().extensionMode === vscode.ExtensionMode.Development ||
+    ["beta", "alpha"].find((identifier) => pluginVersion.includes(identifier));
+
   if (
-    !getBooleanValue("nhctl.checkVersion") ||
-    !requiredVersion ||
-    (fs.existsSync(binPath) &&
-      ["beta", "alpha"].find((identifier) =>
-        pluginVersion.includes(identifier)
-      ))
+    fs.existsSync(binPath) &&
+    (!getBooleanValue("nhctl.checkVersion") || isTest)
   ) {
     return;
   }
@@ -1476,7 +1475,7 @@ export function nhctlCommand(
   namespace: string,
   baseCommand: string
 ) {
-  const command = `${NhctlCommand.nhctlPath} ${baseCommand} ${
+  const command = `${NH_BIN_NHCTL} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
   } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
   return command;
@@ -1513,6 +1512,29 @@ export async function kubeconfig(
   return result;
 }
 
+export async function checkKubeconfig(
+  kubeconfig: { str?: string; path?: string },
+  context: string
+) {
+  const { path, str } = kubeconfig;
+
+  const args = ["-i", `-c ${context}`, "--kubeconfig", str ? "-" : path];
+
+  const { promise, proc } = await exec({
+    command: `${NH_BIN_NHCTL} kubeconfig check`,
+    args: args,
+  });
+
+  if (str) {
+    proc.stdin.write(str);
+    proc.stdin.end();
+  }
+
+  const { stdout } = await promise;
+
+  return JSON.parse(stdout)[0];
+}
+
 export async function devTerminal(
   appName: string,
   workloadName: string,
@@ -1537,7 +1559,7 @@ export async function devTerminal(
   }
 
   const terminal = host.createTerminal({
-    shellPath: NhctlCommand.nhctlPath,
+    shellPath: NH_BIN_NHCTL,
     shellArgs,
     name: `${appName}-${workloadName}`,
     iconPath: {

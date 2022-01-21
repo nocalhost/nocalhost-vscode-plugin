@@ -56,9 +56,8 @@ const extensionConfig = {
   ],
 };
 
+/**@type {import('webpack').Configuration}*/
 const rendererConfig = {
-  target: "node",
-  mode: "production",
   entry: {
     renderer_v1: "./src/renderer/index.tsx",
     home: "./src/renderer/HomeIndex.tsx",
@@ -66,7 +65,6 @@ const rendererConfig = {
   output: {
     path: path.resolve(__dirname, "..", "dist"),
   },
-  devtool: "source-map",
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".json"],
   },

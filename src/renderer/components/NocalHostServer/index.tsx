@@ -1,17 +1,10 @@
 import React, { useState } from "react";
-import { postMessage, vscode } from "../../utils/index";
+import { getState, postMessage, setState } from "../../utils/index";
 
-interface IHocatHostServerProps {
-  oldState: {
-    [key: string]: any;
-  };
-}
-
-const NocalHostServer: React.FC<IHocatHostServerProps> = (props) => {
-  const { oldState } = props;
-  const [username, setUsername] = useState(oldState.username);
-  const [password, setPassword] = useState(oldState.password);
-  const [baseUrl, setBaseUrl] = useState(oldState.baseUrl);
+const NocalHostServer: React.FC = () => {
+  const [username, setUsername] = useState(getState<string>("username"));
+  const [password, setPassword] = useState(getState<string>("password"));
+  const [baseUrl, setBaseUrl] = useState(getState<string>("baseUrl"));
 
   return (
     <div className="server">
@@ -50,20 +43,18 @@ const NocalHostServer: React.FC<IHocatHostServerProps> = (props) => {
         ></input>
         <button
           className="sign-in"
-          onClick={(e) => {
-            vscode.setState({
-              ...oldState,
+          onClick={() => {
+            const data = {
               username,
               password,
               baseUrl,
-            });
+            };
+
+            setState(data);
+
             postMessage({
               type: "connectServer",
-              data: {
-                username,
-                password,
-                baseUrl,
-              },
+              data,
             });
           }}
         >

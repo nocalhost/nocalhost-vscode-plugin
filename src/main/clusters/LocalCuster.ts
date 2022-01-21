@@ -8,7 +8,12 @@ import { IRootNode } from "../domain";
 import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
 import * as yaml from "yaml";
-import { checkCluster, getAllNamespace, kubeconfig } from "../ctl/nhctl";
+import {
+  checkCluster,
+  getAllNamespace,
+  IKubeconfig,
+  kubeconfig,
+} from "../ctl/nhctl";
 import { ClusterSource } from "../common/define";
 import { ClustersState } from ".";
 
@@ -113,38 +118,37 @@ export default class LocalCluster {
   };
 
   static appendLocalClusterByKubeConfig = async (
-    kubeConfig: string,
-    contextName?: string
+    kubeConfig: IKubeconfig
   ): Promise<LocalClusterNode> => {
     const localClusterNodes = host.getGlobalState(LOCAL_PATH) || [];
-    const yamlObj = yamlUtils.parse(kubeConfig);
-    if (contextName) {
-      yamlObj["current-context"] = contextName;
-    }
 
-    const yamlStr = yamlUtils.stringify(yamlObj);
-    if (!fs.existsSync(KUBE_CONFIG_DIR)) {
-      fs.mkdirSync(KUBE_CONFIG_DIR);
-    }
+    const yamlStr = yamlUtils.stringify(kubeConfig);
+
     const hash = getStringHash(yamlStr.trim());
     const resultFilePath = path.resolve(KUBE_CONFIG_DIR, hash);
-
-    const state = await checkCluster(resultFilePath);
-
-    const newCluster = new LocalClusterNode(
-      resultFilePath,
-      hash,
-      Date.now(),
-      state
-    );
 
     if (
       !localClusterNodes.find(
         (it: LocalClusterNode) => it.filePath === resultFilePath
       )
     ) {
+      if (!fs.existsSync(KUBE_CONFIG_DIR)) {
+        fs.mkdirSync(KUBE_CONFIG_DIR);
+      }
+
       writeFileAsync(resultFilePath, yamlStr);
+
+      const state = await checkCluster(resultFilePath);
+
+      const newCluster = new LocalClusterNode(
+        resultFilePath,
+        hash,
+        Date.now(),
+        state
+      );
+
       localClusterNodes.push(newCluster);
+
       host.setGlobalState(LOCAL_PATH, localClusterNodes);
 
       await kubeconfig(resultFilePath, "add");
@@ -153,6 +157,7 @@ export default class LocalCluster {
     } else {
       host.log(`The cluster already exists`, true);
     }
+
     return null;
   };
 }

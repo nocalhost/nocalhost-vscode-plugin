@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 interface ISelectProps {
   className?: string;
@@ -12,26 +12,35 @@ interface ISelectProps {
 
 const Select: React.FC<ISelectProps> = (props) => {
   const { options, value, onChange, className } = props;
-  function handleChange(e: any) {
+  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     if (onChange) {
       const selectedIndex = e.target.options.selectedIndex;
       onChange(options[selectedIndex].value);
     }
   }
+  const input = useRef<HTMLSelectElement>();
+
+  useEffect(() => {
+    if (input?.current) {
+      input.current.value = value ?? "disabled";
+    }
+  }, [value]);
+
   return (
     <select
-      value={value}
+      ref={input}
+      defaultValue={(options.length && value) || "disabled"}
       placeholder="select context"
       onChange={handleChange}
       className={className}
     >
-      {!value && (
-        <option disabled selected>
+      {options.length === 0 && (
+        <option disabled value="disabled">
           select context
         </option>
       )}
 
-      {(options || []).map((it) => {
+      {options.map((it) => {
         return (
           <option key={it.value} value={it.value}>
             {it.label}

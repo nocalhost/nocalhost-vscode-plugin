@@ -79,22 +79,15 @@ async function pasteAsText() {
  *
  */
 async function loadKubeConfig() {
-  "wrapped-tabpanel-select";
-
   const iframe = await getIframe();
-  const tabs = await (await iframe.$(".nocalhost-tab")).$$(":scope > *");
+
+  const tabs = await iframe.$$(".nocalhost-tab-item");
   await tabs[0].click();
 
-  const buttons = await (await iframe.$(".MuiTabs-flexContainer")).$$(
-    ":scope > *"
-  );
+  const buttons = await iframe.$$(".MuiButtonBase-root");
   await buttons[0].click();
 
-  await iframe.click(".MuiSvgIcon-root.icon");
-
-  await setInputBox(process.env.KUBECONFIG_PATH);
-
-  await iframe.waitForTimeout(1 * 1000);
+  await iframe.waitForSelector(".MuiSvgIcon-root.icon.vscode-icon-foreground");
 
   await iframe.click(".kubeConfig-add-btn");
 

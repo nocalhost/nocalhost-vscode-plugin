@@ -1,6 +1,8 @@
 import { homedir, tmpdir } from "os";
 import * as path from "path";
 
+const isWindow = require("is-windows");
+
 export const NOCALHOST = "Nocalhost";
 
 export const HOME_DIR = homedir();
@@ -12,9 +14,13 @@ export const USER_CONFIG_FULLPATH = path.resolve(
   PLUGIN_CONFIG_DIR,
   "config.json"
 );
+
 export const NHCTL_DIR = path.resolve(NH_CONFIG_DIR, "nhctl");
 export const NH_BIN = path.resolve(NH_CONFIG_DIR, "bin");
-export const NH_BIN_NHCTL = path.resolve(NH_BIN, "nhctl");
+export const NH_BIN_NHCTL = path.resolve(
+  NH_BIN,
+  `nhctl${isWindow() ? ".exe" : ""}`
+);
 
 export const KUBE_CONFIG_DIR = path.resolve(PLUGIN_CONFIG_DIR, "kubeConfigs");
 export const HELM_NH_CONFIG_DIR = path.resolve(
