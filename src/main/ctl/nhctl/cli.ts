@@ -932,7 +932,6 @@ export async function getServiceConfig(
       svcProfile = (yaml.parse(result.stdout).description ?? {
         devPortForwardList: [],
       }) as SvcProfile;
-      console.log(svcProfile);
     } catch (error) {
       logger.info("command: " + command + "result: ", result.stdout);
       throw error;
