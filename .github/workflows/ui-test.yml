@@ -78,17 +78,18 @@ jobs:
           VIDEO_CAPTURE: 1
         run: yarn run test:ext
 
-      # - name: Destroy cluster
-      #   if: ${{ always() }} failure
-      #   env:
-      #     TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
-      #     TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
-      #   run: ~/cluster destroy
+      - name: Destroy cluster
+        if: ${{ always() }} failure
+        env:
+          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
+          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
+        run: ~/cluster destroy
 
       - name: Artifact screenshot
         if: ${{ always() }}
         run: |
-          mv .screenshot ~/.nh/screenshot
+          mkdir -p ~/.nh/screenshot
+          mv .screenshot/*.jpeg ~/.nh/screenshot
           cp ~/.kube/config  ~/.nh
 
       - uses: actions/upload-artifact@v2
@@ -97,6 +98,7 @@ jobs:
           name: artifact-${{ runner.os }}-${{ github.run_id }}
           path: |
             ~/.nh/screenshot
+            ~/.nh/nhctl/ns
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
 
@@ -104,6 +106,7 @@ jobs:
         if: ${{ failure() }}
         run: |
           mkdir .dependency
+          mv .screenshot/*.mp4 .dependency/
           cp ~/.nh/bin/nhctl .dependency/
           cp nocalhost.vsix .dependency/
 
