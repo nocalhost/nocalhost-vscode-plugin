@@ -12,8 +12,8 @@ const treeItemPath = [
 ];
 
 async function startDev() {
-  const authorsNode = await tree.getItem(...treeItemPath);
-  const duplicateDev = await authorsNode.$(
+  const ratingsNode = await tree.getItem(...treeItemPath);
+  const duplicateDev = await ratingsNode.$(
     ".action-label[title='Start DevMode(Duplicate)']"
   );
   await duplicateDev.click();
