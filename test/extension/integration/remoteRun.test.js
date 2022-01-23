@@ -14,8 +14,8 @@ const remoteRunTests = () => {
 
   it("start", start);
   it("start complete", checkStartComplete);
-  it("run command", runCommand);
-  it("code sync", codeSync);
+  // it("run command", runCommand);
+  // it("code sync", codeSync);
   it("end", endDevMode);
 };
 

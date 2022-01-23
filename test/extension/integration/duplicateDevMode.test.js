@@ -9,8 +9,8 @@ const duplicateDevModeTests = () => {
 
   it("start", startDev);
   it("start  complete", startDuplicateComplete);
-  it("run command", runCommand);
-  it("code sync", codeSync);
+  // it("run command", runCommand);
+  // it("code sync", codeSync);
   it("end", endDevMode);
 };
 
