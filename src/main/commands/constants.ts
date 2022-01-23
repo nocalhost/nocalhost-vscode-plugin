@@ -46,10 +46,12 @@ export const ASSOCIATE_LOCAL_DIRECTORY = "Nocalhost.associateLocalDirectory";
 
 export const APPLY_KUBERNETES_OBJECT = "Nocalhost.applyKubernetesObject";
 export const DELETE_KUBERNETES_OBJECT = "Nocalhost.deleteKubernetesObject";
+
 export const SYNC_SERVICE = "Nocalhost.syncService";
 export const OVERRIDE_SYNC = "Nocalhost.overrideSync";
 export const RECONNECT_SYNC = "Nocalhost.reconnectSync";
-export const STATUSBAR_SYNC = "Nocalhost.statusBarSync";
+export const OPEN_SYNC_COMMAND = "Nocalhost.openSyncCommand";
+export const OPEN_SYNC_DASHBOARD = "Nocalhost.openSyncDashboard";
 
 // debug
 export const DEBUG = "Nocalhost.debug";

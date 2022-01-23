@@ -42,6 +42,7 @@
   "disassociateAssociate": "Disassociate from Current Directory",
   "overrideRemoteChang": "Overwrite remote files",
   "resumeSync": "Resume File Sync",
+  "sync.openDashboard": "Open Sync Dashboard",
 
   "startProxyMode": "Start ProxyMode(Beta)",
   "resumeProxyMode": "Resume ProxyMode",

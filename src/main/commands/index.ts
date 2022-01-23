@@ -21,7 +21,8 @@ import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
 import SyncServiceCommand from "./sync/SyncServiceCommand";
 import OverrideSyncCommand from "./sync/OverrideSyncCommand";
-import SyncStatusBarCommand from "./sync/SyncStatusBarCommand";
+import OpenSyncCommand from "./sync/OpenSyncCommand";
+import OpenSyncDashboardCommand from "./sync/OpenSyncDashboardCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
 import ShowApplicationsCommand from "./ShowApplicationsCommand";
@@ -83,7 +84,8 @@ export default function initCommands(
   new DeleteKubernetesObjectCommand(context);
   new SyncServiceCommand(context);
   new OverrideSyncCommand(context);
-  new SyncStatusBarCommand(context);
+  new OpenSyncCommand(context);
+  new OpenSyncDashboardCommand(context);
 
   new UpgradeCommand(context);
   new ShowApplicationsCommand(context);

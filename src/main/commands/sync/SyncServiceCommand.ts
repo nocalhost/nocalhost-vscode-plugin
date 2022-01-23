@@ -1,12 +1,7 @@
 import * as vscode from "vscode";
 import ICommand from "../ICommand";
 
-import {
-  RECONNECT_SYNC,
-  OVERRIDE_SYNC,
-  SYNC_SERVICE,
-  STATUSBAR_SYNC,
-} from "../constants";
+import { OPEN_SYNC_COMMAND, SYNC_SERVICE } from "../constants";
 import registerCommand from "../register";
 import * as nhctl from "../../ctl/nhctl";
 import host from "../../host";
@@ -105,8 +100,8 @@ export default class SyncServiceCommand implements ICommand {
       host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
       host.statusBar.tooltip = r.tips;
       host.statusBar.command = {
-        title: STATUSBAR_SYNC,
-        command: STATUSBAR_SYNC,
+        title: OPEN_SYNC_COMMAND,
+        command: OPEN_SYNC_COMMAND,
         arguments: [[r, syncData]],
       };
 

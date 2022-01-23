@@ -298,6 +298,10 @@
           "when": "viewItem =~ /^syncAssociate-(.*)override/i"
         },
         {
+          "command": "Nocalhost.openSyncDashboard",
+          "when": "viewItem =~ /^syncAssociate-(.*)override/i"
+        },
+        {
           "command": "Nocalhost.startProxyMode",
           "when": "viewItem =~ /(^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(?!(developing|starting|develop_starting|vpn_)))|(^network-service-(?!vpn))/i",
           "group": "navigation"
@@ -375,8 +379,12 @@
         "icon": "$(sign-in)"
       },
       {
-        "command": "Nocalhost.statusBarSync",
+        "command": "Nocalhost.openSyncCommand",
         "title": "statusBarSync"
+      },
+      {
+        "command": "Nocalhost.openSyncDashboard",
+        "title": "%sync.openDashboard%"
       },
       {
         "command": "Nocalhost.syncManage.refresh",
