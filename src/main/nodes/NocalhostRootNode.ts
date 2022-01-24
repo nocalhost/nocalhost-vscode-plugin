@@ -1,4 +1,4 @@
-import { difference, get, orderBy } from "lodash";
+import { difference, get, omit, orderBy } from "lodash";
 import * as vscode from "vscode";
 import { sortResources } from "../clusters";
 import AccountClusterService, {
@@ -111,9 +111,15 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     globalClusterRootNodes = globalClusterRootNodes.filter(
       (it: AccountClusterNode) => it?.id
     );
-    logger.info(
-      `[globalClusterRootNodes]: ${JSON.stringify(globalClusterRootNodes)}`
-    );
+
+    if (globalClusterRootNodes.length === 0) {
+      return [];
+    }
+
+    const logNodes = globalClusterRootNodes.map((item) => {
+      return { ...item, loginInfo: omit(item.loginInfo, "password") };
+    });
+    logger.info(`[globalClusterRootNodes]: ${JSON.stringify(logNodes)}`);
 
     let nodes = await asyncLimit(
       globalClusterRootNodes,
