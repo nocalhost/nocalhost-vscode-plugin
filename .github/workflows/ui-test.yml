@@ -53,7 +53,7 @@ jobs:
       - name: Build ext
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-          NHCTL_VERSION: v0.6.13
+          NHCTL_VERSION: v0.6.15
         run: |
           yarn run build:ext
           rm -rf .vscode-test
