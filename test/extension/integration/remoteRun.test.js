@@ -1,5 +1,6 @@
 const { checkReady } = require("./portForward");
 const { start } = require("./remoteRun");
+const { stop } = require("./duplicateDevMode");
 const {
   checkStartComplete,
   runCommand,
@@ -16,7 +17,7 @@ const remoteRunTests = () => {
   it("start complete", checkStartComplete);
   // it("run command", runCommand);
   // it("code sync", codeSync);
-  it("end", endDevMode);
+  it("end", stop);
 };
 
 module.exports = {

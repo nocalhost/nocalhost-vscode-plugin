@@ -1,5 +1,9 @@
 const { checkReady } = require("./portForward");
-const { startDev, startDuplicateComplete } = require("./duplicateDevMode");
+const {
+  startDev,
+  startDuplicateComplete,
+  stop,
+} = require("./duplicateDevMode");
 const { runCommand, codeSync, endDevMode } = require("./devMode");
 
 const duplicateDevModeTests = () => {
@@ -11,7 +15,7 @@ const duplicateDevModeTests = () => {
   it("start  complete", startDuplicateComplete);
   // it("run command", runCommand);
   // it("code sync", codeSync);
-  it("end", endDevMode);
+  it("end", stop);
 };
 
 module.exports = {

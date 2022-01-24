@@ -65,7 +65,45 @@ async function startDuplicateComplete() {
   logger.debug("Start Duplicate Development", "ok");
 }
 
+async function stop() {
+  treeItem = await tree.getItem(...treeItemPath);
+
+  const endDevelop = await treeItem.$(".action-label[title='End Develop']");
+  await endDevelop.click();
+  await page.waitForFunction(
+    (name) => {
+      const nodes = Array.from(
+        document.querySelectorAll(
+          "#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6']"
+        )
+      );
+
+      const node = nodes.find(
+        (node) => node.querySelector(".label-name").innerText === name
+      );
+      if (!node) {
+        return;
+      }
+
+      node.click();
+
+      const isDevStart = !!node.querySelector(
+        `.custom-view-tree-node-item-icon[style$='status_running.svg");']`
+      );
+
+      const isDevEnd = !!node.querySelector(
+        `.actions [style$='v_start.svg");']`
+      );
+
+      return isDevStart && isDevEnd;
+    },
+    { timeout: 300_000 },
+    "ratings"
+  );
+}
+
 module.exports = {
   startDev,
   startDuplicateComplete,
+  stop,
 };
