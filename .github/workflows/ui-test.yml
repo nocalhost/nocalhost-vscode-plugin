@@ -19,7 +19,7 @@ jobs:
 
       - name: Create cluster
         id:  create-cluster
-        uses: zhangjian10/nocalhost-server-cli@v0.0.1-beta.4
+        uses: zhangjian10/nocalhost-server-cli@v0.0.1-beta.5
         with:
           url: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
           email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
