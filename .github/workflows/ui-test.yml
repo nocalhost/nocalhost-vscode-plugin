@@ -24,6 +24,7 @@ jobs:
           url: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
           email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
           password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
+          action: devSpace.create
 
       - uses: actions/checkout@v2
 
