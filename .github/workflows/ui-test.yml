@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [dev, main]
   push:
-    branches: [test/port-forward]
+    branches: [test/vcluster]
 jobs:
   test:
     strategy:
@@ -16,14 +16,6 @@ jobs:
     name: Run UI Tests
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Create cluster
-        env:
-          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
-          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
-        run: |
-          curl -fL "https://nocalhost-generic.pkg.coding.net/nocalhost-test/binary/tketools?version=latest" -o ~/cluster
-          chmod +x ~/cluster
-          ~/cluster create &> ~/cluster.log &
 
       - uses: actions/checkout@v2
 
@@ -59,31 +51,31 @@ jobs:
           rm -rf .vscode-test
           ls -al
 
-      - name: Wait cluster ready
-        timeout-minutes: 30
-        run: >-
-          while [ ! -f "${HOME}/config" ];do
-            tail -n 3 ~/cluster.log
-            sleep 10s;
-          done
-
-      - name: Set kubeconfig
-        run: |
-          mkdir ~/.kube;
-          cp ~/config ~/.kube;
+      - name: Create cluster
+        id:  create-cluster
+        uses: zhangjian10/nocalhost-server-cli@v0.0.8
+        with:
+          host: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
+          email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
+          password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
+          action: devSpace.create
 
       - name: Run tests
+        timeout-minutes: 20
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
           VIDEO_CAPTURE: 1
         run: yarn run test:ext
 
       - name: Destroy cluster
-        if: ${{ always() }} failure
-        env:
-          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
-          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
-        run: ~/cluster destroy
+        if: ${{ always() }}
+        uses: zhangjian10/nocalhost-server-cli@v0.0.8
+        with:
+          host: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
+          email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
+          password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
+          action: devSpace.remove
+          parameters: ${{ steps.create-cluster.outputs.space_id }}
 
       - name: Artifact screenshot
         if: ${{ always() }}
