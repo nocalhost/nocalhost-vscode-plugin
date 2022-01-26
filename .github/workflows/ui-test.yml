@@ -17,15 +17,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
 
-      - name: Create cluster
-        id:  create-cluster
-        uses: zhangjian10/nocalhost-server-cli@v0.0.1-beta.6
-        with:
-          url: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
-          email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
-          password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
-          action: devSpace.create
-
       - uses: actions/checkout@v2
 
       - uses: actions/setup-node@v2
@@ -60,18 +51,14 @@ jobs:
           rm -rf .vscode-test
           ls -al
 
-      - name: Wait cluster ready
-        timeout-minutes: 30
-        run: >-
-          while [ ! -f "${HOME}/config" ];do
-            tail -n 3 ~/cluster.log
-            sleep 10s;
-          done
-
-      - name: Set kubeconfig
-        run: |
-          mkdir ~/.kube;
-          cp ~/config ~/.kube;
+      - name: Create cluster
+        id:  create-cluster
+        uses: zhangjian10/nocalhost-server-cli@v0.0.6
+        with:
+          host: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
+          email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
+          password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
+          action: devSpace.create
 
       - name: Run tests
         env:
@@ -81,10 +68,13 @@ jobs:
 
       - name: Destroy cluster
         if: ${{ always() }} failure
-        env:
-          TKE_SECRET_ID: ${{ secrets.TKE_SECRET_ID }}
-          TKE_SECRET_KEY: ${{ secrets.TKE_SECRET_KEY }}
-        run: ~/cluster destroy
+        uses: zhangjian10/nocalhost-server-cli@v0.0.6
+        with:
+          host: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
+          email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
+          password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
+          action: devSpace.remove
+          parameters: ${{ steps.create-cluster.outputs.space_id }}
 
       - name: Artifact screenshot
         if: ${{ always() }}
