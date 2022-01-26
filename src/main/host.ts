@@ -30,20 +30,26 @@ export class Host implements vscode.Disposable {
 
   private context: vscode.ExtensionContext | null = null;
 
+  private globalState: vscode.Memento;
   public setContext(context: vscode.ExtensionContext) {
     this.context = context;
+
+    if (context.extension.extensionKind === vscode.ExtensionKind.UI) {
+      this.globalState = context.workspaceState;
+    } else {
+      this.globalState = context.globalState;
+    }
   }
 
   public getContext() {
     return this.context;
   }
-
   public setGlobalState(key: string, state: any) {
     if (!this.context) {
       throw new Error("not initialized extension");
     }
 
-    this.context.globalState.update(key, state);
+    this.globalState.update(key, state);
   }
 
   public getGlobalState(key: string) {
@@ -51,7 +57,7 @@ export class Host implements vscode.Disposable {
       throw new Error("not initialized extension");
     }
 
-    return this.context.globalState.get(key) as any;
+    return this.globalState.get(key) as any;
   }
 
   public removeGlobalState(key: string) {
@@ -59,7 +65,7 @@ export class Host implements vscode.Disposable {
       throw new Error("not initialized extension");
     }
 
-    return this.context.globalState.update(key, null);
+    return this.globalState.update(key, null);
   }
 
   public setWorkspaceState(key: string, state: any) {
