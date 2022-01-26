@@ -54,7 +54,7 @@ async function editConfig(page) {
   await page.waitForTimeout(5000);
 
   const tabElement = await page.waitForSelector(
-    'div[aria-label="authors.yaml"]'
+    'div[aria-label="ratings.yaml"]'
   );
   assert.ok(tabElement._remoteObject.description.indexOf("dirty") === -1);
 }
