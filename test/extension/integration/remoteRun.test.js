@@ -1,12 +1,7 @@
 const { checkReady } = require("./portForward");
 const { start } = require("./remoteRun");
 const { stop } = require("./duplicateDevMode");
-const {
-  checkStartComplete,
-  runCommand,
-  codeSync,
-  endDevMode,
-} = require("./devMode");
+const { checkStartComplete } = require("./devMode");
 
 const remoteRunTests = () => {
   beforeAll(async (done) => {
@@ -15,8 +10,6 @@ const remoteRunTests = () => {
 
   it("start", start);
   it("start complete", checkStartComplete);
-  // it("run command", runCommand);
-  // it("code sync", codeSync);
   it("end", stop);
 };
 

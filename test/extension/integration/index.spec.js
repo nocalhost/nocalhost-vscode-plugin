@@ -8,7 +8,6 @@ const { portForwardTests } = require("./portForward.test");
 const { devModeTests } = require("./devMode.test");
 const { viewLogTests } = require("./viewLog.test");
 const { editConfigTests } = require("./editConfig.test");
-const { duplicateDevModeTests } = require("./duplicateDevMode.test");
 const { remoteRunTests } = require("./remoteRun.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
@@ -35,12 +34,11 @@ afterEach(async () => {
 
 describe("nhctl", nhctlTests);
 describe("connect", connectTests);
-describe("install", installTests);
+// describe("install", installTests);
 describe("portForward", portForwardTests);
 describe("devMode", devModeTests);
 describe("viewLog", viewLogTests);
 describe("editConfig", editConfigTests);
-describe("duplicate devMode", duplicateDevModeTests);
 describe("remote run", remoteRunTests);
 
 module.exports = {

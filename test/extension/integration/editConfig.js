@@ -9,7 +9,7 @@ const treeItemPath = [
   "bookinfo",
   "Workloads",
   "Deployments",
-  "authors",
+  "ratings",
 ];
 
 async function editConfig(page) {
@@ -30,7 +30,7 @@ async function editConfig(page) {
   // const content = await navigator.clipboard.readText();
   const content = ncp.paste();
   const obj = yaml.parse(content);
-  obj.containers[0].dev.hotReload = !obj.containers[0].dev.hotReload;
+  obj.containers[0].dev.hotReload = true;
 
   const str = yaml.stringify(obj);
   ncp.copy(str);
