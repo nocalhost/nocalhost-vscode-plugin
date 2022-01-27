@@ -1,5 +1,5 @@
 const { checkReady } = require("./portForward");
-const { start } = require("./remoteRun");
+const { start, checkHotReload } = require("./remoteRun");
 const { stop } = require("./duplicateDevMode");
 const { checkStartComplete } = require("./devMode");
 
@@ -10,6 +10,7 @@ const remoteRunTests = () => {
 
   it("start", start);
   it("start complete", checkStartComplete);
+  it("hotReload", checkHotReload);
   it("end", stop);
 };
 
