@@ -13,6 +13,7 @@ export namespace Associate {
     syncthing_status: {
       msg: string;
       status: SyncStatusType;
+      gui: string;
     };
   };
 }
