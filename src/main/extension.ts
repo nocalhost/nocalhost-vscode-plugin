@@ -107,7 +107,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
 
-  let isSetVisible = false;
+  let isSetVisible =
+    host.getGlobalState(TMP_WORKLOAD_PATH) === host.getCurrentRootPath();
 
   let subs = [
     host,
