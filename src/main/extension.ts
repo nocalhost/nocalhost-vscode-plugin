@@ -51,13 +51,13 @@ import { HomeWebViewProvider } from "./webview/HomePage";
 import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
 import * as nls from "vscode-nls";
-import SyncServiceCommand from "./commands/SyncServiceCommand";
+import SyncServiceCommand from "./commands/sync/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
 import { activateNocalhostDebug } from "./debug/nocalhost";
 
 // The example uses the file message format.
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 

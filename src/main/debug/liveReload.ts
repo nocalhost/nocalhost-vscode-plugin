@@ -7,7 +7,7 @@ import {
   RelativePattern,
 } from "vscode";
 
-import { Sync, SyncMsg } from "../commands/SyncServiceCommand";
+import { Sync, SyncMsg } from "../commands/sync/SyncServiceCommand";
 import { NhctlCommand } from "../ctl/nhctl";
 import { getExecCommand, ShellExecError } from "../ctl/shell";
 import host from "../host";

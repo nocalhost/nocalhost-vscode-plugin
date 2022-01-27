@@ -8,7 +8,7 @@ import { Deployment } from "../nodes/workloads/controllerResources/deployment/De
 import host from "../host";
 import { associate, getServiceConfig, NhctlCommand } from "../ctl/nhctl";
 import { getContainer } from "../utils/getContainer";
-import SyncServiceCommand from "./SyncServiceCommand";
+import SyncServiceCommand from "./sync/SyncServiceCommand";
 
 export default class AssociateLocalDirectoryCommand implements ICommand {
   command: string = ASSOCIATE_LOCAL_DIRECTORY;
