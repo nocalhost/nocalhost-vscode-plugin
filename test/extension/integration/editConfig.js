@@ -2,6 +2,7 @@ const ncp = require("copy-paste");
 const yaml = require("yaml");
 const { tree } = require("../lib/components");
 const assert = require("assert");
+const retry = require("async-retry");
 
 const treeItemPath = [
   "",
@@ -53,10 +54,17 @@ async function editConfig(page) {
 
   await page.waitForTimeout(5000);
 
-  const tabElement = await page.waitForSelector(
-    'div[aria-label="ratings.yaml"]'
+  retry(
+    async () => {
+      const tabElement = await page.waitForSelector(
+        'div[aria-label="ratings.yaml"]'
+      );
+      assert.ok(tabElement._remoteObject.description.indexOf("dirty") === -1);
+    },
+    {
+      retries: 3,
+    }
   );
-  assert.ok(tabElement._remoteObject.description.indexOf("dirty") === -1);
 }
 
 module.exports = {
