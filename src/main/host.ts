@@ -35,9 +35,9 @@ export class Host implements vscode.Disposable {
     this.context = context;
 
     if (context.extension.extensionKind === vscode.ExtensionKind.UI) {
-      this.globalState = context.workspaceState;
-    } else {
       this.globalState = context.globalState;
+    } else {
+      this.globalState = context.workspaceState;
     }
   }
 
