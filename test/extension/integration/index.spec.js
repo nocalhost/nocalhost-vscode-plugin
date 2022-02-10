@@ -8,7 +8,7 @@ const { portForwardTests } = require("./portForward.test");
 const { devModeTests } = require("./devMode.test");
 const { viewLogTests } = require("./viewLog.test");
 const { editConfigTests } = require("./editConfig.test");
-const { remoteRunTests } = require("./remoteRun.test");
+const { applyManifestTests } = require("./applyManifest.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 
@@ -39,7 +39,7 @@ describe("portForward", portForwardTests);
 describe("devMode", devModeTests);
 describe("viewLog", viewLogTests);
 describe("editConfig", editConfigTests);
-describe("remote run", remoteRunTests);
+describe("applyManifest", applyManifestTests);
 
 module.exports = {
   screenshotPath,

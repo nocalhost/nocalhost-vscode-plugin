@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+  annotations:
+    dev.nocalhost/application-name: bookinfo
+  labels:
+    app: php
+    app.kubernetes.io/managed-by: nocalhost
+spec:
+  selector:
+    matchLabels:
+      app: php
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: php
+    spec:
+      containers:
+        - name: php
+          image: nocalhost-docker.pkg.coding.net/nocalhost/bookinfo/ratings
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9080
+          readinessProbe:
+            tcpSocket:
+              port: 9080
+            initialDelaySeconds: 5
+            periodSeconds: 10
