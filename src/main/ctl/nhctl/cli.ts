@@ -663,14 +663,15 @@ export async function associate(
   type: string,
   workLoadName: string,
   container?: string,
-  params: "--de-associate" | "--migrate" | "" = ""
+  params: "--de-associate" | "--migrate" | "" = "",
+  nid?: string
 ) {
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
     `dev associate ${appName} -s "${dir}" ${
       container ? `-c ${container}` : ""
-    } -t ${type} -d ${workLoadName} ${params}`
+    } -t ${type} -d ${workLoadName} ${params} ${nid ? `-nid ${nid}` : ""}`
   );
   const result = await exec({ command }).promise;
   return result.stdout;
