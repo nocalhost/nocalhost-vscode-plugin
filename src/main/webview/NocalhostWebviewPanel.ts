@@ -214,7 +214,20 @@ export default class NocalhostWebviewPanel {
       null,
       this.disposables
     );
+
     process.nextTick(this.update.bind(this));
+
+    NocalhostWebviewPanel.addMessageListener(({ type }, id) => {
+      if (type === "init" && id === this.id) {
+        NocalhostWebviewPanel.postMessage(
+          {
+            type: "location/redirect",
+            payload: { url },
+          },
+          this.id
+        );
+      }
+    });
   }
 
   private didDispose(): void {
