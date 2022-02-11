@@ -6,6 +6,7 @@ import {
   QuickPickOptions,
 } from "vscode";
 
+import { RemoteGlobalMemento } from "./utils/remoteGlobalMemento";
 export class Host implements vscode.Disposable {
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
     "Nocalhost"
@@ -31,13 +32,22 @@ export class Host implements vscode.Disposable {
   private context: vscode.ExtensionContext | null = null;
 
   private globalState: vscode.Memento;
-  public setContext(context: vscode.ExtensionContext) {
+
+  public async setContext(context: vscode.ExtensionContext) {
     this.context = context;
 
     if (context.extension.extensionKind === vscode.ExtensionKind.UI) {
       this.globalState = context.globalState;
     } else {
-      this.globalState = context.workspaceState;
+      const remoteGlobalMemento = new RemoteGlobalMemento(
+        context.globalStorageUri.path
+      );
+
+      context.subscriptions.push(remoteGlobalMemento);
+
+      await remoteGlobalMemento.whenReady;
+
+      this.globalState = remoteGlobalMemento;
     }
   }
 
