@@ -159,7 +159,8 @@ async function codeSync() {
 
   await checkSyncCompletion();
 
-  await terminal.sendText("\x03");
+  // await terminal.sendText("\x03");
+  await terminal.typeCtrlC();
 
   await terminal.sendText("./run.sh \n");
 
