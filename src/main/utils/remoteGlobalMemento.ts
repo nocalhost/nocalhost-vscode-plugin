@@ -51,7 +51,7 @@ export class RemoteGlobalMemento implements vscode.Memento {
         .access(this._globalStoragePath, constants.F_OK)
         .catch(async () => {
           await promises.mkdir(this._globalStoragePath, { recursive: true });
-          return promises.writeFile(this._globalStorageFile, `{}`);
+          await promises.writeFile(this._globalStorageFile, `{}`);
         });
 
       this._scheduler = new RunOnceScheduler(() => {
