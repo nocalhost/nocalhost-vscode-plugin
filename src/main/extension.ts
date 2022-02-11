@@ -346,7 +346,7 @@ export async function updateServerConfigStatus() {
 }
 
 async function init(context: vscode.ExtensionContext) {
-  host.setContext(context);
+  await host.setContext(context);
   fileUtil.mkdir(NH_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_TEMP_DIR);

@@ -2,8 +2,6 @@ import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
 import * as yaml from "yaml";
-import assert = require("assert");
-import { isObject } from "lodash";
 
 import { SIGN_IN } from "../commands/constants";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
@@ -15,6 +13,7 @@ import state from "../state";
 import { NOCALHOST } from "../constants";
 import { checkKubeconfig, IKubeconfig } from "../ctl/nhctl";
 import logger from "../utils/logger";
+import { existsSync } from "fs";
 
 export class HomeWebViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "Nocalhost.Home";
@@ -84,7 +83,12 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
               kubeconfig = await readYaml<IKubeconfig>(defaultKubePath);
             } else {
               defaultKubePath = path.resolve(os.homedir(), ".kube", "config");
-              kubeconfig = await readYaml<IKubeconfig>(defaultKubePath);
+
+              if (existsSync(defaultKubePath)) {
+                kubeconfig = await readYaml<IKubeconfig>(defaultKubePath);
+              } else {
+                defaultKubePath = null;
+              }
             }
 
             webviewView.webview.postMessage({
