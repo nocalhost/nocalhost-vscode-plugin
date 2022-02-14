@@ -364,10 +364,10 @@ async function init(context: vscode.ExtensionContext) {
   const welcomeDidShow: boolean | undefined = host.getGlobalState(
     WELCOME_DID_SHOW
   );
-  if (!welcomeDidShow) {
-    NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
-    host.setGlobalState(WELCOME_DID_SHOW, true);
-  }
+  // if (!welcomeDidShow) {
+  NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
+  host.setGlobalState(WELCOME_DID_SHOW, true);
+  // }
 }
 
 process.on("exit", function (code) {

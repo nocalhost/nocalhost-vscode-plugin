@@ -285,6 +285,9 @@ export default class NocalhostWebviewPanel {
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <link id="syntax-theme" type="text/css" rel="stylesheet" data-light="${syntaxThemeLight}" data-dark="${syntaxThemeDark}" href="${syntaxThemeDark}" />
+          <link type="text/css" rel="stylesheet" href="${webview.asWebviewUri(
+            vscode.Uri.file(path.join(extensionPath, "dist", `markdown.css`))
+          )}"/>
           <style type="text/css">
             @font-face {
               font-family: 'droidsansmono';
