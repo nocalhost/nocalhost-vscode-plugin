@@ -7,6 +7,7 @@ export namespace Associate {
       svc_type: string;
       svc: string;
       container: string;
+      nid: string;
     };
     sha: string;
     server: string;

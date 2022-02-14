@@ -2,6 +2,7 @@ const ncp = require("copy-paste");
 const yaml = require("yaml");
 const { tree } = require("../lib/components");
 const assert = require("assert");
+const retry = require("async-retry");
 
 const treeItemPath = [
   "",
@@ -9,7 +10,7 @@ const treeItemPath = [
   "bookinfo",
   "Workloads",
   "Deployments",
-  "authors",
+  "ratings",
 ];
 
 async function editConfig(page) {
@@ -30,7 +31,7 @@ async function editConfig(page) {
   // const content = await navigator.clipboard.readText();
   const content = ncp.paste();
   const obj = yaml.parse(content);
-  obj.containers[0].dev.hotReload = !obj.containers[0].dev.hotReload;
+  obj.containers[0].dev.hotReload = true;
 
   const str = yaml.stringify(obj);
   ncp.copy(str);
@@ -53,10 +54,17 @@ async function editConfig(page) {
 
   await page.waitForTimeout(5000);
 
-  const tabElement = await page.waitForSelector(
-    'div[aria-label="authors.yaml"]'
+  retry(
+    async () => {
+      const tabElement = await page.waitForSelector(
+        'div[aria-label="ratings.yaml"]'
+      );
+      assert.ok(tabElement._remoteObject.description.indexOf("dirty") === -1);
+    },
+    {
+      retries: 3,
+    }
   );
-  assert.ok(tabElement._remoteObject.description.indexOf("dirty") === -1);
 }
 
 module.exports = {

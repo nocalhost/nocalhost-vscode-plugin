@@ -19,7 +19,7 @@ function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
 
       const {
         associate: {
-          svc_pack: { ns, app, svc, svc_type, container },
+          svc_pack: { ns, app, svc, svc_type, container, nid },
         },
         associate,
         currentPath,
@@ -33,7 +33,8 @@ function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
         svc_type,
         svc,
         container,
-        "--de-associate"
+        "--de-associate",
+        nid
       );
 
       treeDataProvider.refresh();
