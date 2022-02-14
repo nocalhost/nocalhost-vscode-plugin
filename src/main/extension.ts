@@ -113,9 +113,19 @@ export async function activate(context: vscode.ExtensionContext) {
   let subs = [
     host,
     appTreeView.onDidChangeVisibility((event) => {
-      if (!isSetVisible && event.visible) {
-        isSetVisible = true;
-        host.getOutputChannel().show(true);
+      if (event.visible) {
+        const welcomeDidShow = host.getGlobalState(WELCOME_DID_SHOW);
+
+        // if (!welcomeDidShow) {
+
+        NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
+        host.setGlobalState(WELCOME_DID_SHOW, true);
+        // }
+
+        if (!isSetVisible) {
+          isSetVisible = true;
+          host.getOutputChannel().show(true);
+        }
       }
     }),
     appTreeView,
@@ -360,14 +370,6 @@ async function init(context: vscode.ExtensionContext) {
   await messageBus.init();
   await checkVersion();
   LocalClusterService.verifyLocalCluster();
-
-  const welcomeDidShow: boolean | undefined = host.getGlobalState(
-    WELCOME_DID_SHOW
-  );
-  // if (!welcomeDidShow) {
-  NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
-  host.setGlobalState(WELCOME_DID_SHOW, true);
-  // }
 }
 
 process.on("exit", function (code) {

@@ -8,6 +8,7 @@ import MessageManager, {
 import Stack from "../common/Stack";
 import CallableStack from "../common/Stack/CallableStack";
 import host from "../host";
+import { resolveExtensionFilePath } from "../utils/fileUtil";
 
 interface IWebviewOpenProps {
   url: string;
@@ -254,7 +255,11 @@ export default class NocalhostWebviewPanel {
       this.inactiveHandlerStack.exec();
     }
   }
-
+  private getAppStatic(name: string) {
+    return this.panel.webview.asWebviewUri(
+      resolveExtensionFilePath("static", "app", name)
+    );
+  }
   private getHtml(): string {
     if (!this.panel) {
       return "";
@@ -264,18 +269,22 @@ export default class NocalhostWebviewPanel {
     if (!webview || !extensionPath) {
       return "";
     }
+
     const bundlePath: vscode.Uri = webview.asWebviewUri(
       vscode.Uri.file(path.join(extensionPath, "dist", `renderer_v1.js`))
     );
-    const syntaxThemeLight: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", `atom-one-light.css`))
-    );
-    const syntaxThemeDark: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", `vs2015.css`))
-    );
-    const fontPath: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", `DroidSansMono_v1.ttf`))
-    );
+
+    const lightCss = this.getAppStatic("atom-one-light.css");
+    const darkCss = this.getAppStatic("vs2015.css");
+    const font = this.getAppStatic("DroidSansMono_v1.ttf");
+
+    let markdownLinkBlock = "";
+
+    if (this.url === "/welcome") {
+      markdownLinkBlock = `<link href="${this.getAppStatic(
+        "markdown.css"
+      )}" rel="stylesheet">`;
+    }
 
     return `
       <!DOCTYPE html>
@@ -284,14 +293,12 @@ export default class NocalhostWebviewPanel {
           <title>Nocalhost</title>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link id="syntax-theme" type="text/css" rel="stylesheet" data-light="${syntaxThemeLight}" data-dark="${syntaxThemeDark}" href="${syntaxThemeDark}" />
-          <link type="text/css" rel="stylesheet" href="${webview.asWebviewUri(
-            vscode.Uri.file(path.join(extensionPath, "dist", `markdown.css`))
-          )}"/>
+          <link id="syntax-theme" type="text/css" rel="stylesheet" data-light="${lightCss}" data-dark="${darkCss}" href="${darkCss}" />
+          ${markdownLinkBlock}
           <style type="text/css">
             @font-face {
               font-family: 'droidsansmono';
-              src: url(${fontPath}) format("truetype");
+              src: url(${font}) format("truetype");
               font-weight: normal;
               font-style: normal;
             }

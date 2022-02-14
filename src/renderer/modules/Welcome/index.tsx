@@ -3,11 +3,12 @@ import { postMessage } from "../../utils";
 import { MessageActionType, Commands } from "../../constants";
 
 const Welcome: React.FC = () => {
-  const onSignIn = () => {
+  const onSignIn = (data: string) => {
     postMessage({
       type: MessageActionType.executeCommand,
       payload: {
-        command: Commands.signin,
+        command: Commands.homeWebView,
+        data: { command: Commands.connect, data },
       },
     });
   };
@@ -47,8 +48,8 @@ const Welcome: React.FC = () => {
         </li>
       </ul>
       <p>
-        <strong>
-          <a href="http://www.baidu.com">Experience through kubeconfig</a>
+        <strong onClick={onSignIn.bind(null, "local")}>
+          <a href="javascript;">Experience through kubeconfig</a>
         </strong>
       </p>
       <ul>
@@ -63,16 +64,14 @@ const Welcome: React.FC = () => {
         </li>
       </ul>
       <p>
-        <strong>
-          <a href="http:///www.baidu.com">
-            Experience through Nocalhost Server account
-          </a>
+        <strong onClick={onSignIn.bind(null, "server")}>
+          <a href="javascript;">Experience through Nocalhost Server account</a>
         </strong>
       </p>
       <p>
         Nocalhost Server can help you better manage your K8s cluster,
         applications, personnel and permissions. To learn how to deploy
-        Nocalhost Server, you can click
+        Nocalhost Server, you can click&nbsp;
         <a href="https://nocalhost.dev/docs/server/server-overview">
           Nocalhost Server Overview
         </a>

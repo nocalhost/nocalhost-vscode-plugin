@@ -46,6 +46,7 @@ import PortForwardCommand from "./PortForwardCommand/";
 import StartProxyModeCommand from "./proxy/StartProxyModeCommand";
 import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
 import EndProxyModeCommand from "./proxy/EndProxyModeCommand";
+import HomeWebViewCommand from "./HomeWebViewCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -108,4 +109,6 @@ export default function initCommands(
   new StartProxyModeCommand(context);
   new ResumeProxyModeCommand(context);
   new EndProxyModeCommand(context);
+
+  new HomeWebViewCommand(context);
 }
