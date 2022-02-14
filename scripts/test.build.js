@@ -30,6 +30,11 @@ const contextPatch = [
     command: "Nocalhost.applyKubernetesObject",
     when: "viewItem =~ /^application-(.*)-installed/i",
   },
+  {
+    command: "Nocalhost.reset",
+    when:
+      "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
+  },
 ];
 packageJson.contributes.menus["view/item/context"].forEach((context) => {
   if (

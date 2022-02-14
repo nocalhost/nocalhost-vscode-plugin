@@ -10,6 +10,7 @@ const { viewLogTests } = require("./viewLog.test");
 const { editConfigTests } = require("./editConfig.test");
 const { remoteRunTests } = require("./remoteRun.test");
 const { applyManifestTests } = require("./applyManifest.test");
+const { resetPodTests } = require("./resetPod.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 
@@ -43,6 +44,7 @@ describe("editConfig", editConfigTests);
 // remote run after edit config hotreload
 describe("remoteRun", remoteRunTests);
 describe("applyManifest", applyManifestTests);
+describe("resetPod", resetPodTests);
 
 module.exports = {
   screenshotPath,
