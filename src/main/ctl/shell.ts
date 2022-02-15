@@ -84,6 +84,7 @@ export interface ExecParam {
   ignoreError?: boolean;
   printCommand?: boolean;
   sudo?: boolean;
+  enterPassword?: boolean;
 }
 
 type OutPut = boolean | { err: boolean; out: boolean };
@@ -142,7 +143,7 @@ function decodeBuffer(buffer: Buffer) {
 }
 
 export function createProcess(param: ExecParam) {
-  let { command, args, output, sudo } = param;
+  let { command, args, output, sudo, enterPassword } = param;
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
   command = getExecCommand(command);
@@ -153,6 +154,7 @@ export function createProcess(param: ExecParam) {
 
   if (sudo) {
     command = `sudo -p "Password:" -S ${command}`;
+    enterPassword = true;
   }
 
   const proc = spawn(command, [], { shell: true, env });
@@ -177,17 +179,15 @@ export function createProcess(param: ExecParam) {
     const str = decodeBuffer(data);
     stderr += str;
 
-    if (sudo) {
-      if (str.includes("Password:")) {
-        let password = await host.showInputBox({
-          password: true,
-          placeHolder:
-            "nhctl wants to make changes. Type your admin password to allow this.",
-        });
+    if (enterPassword && str.includes("Password:")) {
+      let password = await host.showInputBox({
+        password: true,
+        placeHolder:
+          "nhctl wants to make changes. Type your admin password to allow this.",
+      });
 
-        proc.stdin.write(`${password}\n`);
-        return;
-      }
+      proc.stdin.write(`${password}\n`);
+      return;
     }
 
     err && host.log(str);
