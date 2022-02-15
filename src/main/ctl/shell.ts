@@ -182,7 +182,6 @@ export function createProcess(param: ExecParam) {
     if (enterPassword && str.includes("Password:")) {
       let password = await host.showInputBox({
         password: true,
-        ignoreFocusOut: true,
         placeHolder:
           "nhctl wants to make changes. Type your admin password to allow this.",
       });
