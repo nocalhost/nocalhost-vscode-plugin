@@ -21,7 +21,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
   private _isRegister = false;
-  registerCommand() {
+  private registerCommand() {
     if (this._isRegister) {
       return;
     }

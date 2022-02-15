@@ -38,7 +38,6 @@ import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
-import TextDocumentContentProvider from "./textDocumentContentProvider";
 import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
@@ -105,10 +104,10 @@ export async function activate(context: vscode.ExtensionContext) {
     });
   });
 
-  const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
-
   let isSetVisible =
     host.getGlobalState(TMP_WORKLOAD_PATH) === host.getCurrentRootPath();
+
+  NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
 
   let subs = [
     host,
@@ -118,8 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // if (!welcomeDidShow) {
 
-        NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
-        host.setGlobalState(WELCOME_DID_SHOW, true);
+        // host.setGlobalState(WELCOME_DID_SHOW, true);
         // }
 
         if (!isSetVisible) {
@@ -137,10 +135,6 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.registerFileSystemProvider(
       "NocalhostRW",
       nocalhostFileSystemProvider
-    ),
-    vscode.workspace.registerTextDocumentContentProvider(
-      "nhtext",
-      textDocumentContentProvider
     ),
   ];
 
