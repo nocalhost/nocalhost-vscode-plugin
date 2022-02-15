@@ -1593,6 +1593,6 @@ export async function vpn(param: {
     title: `Waiting for vpn ${subCommand} ...`,
     output: true,
     args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
-    sudo: !host.isWindow(),
+    enterPassword: true,
   });
 }
