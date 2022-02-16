@@ -110,7 +110,12 @@
       "view/title": [
         {
           "command": "Nocalhost.refresh",
-          "when": "extensionActivated && view == Nocalhost",
+          "when": "extensionActivated && !refreshing && view == Nocalhost",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.refreshing",
+          "when": "extensionActivated && refreshing && view == Nocalhost",
           "group": "navigation"
         },
         {
@@ -397,6 +402,12 @@
         "title": "Refresh",
         "alt": "Refresh",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "Nocalhost.refreshing",
+        "title": "Refreshing",
+        "alt": "Refreshing",
+        "icon": "$(sync~spin)"
       },
       {
         "command": "Nocalhost.addKubeconfig",

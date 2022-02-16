@@ -67,15 +67,20 @@ class State {
       clearTimeout(this.autoRefreshTimeId);
     }
 
-    if (force && this.cancellationToken) {
+    if (force) {
       this.queueRender.length = 0;
+
+      if (!this.cancellationToken) {
+        return;
+      }
+
       this.cancellationToken.cancel();
       this.cancellationToken = null;
     }
   }
 
   cancellationToken: vscode.CancellationTokenSource;
-  private autoRefresh() {
+  private async autoRefresh() {
     if (this.cancellationToken) {
       return;
     }
