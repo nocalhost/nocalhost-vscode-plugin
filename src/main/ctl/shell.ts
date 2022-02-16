@@ -3,7 +3,7 @@ import * as path from "path";
 import * as iconv from "iconv-lite";
 import { Event } from "vscode";
 import kill = require("tree-kill");
-import shellWhich from "which";
+import * as shellWhich from "which";
 
 import host from "../host";
 import logger from "../utils/logger";

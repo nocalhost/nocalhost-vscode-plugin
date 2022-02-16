@@ -1,4 +1,4 @@
-import Ajv from "ajv";
+import * as Ajv from "ajv";
 
 const ajv = new Ajv();
 
