@@ -1,6 +1,5 @@
 const { spawn } = require("child_process");
 const path = require("path");
-const iconv = require("iconv-lite");
 const fs = require("fs");
 const fe = require("fs-extra");
 
@@ -43,7 +42,7 @@ function getBuildArgs(args) {
  *
  * @param {Array} args
  */
-function startBuild(args) {
+function startBuild(name, args) {
   const proc = spawn(
     path.resolve("./node_modules/.bin/esbuild"),
     getBuildArgs(args),
@@ -53,15 +52,15 @@ function startBuild(args) {
   );
 
   proc.stdout.on("data", (data) => {
-    process.stdout.write(data);
+    process.stdout.write(`[${name}] ${data}`);
   });
   proc.stderr.on("data", (data) => {
-    process.stderr.write(data);
+    process.stderr.write(`[${name}] ${data}`);
   });
 }
 
 function extension() {
-  startBuild([
+  startBuild("extension", [
     "src/main/extension.ts",
     "--external:vscode",
     "--format=cjs",
@@ -75,7 +74,7 @@ function html() {
     fs.createWriteStream("dist/DroidSansMono_v1.ttf")
   );
 
-  startBuild([
+  startBuild("html", [
     "atom-one-light=src/renderer/assets/css/atom-one-light.css",
     "vs2015=src/renderer/assets/css/vs2015.css",
     "renderer_v1=src/renderer/index.tsx",

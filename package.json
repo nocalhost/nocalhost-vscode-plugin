@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.16-alpha.89822084",
+  "version": "0.6.16-alpha.901d39fb",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -588,21 +588,20 @@
   "scripts": {
     "postinstall": "node ./scripts/postinstall.js",
     "prebuild": "node ./scripts/pre.build.js",
-    "build": "pnpm vsce package --no-dependencies",
-    "vscode:prepublish": "npm run package",
+    "compile": "node scripts/build.js --env=production",
+    "package": "pnpm vsce package --no-dependencies",
+    "build": "run-s -l prebuild compile package",
     "ts-compile-check": "tsc --noEmit -p src/main",
     "watch": "node scripts/build.js",
-    "package": "node scripts/build.js --env=production",
     "analyze": "npm run package -- --analyze ",
     "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
     "prebuild:ext": "node ./scripts/test.build.js",
-    "build:ext": "pnpm vsce package o nocalhost.vsix --no-dependencies",
-    "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
-    "test:watch": "jest --watch"
+    "build:ext": "run-s -l prebuild:ext build",
+    "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && yarn run ts-compile-check"
+      "pre-commit": "lint-staged && npm run ts-compile-check"
     }
   },
   "lint-staged": {
@@ -649,6 +648,7 @@
     "glob": "^7.1.6",
     "husky": "^4.3.0",
     "lint-staged": "^11.1.2",
+    "npm-run-all": "^4.1.5",
     "onchange": "^7.1.0",
     "ovsx": "^0.2.0",
     "prettier": "^2.2.0",
