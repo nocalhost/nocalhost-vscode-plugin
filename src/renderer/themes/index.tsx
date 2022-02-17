@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import {
-  createMuiTheme,
+  createTheme,
   ThemeProvider,
   ThemeOptions,
   Theme,
@@ -34,7 +34,7 @@ const themes: CustomThemes = {
 
 const getTheme = (theme: "light" | "dark"): Theme => {
   const themeOptions: CustomThemeOptions = themes[theme];
-  return createMuiTheme({
+  return createTheme({
     ...themeOptions,
     overrides: {
       MuiCssBaseline: {
