@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { KubernetesResourceNode } from "../abstract/KubernetesResourceNode";
 
 export abstract class StorageResourceNode extends KubernetesResourceNode {

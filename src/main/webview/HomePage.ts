@@ -1,7 +1,7 @@
-import * as vscode from "vscode";
-import * as os from "os";
-import * as path from "path";
-import * as yaml from "yaml";
+import vscode from "vscode";
+import os from "os";
+import path from "path";
+import yaml from "yaml";
 
 import { SIGN_IN } from "../commands/constants";
 import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
@@ -220,7 +220,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
 		</head>
 		<body>
 			<div id="root"></div>
-			<script src="${bundlePath}"></script>
+			<script type="module" src="${bundlePath}"></script>
 		</body>
 		</html>`;
   }

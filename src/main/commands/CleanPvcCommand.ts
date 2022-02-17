@@ -1,5 +1,5 @@
 import { Deployment } from "./../nodes/workloads/controllerResources/deployment/Deployment";
-import * as vscode from "vscode";
+import vscode from "vscode";
 
 import ICommand from "./ICommand";
 

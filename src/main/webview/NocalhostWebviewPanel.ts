@@ -1,6 +1,6 @@
-import * as path from "path";
-import * as vscode from "vscode";
-import * as qs from "qs";
+import path from "path";
+import vscode from "vscode";
+import qs from "qs";
 import MessageManager, {
   IMessage,
   MessageListener,
@@ -292,7 +292,7 @@ export default class NocalhostWebviewPanel {
         </head>
         <body>
           <div id="root"></div>
-          <script src="${bundlePath}"></script>
+          <script type="module" src="${bundlePath}"></script>
         </body>
       </html>
     `;

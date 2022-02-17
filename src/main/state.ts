@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import { isEqual } from "lodash";
+import vscode from "vscode";
+import { isEqual } from "lodash-es";
 import { isExistCluster } from "./clusters/utils";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 import logger from "./utils/logger";

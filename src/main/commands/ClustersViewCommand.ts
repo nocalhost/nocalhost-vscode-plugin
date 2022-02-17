@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { CLUSTERS_VIEW } from "./constants";
 import ICommand from "./ICommand";
 import registerCommand from "./register";

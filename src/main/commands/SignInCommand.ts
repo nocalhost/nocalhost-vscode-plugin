@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import ICommand from "./ICommand";
 import NocalhostAppProvider from "../appProvider";
 import { SIGN_IN } from "./constants";
@@ -33,9 +33,8 @@ export default class SignInCommand implements ICommand {
       info.username = info.username.trim();
       info.baseUrl = info.baseUrl.trim();
 
-      const accountClusterNode = await AccountClusterService.appendClusterByLoginInfo(
-        info
-      );
+      const accountClusterNode =
+        await AccountClusterService.appendClusterByLoginInfo(info);
 
       const rootNode = state.getNode(NOCALHOST) as NocalhostRootNode;
       rootNode && (await rootNode.addCluster(accountClusterNode));

@@ -10,12 +10,11 @@ import {
   EventEmitter,
   commands,
 } from "vscode";
-import * as yaml from "yaml";
-import * as path from "path";
-import { omit } from "lodash";
-import * as querystring from "querystring";
+import yaml from "yaml";
+import path from "path";
+import querystring from "querystring";
 import * as nhctl from "./ctl/nhctl";
-import { get as _get } from "lodash";
+import { get as _get, omit } from "lodash-es";
 import * as shell from "./ctl/shell";
 import * as fileUtil from "./utils/fileUtil";
 import host from "./host";
@@ -41,9 +40,8 @@ export default class NocalhostFileSystemProvider implements FileSystemProvider {
   static supportScheme = ["Nocalhost", "NocalhostRW"];
   static supportAuthority = ["k8s", "nh"];
   public dataMap: Map<Uri, Uint8Array> = new Map();
-  private readonly onDidChangeFileEmitter: EventEmitter<
-    FileChangeEvent[]
-  > = new EventEmitter<FileChangeEvent[]>();
+  private readonly onDidChangeFileEmitter: EventEmitter<FileChangeEvent[]> =
+    new EventEmitter<FileChangeEvent[]>();
   onDidChangeFile: Event<FileChangeEvent[]> = this.onDidChangeFileEmitter.event;
   watch(
     uri: Uri,

@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
-import * as assert from "assert";
-import * as AsyncRetry from "async-retry";
+import vscode from "vscode";
+import assert from "assert";
+import AsyncRetry from "async-retry";
 
 import { IDebugProvider } from "../IDebugProvider";
 import logger from "../../../utils/logger";

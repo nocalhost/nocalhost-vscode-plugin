@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import { PLUGIN_TEMP_DIR } from "../constants";
 import host from "../host";
 import logger from "./logger";

@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import { NH_BIN } from "../../../constants";
 import host from "../../../host";
 import { nhctlCommand, NhctlCommand } from "../../../ctl/nhctl";

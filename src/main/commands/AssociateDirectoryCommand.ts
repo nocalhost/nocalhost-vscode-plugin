@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import * as os from "os";
+import vscode from "vscode";
+import os from "os";
 
 import ICommand from "./ICommand";
 import { ASSOCIATE_LOCAL_DIRECTORY } from "./constants";

@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import * as semver from "semver";
-import * as url from "url";
-import { uniqBy, difference } from "lodash";
-import * as path from "path";
+import semver from "semver";
+import url from "url";
+import { uniqBy, difference } from "lodash-es";
+import path from "path";
 
 import {
   IResponseData,
@@ -21,7 +21,7 @@ import { LoginInfo } from "./interface";
 import { isExist, writeFileLock } from "../utils/fileUtil";
 import { KUBE_CONFIG_DIR, SERVER_CLUSTER_LIST } from "../constants";
 import { ClusterSource } from "../common/define";
-import * as packageJson from "../../../package.json";
+import packageJson from "../../../package.json";
 import { ClustersState } from ".";
 
 export class AccountClusterNode {
@@ -135,7 +135,8 @@ export default class AccountClusterService {
       throw Error("No clusters");
     }
 
-    const applications: IV2ApplicationInfo[] = await accountClusterService.getV2Application();
+    const applications: IV2ApplicationInfo[] =
+      await accountClusterService.getV2Application();
     logger.info(
       `[getServerClusterRootNodes] applications length ${
         (applications || []).length

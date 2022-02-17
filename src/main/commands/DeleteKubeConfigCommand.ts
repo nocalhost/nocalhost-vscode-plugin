@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
+import vscode from "vscode";
+import fs from "fs";
 import ICommand from "./ICommand";
 import { DELETE_KUBECONFIG } from "./constants";
 import registerCommand from "./register";

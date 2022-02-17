@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { IMessage } from "..";
 import fetchLogs from "./fetchLogs";
 import updateURL from "./updateURL";

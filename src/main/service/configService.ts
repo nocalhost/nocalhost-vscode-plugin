@@ -1,4 +1,4 @@
-import * as yaml from "yaml";
+import yaml from "yaml";
 import * as nhctl from "../ctl/nhctl";
 import logger from "../utils/logger";
 const lineBreakFlag = "\n";

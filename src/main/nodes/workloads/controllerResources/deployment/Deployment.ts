@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { DEPLOYMENT } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import logger from "../../../../utils/logger";

@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import Axios from "axios";
-import * as AsyncRetry from "async-retry";
+import AsyncRetry from "async-retry";
 
 import { AppNode } from "../nodes/AppNode";
 import { DevSpaceNode } from "../nodes/DevSpaceNode";

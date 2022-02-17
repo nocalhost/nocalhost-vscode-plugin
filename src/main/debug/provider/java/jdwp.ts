@@ -1,4 +1,4 @@
-import * as net from "net";
+import net from "net";
 import { ByteBuffer } from "./byteBuffer";
 
 export enum Command {

@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { NocalhostDebugAdapterDescriptorFactory } from "./debugAdapter";
 
 export function activateNocalhostDebug(context: vscode.ExtensionContext) {

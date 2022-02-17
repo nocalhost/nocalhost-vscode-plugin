@@ -1,12 +1,12 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { HELM_NH_CONFIG_DIR } from "../constants";
 import * as nhctl from "../ctl/nhctl";
-import * as yaml from "yaml";
+import yaml from "yaml";
 import state from "../state";
 
 import { ID_SPLIT } from "./nodeContants";
 import { resolveVSCodeUri } from "../utils/fileUtil";
-import * as path from "path";
+import path from "path";
 import { BaseNocalhostNode, AppInfo } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";
 import { NetworkFolderNode } from "./networks/NetworkFolderNode";

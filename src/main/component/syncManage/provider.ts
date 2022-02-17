@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import { isEqual } from "lodash";
+import vscode from "vscode";
+import { isEqual } from "lodash-es";
 
 import { associateQuery, Associate } from "../../ctl/nhctl";
 import logger from "../../utils/logger";
@@ -8,13 +8,14 @@ import { SYNC_SERVICE } from "../../commands/constants";
 
 export class SyncManageDataProvider
   extends vscode.Disposable
-  implements vscode.TreeDataProvider<BaseNodeType> {
+  implements vscode.TreeDataProvider<BaseNodeType>
+{
   private time: NodeJS.Timeout;
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
     BaseNodeType | undefined
   >();
-  readonly onDidChangeTreeData?: vscode.Event<void | BaseNodeType> = this
-    .onDidChangeTreeDataEventEmitter.event;
+  readonly onDidChangeTreeData?: vscode.Event<void | BaseNodeType> =
+    this.onDidChangeTreeDataEventEmitter.event;
 
   private disposable: vscode.Disposable[] = [];
 

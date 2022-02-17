@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { ControllerResourceNode } from "../ControllerResourceNode";
 import { JOB } from "../../../nodeContants";
 import logger from "../../../../utils/logger";

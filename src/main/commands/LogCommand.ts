@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import ICommand from "./ICommand";
 import { LOG } from "./constants";
 import registerCommand from "./register";
@@ -43,9 +43,7 @@ export default class LogCommand implements ICommand {
     }
   }
 
-  async getPodAndContainer(
-    node: KubernetesResourceNode
-  ): Promise<{
+  async getPodAndContainer(node: KubernetesResourceNode): Promise<{
     podName: string | undefined;
     containerName: string | undefined;
   }> {

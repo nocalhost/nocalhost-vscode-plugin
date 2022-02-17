@@ -1,11 +1,11 @@
-import * as assert from "assert";
-import * as net from "net";
-import * as path from "path";
-import * as semver from "semver";
+import assert from "assert";
+import net from "net";
+import path from "path";
+import semver from "semver";
 import { existsSync, mkdirSync, watch } from "fs";
 import { commands, DebugConfiguration } from "vscode";
 import { v4 } from "uuid";
-import { delay } from "lodash";
+import { delay } from "lodash-es";
 
 import logger from "../../utils/logger";
 import { getPromiseWithAbort } from "../../utils";
@@ -151,7 +151,11 @@ export class GoDebugProvider extends IDebugProvider {
       }
 
       this.socket.once("data", (data) => {
-        const { id: rid, error, result } = JSON.parse(data.toString()) as {
+        const {
+          id: rid,
+          error,
+          result,
+        } = JSON.parse(data.toString()) as {
           id: string;
           result: T;
           error?: string;

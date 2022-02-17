@@ -1,5 +1,5 @@
 import { homedir, tmpdir } from "os";
-import * as path from "path";
+import path from "path";
 
 const isWindow = require("is-windows");
 

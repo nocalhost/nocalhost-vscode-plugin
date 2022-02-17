@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import * as nhctl from "../../../ctl/nhctl";
-import { get as _get } from "lodash";
+import { get as _get } from "lodash-es";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";

@@ -1,13 +1,13 @@
 import host from "../host";
-import * as yamlUtils from "yaml";
-import * as path from "path";
-import * as fs from "fs";
+import yamlUtils from "yaml";
+import path from "path";
+import fs from "fs";
 import { LOCAL_PATH, KUBE_CONFIG_DIR } from "../constants";
 import { isExistSync, writeFileAsync } from "../utils/fileUtil";
 import { IRootNode } from "../domain";
 import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";
 import { getStringHash } from "../utils/common";
-import * as yaml from "yaml";
+import yaml from "yaml";
 import {
   checkCluster,
   getAllNamespace,

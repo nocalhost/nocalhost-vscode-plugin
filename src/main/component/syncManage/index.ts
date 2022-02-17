@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 
 export { DISASSOCIATE_ASSOCIATE } from "./command";
 import { registerCommand } from "./command";

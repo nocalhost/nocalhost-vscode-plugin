@@ -1,6 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn, execSync } from "child_process";
-import * as path from "path";
-import * as iconv from "iconv-lite";
+import path from "path";
+import iconv from "iconv-lite";
 import { Event } from "vscode";
 import kill = require("tree-kill");
 import * as shellWhich from "which";

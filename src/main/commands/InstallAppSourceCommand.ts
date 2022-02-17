@@ -1,7 +1,7 @@
-import * as vscode from "vscode";
-import * as path from "path";
-import * as tempy from "tempy";
-import * as yaml from "yaml";
+import vscode from "vscode";
+import path from "path";
+import tempy from "tempy";
+import yaml from "yaml";
 import * as nls from "vscode-nls";
 
 import Bookinfo from "../common/bookinfo";

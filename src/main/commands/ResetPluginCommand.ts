@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import ICommand from "./ICommand";
 import { RESET_PLUGIN } from "./constants";
 import registerCommand from "./register";

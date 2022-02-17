@@ -1,4 +1,4 @@
-import * as camelcase from "camelcase";
+import camelcase from "camelcase";
 import { cpus } from "os";
 
 export const keysToCamel = (o: any) => {

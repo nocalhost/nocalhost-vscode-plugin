@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import * as nls from "vscode-nls";
 import host from "../../host";
 

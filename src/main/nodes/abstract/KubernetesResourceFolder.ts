@@ -1,6 +1,6 @@
 import state from "../../state";
-import * as vscode from "vscode";
-import { orderBy } from "lodash";
+import vscode from "vscode";
+import { orderBy } from "lodash-es";
 import { ControllerResourceNode } from "../workloads/controllerResources/ControllerResourceNode";
 import { NhctlCommand } from "../../ctl/nhctl";
 import { NocalhostFolderNode } from "./NocalhostFolderNode";
@@ -13,7 +13,8 @@ import { INhCtlGetResult } from "../../domain";
 
 export abstract class KubernetesResourceFolder
   extends NocalhostFolderNode
-  implements RefreshData {
+  implements RefreshData
+{
   public abstract label: string;
   public abstract type: string;
   public abstract resourceType: string;

@@ -1,8 +1,8 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as ProperLockfile from "proper-lockfile";
-import * as yaml from "yaml";
-import * as vscode from "vscode";
+import fs from "fs";
+import path from "path";
+import ProperLockfile from "proper-lockfile";
+import yaml from "yaml";
+import vscode from "vscode";
 import host from "../host";
 import logger from "./logger";
 import { IKubeconfig } from "../ctl/nhctl/type";

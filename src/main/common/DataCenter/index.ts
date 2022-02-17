@@ -1,4 +1,4 @@
-import * as yaml from "yaml";
+import yaml from "yaml";
 import { IApplicationInfo } from "../../domain";
 import {
   IApplication,
@@ -6,15 +6,13 @@ import {
   IApplicationConfig,
   IApplicationConfigService,
   IApplicationDescribe,
-  IApplicationDescribeSvcProfile,
-  IApplicationDescribeSvcProfileRawConfig,
   IApplicationMeta,
   IApplicationMetaSvcProfile,
 } from "./index.types";
 import * as shell from "../../ctl/shell";
 import services, { ServiceResult } from "./services";
 import { DATA_CENTER_INTERVAL_MS, KUBE_CONFIG_DIR } from "../../constants";
-import * as path from "path";
+import path from "path";
 
 interface IDataStore {
   applications: IApplication[];

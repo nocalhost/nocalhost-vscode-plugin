@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import host from "../../../../host";
 import { DAEMON_SET } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";

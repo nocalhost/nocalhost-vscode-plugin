@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 
 import host from "../../host";
 import { KubernetesResourceNode } from "../../nodes/abstract/KubernetesResourceNode";
@@ -11,7 +11,8 @@ import { Pod } from "../../nodes/workloads/pod/Pod";
 const placeHolder = "single: 1234:1234 multiple: 1234:1234,2345:2345.";
 
 function validateInput(node: KubernetesResourceNode, value: string) {
-  const expReg = /^([1-9][0-9]*)?:([1-9][0-9]*)(,([1-9][0-9]*)?:([1-9][0-9]*))*$/;
+  const expReg =
+    /^([1-9][0-9]*)?:([1-9][0-9]*)(,([1-9][0-9]*)?:([1-9][0-9]*))*$/;
   const match = expReg.exec(value);
 
   if (!match) {

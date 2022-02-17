@@ -1,6 +1,6 @@
 import { DebugConfiguration } from "vscode";
 import { createConnection } from "net";
-import { delay } from "lodash";
+import { delay } from "lodash-es";
 
 import { IDebugProvider } from "./IDebugProvider";
 import { Language } from ".";

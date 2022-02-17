@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
-import * as os from "os";
-import { get as _get } from "lodash";
+import vscode from "vscode";
+import os from "os";
+import { get as _get } from "lodash-es";
 import { existsSync } from "fs";
 import { INhCtlGetResult, IDescribeConfig } from "../domain";
 import ICommand from "./ICommand";
@@ -24,11 +24,11 @@ import {
   TMP_WORKLOAD_PATH,
 } from "../constants";
 import host, { Host } from "../host";
-import * as path from "path";
+import path from "path";
 import git from "../ctl/git";
 import ConfigService from "../service/configService";
 import * as nhctl from "../ctl/nhctl";
-import * as nls from "../../../package.nls.json";
+import nls from "../../../package.nls.json";
 import { replaceSpacePath } from "../utils/fileUtil";
 import { BaseNocalhostNode, DeploymentStatus } from "../nodes/types/nodeType";
 import { ControllerResourceNode } from "../nodes/workloads/controllerResources/ControllerResourceNode";

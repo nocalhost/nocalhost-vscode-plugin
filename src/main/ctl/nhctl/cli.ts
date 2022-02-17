@@ -1,9 +1,9 @@
-import * as vscode from "vscode";
-import * as semver from "semver";
-import * as os from "os";
-import * as path from "path";
-import * as fs from "fs";
-import { delay } from "lodash";
+import vscode from "vscode";
+import semver from "semver";
+import os from "os";
+import path from "path";
+import fs from "fs";
+import { delay } from "lodash-es";
 
 import {
   DEV_VERSION,
@@ -14,10 +14,10 @@ import {
 } from "./../../constants";
 import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
-import * as yaml from "yaml";
-import { get as _get, orderBy } from "lodash";
+import yaml from "yaml";
+import { get as _get, orderBy } from "lodash-es";
 import { readYaml } from "../../utils/fileUtil";
-import * as packageJson from "../../../../package.json";
+import packageJson from "../../../../package.json";
 import { NH_BIN } from "../../constants";
 import services from "../../common/DataCenter/services";
 import { SvcProfile, NodeInfo } from "../../nodes/types/nodeType";

@@ -1,5 +1,5 @@
-import { difference, get, omit, orderBy } from "lodash";
-import * as vscode from "vscode";
+import { difference, get, omit, orderBy } from "lodash-es";
+import vscode from "vscode";
 import { sortResources } from "../clusters";
 import AccountClusterService, {
   AccountClusterNode,

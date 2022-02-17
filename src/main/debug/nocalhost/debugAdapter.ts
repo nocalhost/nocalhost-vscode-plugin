@@ -1,8 +1,9 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { startDebug } from "./start";
 
 export class NocalhostDebugAdapterDescriptorFactory
-  implements vscode.DebugAdapterDescriptorFactory {
+  implements vscode.DebugAdapterDescriptorFactory
+{
   public async createDebugAdapterDescriptor(
     session: vscode.DebugSession,
     _executable: vscode.DebugAdapterExecutable

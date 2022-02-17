@@ -1,5 +1,5 @@
 import { DebugConfiguration } from "vscode";
-import * as assert from "assert";
+import assert from "assert";
 
 import { IDebugProvider } from "./IDebugProvider";
 import logger from "../../utils/logger";

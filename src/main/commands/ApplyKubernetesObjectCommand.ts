@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as vscode from "vscode";
-import * as querystring from "querystring";
-import * as tempy from "tempy";
+import fs from "fs";
+import vscode from "vscode";
+import querystring from "querystring";
+import tempy from "tempy";
 import ICommand from "./ICommand";
 import registerCommand from "./register";
 import services, { ServiceResult } from "../common/DataCenter/services";

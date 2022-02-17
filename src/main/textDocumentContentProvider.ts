@@ -1,12 +1,13 @@
-import * as vscode from "vscode";
-import * as querystring from "querystring";
+import vscode from "vscode";
+import querystring from "querystring";
 import services, { ServiceResult } from "./common/DataCenter/services/index";
 import host from "./host";
 
 let instance: TextDocumentContentProvider | null = null;
 
 export default class TextDocumentContentProvider
-  implements vscode.TextDocumentContentProvider, vscode.Disposable {
+  implements vscode.TextDocumentContentProvider, vscode.Disposable
+{
   public static getInstance(): TextDocumentContentProvider {
     if (!instance) {
       instance = new TextDocumentContentProvider();

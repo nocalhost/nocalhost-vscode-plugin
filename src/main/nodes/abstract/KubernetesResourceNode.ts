@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { AppNode } from "../AppNode";
 import { DevSpaceNode } from "../DevSpaceNode";
 import { ID_SPLIT } from "../nodeContants";

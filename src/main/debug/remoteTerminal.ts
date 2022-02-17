@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 import host from "../host";
@@ -21,7 +21,8 @@ const ANSI_COLOR_RED = "\x1b[31m";
 const ANSI_COLOR_RESET = "\x1b[0m";
 
 export class RemoteTerminal implements vscode.Terminal {
-  private writeEmitter: vscode.EventEmitter<string> | null = new vscode.EventEmitter<string>();
+  private writeEmitter: vscode.EventEmitter<string> | null =
+    new vscode.EventEmitter<string>();
   private terminal: vscode.Terminal | null;
   private proc: ChildProcessWithoutNullStreams | null;
 

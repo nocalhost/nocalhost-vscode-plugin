@@ -1,8 +1,8 @@
-import * as semver from "semver";
-import * as vscode from "vscode";
+import semver from "semver";
+import vscode from "vscode";
 
-import * as appSchema from "../../../schemas/nocalhost.app.config.json";
-import * as serviceSchema from "../../../schemas/nocalhost.service.config.json";
+import appSchema from "../../../schemas/nocalhost.app.config.json";
+import serviceSchema from "../../../schemas/nocalhost.service.config.json";
 
 declare type YamlSchemaContributor = (
   schema: string,

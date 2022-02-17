@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
+import vscode from "vscode";
+import fs from "fs";
 import ICommand from "./ICommand";
 import { LOCAL_PATH, SERVER_CLUSTER_LIST } from "../constants";
 import { CLEAR_LOCAL_CLUSTER } from "./constants";

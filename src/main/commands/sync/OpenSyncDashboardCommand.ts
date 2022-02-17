@@ -1,5 +1,5 @@
 import assert = require("assert");
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { Associate } from "../../ctl/nhctl/type";
 import host from "../../host";
 

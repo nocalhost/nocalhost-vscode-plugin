@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 
 import { AssociateNode } from "./node";
 import * as nhctl from "../../ctl/nhctl";

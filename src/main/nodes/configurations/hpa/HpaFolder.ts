@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { INhCtlGetResult } from "../../../domain";
 
 import state from "../../../state";

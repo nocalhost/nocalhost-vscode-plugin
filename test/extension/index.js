@@ -11,7 +11,7 @@ const { getRepository, gitCode } = require("./lib");
 const {
   downloadAndUnzipVSCode,
   resolveCliPathFromVSCodeExecutablePath,
-} = require("vscode-test");
+} = require("@vscode/test-electron");
 
 const logger = require("./lib/log");
 const VideoCapture = require("./lib/videoCapture");

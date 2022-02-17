@@ -1,5 +1,5 @@
-import * as net from "net";
-import * as vscode from "vscode";
+import net from "net";
+import vscode from "vscode";
 
 const TWO_CRLF = "\r\n\r\n";
 

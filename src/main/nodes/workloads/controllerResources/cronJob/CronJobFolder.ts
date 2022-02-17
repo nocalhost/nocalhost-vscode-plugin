@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { KubernetesResourceFolder } from "../../../abstract/KubernetesResourceFolder";
 import { CronJob } from "./CronJob";
 import { CRON_JOBS_FOLDER } from "../../../nodeContants";

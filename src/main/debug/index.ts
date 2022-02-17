@@ -1,7 +1,7 @@
-import * as assert from "assert";
-import * as vscode from "vscode";
-import * as AsyncRetry from "async-retry";
-import * as getPort from "get-port";
+import assert from "assert";
+import vscode from "vscode";
+import AsyncRetry from "async-retry";
+import getPort from "get-port";
 
 import SyncServiceCommand, {
   SyncMsg,

@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import ICommand from "./ICommand";
 import { DELETE_KUBERNETES_OBJECT } from "./constants";
 import registerCommand from "./register";
@@ -20,13 +20,12 @@ export default class DeleteKubernetesObjectCommand implements ICommand {
     const nodeName: string = node.name;
     const namespace: string = node.getAppNode().namespace;
     const kubeConfig: string = node.getKubeConfigPath();
-    const confirm:
-      | string
-      | undefined = await vscode.window.showInformationMessage(
-      `Delete: ${nodeName}?`,
-      { modal: true },
-      "OK"
-    );
+    const confirm: string | undefined =
+      await vscode.window.showInformationMessage(
+        `Delete: ${nodeName}?`,
+        { modal: true },
+        "OK"
+      );
     if (confirm !== "OK") {
       return;
     }

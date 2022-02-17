@@ -1,7 +1,7 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { watchFile, unwatchFile, promises, constants } from "fs";
 import { join } from "path";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { lock, unlock } from "proper-lockfile";
 
 import { RunOnceScheduler, DeferredPromise } from "./async";

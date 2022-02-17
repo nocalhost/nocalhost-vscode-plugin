@@ -1,5 +1,5 @@
-import * as assert from "assert";
-import * as vscode from "vscode";
+import assert from "assert";
+import vscode from "vscode";
 
 import * as nhctl from "../../ctl/nhctl";
 import host from "../../host";

@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import { sortBy } from "lodash";
+import vscode from "vscode";
+import { sortBy } from "lodash-es";
 
 import { Associate, getIconIdByStatus } from "../../ctl/nhctl";
 import host from "../../host";

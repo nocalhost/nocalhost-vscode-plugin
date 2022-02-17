@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
+import vscode from "vscode";
+import fs from "fs";
+import path from "path";
 
 import ICommand from "./ICommand";
 import { INSTALL_APP } from "./constants";

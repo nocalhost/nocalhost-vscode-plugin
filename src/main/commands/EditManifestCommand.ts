@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import ICommand from "./ICommand";
 import { EDIT_MANIFEST, APPLY_KUBERNETES_OBJECT } from "./constants";
 import registerCommand from "./register";
@@ -60,15 +60,14 @@ export default class EditManifestCommand implements ICommand {
     const uri: vscode.Uri = doc.uri;
     const { scheme, authority } = uri;
     if (scheme === "NocalhostRW" && authority === "k8s") {
-      const confirm:
-        | string
-        | undefined = await vscode.window.showInformationMessage(
-        `Apply this resource?`,
-        {
-          modal: true,
-        },
-        "OK"
-      );
+      const confirm: string | undefined =
+        await vscode.window.showInformationMessage(
+          `Apply this resource?`,
+          {
+            modal: true,
+          },
+          "OK"
+        );
       if (confirm === "OK") {
         vscode.commands.executeCommand(APPLY_KUBERNETES_OBJECT, uri);
       }

@@ -1,11 +1,11 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { BaseNocalhostNode } from "../types/nodeType";
 import state from "../../state";
 import { NhctlCommand } from "../../ctl/nhctl";
 import { KubernetesResourceFolder } from "../abstract/KubernetesResourceFolder";
 import { CrdResource } from "../types/resourceType";
 import { CrdGroup } from "./CrdGroup";
-import { orderBy, sortBy } from "lodash";
+import { orderBy, sortBy } from "lodash-es";
 
 export class CrdFolder extends KubernetesResourceFolder {
   public label: string = "CustomResources";

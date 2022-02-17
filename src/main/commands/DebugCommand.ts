@@ -1,8 +1,8 @@
-import * as vscode from "vscode";
-import * as assert from "assert";
-import * as fs from "fs";
-import * as yaml from "yaml";
-import * as path from "path";
+import vscode from "vscode";
+import assert from "assert";
+import fs from "fs";
+import yaml from "yaml";
+import path from "path";
 import { ValidateFunction } from "ajv";
 
 import parse = require("json5/lib/parse");
@@ -161,13 +161,14 @@ export default class DebugCommand implements ICommand {
     const { node, container } = this;
 
     if (!container.dev.debug.language || language !== debugProvider.name) {
-      const serviceConfig = await ConfigService.getAppConfig<NocalhostServiceConfig>(
-        node.getKubeConfigPath(),
-        node.getNameSpace(),
-        node.getAppName(),
-        node.name,
-        node.resourceType
-      );
+      const serviceConfig =
+        await ConfigService.getAppConfig<NocalhostServiceConfig>(
+          node.getKubeConfigPath(),
+          node.getNameSpace(),
+          node.getAppName(),
+          node.name,
+          node.resourceType
+        );
       const currentContainer = serviceConfig.containers.find(
         (item) => item.name === container.name
       );

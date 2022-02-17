@@ -1,9 +1,10 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { NocalhostRootNode } from "./nodes/NocalhostRootNode";
 import { BaseNocalhostNode } from "./nodes/types/nodeType";
 
 export default class NocalhostAppProvider
-  implements vscode.TreeDataProvider<BaseNocalhostNode> {
+  implements vscode.TreeDataProvider<BaseNocalhostNode>
+{
   private onDidChangeTreeDataEventEmitter = new vscode.EventEmitter<
     BaseNocalhostNode | undefined
   >();

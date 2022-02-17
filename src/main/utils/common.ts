@@ -1,4 +1,4 @@
-import * as crypto from "crypto";
+import crypto from "crypto";
 
 export function getStringHash(str: string): string {
   var shasum = crypto.createHash("md5");

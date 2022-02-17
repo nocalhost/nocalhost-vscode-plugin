@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as path from "path";
-import { isEqual } from "lodash";
+import fs from "fs";
+import path from "path";
+import { isEqual } from "lodash-es";
 
 import { PLUGIN_CONFIG_DIR } from "../constants";
 import host from "../host";

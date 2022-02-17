@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import state from "../../../../state";
 import { DeploymentStatus } from "../../../types/nodeType";
 import { STATEFUL_SET } from "../../../nodeContants";

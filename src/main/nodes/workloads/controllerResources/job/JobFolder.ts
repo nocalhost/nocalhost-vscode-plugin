@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import { orderBy } from "lodash";
+import vscode from "vscode";
+import { orderBy } from "lodash-es";
 
 import host from "../../../../host";
 import state from "../../../../state";

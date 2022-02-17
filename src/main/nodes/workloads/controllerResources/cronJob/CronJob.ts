@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import state from "../../../../state";
 import { CRON_JOB } from "../../../nodeContants";
 import { ControllerResourceNode } from "../ControllerResourceNode";

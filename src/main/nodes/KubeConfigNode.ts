@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
-import { orderBy } from "lodash";
+import vscode from "vscode";
+import { orderBy } from "lodash-es";
 import { HELM_NH_CONFIG_DIR, NOCALHOST } from "../constants";
 import state from "../state";
 import AccountClusterService from "../clusters/AccountCluster";
 import { ID_SPLIT } from "./nodeContants";
-import * as path from "path";
+import path from "path";
 import { ClusterSource } from "../common/define";
 import { BaseNocalhostNode } from "./types/nodeType";
 import { NocalhostFolderNode } from "./abstract/NocalhostFolderNode";

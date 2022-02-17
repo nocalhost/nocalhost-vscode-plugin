@@ -1,5 +1,5 @@
-import * as assert from "assert";
-import * as vscode from "vscode";
+import assert from "assert";
+import vscode from "vscode";
 
 import NocalhostAppProvider from "../appProvider";
 import { DISASSOCIATE_ASSOCIATE } from "../component/syncManage";

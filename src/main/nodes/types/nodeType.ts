@@ -1,5 +1,5 @@
 import AccountClusterService from "./../../clusters/AccountCluster";
-import * as vscode from "vscode";
+import vscode from "vscode";
 
 export interface AppInfo {
   name: string;

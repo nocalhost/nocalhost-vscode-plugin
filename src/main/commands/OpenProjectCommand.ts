@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { associateInfo, NhctlCommand } from "../ctl/nhctl";
 import host from "../host";
 import { OPEN_PROJECT, ASSOCIATE_LOCAL_DIRECTORY } from "./constants";

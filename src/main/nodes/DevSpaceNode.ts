@@ -1,5 +1,5 @@
-import { difference } from "lodash";
-import * as vscode from "vscode";
+import { difference } from "lodash-es";
+import vscode from "vscode";
 import { ClusterSource } from "../common/define";
 import * as nhctl from "../ctl/nhctl";
 import { IDevSpaceInfo, IV2ApplicationInfo } from "../domain";

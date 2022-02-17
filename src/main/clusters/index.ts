@@ -1,6 +1,6 @@
 import LocalCluster from "./LocalCuster";
 import AccountCluster, { AccountClusterNode } from "./AccountCluster";
-import { orderBy } from "lodash";
+import { orderBy } from "lodash-es";
 import { IRootNode } from "../domain";
 const sortResources = (resources: IRootNode[]) => {
   return orderBy(resources, ["createTime"], ["desc"]);

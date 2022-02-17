@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import ICommand from "./ICommand";
 import registerCommand from "./register";
 import { START_COPY_DEV_MODE, START_DEV_MODE } from "./constants";
