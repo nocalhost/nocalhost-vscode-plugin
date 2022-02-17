@@ -1,7 +1,8 @@
 const fs = require("fs");
-const { execSync } = require("child_process");
 const path = require("path");
 const semver = require("semver");
+const { spawnSync } = require("child_process");
+const assert = require("assert");
 
 const packageJsonUri = path.resolve(__dirname, "../package.json");
 const packageJson = JSON.parse(
@@ -10,8 +11,18 @@ const packageJson = JSON.parse(
 
 const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
 
-function getGitResult(cmd) {
-  return execSync(cmd).toString().trim();
+/**
+ *
+ * @param {string} cmd
+ * @param {ReadonlyArray<string>} array
+ * @returns
+ */
+function getGitResult(cmd, args) {
+  const result = spawnSync(cmd, args);
+
+  assert.equal(result.status, 0, result.stderr);
+
+  return result.stdout.toString().trim();
 }
 
 if (VERSION) {
@@ -30,13 +41,13 @@ if (VERSION) {
   }
 } else {
   // get the latest tag and short commit and environment generation version number
-  let version = getGitResult(`git describe --tags --abbrev=0`);
+  let version = getGitResult("git", ["describe", "--tags", "--abbrev=0"]);
 
   version = semver.coerce(version);
 
   version = semver.minVersion(`>${version}`);
 
-  const rev = getGitResult(`git rev-parse --short HEAD`);
+  const rev = getGitResult("git", ["rev-parse", "--short", "HEAD"]);
 
   const identifier = process.env.CI === "true" ? "beta" : "alpha";
 
