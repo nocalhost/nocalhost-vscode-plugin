@@ -596,7 +596,7 @@
     "analyze": "npm run package -- --analyze ",
     "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
     "prebuild:ext": "node ./scripts/test.build.js",
-    "build:ext": "run-s -l prebuild:ext prebuild compile 'package -- -o {1}' -- nocalhost.vsix",
+    "build:ext": "run-s -l prebuild:ext compile 'package -- -o {1}' -- nocalhost.vsix",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js"
   },
   "husky": {
