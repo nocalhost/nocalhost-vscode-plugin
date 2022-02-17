@@ -30,6 +30,7 @@ jobs:
       - uses: pnpm/action-setup@v2.1.0
         if: steps.pnpm-cache.outputs.cache-hit != 'true'
         with:
+          version: 6
           run_install: |
             - recursive: true
               args: [--frozen-lockfile]
