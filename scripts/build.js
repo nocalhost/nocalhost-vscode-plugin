@@ -82,7 +82,7 @@ function html() {
     "home=src/renderer/HomeIndex.tsx",
     "--format=esm",
     "--splitting",
-    "--target=chrome90",
+    "--target=chrome89",
   ]);
 }
 
