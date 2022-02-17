@@ -49,7 +49,7 @@ jobs:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
           NHCTL_VERSION: dev
         run: |
-          yarn run build:ext
+          pnpm run build:ext
           rm -rf .vscode-test
           ls -al
 
@@ -67,7 +67,7 @@ jobs:
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
           VIDEO_CAPTURE: 1
-        run: yarn run test:ext
+        run: pnpm run test:ext
 
       - name: Destroy cluster
         if: ${{ always() }}
