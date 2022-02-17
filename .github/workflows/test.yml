@@ -24,7 +24,7 @@ jobs:
         id: pnpm-cache
         with:
           path: "**/node_modules"
-          key: ${{ runner.os }}-build-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-ui-test-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-build
 
       - uses: pnpm/action-setup@v2.1.0
@@ -34,7 +34,6 @@ jobs:
           run_install: |
             - recursive: true
               args: [--frozen-lockfile]
-            - args: [--no-optional]
 
       - name: Run tests
         run: npm run test
