@@ -1,14 +1,12 @@
 import * as vscode from "vscode";
-import { omit } from "lodash";
-import ICommand from "./ICommand";
+import ICommand from "../ICommand";
 
-import { RECONNECT_SYNC, OVERRIDE_SYNC, SYNC_SERVICE } from "./constants";
-import registerCommand from "./register";
-import * as nhctl from "../ctl/nhctl";
-import host from "../host";
-import logger from "../utils/logger";
-import { DEV_ASSOCIATE_LOCAL_DIRECTORYS } from "../constants";
-import { Associate } from "../ctl/nhctl";
+import { OPEN_SYNC_COMMAND, SYNC_SERVICE } from "../constants";
+import registerCommand from "../register";
+import * as nhctl from "../../ctl/nhctl";
+import host from "../../host";
+import logger from "../../utils/logger";
+import { Associate } from "../../ctl/nhctl";
 
 export interface Sync {
   app: string;
@@ -23,6 +21,7 @@ export interface SyncMsg {
   msg: string;
   tips: string;
   outOfSync?: string;
+  gui: string;
 }
 
 export default class SyncServiceCommand implements ICommand {
@@ -40,34 +39,6 @@ export default class SyncServiceCommand implements ICommand {
 
     if (!currentRootPath) {
       return;
-    }
-
-    const devAssociateLocalDirectorys =
-      host.getGlobalState(DEV_ASSOCIATE_LOCAL_DIRECTORYS) ?? {};
-    const current = devAssociateLocalDirectorys[currentRootPath];
-
-    if (current) {
-      const { app, resourceType, service, kubeConfigPath, namespace } = current;
-
-      try {
-        await nhctl.associate(
-          kubeConfigPath,
-          namespace,
-          app,
-          currentRootPath,
-          resourceType,
-          service,
-          "",
-          "--migrate"
-        );
-      } catch (err) {
-        logger.error("associate migrate:", err);
-      } finally {
-        host.setGlobalState(
-          DEV_ASSOCIATE_LOCAL_DIRECTORYS,
-          omit(devAssociateLocalDirectorys, currentRootPath)
-        );
-      }
     }
 
     try {
@@ -105,10 +76,9 @@ export default class SyncServiceCommand implements ICommand {
       this.syncData = syncData || {};
       this.getSyncStatus();
     } else {
-      logger.info("after kill cleartime sync-status");
+      logger.info("after kill clear time sync-status");
     }
   }
-
   async getSyncStatus() {
     clearTimeout(this._id);
 
@@ -122,44 +92,20 @@ export default class SyncServiceCommand implements ICommand {
         syncData.service
       );
       if (!result) {
-        // hide status bar
-        if (this._id) {
-          // clearInterval(this._id);
-          logger.info("sync-status result empty");
-          // this._id = null;
-        }
-        // host.statusBar.hide();
-        // host.outSyncStatusBar.hide();
-      } else {
-        // update status bar
-
-        let r: SyncMsg;
-        r = JSON.parse(result) as SyncMsg;
-
-        host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
-        host.statusBar.tooltip = r.tips;
-        host.statusBar.command = null;
-
-        if (r.status === "disconnected") {
-          const reconnectSyncCommand: vscode.Command = {
-            title: RECONNECT_SYNC,
-            command: RECONNECT_SYNC,
-            arguments: [syncData],
-          };
-          host.statusBar.command = reconnectSyncCommand;
-        } else if (r.outOfSync || r.status === "outOfSync") {
-          const overrideSyncCommand: vscode.Command = {
-            title: OVERRIDE_SYNC,
-            command: OVERRIDE_SYNC,
-            arguments: [syncData],
-          };
-
-          host.statusBar.command = overrideSyncCommand;
-          host.statusBar.tooltip = r.outOfSync;
-        }
-
-        host.statusBar.show();
+        return;
       }
+      let r: SyncMsg;
+      r = JSON.parse(result) as SyncMsg;
+
+      host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
+      host.statusBar.tooltip = r.tips;
+      host.statusBar.command = {
+        title: OPEN_SYNC_COMMAND,
+        command: OPEN_SYNC_COMMAND,
+        arguments: [[r, syncData]],
+      };
+
+      host.statusBar.show();
     } catch (e) {
       logger.info("sync-status error");
       console.log(e);

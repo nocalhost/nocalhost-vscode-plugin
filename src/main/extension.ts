@@ -51,13 +51,13 @@ import { HomeWebViewProvider } from "./webview/HomePage";
 import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
 import * as nls from "vscode-nls";
-import SyncServiceCommand from "./commands/SyncServiceCommand";
+import SyncServiceCommand from "./commands/sync/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
 import { activateNocalhostDebug } from "./debug/nocalhost";
 
 // The example uses the file message format.
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -107,7 +107,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
 
-  let isSetVisible = false;
+  let isSetVisible =
+    host.getGlobalState(TMP_WORKLOAD_PATH) === host.getCurrentRootPath();
 
   let subs = [
     host,
@@ -345,7 +346,7 @@ export async function updateServerConfigStatus() {
 }
 
 async function init(context: vscode.ExtensionContext) {
-  host.setContext(context);
+  await host.setContext(context);
   fileUtil.mkdir(NH_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_TEMP_DIR);
@@ -360,9 +361,8 @@ async function init(context: vscode.ExtensionContext) {
   await checkVersion();
   LocalClusterService.verifyLocalCluster();
 
-  const welcomeDidShow: boolean | undefined = host.getGlobalState(
-    WELCOME_DID_SHOW
-  );
+  const welcomeDidShow: boolean | undefined =
+    host.getGlobalState(WELCOME_DID_SHOW);
   if (!welcomeDidShow) {
     NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
     host.setGlobalState(WELCOME_DID_SHOW, true);

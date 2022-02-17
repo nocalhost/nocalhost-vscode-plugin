@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import NocalhostAppProvider from "../appProvider";
-import AssociateLocalDirxectoryCommand from "./AssociateDirectoryCommand";
+import AssociateDirectoryCommand from "./AssociateDirectoryCommand";
 import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
@@ -19,12 +19,14 @@ import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
 import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
-import SyncServiceCommand from "./SyncServiceCommand";
-import OverrideSyncCommand from "./OverrideSyncCommand";
+import SyncServiceCommand from "./sync/SyncServiceCommand";
+import OverrideSyncCommand from "./sync/OverrideSyncCommand";
+import OpenSyncCommand from "./sync/OpenSyncCommand";
+import OpenSyncDashboardCommand from "./sync/OpenSyncDashboardCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
 import ShowApplicationsCommand from "./ShowApplicationsCommand";
-import ReconnectSyncCommand from "./ReconnectSyncCommand";
+import ReconnectSyncCommand from "./sync/ReconnectSyncCommand";
 import DebugCommand from "./DebugCommand";
 import RunCommand from "./RunCommand";
 import DeleteKubeConfigCommand from "./DeleteKubeConfigCommand";
@@ -76,12 +78,15 @@ export default function initCommands(
   new CleanPvcCommand(context);
   new ResetDevspaceCommand(context);
   new ViewKubeConfigCommand(context);
-  new AssociateLocalDirxectoryCommand(context);
+  new AssociateDirectoryCommand(context);
 
   new ApplyKubernetesObjectCommand(context);
   new DeleteKubernetesObjectCommand(context);
   new SyncServiceCommand(context);
   new OverrideSyncCommand(context);
+  new OpenSyncCommand(context);
+  new OpenSyncDashboardCommand(context);
+
   new UpgradeCommand(context);
   new ShowApplicationsCommand(context);
   new ReconnectSyncCommand(context);

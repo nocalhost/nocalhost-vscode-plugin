@@ -1,13 +1,23 @@
 import { ChildProcessWithoutNullStreams, spawn, execSync } from "child_process";
-import * as shell from "shelljs";
 import * as path from "path";
 import * as iconv from "iconv-lite";
 import { Event } from "vscode";
-import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
+import * as shellWhich from "which";
 
 import host from "../host";
 import logger from "../utils/logger";
+
+export interface ExecOutputReturnValue {
+  /** The process exit code. */
+  code: number;
+
+  /** The process standard output. */
+  stdout: string;
+
+  /** The process standard error output. */
+  stderr: string;
+}
 
 function showGlobalMsg(str: string) {
   const strArr = str.split("\n");
@@ -84,6 +94,7 @@ export interface ExecParam {
   ignoreError?: boolean;
   printCommand?: boolean;
   sudo?: boolean;
+  enterPassword?: boolean;
 }
 
 type OutPut = boolean | { err: boolean; out: boolean };
@@ -142,7 +153,7 @@ function decodeBuffer(buffer: Buffer) {
 }
 
 export function createProcess(param: ExecParam) {
-  let { command, args, output, sudo } = param;
+  let { command, args, output, sudo, enterPassword } = param;
   const env = Object.assign(process.env, { DISABLE_SPINNER: true });
   command = command + " " + (args || []).join(" ");
   command = getExecCommand(command);
@@ -153,6 +164,7 @@ export function createProcess(param: ExecParam) {
 
   if (sudo) {
     command = `sudo -p "Password:" -S ${command}`;
+    enterPassword = true;
   }
 
   const proc = spawn(command, [], { shell: true, env });
@@ -177,17 +189,15 @@ export function createProcess(param: ExecParam) {
     const str = decodeBuffer(data);
     stderr += str;
 
-    if (sudo) {
-      if (str.includes("Password:")) {
-        let password = await host.showInputBox({
-          password: true,
-          placeHolder:
-            "nhctl wants to make changes. Type your admin password to allow this.",
-        });
+    if (enterPassword && str.includes("Password:")) {
+      let password = await host.showInputBox({
+        password: true,
+        placeHolder:
+          "nhctl wants to make changes. Type your admin password to allow this.",
+      });
 
-        proc.stdin.write(`${password}\n`);
-        return;
-      }
+      proc.stdin.write(`${password}\n`);
+      return;
     }
 
     err && host.log(str);
@@ -218,9 +228,7 @@ export function createProcess(param: ExecParam) {
   return { proc, promise };
 }
 
-export function exec(
-  param: ExecParam
-): {
+export function exec(param: ExecParam): {
   cancel: Event<any>;
   promise: Promise<ExecOutputReturnValue>;
   proc: ChildProcessWithoutNullStreams;
@@ -278,9 +286,7 @@ export function execWithProgress(
 }
 
 export function which(name: string) {
-  const result = shell.which(name);
-
-  return result && result.code === 0;
+  return !!shellWhich.sync(name, { nothrow: true });
 }
 
 export function getExecCommand(command: string) {

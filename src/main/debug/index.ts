@@ -3,7 +3,9 @@ import * as vscode from "vscode";
 import * as AsyncRetry from "async-retry";
 import * as getPort from "get-port";
 
-import SyncServiceCommand, { SyncMsg } from "../commands/SyncServiceCommand";
+import SyncServiceCommand, {
+  SyncMsg,
+} from "../commands/sync/SyncServiceCommand";
 import {
   associate,
   getServiceConfig,

@@ -6,11 +6,8 @@
     {
       "type": "npm",
       "script": "watch",
-      "problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"],
       "isBackground": true,
-      "presentation": {
-        "reveal": "never"
-      },
+      "problemMatcher": "$esbuild-watch",
       "group": {
         "kind": "build",
         "isDefault": true

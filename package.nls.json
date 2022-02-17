@@ -41,8 +41,9 @@
 
   "switchAssociate": "Switch This Service as Current Service",
   "disassociateAssociate": "Disassociate from Current Directory",
-  "overrideRemoteChang": "Override Remote Changing According to Local Files",
+  "overrideRemoteChang": "Overwrite remote files",
   "resumeSync": "Resume File Sync",
+  "sync.openDashboard": "Open Sync Dashboard",
 
   "startProxyMode": "Start ProxyMode(Beta)",
   "resumeProxyMode": "Resume ProxyMode",

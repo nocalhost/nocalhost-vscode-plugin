@@ -18,4 +18,12 @@ async function sendText(text) {
   await page.waitForTimeout(5_00);
 }
 
-module.exports = { sendText, getTerminal };
+async function typeCtrlC() {
+  await getTerminal();
+  await page.keyboard.down("ControlLeft");
+  await page.keyboard.down("C");
+  await page.keyboard.up("C");
+  await page.keyboard.up("ControlLeft");
+}
+
+module.exports = { sendText, getTerminal, typeCtrlC };

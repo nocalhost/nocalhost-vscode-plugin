@@ -4,7 +4,7 @@ import reducer from "./reducers";
 import { ThemeType } from "../constants";
 
 const initialState: IStoreState = {
-  url: "/landing",
+  url: null,
   theme: ThemeType.dark,
   logs: {
     id: "",

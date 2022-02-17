@@ -28,6 +28,10 @@ export default function (props: { children: JSX.Element }): JSX.Element {
   useTheme();
 
   useEffect(() => {
+    if (!url) {
+      return;
+    }
+
     history.replace(url);
     updateURL(url);
   }, [url]);

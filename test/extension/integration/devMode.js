@@ -65,9 +65,9 @@ async function checkSyncCompletion() {
 
   await retry(
     async () => {
-      const className = await (await statusBar.$(".codicon")).evaluate(
-        (el) => el.className
-      );
+      const className = await (
+        await statusBar.$(".codicon")
+      ).evaluate((el) => el.className);
 
       assert(className.includes("codicon-check"));
     },
@@ -159,7 +159,8 @@ async function codeSync() {
 
   await checkSyncCompletion();
 
-  await terminal.sendText("\x03");
+  // await terminal.sendText("\x03");
+  await terminal.typeCtrlC();
 
   await terminal.sendText("./run.sh \n");
 

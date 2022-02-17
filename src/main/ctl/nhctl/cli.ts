@@ -663,14 +663,15 @@ export async function associate(
   type: string,
   workLoadName: string,
   container?: string,
-  params: "--de-associate" | "--migrate" | "" = ""
+  params: "--de-associate" | "--migrate" | "" = "",
+  nid?: string
 ) {
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
     `dev associate ${appName} -s "${dir}" ${
       container ? `-c ${container}` : ""
-    } -t ${type} -d ${workLoadName} ${params}`
+    } -t ${type} -d ${workLoadName} ${params} ${nid ? `-nid ${nid}` : ""}`
   );
   const result = await exec({ command }).promise;
   return result.stdout;
@@ -1064,7 +1065,9 @@ export async function editConfig(
   proc.stdin.write(contents);
   proc.stdin.end();
 
-  return await (await promise).stdout;
+  return await (
+    await promise
+  ).stdout;
 }
 
 export async function resetApp(
@@ -1127,13 +1130,8 @@ export async function listPVC(
     workloadName?: string;
   }>
 ) {
-  const {
-    kubeConfigPath,
-    namespace,
-    appName,
-    workloadName,
-    workloadType,
-  } = props;
+  const { kubeConfigPath, namespace, appName, workloadName, workloadType } =
+    props;
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
@@ -1311,9 +1309,8 @@ export async function checkVersion() {
   // is dev plugin
   const pluginVersion: string = packageJson.version;
 
-  const { sourcePath, destinationPath, binPath } = getNhctlPath(
-    requiredVersion
-  );
+  const { sourcePath, destinationPath, binPath } =
+    getNhctlPath(requiredVersion);
 
   const isTest =
     host.getContext().extensionMode === vscode.ExtensionMode.Development ||
@@ -1592,6 +1589,6 @@ export async function vpn(param: {
     title: `Waiting for vpn ${subCommand} ...`,
     output: true,
     args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
-    sudo: !host.isWindow(),
+    enterPassword: true,
   });
 }

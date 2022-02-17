@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 
-import ICommand from "./ICommand";
+import ICommand from "../ICommand";
 import { Sync } from "./SyncServiceCommand";
 
-import { RECONNECT_SYNC } from "./constants";
-import registerCommand from "./register";
-import * as nhctl from "../ctl/nhctl";
-import host from "../host";
-import { AssociateNode } from "../component/syncManage/node";
+import { RECONNECT_SYNC } from "../constants";
+import registerCommand from "../register";
+import * as nhctl from "../../ctl/nhctl";
+import host from "../../host";
+import { AssociateNode } from "../../component/syncManage/node";
 
 export default class ReconnectSyncCommand implements ICommand {
   command: string = RECONNECT_SYNC;

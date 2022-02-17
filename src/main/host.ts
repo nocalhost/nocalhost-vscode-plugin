@@ -6,10 +6,10 @@ import {
   QuickPickOptions,
 } from "vscode";
 
+import { RemoteGlobalMemento } from "./utils/remoteGlobalMemento";
 export class Host implements vscode.Disposable {
-  private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(
-    "Nocalhost"
-  );
+  private outputChannel: vscode.OutputChannel =
+    vscode.window.createOutputChannel("Nocalhost");
   public statusBar = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
     100
@@ -30,20 +30,35 @@ export class Host implements vscode.Disposable {
 
   private context: vscode.ExtensionContext | null = null;
 
-  public setContext(context: vscode.ExtensionContext) {
+  private globalState: vscode.Memento;
+
+  public async setContext(context: vscode.ExtensionContext) {
     this.context = context;
+
+    if (context.extension.extensionKind === vscode.ExtensionKind.UI) {
+      this.globalState = context.globalState;
+    } else {
+      const remoteGlobalMemento = new RemoteGlobalMemento(
+        context.globalStorageUri.path
+      );
+
+      context.subscriptions.push(remoteGlobalMemento);
+
+      await remoteGlobalMemento.whenReady;
+
+      this.globalState = remoteGlobalMemento;
+    }
   }
 
   public getContext() {
     return this.context;
   }
-
   public setGlobalState(key: string, state: any) {
     if (!this.context) {
       throw new Error("not initialized extension");
     }
 
-    this.context.globalState.update(key, state);
+    this.globalState.update(key, state);
   }
 
   public getGlobalState(key: string) {
@@ -51,7 +66,7 @@ export class Host implements vscode.Disposable {
       throw new Error("not initialized extension");
     }
 
-    return this.context.globalState.get(key) as any;
+    return this.globalState.get(key) as any;
   }
 
   public removeGlobalState(key: string) {
@@ -59,7 +74,7 @@ export class Host implements vscode.Disposable {
       throw new Error("not initialized extension");
     }
 
-    return this.context.globalState.update(key, null);
+    return this.globalState.update(key, null);
   }
 
   public setWorkspaceState(key: string, state: any) {
@@ -234,6 +249,10 @@ export class Host implements vscode.Disposable {
         );
       }
     });
+  }
+  openExternal(url: string) {
+    const uri = vscode.Uri.parse(url);
+    vscode.env.openExternal(uri);
   }
   /**
    * Shows a selection list allowing multiple selections.

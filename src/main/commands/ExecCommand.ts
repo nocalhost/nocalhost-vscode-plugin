@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { ExecOutputReturnValue } from "shelljs";
 
 import ICommand from "./ICommand";
 import { EXEC } from "./constants";
@@ -88,7 +87,7 @@ export default class ExecCommand implements ICommand {
       if (notExist) {
         continue;
       } else {
-        const result = shellObj as ExecOutputReturnValue;
+        const result = shellObj as shell.ExecOutputReturnValue;
         if (result.code === 0 && result.stdout) {
           defaultShell = ExecCommand.defaultShells[i];
           break;
