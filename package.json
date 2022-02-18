@@ -587,7 +587,7 @@
   },
   "scripts": {
     "build": "run-s -l prebuild compile package",
-    "build:ext": "run-s -l prebuild:ext compile package",
+    "build:ext": "run-s -l prebuild:ext build",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
     "analyze": "npm run compile -- --analyze",
     "postinstall": "node ./scripts/postinstall.js",
