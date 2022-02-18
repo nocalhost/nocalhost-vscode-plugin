@@ -13,7 +13,7 @@ async function selectPath(path) {
   await input.type(" ");
   await page.keyboard.press("Backspace");
 
-  await page.waitForTimeout(1_00);
+  await page.waitForTimeout(1_000);
 
   const action = await page.waitForSelector(
     ".quick-input-widget .quick-input-action a"
