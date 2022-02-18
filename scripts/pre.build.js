@@ -14,11 +14,11 @@ const { VERSION, NHCTL_VERSION, MINIMUNM_VERSION_REQUIREMENT } = process.env;
 /**
  *
  * @param {string} cmd
- * @param {ReadonlyArray<string>} array
+ * @param {ReadonlyArray<string>} args
  * @returns
  */
 function getGitResult(cmd, args) {
-  const result = spawnSync(cmd, args);
+  const result = spawnSync(`${cmd} ${args.join(" ")}`, { shell: true });
 
   assert.equal(result.status, 0, result.stderr);
 
