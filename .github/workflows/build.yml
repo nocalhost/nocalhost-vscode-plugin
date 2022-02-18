@@ -45,10 +45,8 @@ jobs:
       - name: Build
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-        run: |
-          pnpm build
-          mv nocalhost-*.vsix nocalhost.vsix
-
+        run: pnpm build
+          
       - name: Push to Coding Artifacts
         if: ${{ github.ref != 'refs/heads/dev' }}
         run: |

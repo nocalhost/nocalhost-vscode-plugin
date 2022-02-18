@@ -53,10 +53,7 @@ jobs:
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
           NHCTL_VERSION: dev
-        run: |
-          pnpm run build:ext
-          rm -rf .vscode-test
-          ls -al
+        run: pnpm run build:ext
 
       - name: Create cluster
         id:  create-cluster
