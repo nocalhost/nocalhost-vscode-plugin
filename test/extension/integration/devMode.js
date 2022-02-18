@@ -65,9 +65,9 @@ async function checkSyncCompletion() {
 
   await retry(
     async () => {
-      const className = await (await statusBar.$(".codicon")).evaluate(
-        (el) => el.className
-      );
+      const className = await (
+        await statusBar.$(".codicon")
+      ).evaluate((el) => el.className);
 
       assert(className.includes("codicon-check"));
     },
