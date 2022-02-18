@@ -4,7 +4,6 @@ const retry = require("async-retry");
 
 const { getQuickPick, checkPort, setInputBox } = require("./index");
 const { dialog, tree } = require("../lib/components");
-const logger = require("../lib/log");
 
 const treeItemPath = [
   "",
@@ -39,15 +38,7 @@ async function checkReady() {
 }
 
 async function add() {
-  // add performance mark
-  window.performance.mark("tree-start-time");
   const treeItem = await tree.getItem(...treeItemPath);
-  window.performance.mark("tree-end-time");
-  window.performance.measure("tree-time", "tree-start-time", "tree-end-time");
-  const measures = window.performance.getEntriesByName("tree-time");
-  const measure = measures[0];
-  logger.debug("setTimeout milliseconds:", measure.duration);
-
   const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 

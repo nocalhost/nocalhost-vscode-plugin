@@ -11,6 +11,7 @@ const { editConfigTests } = require("./editConfig.test");
 const { remoteRunTests } = require("./remoteRun.test");
 const { applyManifestTests } = require("./applyManifest.test");
 const { resetPodTests } = require("./resetPod.test");
+let fpsArr = [];
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 
@@ -34,6 +35,43 @@ afterEach(async () => {
   });
 });
 
+beforeAll(async () => {
+  await page.tracing.start({
+    path: `${screenshotPath}/.trace.json`,
+    screenshots: true,
+    screenshotPath: screenshotPath,
+  });
+
+  // calc fps
+  await page.evaluate(async () => {
+    let lastTime = (window.performance || window.Date).now();
+    let fpsCount = 0;
+    let fps = 0;
+    let arr = [];
+    const fpsInterval = 30;
+
+    const getFps = () => {
+      fpsCount++;
+      const timeNow = (window.performance || window.Date).now();
+      if (fpsCount >= fpsInterval) {
+        fps = Math.round((1000 * fpsCount) / (timeNow - lastTime));
+        lastTime = timeNow;
+        fpsCount = 0;
+        // const memory = window.performance.memory;
+        arr.push(fps);
+      }
+    };
+
+    const start = () => {
+      getFps();
+      window.__data = JSON.stringify(arr);
+      window.requestAnimationFrame(start);
+    };
+
+    start();
+  });
+});
+
 describe("nhctl", nhctlTests);
 describe("connect", connectTests);
 describe("install", installTests);
@@ -45,6 +83,21 @@ describe("editConfig", editConfigTests);
 describe("remoteRun", remoteRunTests);
 describe("applyManifest", applyManifestTests);
 describe("resetPod", resetPodTests);
+
+afterAll(async () => {
+  const fps = await page.evaluate(() => {
+    return window.__data;
+  });
+  logger.info(`fps: ${fps}`);
+  await (() => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+    });
+  })();
+  await page.tracing.stop();
+});
 
 module.exports = {
   screenshotPath,
