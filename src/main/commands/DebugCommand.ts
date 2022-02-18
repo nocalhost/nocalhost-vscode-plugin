@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as assert from "assert";
+import assert = require("assert");
 import * as fs from "fs";
 import * as yaml from "yaml";
 import * as path from "path";

@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert = require("assert");
 import { QuickPickItem, window, commands, DebugConfiguration } from "vscode";
 
 import { DEBUG } from "../../commands/constants";

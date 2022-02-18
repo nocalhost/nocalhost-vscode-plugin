@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as assert from "assert";
+import assert = require("assert");
 import { capitalCase } from "change-case";
 
 import ICommand from "./ICommand";
