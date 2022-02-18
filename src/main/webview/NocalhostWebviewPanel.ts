@@ -22,10 +22,8 @@ export default class NocalhostWebviewPanel {
   public static readonly viewType: string = "nocalhostWebview";
   public static currentPanel: NocalhostWebviewPanel | null = null;
   private static id: number = 0;
-  private static readonly panels: Map<
-    number,
-    NocalhostWebviewPanel
-  > = new Map();
+  private static readonly panels: Map<number, NocalhostWebviewPanel> =
+    new Map();
   private static readonly messageManager: MessageManager = new MessageManager();
 
   private id: number = 0;
@@ -49,9 +47,8 @@ export default class NocalhostWebviewPanel {
     if (Object.keys(query).length > 0) {
       url = `${url}?${qs.stringify(query)}`;
     }
-    const panel: NocalhostWebviewPanel = NocalhostWebviewPanel.getPanelByURL(
-      url
-    );
+    const panel: NocalhostWebviewPanel =
+      NocalhostWebviewPanel.getPanelByURL(url);
     if (panel) {
       NocalhostWebviewPanel.openOnExistPanel(panel, url, title, column);
     } else {
@@ -79,9 +76,8 @@ export default class NocalhostWebviewPanel {
       );
       return;
     }
-    const targetPanel:
-      | NocalhostWebviewPanel
-      | undefined = NocalhostWebviewPanel.panels.get(id);
+    const targetPanel: NocalhostWebviewPanel | undefined =
+      NocalhostWebviewPanel.panels.get(id);
     if (targetPanel) {
       targetPanel.panel?.webview.postMessage(message);
       targetPanel.postMessageStack.push(message);
@@ -296,7 +292,7 @@ export default class NocalhostWebviewPanel {
         </head>
         <body>
           <div id="root"></div>
-          <script src="${bundlePath}"></script>
+          <script type="module" src="${bundlePath}"></script>
         </body>
       </html>
     `;

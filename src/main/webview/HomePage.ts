@@ -109,9 +109,8 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
             host.showProgressing("Adding ...", async () => {
               let { kubeconfig } = await this.getKubeconfig(data.data);
 
-              let newLocalCluster = await LocalCluster.appendLocalClusterByKubeConfig(
-                kubeconfig
-              );
+              let newLocalCluster =
+                await LocalCluster.appendLocalClusterByKubeConfig(kubeconfig);
 
               if (newLocalCluster) {
                 await LocalCluster.getLocalClusterRootNode(newLocalCluster);
@@ -173,12 +172,8 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
     data: any,
     webviewView: vscode.WebviewView
   ) {
-    let {
-      kubeconfig,
-      currentContext,
-      path,
-      strKubeconfig,
-    } = await this.getKubeconfig(data);
+    let { kubeconfig, currentContext, path, strKubeconfig } =
+      await this.getKubeconfig(data);
 
     let str: string = strKubeconfig;
 
@@ -225,7 +220,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
 		</head>
 		<body>
 			<div id="root"></div>
-			<script src="${bundlePath}"></script>
+			<script type="module" src="${bundlePath}"></script>
 		</body>
 		</html>`;
   }
