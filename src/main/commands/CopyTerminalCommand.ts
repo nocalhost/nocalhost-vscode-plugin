@@ -10,7 +10,6 @@ import * as shell from "../ctl/shell";
 import { NhctlCommand, getContainers, getPodNames } from "../ctl/nhctl";
 import { DeploymentStatus } from "../nodes/types/nodeType";
 import { Pod } from "../nodes/workloads/pod/Pod";
-import { ExecOutputReturnValue } from "shelljs";
 
 export default class CopyTerminalCommand implements ICommand {
   command: string = COPY_TERMINAL;
@@ -82,7 +81,7 @@ export default class CopyTerminalCommand implements ICommand {
       if (notExist) {
         continue;
       } else {
-        const result = shellObj as ExecOutputReturnValue;
+        const result = shellObj as shell.ExecOutputReturnValue;
         if (result.code === 0 && result.stdout) {
           defaultShell = CopyTerminalCommand.defaultShells[i];
           break;

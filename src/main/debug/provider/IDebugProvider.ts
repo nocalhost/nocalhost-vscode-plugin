@@ -5,7 +5,7 @@ import {
   DebugConfiguration,
   workspace,
 } from "vscode";
-import * as AsyncRetry from "async-retry";
+import AsyncRetry = require("async-retry");
 import { merge, omit } from "lodash";
 
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";

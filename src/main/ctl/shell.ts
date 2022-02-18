@@ -1,13 +1,23 @@
 import { ChildProcessWithoutNullStreams, spawn, execSync } from "child_process";
-import * as shell from "shelljs";
 import * as path from "path";
 import * as iconv from "iconv-lite";
 import { Event } from "vscode";
-import { ExecOutputReturnValue } from "shelljs";
 import kill = require("tree-kill");
+import * as shellWhich from "which";
 
 import host from "../host";
 import logger from "../utils/logger";
+
+export interface ExecOutputReturnValue {
+  /** The process exit code. */
+  code: number;
+
+  /** The process standard output. */
+  stdout: string;
+
+  /** The process standard error output. */
+  stderr: string;
+}
 
 function showGlobalMsg(str: string) {
   const strArr = str.split("\n");
@@ -278,9 +288,7 @@ export function execWithProgress(
 }
 
 export function which(name: string) {
-  const result = shell.which(name);
-
-  return result && result.code === 0;
+  return !!shellWhich.sync(name, { nothrow: true });
 }
 
 export function getExecCommand(command: string) {
