@@ -51,8 +51,6 @@ class State {
       this.queueRender.push(id);
 
       this.startRender();
-
-      logger.info("render node id: " + id);
     }
   }
 

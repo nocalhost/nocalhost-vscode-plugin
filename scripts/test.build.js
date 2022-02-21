@@ -8,23 +8,19 @@ let packageJson = require("../package.json");
 const contextPatch = [
   {
     command: "Nocalhost.portForward",
-    when:
-      "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(?!vpn_)/i",
+    when: "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(?!vpn_)/i",
   },
   {
     command: "Nocalhost.log",
-    when:
-      "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(?!vpn_)/i",
+    when: "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(?!vpn_)/i",
   },
   {
     command: "Nocalhost.startCopyDevMode",
-    when:
-      "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
+    when: "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
   },
   {
     command: "Nocalhost.run",
-    when:
-      "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
+    when: "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
   },
   {
     command: "Nocalhost.applyKubernetesObject",

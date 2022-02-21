@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert = require("assert");
 import * as net from "net";
 import * as path from "path";
 import * as semver from "semver";
