@@ -57,8 +57,8 @@ beforeAll(async () => {
         fps = Math.round((1000 * fpsCount) / (timeNow - lastTime));
         lastTime = timeNow;
         fpsCount = 0;
-        const memory = window.performance.memory;
-        arr.push({ fps, memory });
+        // const memory = window.performance.memory;
+        arr.push({ fps });
       }
     };
 
