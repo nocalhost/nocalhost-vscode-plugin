@@ -33,7 +33,7 @@ export default class RefreshCommand implements ICommand {
     }
     if (node instanceof NocalhostRootNode) {
       this.provider.refresh(undefined);
-    } else {
+    } else if (state.getData(node.getNodeStateId())) {
       this.provider.refresh(node);
     }
   }
