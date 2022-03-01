@@ -769,7 +769,7 @@ export async function devStart(
 }
 
 function isSudo(ports: string[] | undefined) {
-  if (!ports && !host.isLinux()) {
+  if (!ports || !host.isLinux()) {
     return false;
   }
 

@@ -19,16 +19,30 @@ export default class RefreshCommand implements ICommand {
     this.provider = provider;
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  execCommand(node?: BaseNocalhostNode) {
+  async execCommand(node?: BaseNocalhostNode) {
     if (!node) {
-      // clear all data;
-      state.startAutoRefresh();
-      // state.clearAllData();
+      vscode.commands.executeCommand("setContext", "refreshing", true);
+
+      await state.startAutoRefresh(true);
+
+      setTimeout(() => {
+        vscode.commands.executeCommand("setContext", "refreshing", false);
+      }, 1_000);
+
+      return;
     }
     if (node instanceof NocalhostRootNode) {
       this.provider.refresh(undefined);
-    } else {
+    } else if (state.getData(node.getNodeStateId())) {
       this.provider.refresh(node);
     }
   }
+}
+
+export class RefreshingCommand implements ICommand {
+  command: string = "Nocalhost.refreshing";
+  constructor(context: vscode.ExtensionContext) {
+    registerCommand(context, this.command, false, this.execCommand.bind(this));
+  }
+  execCommand(): void {}
 }
