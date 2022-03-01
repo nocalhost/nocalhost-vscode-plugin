@@ -72,7 +72,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Publish To VS Code Extension Marketplace
-        run: pnpm vsce publish -p ${{ secrets.VSCE_TOKEN }}
+        run: pnpm vsce publish -p ${{ secrets.VSCE_TOKEN }} --no-dependencies
 
       - name: Publish openVSX
         run: pnpm dlx ovsx publish nocalhost.vsix -p ${{ secrets.OPEN_VSX_ACCESS_TOKEN }}
