@@ -3,6 +3,10 @@ const path = require("path");
 const fs = require("fs");
 const fe = require("fs-extra");
 
+const {
+  promises: { readdir },
+} = fs;
+
 let argv = process.argv.slice(2);
 
 process.env.NODE_ENV = getArg("env") ?? "development";
@@ -42,7 +46,7 @@ function getBuildArgs(args) {
  *
  * @param {Array} args
  */
-function startBuild(name, args) {
+async function startBuild(name, args) {
   const proc = spawn(
     path.resolve("./node_modules/.bin/esbuild"),
     getBuildArgs(args),
@@ -57,6 +61,10 @@ function startBuild(name, args) {
   proc.stderr.on("data", (data) => {
     process.stderr.write(`[${name}] ${data}`);
   });
+
+  return new Promise((res) => {
+    proc.on("exit", res);
+  });
 }
 
 function extension() {
@@ -68,15 +76,45 @@ function extension() {
     "--target=node14",
   ]);
 }
+/**
+ *
+ * @param {string} source
+ * @returns {Promise<string[]>}
+ */
+async function getEntryArray(source) {
+  const array = (await readdir(source, { withFileTypes: true })).map(
+    async (dirent) => {
+      const { name } = dirent;
+      const filePath = path.join(source, name);
 
-function html() {
-  fs.createReadStream("src/renderer/assets/fonts/DroidSansMono_v1.ttf").pipe(
-    fs.createWriteStream("dist/DroidSansMono_v1.ttf")
+      if (!dirent.isDirectory()) {
+        return filePath;
+      }
+
+      return await getEntryArray(filePath);
+    }
   );
 
+  return (await Promise.all(array)).flat(1);
+}
+
+async function assets() {
+  const entryArray = (await getEntryArray("static")).map((file) => {
+    if (file.endsWith(".css")) {
+      return `${file}=${file}`;
+    }
+    return "";
+  });
+
+  await startBuild("css", [...entryArray, "--target=chrome89"]);
+
+  fs.createReadStream("static/app/DroidSansMono_v1.ttf").pipe(
+    fs.createWriteStream("dist/static/app/DroidSansMono_v1.ttf")
+  );
+}
+
+async function html() {
   startBuild("html", [
-    "atom-one-light=src/renderer/assets/css/atom-one-light.css",
-    "vs2015=src/renderer/assets/css/vs2015.css",
     "renderer_v1=src/renderer/index.tsx",
     "home=src/renderer/HomeIndex.tsx",
     "--format=esm",
@@ -89,4 +127,7 @@ fe.rmSync("dist", { recursive: true, force: true });
 fe.mkdirSync("dist");
 
 extension();
+
+assets();
+
 html();
