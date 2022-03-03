@@ -27,11 +27,11 @@ import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
 import { keysToCamel } from "../../utils";
 import { IPvc } from "../../domain";
-import { getBooleanValue } from "../../utils/config";
 import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
 import { Associate, IPortForward } from "./type";
 import state from "../../state";
+import { getConfiguration, Switch } from "../../utils/config";
 
 export interface InstalledAppInfo {
   name: string;
@@ -1322,7 +1322,7 @@ export async function checkVersion() {
 
   if (
     fs.existsSync(binPath) &&
-    (!getBooleanValue("nhctl.checkVersion") || isTest)
+    (getConfiguration<Switch>("checkNhctlVersion") === "off" || isTest)
   ) {
     return;
   }

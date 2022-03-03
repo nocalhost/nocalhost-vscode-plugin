@@ -16,9 +16,9 @@ const Welcome: React.FC = () => {
   return (
     <>
       <article className="markdown-body">
-        <h1 className="atx" id="welcome-to-nocalhost">
+        <h2 className="atx" id="welcome-to-nocalhost">
           Welcome to Nocalhost
-        </h1>
+        </h2>
         <p>
           Nocalhost is an open-source IDE plugin for cloud-native applications
           development:
@@ -33,9 +33,9 @@ const Welcome: React.FC = () => {
           change to remote container without rebuilding images or restarting
           containers.
         </p>
-        <h2 className="atx" id="how-to-use">
+        <h3 className="atx" id="how-to-use">
           How to use
-        </h2>
+        </h3>
         <p>You can use Nocalhost in two ways:</p>
         <ul>
           <li>
@@ -83,7 +83,8 @@ const Welcome: React.FC = () => {
         <br />
         <FormControlLabel
           value="end"
-          control={<Checkbox defaultChecked color="primary" />}
+          onChange={onSignIn.bind(null, "startup")}
+          control={<Checkbox defaultChecked color="default" />}
           label="Show welcome page on startup"
           labelPlacement="end"
         />
