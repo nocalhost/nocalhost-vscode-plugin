@@ -1,5 +1,4 @@
-import * as Ajv from "ajv";
-
+import Ajv = require("ajv");
 const ajv = new Ajv();
 
 export default function validate(

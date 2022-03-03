@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert = require("assert");
 import * as net from "net";
 import * as path from "path";
 import * as semver from "semver";
@@ -151,7 +151,11 @@ export class GoDebugProvider extends IDebugProvider {
       }
 
       this.socket.once("data", (data) => {
-        const { id: rid, error, result } = JSON.parse(data.toString()) as {
+        const {
+          id: rid,
+          error,
+          result,
+        } = JSON.parse(data.toString()) as {
           id: string;
           result: T;
           error?: string;

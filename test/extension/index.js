@@ -10,8 +10,8 @@ const { getRepository, gitCode } = require("./lib");
 
 const {
   downloadAndUnzipVSCode,
-  resolveCliPathFromVSCodeExecutablePath,
-} = require("vscode-test");
+  resolveCliArgsFromVSCodeExecutablePath,
+} = require("@vscode/test-electron");
 
 const logger = require("./lib/log");
 const VideoCapture = require("./lib/videoCapture");
@@ -37,7 +37,7 @@ const start = async (options = {}) => {
     );
   }
 
-  const cliPath = resolveCliPathFromVSCodeExecutablePath(
+  const [cliPath] = resolveCliArgsFromVSCodeExecutablePath(
     options.vscodeExecutablePath
   );
 
@@ -154,7 +154,7 @@ const run = async (executable, args, testsEnv) => {
   const cmd = cp.spawn(executable, args, { env: fullEnv });
 
   cmd.stdout.on("data", function (data) {
-    logger.log(data.toString());
+    logger.info(data.toString());
   });
 
   cmd.stderr.on("data", function (data) {

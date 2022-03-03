@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as getPort from "get-port";
+import getPort = require("get-port");
 
 import { NhctlCommand } from "../../ctl/nhctl";
 import { exec } from "../../ctl/shell";
