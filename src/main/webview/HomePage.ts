@@ -20,11 +20,33 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
+  private _isRegister = false;
+  private registerCommand() {
+    if (this._isRegister) {
+      return;
+    }
+
+    host.getContext().subscriptions.push(
+      vscode.commands.registerCommand(`${NOCALHOST}.connect`, (payload) => {
+        this._webviewView.webview.postMessage({
+          type: "setNavTab",
+          payload,
+        });
+      })
+    );
+
+    this._isRegister = true;
+  }
+
+  private _webviewView: vscode.WebviewView;
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
+    this._webviewView = webviewView;
+    this.registerCommand();
+
     webviewView.webview.options = {
       // Allow scripts in the webview
       enableScripts: true,
@@ -130,6 +152,7 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
       }
     );
   }
+
   private async getKubeconfig(data: {
     currentContext?: string;
     strKubeconfig?: string;

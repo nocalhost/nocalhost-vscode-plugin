@@ -38,7 +38,6 @@ import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
-import TextDocumentContentProvider from "./textDocumentContentProvider";
 import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
@@ -55,6 +54,7 @@ import SyncServiceCommand from "./commands/sync/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
 import { activateNocalhostDebug } from "./debug/nocalhost";
+import { getConfiguration, Switch } from "./utils/config";
 
 // The example uses the file message format.
 nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -105,17 +105,24 @@ export async function activate(context: vscode.ExtensionContext) {
     });
   });
 
-  const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
-
   let isSetVisible =
     host.getGlobalState(TMP_WORKLOAD_PATH) === host.getCurrentRootPath();
+
+  if (getConfiguration<Switch>("showWelcome") === "on") {
+    NocalhostWebviewPanel.open({
+      url: "/welcome",
+      title: "Welcome to Nocalhost",
+    });
+  }
 
   let subs = [
     host,
     appTreeView.onDidChangeVisibility((event) => {
-      if (!isSetVisible && event.visible) {
-        isSetVisible = true;
-        host.getOutputChannel().show(true);
+      if (event.visible) {
+        if (!isSetVisible) {
+          isSetVisible = true;
+          host.getOutputChannel().show(true);
+        }
       }
     }),
     appTreeView,
@@ -127,10 +134,6 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.registerFileSystemProvider(
       "NocalhostRW",
       nocalhostFileSystemProvider
-    ),
-    vscode.workspace.registerTextDocumentContentProvider(
-      "nhtext",
-      textDocumentContentProvider
     ),
   ];
 
@@ -360,14 +363,6 @@ async function init(context: vscode.ExtensionContext) {
   await messageBus.init();
   await checkVersion();
   LocalClusterService.verifyLocalCluster();
-
-  const welcomeDidShow: boolean | undefined = host.getGlobalState(
-    WELCOME_DID_SHOW
-  );
-  if (!welcomeDidShow) {
-    NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
-    host.setGlobalState(WELCOME_DID_SHOW, true);
-  }
 }
 
 process.on("exit", function (code) {

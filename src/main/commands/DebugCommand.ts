@@ -161,13 +161,14 @@ export default class DebugCommand implements ICommand {
     const { node, container } = this;
 
     if (!container.dev.debug.language || language !== debugProvider.name) {
-      const serviceConfig = await ConfigService.getAppConfig<NocalhostServiceConfig>(
-        node.getKubeConfigPath(),
-        node.getNameSpace(),
-        node.getAppName(),
-        node.name,
-        node.resourceType
-      );
+      const serviceConfig =
+        await ConfigService.getAppConfig<NocalhostServiceConfig>(
+          node.getKubeConfigPath(),
+          node.getNameSpace(),
+          node.getAppName(),
+          node.name,
+          node.resourceType
+        );
       const currentContainer = serviceConfig.containers.find(
         (item) => item.name === container.name
       );

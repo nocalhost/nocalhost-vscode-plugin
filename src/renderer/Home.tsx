@@ -5,6 +5,7 @@ import TabPanel from "./components/TabPanel";
 import LocalKubeConfig from "./components/LocalKubeConfig";
 import NocalHostServer from "./components/NocalHostServer";
 import i18n from "./i18n";
+import useMessage from "./hooks/vscode";
 
 const options = [
   {
@@ -29,6 +30,7 @@ export default function Home() {
     setState(STATE_KEY, newValue);
   };
 
+  useMessage("setNavTab", setNavTab);
   return (
     <div>
       <div className="type">

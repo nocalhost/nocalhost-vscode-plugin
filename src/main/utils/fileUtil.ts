@@ -140,6 +140,14 @@ export function resolveVSCodeUri(iconName: string): vscode.Uri {
   return vscode.Uri.file(resolvePath);
 }
 
+export function resolveExtensionFilePath(...pathArr: string[]): vscode.Uri {
+  const extensionPath: string = host.getGlobalState("extensionPath");
+
+  const resolvePath: string = path.resolve(extensionPath, ...pathArr);
+
+  return vscode.Uri.file(resolvePath);
+}
+
 export function mkdir(fullPath: string) {
   const isExist = fs.existsSync(fullPath);
   if (isExist) {

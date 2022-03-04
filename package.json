@@ -43,11 +43,23 @@
       {
         "title": "Nocalhost",
         "properties": {
-          "nocalhost.nhctl.checkVersion": {
-            "type": "boolean",
-            "default": true,
-            "description": "%nocalhost.nhctl.checkVersion%",
-            "deprecationMessage": "Debug config"
+          "nocalhost.checkNhctlVersion": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ],
+            "default": "on",
+            "description": "%nocalhost.nhctl.checkVersion%"
+          },
+          "nocalhost.showWelcome": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ],
+            "default": "on",
+            "description": "%nocalhost.showWelcome%"
           }
         }
       }
