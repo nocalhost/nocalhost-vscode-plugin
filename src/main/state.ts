@@ -66,8 +66,6 @@ class State {
     }
 
     if (force) {
-      this.queueRender.length = 0;
-
       if (!this.cancellationToken) {
         return;
       }
