@@ -101,7 +101,7 @@ async function getEntryArray(source) {
 async function assets() {
   const entryArray = (await getEntryArray("static")).map((file) => {
     if (file.endsWith(".css")) {
-      return `${file}=${file}`;
+      return `${file.replace(".css", "")}=${file}`;
     }
     return "";
   });
