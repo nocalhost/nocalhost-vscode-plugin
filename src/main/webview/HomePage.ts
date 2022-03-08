@@ -8,7 +8,7 @@ import { NocalhostRootNode } from "../nodes/NocalhostRootNode";
 
 import { LocalCluster } from "../clusters";
 import host from "../host";
-import { readYaml } from "../utils/fileUtil";
+import { readYaml, resolveExtensionFilePath } from "../utils/fileUtil";
 import state from "../state";
 import { NOCALHOST } from "../constants";
 import { checkKubeconfig, IKubeconfig } from "../ctl/nhctl";
@@ -212,21 +212,23 @@ export class HomeWebViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  private getCssPath(name: string) {
+    return this._webviewView.webview.asWebviewUri(
+      resolveExtensionFilePath("dist", "static", "home", name)
+    );
+  }
   private _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
     const bundlePath = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, "dist", "home.js")
     );
+
     // Do the same for the stylesheet.
-    const styleResetUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "static", "home", "reset.css")
-    );
-    const styleVSCodeUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "static", "home", "vscode.css")
-    );
-    const styleMainUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "static", "home", "main.css")
-    );
+    const styleResetUri = this.getCssPath("reset.css");
+
+    const styleVSCodeUri = this.getCssPath("vscode.css");
+
+    const styleMainUri = this.getCssPath("main.css");
 
     return `<!DOCTYPE html>
 		<html lang="en">

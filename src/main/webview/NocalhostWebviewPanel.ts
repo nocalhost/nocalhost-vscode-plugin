@@ -256,7 +256,7 @@ export default class NocalhostWebviewPanel {
   }
   private getAppStatic(name: string) {
     return this.panel.webview.asWebviewUri(
-      resolveExtensionFilePath("static", "app", name)
+      resolveExtensionFilePath("dist", "static", "app", name)
     );
   }
   private getHtml(): string {

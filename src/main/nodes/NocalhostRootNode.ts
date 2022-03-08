@@ -19,7 +19,6 @@ import state from "../state";
 import { asyncLimit } from "../utils";
 import { isExistSync, readYaml } from "../utils/fileUtil";
 import logger from "../utils/logger";
-import { AppNode } from "./AppNode";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
