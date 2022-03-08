@@ -71,7 +71,7 @@ jobs:
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
           VIDEO_CAPTURE: 1
-        run: pnpm run test:test
+        run: pnpm run test:ext
 
       - name: Artifact screenshot
         if: ${{ always() }}
