@@ -55,7 +55,7 @@ jobs:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
           NHCTL_VERSION: dev
         run: |
-          pnpm run build:ext
+          pnpm run build:test
           rm -rf .vscode-test
 
       - name: Create cluster
@@ -71,7 +71,7 @@ jobs:
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
           VIDEO_CAPTURE: 1
-        run: pnpm run test:ext
+        run: pnpm run test:test
 
       - name: Artifact screenshot
         if: ${{ always() }}
