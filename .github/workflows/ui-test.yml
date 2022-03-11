@@ -12,4 +12,4 @@ jobs:
     - uses: actions/checkout@v2
     - run: | 
         ls -a
-    - uses: ./.github/workflows/ui-test.action
+    - uses: .github/workflows/ui-test.action.yaml
