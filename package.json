@@ -611,8 +611,8 @@
   "scripts": {
     "build": "run-s -l prebuild compile package",
     "build:test": "run-s -l prebuild:test build",
-    "test-install:ext": "npm run test:ext -- test/extension/integration/install.spec.js",
-    "test-replace:ext": "npm run test:ext -- test/extension/integration/index.spec.js",
+    "test-install": "npm run test:ext -- test/extension/integration/install.spec.js",
+    "test-replace": "npm run test:ext -- test/extension/integration/index.spec.js",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
     "analyze": "npm run compile -- --analyze",
     "postinstall": "node ./scripts/postinstall.js",
