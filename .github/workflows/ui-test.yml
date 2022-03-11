@@ -5,10 +5,5 @@ on:
   push:
     branches: [test/reusing]
 jobs:
-  reusable_workflow_job:
-    name: Run UI Tests
-    runs-on: macos-10.15
-    steps:
-    - run: | 
-        ls -a
-    - uses: ./.github/workflows/ui-test.action.yaml
+  call-workflow:
+    uses: ./.github/workflows/ui-test.action.yaml
