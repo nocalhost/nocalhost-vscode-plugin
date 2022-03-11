@@ -1,3 +1,5 @@
+require("./base.spec");
+
 const {
   installHelmGit,
   installManifestGit,
@@ -32,4 +34,4 @@ const installTests = () => {
   });
 };
 
-module.exports = { installTests };
+describe("install", installTests);
