@@ -8,7 +8,8 @@ export default function (message: IMessage, id: number) {
   const { type } = message;
   switch (type) {
     case "executeCommand":
-      return vscode.commands.executeCommand(message.payload?.command);
+      const { command, data } = message.payload;
+      return vscode.commands.executeCommand(command, data);
     case "logs/fetch":
       return fetchLogs(message, id);
     case "url/update": {

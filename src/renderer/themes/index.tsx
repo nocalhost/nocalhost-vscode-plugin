@@ -43,6 +43,10 @@ const getTheme = (theme: "light" | "dark"): Theme => {
             margin: 0,
             padding: 0,
           },
+          body: {
+            backgroundColor: "unset",
+            color: "var(--vscode-editor-foreground)",
+          },
         },
       },
     },

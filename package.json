@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.16",
+  "version": "0.6.16-alpha.b187299",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -43,11 +43,23 @@
       {
         "title": "Nocalhost",
         "properties": {
-          "nocalhost.nhctl.checkVersion": {
-            "type": "boolean",
-            "default": true,
-            "description": "%nocalhost.nhctl.checkVersion%",
-            "deprecationMessage": "Debug config"
+          "nocalhost.checkNhctlVersion": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ],
+            "default": "on",
+            "description": "%nocalhost.nhctl.checkVersion%"
+          },
+          "nocalhost.showWelcome": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ],
+            "default": "on",
+            "description": "%nocalhost.showWelcome%"
           }
         }
       }
@@ -110,7 +122,12 @@
       "view/title": [
         {
           "command": "Nocalhost.refresh",
-          "when": "extensionActivated && view == Nocalhost",
+          "when": "extensionActivated && !refreshing && view == Nocalhost",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.refreshing",
+          "when": "extensionActivated && refreshing && view == Nocalhost",
           "group": "navigation"
         },
         {
@@ -399,6 +416,12 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "Nocalhost.refreshing",
+        "title": "Refreshing",
+        "alt": "Refreshing",
+        "icon": "$(sync~spin)"
+      },
+      {
         "command": "Nocalhost.addKubeconfig",
         "title": "Add Cluster",
         "alt": "Add Cluster",
@@ -587,7 +610,7 @@
   },
   "scripts": {
     "build": "run-s -l prebuild compile package",
-    "build:ext": "run-s -l prebuild:ext build",
+    "build:test": "run-s -l prebuild:test build",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
     "analyze": "npm run compile -- --analyze",
     "postinstall": "node ./scripts/postinstall.js",
@@ -597,7 +620,7 @@
     "ts-compile-check": "tsc --noEmit -p src/main",
     "watch": "node scripts/build.js",
     "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
-    "prebuild:ext": "node ./scripts/test.build.js"
+    "prebuild:test": "node ./scripts/test.build.js"
   },
   "husky": {
     "hooks": {

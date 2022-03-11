@@ -5,7 +5,6 @@ import registerCommand from "./register";
 import host from "../host";
 import { KubernetesResourceNode } from "../nodes/abstract/KubernetesResourceNode";
 import { AppNode } from "../nodes/AppNode";
-import TextDocumentContentProvider from "../textDocumentContentProvider";
 import EventCenter from "../common/EventCenter";
 import { Deployment } from "../nodes/workloads/controllerResources/deployment/Deployment";
 

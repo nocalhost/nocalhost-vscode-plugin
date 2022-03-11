@@ -27,11 +27,11 @@ import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
 import { keysToCamel } from "../../utils";
 import { IPvc } from "../../domain";
-import { getBooleanValue } from "../../utils/config";
 import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
 import { Associate, IPortForward } from "./type";
 import state from "../../state";
+import { getConfiguration, Switch } from "../../utils/config";
 
 export interface InstalledAppInfo {
   name: string;
@@ -769,7 +769,7 @@ export async function devStart(
 }
 
 function isSudo(ports: string[] | undefined) {
-  if (!ports && !host.isLinux()) {
+  if (!ports || !host.isLinux()) {
     return false;
   }
 
@@ -1065,7 +1065,9 @@ export async function editConfig(
   proc.stdin.write(contents);
   proc.stdin.end();
 
-  return await (await promise).stdout;
+  return await (
+    await promise
+  ).stdout;
 }
 
 export async function resetApp(
@@ -1128,13 +1130,8 @@ export async function listPVC(
     workloadName?: string;
   }>
 ) {
-  const {
-    kubeConfigPath,
-    namespace,
-    appName,
-    workloadName,
-    workloadType,
-  } = props;
+  const { kubeConfigPath, namespace, appName, workloadName, workloadType } =
+    props;
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
@@ -1312,9 +1309,8 @@ export async function checkVersion() {
   // is dev plugin
   const pluginVersion: string = packageJson.version;
 
-  const { sourcePath, destinationPath, binPath } = getNhctlPath(
-    requiredVersion
-  );
+  const { sourcePath, destinationPath, binPath } =
+    getNhctlPath(requiredVersion);
 
   const isTest =
     host.getContext().extensionMode === vscode.ExtensionMode.Development ||
@@ -1322,7 +1318,7 @@ export async function checkVersion() {
 
   if (
     fs.existsSync(binPath) &&
-    (!getBooleanValue("nhctl.checkVersion") || isTest)
+    (getConfiguration<Switch>("checkNhctlVersion") === "off" || isTest)
   ) {
     return;
   }

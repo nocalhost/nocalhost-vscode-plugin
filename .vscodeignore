@@ -21,3 +21,4 @@ yarn-error.log
 jest.config.js
 jest.setup.js
 pnpm-lock.yaml
+static

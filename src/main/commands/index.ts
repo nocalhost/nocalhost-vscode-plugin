@@ -5,7 +5,7 @@ import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
 import ExecCommand from "./ExecCommand";
-import RefreshCommand from "./RefreshCommand";
+import RefreshCommand, { RefreshingCommand } from "./RefreshCommand";
 import InstallCommand from "./InstallCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
@@ -46,6 +46,7 @@ import PortForwardCommand from "./PortForwardCommand/";
 import StartProxyModeCommand from "./proxy/StartProxyModeCommand";
 import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
 import EndProxyModeCommand from "./proxy/EndProxyModeCommand";
+import HomeWebViewCommand from "./HomeWebViewCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -67,6 +68,8 @@ export default function initCommands(
   new SignOutCommand(context);
 
   new RefreshCommand(context, appTreeProvider);
+  new RefreshingCommand(context);
+
   new InstallCommand(context);
   new UninstallCommand(context);
   new EditManifestCommand(context);
@@ -108,4 +111,6 @@ export default function initCommands(
   new StartProxyModeCommand(context);
   new ResumeProxyModeCommand(context);
   new EndProxyModeCommand(context);
+
+  new HomeWebViewCommand(context);
 }

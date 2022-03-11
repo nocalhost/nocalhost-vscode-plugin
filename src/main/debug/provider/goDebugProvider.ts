@@ -151,7 +151,11 @@ export class GoDebugProvider extends IDebugProvider {
       }
 
       this.socket.once("data", (data) => {
-        const { id: rid, error, result } = JSON.parse(data.toString()) as {
+        const {
+          id: rid,
+          error,
+          result,
+        } = JSON.parse(data.toString()) as {
           id: string;
           result: T;
           error?: string;

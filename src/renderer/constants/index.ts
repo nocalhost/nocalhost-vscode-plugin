@@ -6,6 +6,7 @@ export const enum ThemeType {
 export const enum MessageActionType {
   executeCommand = "executeCommand",
   domContentLoaded = "domContentLoaded",
+  homeWebView = "homeWebView",
 }
 
 export const enum Commands {
@@ -16,8 +17,8 @@ export const enum Commands {
   reset = "Nocalhost.reset",
   switchEndPoint = "Nocalhost.switchEndPoint",
   openEndPoint = "Nocalhost.openEndPoint",
-  signin = "Nocalhost.signin",
-  signout = "Nocalhost.signout",
+  homeWebView = "Nocalhost.homeWebView",
+  connect = "Nocalhost.connect",
   installApp = "Nocalhost.installApp",
   uninstallApp = "Nocalhost.uninstallApp",
   loadResource = "Nocalhost.loadResource",

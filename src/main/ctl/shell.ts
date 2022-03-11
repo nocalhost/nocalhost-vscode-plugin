@@ -228,9 +228,7 @@ export function createProcess(param: ExecParam) {
   return { proc, promise };
 }
 
-export function exec(
-  param: ExecParam
-): {
+export function exec(param: ExecParam): {
   cancel: Event<any>;
   promise: Promise<ExecOutputReturnValue>;
   proc: ChildProcessWithoutNullStreams;
