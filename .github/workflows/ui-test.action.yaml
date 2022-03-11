@@ -1,6 +1,10 @@
 name: UI Tests Action
 on:
   workflow_call:
+    inputs:
+      script:
+        required: true
+        type: string
     secrets:
         MINIMUNM_VERSION_REQUIREMENT:
           required: true
@@ -65,7 +69,7 @@ jobs:
           VIDEO_CAPTURE: 1
         run: | 
           rm -rf .vscode-test
-          pnpm run test:ext
+          pnpm run ${{inputs.script}}
 
       - name: Artifact screenshot
         if: ${{ always() }}

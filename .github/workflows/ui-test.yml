@@ -7,6 +7,8 @@ on:
 jobs:
   install:
     uses: ./.github/workflows/ui-test.action.yaml
+    with:
+      script: test-install:ext
     secrets:
       MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
       NOCALHOST_VCLUSTER_HOST_FOR_TEST: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
@@ -15,6 +17,8 @@ jobs:
 
   replace:
     uses: ./.github/workflows/ui-test.action.yaml
+    with:
+      script: test-replace:ext
     secrets:
       MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
       NOCALHOST_VCLUSTER_HOST_FOR_TEST: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
