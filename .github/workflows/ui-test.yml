@@ -6,6 +6,7 @@ on:
     branches: [test/reusing]
 jobs:
   install:
+    name: test install
     uses: ./.github/workflows/ui-test.action.yaml
     with:
       script: test-install
@@ -16,6 +17,7 @@ jobs:
       NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
 
   replace:
+    name: test replace
     uses: ./.github/workflows/ui-test.action.yaml
     with:
       script: test-replace
