@@ -72,14 +72,14 @@ jobs:
           pnpm run ${{inputs.script}}
 
       - name: Artifact screenshot
-        if: ${{ always() }}
+        if:  ${{ failure() }}
         run: |
           mkdir -p ~/.nh/screenshot
           mv .screenshot/*.jpeg ~/.nh/screenshot
           cp ~/.kube/config  ~/.nh
 
       - uses: actions/upload-artifact@v2
-        if: ${{ always() }}
+        if: ${{ failure() }}
         with:
           name: ${{inputs.script}}-artifact-${{ runner.os }}-${{ github.run_id }}
           path: |
