@@ -11,7 +11,7 @@ async function download() {
     path.resolve(homedir(), ".nh", "bin", "nhctl"),
     { nothrow: true }
   );
-  if (result && result.code === 0) {
+  if (result) {
     return;
   }
 

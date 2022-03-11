@@ -9,18 +9,7 @@ const {
   installManifestLocal,
 } = require("./install");
 
-const { gitCode, getRepository } = require("../lib");
-
 const installTests = () => {
-  beforeAll(async (done) => {
-    gitCode(getRepository("bookinfo.git"))
-      .then((res) => {
-        process.env.tmpDir = res.tmpDir;
-        done();
-      })
-      .catch(done.fail);
-  });
-
   describe("deploy From Local Directory", () => {
     it("kustomize", installKustomizeLocal);
     it("helm", installHelmLocal);

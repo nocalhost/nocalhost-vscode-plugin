@@ -28,6 +28,10 @@ const videoCapture = new VideoCapture();
  * @returns {{pid:string,port:string}}
  */
 const start = async (options = {}) => {
+  const extensionPath = path.join(__dirname, "../../nocalhost.vsix");
+
+  assert(fse.existsSync(extensionPath), "extension Not found");
+
   const userDataDir = await getUserDataDir();
 
   if (!options.vscodeExecutablePath) {
@@ -47,7 +51,7 @@ const start = async (options = {}) => {
       "--extensions-dir",
       getExtensionsDir(true),
       "--install-extension",
-      path.join(__dirname, "../../nocalhost.vsix"),
+      extensionPath,
     ],
     {
       encoding: "utf-8",

@@ -1,10 +1,20 @@
 const path = require("path");
 const logger = require("../lib/log");
+const { gitCode, getRepository } = require("../lib");
 
 const { nhctlTests } = require("./nhctl.test");
 const { connectTests } = require("./connect.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
+
+beforeAll(async (done) => {
+  gitCode(getRepository("bookinfo.git"))
+    .then((res) => {
+      process.env.tmpDir = res.tmpDir;
+      done();
+    })
+    .catch(done.fail);
+});
 
 afterEach(async () => {
   const { currentTest } = jasmine;
