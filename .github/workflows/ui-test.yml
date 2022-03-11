@@ -9,4 +9,4 @@ jobs:
     name: Run UI Tests
     runs-on: macos-10.15
     steps:
-    - uses: ./.github/workflows/ui-test.action
+    - uses: ../.github/workflows/ui-test.action
