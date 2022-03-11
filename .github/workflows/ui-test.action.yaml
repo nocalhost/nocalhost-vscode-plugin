@@ -1,6 +1,15 @@
 name: UI Tests Action
 on:
   workflow_call:
+    secrets:
+        MINIMUNM_VERSION_REQUIREMENT:
+          required: true
+        NOCALHOST_VCLUSTER_HOST_FOR_TEST:
+          required: true
+        NOCALHOST_VCLUSTER_EMAIL_FOR_TEST:
+          required: true
+        NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST:
+          required: true
 jobs:
   replace:
     name: Run UI Tests

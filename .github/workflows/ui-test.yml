@@ -5,5 +5,10 @@ on:
   push:
     branches: [test/reusing]
 jobs:
-  call-workflow:
+  ui-test:
     uses: ./.github/workflows/ui-test.action.yaml
+    secrets:
+      MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
+      NOCALHOST_VCLUSTER_HOST_FOR_TEST: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
+      NOCALHOST_VCLUSTER_EMAIL_FOR_TEST: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
+      NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
