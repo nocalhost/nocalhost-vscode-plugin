@@ -81,7 +81,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
         with:
-          name: artifact-${{ runner.os }}-${{ github.run_id }}
+          name: ${{inputs.script}}-artifact-${{ runner.os }}-${{ github.run_id }}
           path: |
             ~/.nh/screenshot
             ~/.nh/nhctl/ns
@@ -99,5 +99,5 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
         with:
-          name: artifact-${{ runner.os }}-${{ github.run_id }}-dependency
+          name: ${{inputs.script}}-artifact-${{ runner.os }}-${{ github.run_id }}-dependency
           path: .dependency
