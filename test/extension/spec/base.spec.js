@@ -2,8 +2,8 @@ const path = require("path");
 const logger = require("../lib/log");
 const { gitCode, getRepository } = require("../lib");
 
-const { nhctlTests } = require("./nhctl.test");
-const { connectTests } = require("./connect.test");
+const { nhctlTests } = require("../integration/nhctl.test");
+const { connectTests } = require("../integration/connect.test");
 
 const screenshotPath = path.join(__dirname, "../../../.screenshot");
 

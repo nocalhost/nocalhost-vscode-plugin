@@ -34,7 +34,18 @@ const getRepository = (suffix) => {
   return `${prefix}/nocalhost/${suffix}`;
 };
 
-module.exports = {
-  getRepository,
-  gitCode,
-};
+function generateMacAddress(sep = ":") {
+  let mac = "XX:XX:XX:XX:XX:XX"
+    .replace(/X/g, () => {
+      return "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16));
+    })
+    .toLowerCase();
+
+  if (sep !== ":") {
+    mac = mac.replace(/:/g, sep);
+  }
+
+  return mac;
+}
+
+module.exports = { generateMacAddress, getRepository, gitCode };

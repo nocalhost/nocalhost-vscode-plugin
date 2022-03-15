@@ -1,18 +1,20 @@
-const { tree, dialog, file } = require("../lib/components");
-const logger = require("../lib/log");
-const { checkSyncCompletion } = require("./devMode");
+const { spawnSync } = require("child_process");
+const { parse } = require("yaml");
 
-const treeItemPath = [
-  "",
-  "default",
-  "bookinfo",
-  "Workloads",
-  "Deployments",
-  "ratings",
-];
+const { tree } = require("../lib/components");
+const logger = require("../lib/log");
+const {
+  defaultTreeItemPath,
+  checkSyncCompletion,
+  checkStartComplete,
+  deployment,
+} = require("./devMode");
+
+const { generateMacAddress } = require("../lib");
+const assert = require("assert");
 
 async function startDev() {
-  const ratingsNode = await tree.getItem(...treeItemPath);
+  const ratingsNode = await tree.getItem(...defaultTreeItemPath);
   const duplicateDev = await ratingsNode.$(
     ".action-label[title='Start DevMode(Duplicate)']"
   );
@@ -29,81 +31,63 @@ async function startDev() {
 }
 
 async function startDuplicateComplete() {
-  await page.waitForFunction(
-    (name) => {
-      const nodes = Array.from(
-        document.querySelectorAll(
-          "#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6']"
-        )
-      );
-
-      const node = nodes.find(
-        (node) => node.querySelector(".label-name").innerText === name
-      );
-      if (!node) {
-        return;
-      }
-
-      node.click();
-
-      const isDevStart = !!node.querySelector(
-        `.custom-view-tree-node-item-icon[style$='dev_copy.svg");']`
-      );
-
-      const isDevEnd = !!node.querySelector(
-        `.actions [style$='dev_end.svg");']`
-      );
-
-      return isDevStart && isDevEnd;
-    },
-    { timeout: 300_000 },
-    "ratings"
-  );
+  await checkStartComplete("dev_copy");
 
   await checkSyncCompletion();
 
   logger.debug("Start Duplicate Development", "ok");
 }
 
-async function stop() {
-  treeItem = await tree.getItem(...treeItemPath);
+async function checkOthers() {
+  const newUid = generateMacAddress("-");
 
-  const endDevelop = await treeItem.$(".action-label[title='End Develop']");
-  await endDevelop.click();
-  await page.waitForFunction(
-    (name) => {
-      const nodes = Array.from(
-        document.querySelectorAll(
-          "#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6']"
-        )
-      );
+  await setUid(newUid);
 
-      const node = nodes.find(
-        (node) => node.querySelector(".label-name").innerText === name
-      );
-      if (!node) {
-        return;
-      }
-
-      node.click();
-
-      const isDevStart = !!node.querySelector(
-        `.custom-view-tree-node-item-icon[style$='status_running.svg");']`
-      );
-
-      const isDevEnd = !!node.querySelector(
-        `.actions [style$='v_start.svg");']`
-      );
-
-      return isDevStart && isDevEnd;
-    },
-    { timeout: 300_000 },
-    "ratings"
-  );
+  await checkStartComplete("dev_other");
 }
 
-module.exports = {
-  startDev,
-  startDuplicateComplete,
-  stop,
-};
+function setUid(uid) {
+  const json = `{"data":{"v":"${Buffer.from(
+    `D:\n    ${deployment}: i${uid}\n`
+  ).toString("base64")}"}}`;
+
+  const result = spawnSync(
+    [
+      "kubectl",
+      "patch",
+      "secret",
+      "dev.nocalhost.application.bookinfo",
+      `-p='${json}'`,
+    ].join(" "),
+    { shell: true }
+  );
+
+  assert(result.status === 0, result.stderr);
+}
+
+function getUid() {
+  const result = spawnSync(
+    [
+      "kubectl",
+      "get",
+      "secrets",
+      "dev.nocalhost.application.bookinfo",
+      "-o",
+      "jsonpath='{.data.v}'",
+      "|",
+      "base64",
+      "--decode",
+    ].join(" "),
+    { shell: true }
+  );
+
+  assert(result.status === 0, result.stderr);
+
+  const { stdout } = result;
+
+  const { D } = parse(stdout.toString());
+
+  return D[deployment];
+}
+
+module.exports = { checkOthers, startDev, startDuplicateComplete };

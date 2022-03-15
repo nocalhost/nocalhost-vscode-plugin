@@ -7,9 +7,9 @@ const {
   installKustomizeLocal,
   installHelmLocal,
   installManifestLocal,
-} = require("./install");
+} = require("../integration/install");
 
-const installTests = () => {
+describe("install", () => {
   describe("deploy From Local Directory", () => {
     it("kustomize", installKustomizeLocal);
     it("helm", installHelmLocal);
@@ -21,6 +21,4 @@ const installTests = () => {
     it("helm", installHelmGit);
     it("manifest", installManifestGit);
   });
-};
-
-describe("install", installTests);
+});

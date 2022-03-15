@@ -7,7 +7,10 @@ const logger = require("../lib/log");
 const { initialize, enterShortcutKeys, setInputBox } = require("./index");
 const { add, stop, getPortForwardPort } = require("./portForward");
 
-const treeItemPath = [
+/**
+ *{Array<string>}
+ */
+const defaultTreeItemPath = [
   "",
   "default",
   "bookinfo",
@@ -16,14 +19,16 @@ const treeItemPath = [
   "ratings",
 ];
 
+const deployment = defaultTreeItemPath[defaultTreeItemPath.length - 1];
+
 /**
  *
- * @description
+ * @param {string} icon
  */
-async function checkStartComplete() {
+async function checkStartComplete(icon) {
   // check icon devIcon endButton
   await page.waitForFunction(
-    (name) => {
+    (name, icon) => {
       const nodes = Array.from(
         document.querySelectorAll(
           "#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='6']"
@@ -40,7 +45,7 @@ async function checkStartComplete() {
       node.click();
 
       const isDevStart = !!node.querySelector(
-        `.custom-view-tree-node-item-icon[style$='v_start.svg");']`
+        `.custom-view-tree-node-item-icon[style$='${icon}.svg");']`
       );
 
       const isDevEnd = !!node.querySelector(
@@ -50,12 +55,9 @@ async function checkStartComplete() {
       return isDevStart && isDevEnd;
     },
     { timeout: 300_000 },
-    "ratings"
+    deployment,
+    icon
   );
-
-  await checkSyncCompletion();
-
-  logger.debug("Start Development", "ok");
 }
 /**
  *
@@ -65,9 +67,9 @@ async function checkSyncCompletion() {
 
   await retry(
     async () => {
-      const className = await (await statusBar.$(".codicon")).evaluate(
-        (el) => el.className
-      );
+      const className = await (
+        await statusBar.$(".codicon")
+      ).evaluate((el) => el.className);
 
       assert(className.includes("codicon-check"));
     },
@@ -114,7 +116,7 @@ async function runCommand() {
  * @description
  */
 async function start() {
-  const treeItem = await tree.getItem(...treeItemPath);
+  const treeItem = await tree.getItem(...defaultTreeItemPath);
 
   const action = await treeItem.$(
     `a.action-label.icon[title="Start Development"]`
@@ -130,6 +132,12 @@ async function start() {
   }
 
   await file.selectPath(process.env.currentPath);
+
+  await checkStartComplete("dev_start");
+
+  await checkSyncCompletion();
+
+  logger.debug("Start Development", "ok");
 }
 
 /**
@@ -177,16 +185,8 @@ async function codeSync() {
     { retries: 3 }
   );
 }
-
-async function endDevMode() {
-  let treeItem = await tree.getItem(...treeItemPath);
-
-  const portForward = await treeItem.$(".action-label[title='Port Forward']");
-  await portForward.click();
-
-  await stop();
-
-  treeItem = await tree.getItem(...treeItemPath);
+async function stopDevMode() {
+  treeItem = await tree.getItem(...defaultTreeItemPath);
 
   const endDevelop = await treeItem.$(".action-label[title='End Develop']");
   await endDevelop.click();
@@ -219,17 +219,30 @@ async function endDevMode() {
       return isDevStart && isDevEnd;
     },
     { timeout: 300_000 },
-    "ratings"
+    deployment
   );
+}
+async function endDevMode() {
+  let treeItem = await tree.getItem(...defaultTreeItemPath);
+
+  const portForward = await treeItem.$(".action-label[title='Port Forward']");
+  await portForward.click();
+
+  await stop();
+
+  await stopDevMode();
 }
 
 module.exports = {
+  defaultTreeItemPath,
+  deployment,
+  checkStartComplete,
   start,
   codeSync,
-  checkStartComplete,
   checkSyncCompletion,
   endDevMode,
   runCommand,
+  stopDevMode,
 };
 
 (async () => {

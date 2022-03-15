@@ -1,4 +1,5 @@
 module.exports = {
+  testMatch: [],
   globalSetup: "./setup.js",
   maxWorkers: 1,
   verbose: true,
