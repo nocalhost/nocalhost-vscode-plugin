@@ -142,7 +142,7 @@ export default class NocalhostWebviewPanel {
       }
     );
 
-    webviewPanel.iconPath = resolveExtensionFilePath("images", "favicon.ico");
+    webviewPanel.iconPath = resolveExtensionFilePath("images", "logo.svg");
 
     const panel: NocalhostWebviewPanel = new NocalhostWebviewPanel(
       id,
