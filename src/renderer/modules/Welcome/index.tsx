@@ -1,7 +1,6 @@
 import React from "react";
 import { postMessage } from "../../utils";
 import { MessageActionType, Commands } from "../../constants";
-import { Checkbox, FormControlLabel } from "@material-ui/core";
 
 const Welcome: React.FC = () => {
   const onSignIn = (data: string) => {
@@ -80,14 +79,6 @@ const Welcome: React.FC = () => {
             Nocalhost Server Overview
           </a>
         </p>
-        <br />
-        <FormControlLabel
-          value="end"
-          onChange={onSignIn.bind(null, "startup")}
-          control={<Checkbox defaultChecked color="default" />}
-          label="Show welcome page on startup"
-          labelPlacement="end"
-        />
       </article>
     </>
   );

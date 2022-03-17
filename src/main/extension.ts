@@ -54,8 +54,6 @@ import SyncServiceCommand from "./commands/sync/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
 import { activateNocalhostDebug } from "./debug/nocalhost";
-import { getConfiguration, Switch } from "./utils/config";
-
 // The example uses the file message format.
 nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -105,15 +103,16 @@ export async function activate(context: vscode.ExtensionContext) {
     });
   });
 
-  let isSetVisible =
-    host.getGlobalState(TMP_WORKLOAD_PATH) === host.getCurrentRootPath();
-
-  if (getConfiguration<Switch>("showWelcome") === "on") {
+  if (!host.getGlobalState(WELCOME_DID_SHOW)) {
     NocalhostWebviewPanel.open({
       url: "/welcome",
       title: "Welcome to Nocalhost",
     });
+    host.setGlobalState(WELCOME_DID_SHOW, true);
   }
+
+  let isSetVisible =
+    host.getGlobalState(TMP_WORKLOAD_PATH) === host.getCurrentRootPath();
 
   let subs = [
     host,
