@@ -22,27 +22,20 @@ export default class OpenSyncCommand implements ICommand {
   async execCommand(ary: any) {
     const [msg, sync] = ary as [SyncMsg, Sync];
 
-    let commands: { [key: string]: Function } = {};
+    let commands: { [key: string]: Function } = {
+      [localize("overrideRemoteChang", "Overwrite Remote File")]:
+        vscode.commands.executeCommand.bind(null, OVERRIDE_SYNC, sync),
+    };
+
     if (msg.status === "disconnected") {
-      commands[
-        localize("resumeSync", "Resume File Sync")
-      ] = vscode.commands.executeCommand.bind(null, RECONNECT_SYNC, sync);
+      commands[localize("resumeSync", "Resume File Sync")] =
+        vscode.commands.executeCommand.bind(null, RECONNECT_SYNC, sync);
     }
 
-    commands = Object.assign(commands, {
-      [localize(
-        "overrideRemoteChang",
-        "Overwrite Remote File"
-      )]: vscode.commands.executeCommand.bind(null, OVERRIDE_SYNC, sync),
-      [localize(
-        "sync.openDashboard",
-        "Open Sync Dashboard"
-      )]: vscode.commands.executeCommand.bind(
-        null,
-        OPEN_SYNC_DASHBOARD,
-        msg.gui
-      ),
-    });
+    if (msg.gui) {
+      commands[localize("sync.openDashboard", "Open Sync Dashboard")] =
+        vscode.commands.executeCommand.bind(null, OPEN_SYNC_DASHBOARD, msg.gui);
+    }
 
     const result = await host.showQuickPick(Object.keys(commands));
 

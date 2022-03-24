@@ -99,11 +99,16 @@ export default class SyncServiceCommand implements ICommand {
 
       host.statusBar.text = `$(${this.getIcon(r.status)}) ${r.msg}`;
       host.statusBar.tooltip = r.tips;
-      host.statusBar.command = {
-        title: OPEN_SYNC_COMMAND,
-        command: OPEN_SYNC_COMMAND,
-        arguments: [[r, syncData]],
-      };
+
+      if (r.status !== "end") {
+        host.statusBar.command = {
+          title: OPEN_SYNC_COMMAND,
+          command: OPEN_SYNC_COMMAND,
+          arguments: [[r, syncData]],
+        };
+      } else {
+        host.statusBar.command = null;
+      }
 
       host.statusBar.show();
     } catch (e) {
