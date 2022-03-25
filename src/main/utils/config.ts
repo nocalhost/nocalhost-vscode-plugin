@@ -1,21 +1,29 @@
 import * as vscode from "vscode";
 
-type ConfigName = "nhctl.checkVersion";
+type ConfigName = "checkNhctlVersion";
 
-export function getConfiguration(name: ConfigName) {
-  const KEY = "nocalhost." + name;
+export type Switch = "on" | "off";
 
-  return (
-    process.env[KEY.toUpperCase().replace(/\./g, "_")] ||
-    vscode.workspace.getConfiguration().get(KEY)
-  );
+export function getConfiguration<T = any>(name: ConfigName) {
+  return (vscode.workspace.getConfiguration().get(`nocalhost.${name}`) ||
+    null) as T;
 }
 
-export function getBooleanValue(name: ConfigName) {
-  const value: boolean | string = getConfiguration(name);
-
-  if (typeof value === "string") {
-    return value !== "0";
-  }
-  return value;
+/**
+ *
+ * @param name
+ * @param value
+ * @param configurationTarget The {@link ConfigurationTarget configuration target} or a boolean value.
+ *    - If `true` updates {@link ConfigurationTarget.Global Global settings}.
+ *    - If `false` updates {@link ConfigurationTarget.Workspace Workspace settings}.
+ *    - If `undefined` or `null` updates to {@link ConfigurationTarget.WorkspaceFolder Workspace folder settings} if configuration is resource specific,
+ */
+export function updateConfiguration(
+  name: ConfigName,
+  value: any,
+  configurationTarget: vscode.ConfigurationTarget | boolean | null = true
+) {
+  vscode.workspace
+    .getConfiguration()
+    .update(`nocalhost.${name}`, value, configurationTarget);
 }

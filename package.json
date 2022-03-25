@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.9",
+  "version": "0.6.16-alpha.f0d3f86",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -36,18 +36,21 @@
   "main": "./dist/extension.js",
   "nhctl": {
     "serverVersion": "0.4.7",
-    "version": "0.6.1"
+    "version": "0.6.15"
   },
   "contributes": {
     "configuration": [
       {
         "title": "Nocalhost",
         "properties": {
-          "nocalhost.nhctl.checkVersion": {
-            "type": "boolean",
-            "default": true,
-            "description": "%nocalhost.nhctl.checkVersion%",
-            "deprecationMessage": "Debug config"
+          "nocalhost.checkNhctlVersion": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ],
+            "default": "on",
+            "description": "%nocalhost.nhctl.checkVersion%"
           }
         }
       }
@@ -110,12 +113,22 @@
       "view/title": [
         {
           "command": "Nocalhost.refresh",
-          "when": "extensionActivated && view == Nocalhost",
+          "when": "extensionActivated && !refreshing && view == Nocalhost",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.refreshing",
+          "when": "extensionActivated && refreshing && view == Nocalhost",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.ClustersView",
           "when": "extensionActivated && !Nocalhost.visibleTree",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.LocateWorkNode",
+          "when": "extensionActivated && view == Nocalhost",
           "group": "navigation"
         },
         {
@@ -132,17 +145,17 @@
       "view/item/context": [
         {
           "command": "Nocalhost.openProject",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "developing@1"
         },
         {
           "command": "Nocalhost.run",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "developing@3"
         },
         {
           "command": "Nocalhost.debug",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "developing@2"
         },
         {
@@ -182,52 +195,42 @@
         },
         {
           "command": "Nocalhost.cleanPvc",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "2"
         },
         {
           "command": "Nocalhost.startDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing|starting|develop_starting|vpn_))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing|starting|develop_starting|vpn_))/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.startCopyDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.endDevMode",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(.+?)-(developing|develop_starting)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(developing|develop_starting)/i",
           "group": "inline@0"
         },
         {
           "command": "Nocalhost.editServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-info-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "inline@1"
-        },
-        {
-          "command": "Nocalhost.writeServiceConfig",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-warn-(?!vpn_)/i",
-          "group": "inline@1"
-        },
-        {
-          "command": "Nocalhost.EditAppConfig",
-          "when": "viewItem =~ /^application-nodefault-installed/i",
-          "group": "inline@0"
         },
         {
           "command": "Nocalhost.exec",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|pod-Running|daemonSet|cronjob|job|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "3"
         },
         {
           "command": "Nocalhost.copyTerminal",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(?!vpn_)/i",
           "group": "3"
         },
         {
           "command": "Nocalhost.reset",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "2"
         },
         {
@@ -237,24 +240,19 @@
         },
         {
           "command": "Nocalhost.log",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "1"
         },
         {
           "command": "Nocalhost.editManifest",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(info|warn)-(?!vpn_).*(?<!duplicate-self)$/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(?!vpn_).*(?<!duplicate-self)$/i",
           "title": "%editManifest%",
           "group": "1"
         },
         {
           "command": "Nocalhost.portForward",
-          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(?!vpn_)/i",
           "group": "1"
-        },
-        {
-          "command": "Nocalhost.loadResource",
-          "title": "%loadResource%",
-          "when": "viewItem =~ /^application-nodefault-installed/i"
         },
         {
           "command": "Nocalhost.portForward",
@@ -263,7 +261,7 @@
         },
         {
           "command": "Nocalhost.associateLocalDirectory",
-          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(info|warn)-(?!vpn_)/i",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
           "group": "0"
         },
         {
@@ -308,18 +306,22 @@
           "when": "viewItem =~ /^syncAssociate-(.*)override/i"
         },
         {
+          "command": "Nocalhost.openSyncDashboard",
+          "when": "viewItem =~ /^syncAssociate-(.*)override/i"
+        },
+        {
           "command": "Nocalhost.startProxyMode",
-          "when": "viewItem =~ /(^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)-dev-(info|warn)-(?!(developing|starting|develop_starting|vpn_)))|(^network-service-(?!vpn))/i",
+          "when": "viewItem =~ /(^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing|starting|develop_starting|vpn_)))|(^network-service-(?!vpn))/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.resumeProxyMode",
-          "when": "viewItem =~ /^(workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)|network-service)(.*)vpn_unhealthy/i",
+          "when": "viewItem =~ /^(workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)|network-service)(.*)vpn_unhealthy/i",
           "group": "navigation"
         },
         {
           "command": "Nocalhost.endProxyMode",
-          "when": "viewItem =~ /^(workload-(deployment|statefulSet|job|daemonSet|cronjob|pod)|network-service)(.*)vpn/i",
+          "when": "viewItem =~ /^(workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)|network-service)(.*)vpn/i",
           "group": "inline@0"
         }
       ]
@@ -368,10 +370,6 @@
         "title": "%rename%"
       },
       {
-        "command": "Nocalhost.loadWorkloads",
-        "title": "Load Workloads"
-      },
-      {
         "command": "Nocalhost.applyKubernetesObject",
         "title": "Apply New Manifest"
       },
@@ -389,6 +387,14 @@
         "icon": "$(sign-in)"
       },
       {
+        "command": "Nocalhost.openSyncCommand",
+        "title": "statusBarSync"
+      },
+      {
+        "command": "Nocalhost.openSyncDashboard",
+        "title": "%sync.openDashboard%"
+      },
+      {
         "command": "Nocalhost.syncManage.refresh",
         "title": "Refresh",
         "alt": "Refresh",
@@ -401,10 +407,21 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "Nocalhost.refreshing",
+        "title": "Refreshing",
+        "alt": "Refreshing",
+        "icon": "$(sync~spin)"
+      },
+      {
         "command": "Nocalhost.addKubeconfig",
         "title": "Add Cluster",
         "alt": "Add Cluster",
         "icon": "$(add)"
+      },
+      {
+        "command": "Nocalhost.LocateWorkNode",
+        "title": "Locate Current Service",
+        "icon": "images/icon/locate.svg"
       },
       {
         "command": "Nocalhost.installAppSource",
@@ -479,10 +496,6 @@
         "title": "%CopyTerminal%"
       },
       {
-        "command": "Nocalhost.loadResource",
-        "title": "%nocalhostProfile%"
-      },
-      {
         "command": "Nocalhost.editManifest",
         "title": "%editManifest%"
       },
@@ -501,16 +514,6 @@
       {
         "command": "Nocalhost.editServiceConfig",
         "title": "%viewDevConfig%",
-        "icon": "images/icon/setting_normal.svg"
-      },
-      {
-        "command": "Nocalhost.writeServiceConfig",
-        "title": "%viewDevConfig%",
-        "icon": "images/icon/setting_warning.svg"
-      },
-      {
-        "command": "Nocalhost.EditAppConfig",
-        "title": "%developConfig%",
         "icon": "images/icon/setting_normal.svg"
       },
       {
@@ -597,25 +600,22 @@
     ]
   },
   "scripts": {
-    "prebuild": "node ./scripts/prebuild.js",
-    "build": "./node_modules/.bin/vsce package",
-    "vscode:prepublish": "yarn run package",
-    "vscode:uninstall": "node ./dist/cleanup.js",
-    "ts-compile-check": "tsc --noEmit -p build/tsconfig.extension.json",
-    "compile": "webpack --devtool nosources-source-map --config ./build/webpack.config.js",
-    "watch": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/webpack.config.js",
-    "package": "webpack --mode production --config ./build/webpack.config.js",
-    "lint": "eslint src --ext ts",
-    "prettier": "prettier --write \"./**/*@(.js|.jsx|.ts|.tsx|.json)\"",
-    "prettier:watch": "onchange \"./**/*@(.js|.jsx|.ts|.tsx|.json)\" -- prettier --write --ignore-unknown {{changed}}",
-    "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
-    "build:ext": "vsce package --yarn -o nocalhost.vsix",
+    "build": "run-s -l prebuild compile package",
+    "build:test": "run-s -l prebuild:test build",
     "test:ext": "jest --silent --forceExit --detectOpenHandles -i -c test/extension/jest.config.js",
-    "test:watch": "jest --watch"
+    "analyze": "npm run compile -- --analyze",
+    "postinstall": "node ./scripts/postinstall.js",
+    "prebuild": "node ./scripts/pre.build.js",
+    "compile": "node scripts/build.js --env=production",
+    "package": "pnpm vsce package -o nocalhost.vsix --no-dependencies",
+    "ts-compile-check": "tsc --noEmit -p src/main",
+    "watch": "node scripts/build.js",
+    "test": "jest --forceExit --detectOpenHandles --maxWorkers=10",
+    "prebuild:test": "node ./scripts/test.build.js"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && yarn run ts-compile-check"
+      "pre-commit": "lint-staged && npm run ts-compile-check"
     }
   },
   "lint-staged": {
@@ -628,95 +628,85 @@
     ]
   },
   "devDependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@material-ui/core": "^4.11.0",
     "@material-ui/data-grid": "4.0.0-alpha.35",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.57",
-    "@testing-library/jest-dom": "^5.11.9",
-    "@testing-library/react": "^11.2.3",
     "@types/async-retry": "^1.4.3",
-    "@types/enzyme": "^3.10.8",
-    "@types/glob": "^7.1.3",
-    "@types/i18next": "^13.0.0",
-    "@types/iconv-lite": "^0.0.1",
-    "@types/jest": "^26.0.20",
-    "@types/lodash": "^4.14.168",
-    "@types/mocha": "^8.0.0",
+    "@types/lodash-es": "^4.17.6",
     "@types/node": "^14.0.27",
+    "@types/proper-lockfile": "^4.1.1",
     "@types/qs": "^6.9.5",
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
     "@types/react-router-dom": "^5.1.6",
     "@types/semver": "^7.3.4",
-    "@types/shelljs": "^0.8.8",
-    "@types/sinon": "^9.0.10",
     "@types/uuid": "^8.3.0",
     "@types/vscode": "^1.52.0",
-    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@types/which": "^2.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^3.8.0",
-    "@wojtekmaj/enzyme-adapter-react-17": "^0.4.1",
     "async-retry": "^1.3.1",
-    "copy-paste": "^1.3.0",
-    "copy-webpack-plugin": "^6.3.2",
-    "cross-env": "^7.0.2",
-    "enzyme": "^3.11.0",
     "eslint": "^7.6.0",
     "eslint-config-airbnb-typescript": "^12.0.0",
-    "eslint-loader": "^4.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
-    "fluent-ffmpeg": "^2.1.2",
-    "glob": "^7.1.6",
     "husky": "^4.3.0",
-    "identity-obj-proxy": "^3.0.0",
-    "is-port-reachable": "^3.0.0",
-    "jest": "^26.6.3",
     "lint-staged": "^11.1.2",
-    "mocha": "^8.1.3",
-    "onchange": "^7.1.0",
-    "ovsx": "^0.2.0",
+    "npm-run-all": "^4.1.5",
     "prettier": "^2.2.0",
-    "puppeteer-core": "^10.2.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
-    "sinon": "^9.2.3",
-    "sirv-cli": "^1.0.8",
     "tree-kill": "^1.2.2",
-    "ts-jest": "^26.4.4",
-    "ts-loader": "^8.0.11",
     "typescript": "4.0.2",
-    "vsce": "^1.81.1",
-    "vscode-test": "^1.6.1",
-    "webpack": "^4.46.0",
-    "webpack-cli": "^3.3.12"
+    "vsce": "^1.81.1"
+  },
+  "optionalDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@testing-library/jest-dom": "^5.11.9",
+    "@testing-library/react": "^11.2.3",
+    "@types/enzyme": "^3.10.8",
+    "@types/jest": "^26.0.20",
+    "@types/mocha": "^8.0.0",
+    "@vscode/test-electron": "^2.1.2",
+    "@wojtekmaj/enzyme-adapter-react-17": "^0.4.1",
+    "copy-paste": "^1.3.0",
+    "enzyme": "^3.11.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "identity-obj-proxy": "^3.0.0",
+    "is-port-reachable": "^3.0.0",
+    "jest": "^26.6.3",
+    "mocha": "^8.1.3",
+    "puppeteer-core": "^10.2.0",
+    "ts-jest": "^26.4.4"
   },
   "dependencies": {
-    "@dineug/vscode-google-analytics": "^0.1.2",
-    "@types/proper-lockfile": "^4.1.1",
     "ajv": "^6.12.6",
     "axios": "^0.21.0",
     "camelcase": "^6.2.0",
     "change-case": "^4.1.2",
     "classnames": "^2.3.1",
+    "esbuild": "^0.14.21",
     "fs-extra": "^10.0.0",
+    "get-port": "^3.2",
     "highlight.js": "^10.5.0",
     "i18next": "^20.3.5",
+    "iconv-lite": "^0.6.3",
+    "is-windows": "^1.0.2",
     "json5": "^2.2.0",
-    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "log4js": "^6.3.0",
     "proper-lockfile": "^4.1.2",
     "qs": "^6.9.4",
     "rimraf": "^3.0.2",
     "semver": "^7.3.4",
-    "shelljs": "^0.8.4",
-    "shortid": "^2.2.16",
     "tempy": "^1.0.0",
     "uuid": "^8.3.2",
     "vscode-nls": "^5.0.0",
+    "which": "^2.0.2",
     "yaml": "^1.10.0"
   },
   "publisher": "nocalhost"

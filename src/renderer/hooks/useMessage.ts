@@ -1,4 +1,6 @@
 import { useContext, useEffect } from "react";
+
+import { postMessage } from "../utils/index";
 import { redirect, updateDeployments, updateLogs } from "../store/actions";
 import { store } from "../store/store";
 import { IDeployments } from "../store/store.types";
@@ -46,6 +48,9 @@ export default function useMessage() {
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
+
+    postMessage({ type: "init" });
+
     () => {
       window.removeEventListener("message", handleMessage);
     };

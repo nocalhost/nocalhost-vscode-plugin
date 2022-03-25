@@ -74,7 +74,7 @@ export default class PortForwardCommand implements ICommand {
       resourceType = item.servicetype;
     }
 
-    const confirm = await vscode.window.showInformationMessage(
+    const confirm = await host.showInformationMessage(
       `Do you want to stop port-forward ${port}?`,
       { modal: true },
       "Confirm"

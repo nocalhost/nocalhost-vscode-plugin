@@ -1,15 +1,17 @@
-import {
-  DEV_VERSION,
-  GLOBAL_TIMEOUT,
-  PLUGIN_TEMP_DIR,
-  TEMP_NHCTL_BIN,
-} from "./../../constants";
 import * as vscode from "vscode";
 import * as semver from "semver";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
+import { delay } from "lodash";
 
+import {
+  DEV_VERSION,
+  GLOBAL_TIMEOUT,
+  NH_BIN_NHCTL,
+  PLUGIN_TEMP_DIR,
+  TEMP_NHCTL_BIN,
+} from "./../../constants";
 import { exec, ExecParam, execWithProgress } from "../shell";
 import host, { Host } from "../../host";
 import * as yaml from "yaml";
@@ -25,11 +27,11 @@ import { Resource, ResourceStatus } from "../../nodes/types/resourceType";
 import { downloadNhctl, lock, unlock } from "../../utils/download";
 import { keysToCamel } from "../../utils";
 import { IPvc } from "../../domain";
-import { getBooleanValue } from "../../utils/config";
 import messageBus from "../../utils/messageBus";
 import { ClustersState } from "../../clusters";
 import { Associate, IPortForward } from "./type";
 import state from "../../state";
+import { getConfiguration, Switch } from "../../utils/config";
 
 export interface InstalledAppInfo {
   name: string;
@@ -48,11 +50,9 @@ export interface AllInstallAppInfo {
 export class NhctlCommand {
   public baseCommand: string = null;
   private argTheTail: string = null;
-  public static nhctlPath: string = path.resolve(
-    NH_BIN,
-    host.isWindow() ? "nhctl.exe" : "nhctl"
-  );
   private outputMethod: string = "toJson";
+
+  public static nhctlPath: string = NH_BIN_NHCTL;
 
   constructor(
     base: string,
@@ -60,7 +60,7 @@ export class NhctlCommand {
     private execParam: Omit<ExecParam, "command"> = {},
     public args: string[] = []
   ) {
-    this.baseCommand = `${NhctlCommand.nhctlPath} ${base || ""}`;
+    this.baseCommand = `${NH_BIN_NHCTL} ${base || ""}`;
   }
   static create(
     base: string,
@@ -435,7 +435,8 @@ export async function getAllNamespace(props: IBaseCommand<unknown>) {
 
     devspaces.push(devspace);
   });
-  return devspaces;
+
+  return orderBy(devspaces, "namespace");
 }
 
 export async function getAll(params: IBaseCommand) {
@@ -662,14 +663,15 @@ export async function associate(
   type: string,
   workLoadName: string,
   container?: string,
-  params: "--de-associate" | "--migrate" | "" = ""
+  params: "--de-associate" | "--migrate" | "" = "",
+  nid?: string
 ) {
   const command = nhctlCommand(
     kubeconfigPath,
     namespace,
     `dev associate ${appName} -s "${dir}" ${
       container ? `-c ${container}` : ""
-    } -t ${type} -d ${workLoadName} ${params}`
+    } -t ${type} -d ${workLoadName} ${params} ${nid ? `-nid ${nid}` : ""}`
   );
   const result = await exec({ command }).promise;
   return result.stdout;
@@ -767,7 +769,7 @@ export async function devStart(
 }
 
 function isSudo(ports: string[] | undefined) {
-  if (!ports && !host.isLinux()) {
+  if (!ports || !host.isLinux()) {
     return false;
   }
 
@@ -810,11 +812,32 @@ export async function startPortForward(
     title,
     command,
     sudo: !!isSudo(ports),
-  }).catch(() => {
-    return Promise.reject(
-      new Error(`Port-forward (${appName}/${workloadName}) fail`)
-    );
-  });
+  })
+    .catch(() => {
+      return Promise.reject(
+        Error(`Port-forward (${appName}/${workloadName}) fail`)
+      );
+    })
+    .then(() => {
+      if (
+        host.getContext().extension.extensionKind === vscode.ExtensionKind.UI
+      ) {
+        return;
+      }
+
+      const localPort = ports[0].split(":")[0];
+
+      const terminal = host.createTerminal({
+        name: "forwarding",
+        shellPath: "/bin/sh",
+        shellArgs: [
+          "-c",
+          `echo Automatic forwarding tcp://:127.0.0.1:${localPort}`,
+        ],
+      });
+
+      delay(terminal.dispose, 1000);
+    });
 }
 
 export async function endPortForward(
@@ -889,48 +912,17 @@ export async function endDevMode(
   });
 }
 
-export async function loadResource(
-  host: Host,
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string
-) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `describe ${appName}`
-  );
-  const result = await exec({ command }).promise;
-  return result.stdout;
-}
-
-export async function getAppInfo(
-  kubeConfigPath: string,
-  namespace: string,
-  appName: string
-) {
-  const command = nhctlCommand(
-    kubeConfigPath,
-    namespace,
-    `describe ${appName}`
-  );
-
-  const result = await exec({ command }).promise;
-
-  return result.stdout;
-}
-
 export async function getServiceConfig(
   kubeConfigPath: string,
   namespace: string,
   appName: string,
   workloadName: string,
-  type?: string
+  type: string
 ) {
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
-    `describe ${appName} -d ${workloadName} ${type ? `--type ${type}` : ""}`
+    `get ${type} ${workloadName} -a ${appName} -o yaml`
   );
 
   const result = await exec({ command }).promise;
@@ -938,7 +930,9 @@ export async function getServiceConfig(
   let svcProfile: SvcProfile | null = null;
   if (result && result.stdout) {
     try {
-      svcProfile = yaml.parse(result.stdout) as SvcProfile;
+      svcProfile = (yaml.parse(result.stdout).description ?? {
+        devPortForwardList: [],
+      }) as SvcProfile;
     } catch (error) {
       logger.info("command: " + command + "result: ", result.stdout);
       throw error;
@@ -1071,7 +1065,9 @@ export async function editConfig(
   proc.stdin.write(contents);
   proc.stdin.end();
 
-  return await (await promise).stdout;
+  return await (
+    await promise
+  ).stdout;
 }
 
 export async function resetApp(
@@ -1134,13 +1130,8 @@ export async function listPVC(
     workloadName?: string;
   }>
 ) {
-  const {
-    kubeConfigPath,
-    namespace,
-    appName,
-    workloadName,
-    workloadType,
-  } = props;
+  const { kubeConfigPath, namespace, appName, workloadName, workloadType } =
+    props;
   const command = nhctlCommand(
     kubeConfigPath,
     namespace,
@@ -1241,19 +1232,25 @@ export async function reconnectSync(
   });
 }
 
+function getArch() {
+  let arch = os.arch();
+
+  if (arch !== "arm64") {
+    arch = "amd64";
+  }
+
+  return arch;
+}
+
 function getNhctlPath(version: string) {
   let name = "";
   let destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl");
   let binPath = path.resolve(NH_BIN, "nhctl");
 
   if (host.isLinux()) {
-    name = `nhctl-linux-amd64`;
+    name = `nhctl-linux-${getArch()}`;
   } else if (host.isMac()) {
-    if (os.arch() === "arm64") {
-      name = `nhctl-darwin-arm64`;
-    } else {
-      name = `nhctl-darwin-amd64`;
-    }
+    name = `nhctl-darwin-${getArch()}`;
   } else if (host.isWindow()) {
     name = `nhctl-windows-amd64.exe`;
     destinationPath = path.resolve(PLUGIN_TEMP_DIR, "nhctl.exe");
@@ -1312,14 +1309,16 @@ export async function checkVersion() {
   // is dev plugin
   const pluginVersion: string = packageJson.version;
 
-  const { sourcePath, destinationPath, binPath } = getNhctlPath(
-    requiredVersion
-  );
+  const { sourcePath, destinationPath, binPath } =
+    getNhctlPath(requiredVersion);
+
+  const isTest =
+    host.getContext().extensionMode === vscode.ExtensionMode.Development ||
+    ["beta", "alpha"].find((identifier) => pluginVersion.includes(identifier));
 
   if (
-    !getBooleanValue("nhctl.checkVersion") ||
-    !requiredVersion ||
-    (pluginVersion.indexOf("-beta") > -1 && fs.existsSync(binPath))
+    fs.existsSync(binPath) &&
+    (getConfiguration<Switch>("checkNhctlVersion") === "off" || isTest)
   ) {
     return;
   }
@@ -1444,7 +1443,7 @@ export function nhctlCommand(
   namespace: string,
   baseCommand: string
 ) {
-  const command = `${NhctlCommand.nhctlPath} ${baseCommand} ${
+  const command = `${NH_BIN_NHCTL} ${baseCommand} ${
     namespace ? `-n ${namespace}` : ""
   } ${kubeconfigPath ? `--kubeconfig ${kubeconfigPath}` : ""}`;
   return command;
@@ -1481,6 +1480,29 @@ export async function kubeconfig(
   return result;
 }
 
+export async function checkKubeconfig(
+  kubeconfig: { str?: string; path?: string },
+  context: string
+) {
+  const { path, str } = kubeconfig;
+
+  const args = ["-i", `-c ${context}`, "--kubeconfig", str ? "-" : path];
+
+  const { promise, proc } = await exec({
+    command: `${NH_BIN_NHCTL} kubeconfig check`,
+    args: args,
+  });
+
+  if (str) {
+    proc.stdin.write(str);
+    proc.stdin.end();
+  }
+
+  const { stdout } = await promise;
+
+  return JSON.parse(stdout)[0];
+}
+
 export async function devTerminal(
   appName: string,
   workloadName: string,
@@ -1505,7 +1527,7 @@ export async function devTerminal(
   }
 
   const terminal = host.createTerminal({
-    shellPath: NhctlCommand.nhctlPath,
+    shellPath: NH_BIN_NHCTL,
     shellArgs,
     name: `${appName}-${workloadName}`,
     iconPath: {
@@ -1567,6 +1589,6 @@ export async function vpn(param: {
     title: `Waiting for vpn ${subCommand} ...`,
     output: true,
     args: ["--workloads", `${workLoadType.toLowerCase()}/${workLoadName}`],
-    sudo: !host.isWindow(),
+    enterPassword: true,
   });
 }

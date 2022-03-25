@@ -3,7 +3,6 @@ import * as nhctl from "../../../ctl/nhctl";
 import { get as _get } from "lodash";
 import { resolveVSCodeUri } from "../../../utils/fileUtil";
 import state from "../../../state";
-import { NocalhostServiceConfig } from "../../../service/configService";
 import { KubernetesResourceNode } from "../../abstract/KubernetesResourceNode";
 import {
   BaseNocalhostNode,
@@ -41,7 +40,6 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
     public resource: IK8sResource,
     public conditionsStatus?: Array<IStatus> | string,
     public svcProfile?: SvcProfile | undefined | null,
-    public config?: NocalhostServiceConfig | undefined | null,
     public vpn?: VPN
   ) {
     super();
@@ -197,10 +195,6 @@ export abstract class ControllerResourceNode extends KubernetesResourceNode {
         }
       );
     }
-  }
-
-  public checkConfig() {
-    return Promise.resolve(true);
   }
 
   public async getStatus(refresh = false) {

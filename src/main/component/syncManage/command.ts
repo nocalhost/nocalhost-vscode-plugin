@@ -6,7 +6,7 @@ import host from "../../host";
 import { SyncManageDataProvider } from "./provider";
 export const DISASSOCIATE_ASSOCIATE = "Nocalhost.disassociateAssociate";
 const SWITCH_ASSOCIATE = "Nocalhost.switchAssociate";
-const SYNCMANAGE_REFRESH = "Nocalhost.syncManage.refresh";
+const SYNC_MANAGE_REFRESH = "Nocalhost.syncManage.refresh";
 
 function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
   return vscode.commands.registerCommand(
@@ -19,7 +19,7 @@ function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
 
       const {
         associate: {
-          svc_pack: { ns, app, svc, svc_type, container },
+          svc_pack: { ns, app, svc, svc_type, container, nid },
         },
         associate,
         currentPath,
@@ -33,7 +33,8 @@ function disassociateAssociate(treeDataProvider: SyncManageDataProvider) {
         svc_type,
         svc,
         container,
-        "--de-associate"
+        "--de-associate",
+        nid
       );
 
       treeDataProvider.refresh();
@@ -56,7 +57,7 @@ function switchAssociate(treeDataProvider: SyncManageDataProvider) {
 
 function refresh(treeDataProvider: SyncManageDataProvider) {
   return vscode.commands.registerCommand(
-    SYNCMANAGE_REFRESH,
+    SYNC_MANAGE_REFRESH,
     treeDataProvider.refresh
   );
 }

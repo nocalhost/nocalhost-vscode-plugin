@@ -1,13 +1,12 @@
 import * as vscode from "vscode";
 import NocalhostAppProvider from "../appProvider";
-import AssociateLocalDirxectoryCommand from "./AssociateDirectoryCommand";
+import AssociateDirectoryCommand from "./AssociateDirectoryCommand";
 import CleanPvcCommand from "./CleanPvcCommand";
 import EditServiceConfigCommand from "./EditServiceConfigCommand";
 import EndDevModeCommand from "./EndDevModeCommand";
 import ExecCommand from "./ExecCommand";
-import RefreshCommand from "./RefreshCommand";
+import RefreshCommand, { RefreshingCommand } from "./RefreshCommand";
 import InstallCommand from "./InstallCommand";
-import LoadResourceCommand from "./LoadResourceCommand";
 import LogCommand from "./LogCommand";
 import OpenEndPointCommand from "./OpenEndPointCommand";
 import ResetDevspaceCommand from "./ResetDevspaceCommand";
@@ -18,17 +17,16 @@ import StartDevModeCommand from "./StartDevModeCommand";
 import SwitchEndPointCommand from "./SwitchEndPointCommand";
 import UninstallCommand from "./UninstallCommand";
 import ViewKubeConfigCommand from "./ViewKubeConfig";
-import WriteServiceConfigCommand from "./WriteServiceConfigCommand";
-import LoadWorkloadsCommand from "./LoadWorkloadsCommand";
 import ApplyKubernetesObjectCommand from "./ApplyKubernetesObjectCommand";
 import DeleteKubernetesObjectCommand from "./DeleteKubernetesObjectCommand";
-import SyncServiceCommand from "./SyncServiceCommand";
-import OverrideSyncCommand from "./OverrideSyncCommand";
+import SyncServiceCommand from "./sync/SyncServiceCommand";
+import OverrideSyncCommand from "./sync/OverrideSyncCommand";
+import OpenSyncCommand from "./sync/OpenSyncCommand";
+import OpenSyncDashboardCommand from "./sync/OpenSyncDashboardCommand";
 import CopyTerminalCommand from "./CopyTerminalCommand";
 import UpgradeCommand from "./UpgradeCommand";
-import EditAppConfigCommand from "./EditAppConfigCommand";
 import ShowApplicationsCommand from "./ShowApplicationsCommand";
-import ReconnectSyncCommand from "./ReconnectSyncCommand";
+import ReconnectSyncCommand from "./sync/ReconnectSyncCommand";
 import DebugCommand from "./DebugCommand";
 import RunCommand from "./RunCommand";
 import DeleteKubeConfigCommand from "./DeleteKubeConfigCommand";
@@ -43,10 +41,12 @@ import OpenProjectCommand from "./OpenProjectCommand";
 import EditManifestCommand from "./EditManifestCommand";
 import ResetPluginCommand from "./ResetPluginCommand";
 import StartCopyDevModeCommand from "./StartCopyDevModeCommand";
+import LocateWorkNodeCommand from "./LocateWorkNodeCommand";
 import PortForwardCommand from "./PortForwardCommand/";
 import StartProxyModeCommand from "./proxy/StartProxyModeCommand";
 import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
 import EndProxyModeCommand from "./proxy/EndProxyModeCommand";
+import HomeWebViewCommand from "./HomeWebViewCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -57,7 +57,6 @@ export default function initCommands(
   new ClearLocalCluster(context);
   new ClustersViewCommand(context);
   new EditServiceConfigCommand(context);
-  new WriteServiceConfigCommand(context);
 
   new StartDevModeCommand(context);
   new EndDevModeCommand(context);
@@ -69,9 +68,10 @@ export default function initCommands(
   new SignOutCommand(context);
 
   new RefreshCommand(context, appTreeProvider);
+  new RefreshingCommand(context);
+
   new InstallCommand(context);
   new UninstallCommand(context);
-  new LoadResourceCommand(context);
   new EditManifestCommand(context);
   new LogCommand(context);
   new PortForwardCommand(context);
@@ -80,16 +80,17 @@ export default function initCommands(
   new ResetCommand(context);
   new CleanPvcCommand(context);
   new ResetDevspaceCommand(context);
-  new LoadWorkloadsCommand(context);
   new ViewKubeConfigCommand(context);
-  new AssociateLocalDirxectoryCommand(context);
+  new AssociateDirectoryCommand(context);
 
   new ApplyKubernetesObjectCommand(context);
   new DeleteKubernetesObjectCommand(context);
   new SyncServiceCommand(context);
   new OverrideSyncCommand(context);
+  new OpenSyncCommand(context);
+  new OpenSyncDashboardCommand(context);
+
   new UpgradeCommand(context);
-  new EditAppConfigCommand(context);
   new ShowApplicationsCommand(context);
   new ReconnectSyncCommand(context);
 
@@ -100,6 +101,7 @@ export default function initCommands(
 
   new DeleteKubeConfigCommand(context);
   new AddKubeconfig(context);
+  new LocateWorkNodeCommand(context, appTreeProvider);
   new ClearServerCluster(context);
   new InstallAppSourceCommand(context);
 
@@ -109,4 +111,6 @@ export default function initCommands(
   new StartProxyModeCommand(context);
   new ResumeProxyModeCommand(context);
   new EndProxyModeCommand(context);
+
+  new HomeWebViewCommand(context);
 }

@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
-import * as getPort from "get-port";
+import getPort = require("get-port");
 
 import { NhctlCommand } from "../../ctl/nhctl";
 import { exec } from "../../ctl/shell";
 import { ControllerResourceNode } from "../../nodes/workloads/controllerResources/ControllerResourceNode";
-import { ContainerConfig } from "../../service/configService";
+import { ContainerConfig, Language } from "../../service/configService";
 
 import { IDebugProvider } from "./IDebugProvider";
 
 export class PhpDebugProvider extends IDebugProvider {
-  name: string = "php";
+  name: Language = "php";
   requireExtensions: string[] = ["felixfbecker.php-debug"];
 
   downloadUrl: string = "https://www.php.net/downloads";

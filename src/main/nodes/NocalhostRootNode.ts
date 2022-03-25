@@ -1,4 +1,4 @@
-import { difference, get, orderBy } from "lodash";
+import { difference, get, omit, orderBy } from "lodash";
 import * as vscode from "vscode";
 import { sortResources } from "../clusters";
 import AccountClusterService, {
@@ -19,7 +19,6 @@ import state from "../state";
 import { asyncLimit } from "../utils";
 import { isExistSync, readYaml } from "../utils/fileUtil";
 import logger from "../utils/logger";
-import { AppNode } from "./AppNode";
 import { KubeConfigNode } from "./KubeConfigNode";
 import { ROOT } from "./nodeContants";
 import { BaseNocalhostNode } from "./types/nodeType";
@@ -111,9 +110,15 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     globalClusterRootNodes = globalClusterRootNodes.filter(
       (it: AccountClusterNode) => it?.id
     );
-    logger.info(
-      `[globalClusterRootNodes]: ${JSON.stringify(globalClusterRootNodes)}`
-    );
+
+    if (globalClusterRootNodes.length === 0) {
+      return [];
+    }
+
+    const logNodes = globalClusterRootNodes.map((item) => {
+      return { ...item, loginInfo: omit(item.loginInfo, "password") };
+    });
+    logger.info(`[globalClusterRootNodes]: ${JSON.stringify(logNodes)}`);
 
     let nodes = await asyncLimit(
       globalClusterRootNodes,
@@ -320,7 +325,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
   public label: string = NOCALHOST;
   public type = ROOT;
   constructor(public parent: BaseNocalhostNode | null) {
-    console.log(AppNode);
     state.setNode(this.getNodeStateId(), this);
   }
 
@@ -334,7 +338,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
     return new KubeConfigNode({
       id: res.id,
       label: clusterName,
-      parent: this,
       kubeConfigPath: res.kubeConfigPath,
       devSpaceInfos: res.devSpaces,
       applications: res.applications,
@@ -376,7 +379,6 @@ export class NocalhostRootNode implements BaseNocalhostNode {
         return new KubeConfigNode({
           id: res.id,
           label: res.clusterName,
-          parent: this,
           kubeConfigPath: res.kubeConfigPath,
           devSpaceInfos: res.devSpaces,
           applications: res.applications,

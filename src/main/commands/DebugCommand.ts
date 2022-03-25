@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
-import * as assert from "assert";
+import assert = require("assert");
 import * as fs from "fs";
+import * as yaml from "yaml";
 import * as path from "path";
 import { ValidateFunction } from "ajv";
 
@@ -11,7 +12,10 @@ import { DEBUG, START_DEV_MODE } from "./constants";
 import registerCommand from "./register";
 import host from "../host";
 import { DebugSession } from "../debug/debugSession";
-import { ContainerConfig } from "../service/configService";
+import ConfigService, {
+  ContainerConfig,
+  NocalhostServiceConfig,
+} from "../service/configService";
 import {
   checkDebuggerDependencies,
   chooseDebugProvider,
@@ -22,6 +26,7 @@ import { ControllerResourceNode } from "../nodes/workloads/controllerResources/C
 import { getContainer, waitForSync } from "../debug";
 import { IDebugProvider } from "../debug/provider/IDebugProvider";
 import { validateData } from "../utils/validate";
+import { editConfig } from "../ctl/nhctl";
 
 export default class DebugCommand implements ICommand {
   command: string = DEBUG;
@@ -137,8 +142,13 @@ export default class DebugCommand implements ICommand {
 
     await debugSession.launch();
   }
+
   async getDebugProvider(): Promise<IDebugProvider> {
-    const debugProvider = await chooseDebugProvider(await this.getLanguage());
+    const language = this.getLanguage();
+
+    const debugProvider = await chooseDebugProvider(language);
+
+    this.saveLanguage(debugProvider, language);
 
     await checkDebuggerDependencies(debugProvider);
 
@@ -146,17 +156,55 @@ export default class DebugCommand implements ICommand {
 
     return debugProvider;
   }
-  async getLanguage() {
-    const { image } = this.container.dev;
-    let type: Language;
 
-    if (image.includes("nocalhost/dev-images")) {
-      type = Object.keys(supportLanguage).find((name) =>
-        image.includes(name)
-      ) as Language;
+  async saveLanguage(debugProvider: IDebugProvider, language: Language) {
+    const { node, container } = this;
+
+    if (!container.dev.debug.language || language !== debugProvider.name) {
+      const serviceConfig =
+        await ConfigService.getAppConfig<NocalhostServiceConfig>(
+          node.getKubeConfigPath(),
+          node.getNameSpace(),
+          node.getAppName(),
+          node.name,
+          node.resourceType
+        );
+      const currentContainer = serviceConfig.containers.find(
+        (item) => item.name === container.name
+      );
+      currentContainer.dev.debug.language = debugProvider.name;
+
+      const contents = yaml.stringify(serviceConfig);
+
+      editConfig(
+        node.getKubeConfigPath(),
+        node.getNameSpace(),
+        node.getAppName(),
+        Buffer.from(contents),
+        node.name,
+        node.resourceType
+      );
+    }
+  }
+  getLanguage() {
+    const {
+      image,
+      debug: { language },
+    } = this.container.dev;
+
+    const supportLanguages = Object.keys(supportLanguage) as Language[];
+    if (
+      !!language &&
+      supportLanguages.includes(language.toLowerCase() as Language)
+    ) {
+      return language.toLowerCase() as Language;
     }
 
-    return type;
+    if (image.includes("nocalhost/dev-images")) {
+      return supportLanguages.find((name) =>
+        image.includes(name === "go" ? "golang" : name)
+      );
+    }
   }
 
   async createDebugLaunchConfig() {

@@ -3,9 +3,10 @@ import { createConnection } from "net";
 import { delay } from "lodash";
 
 import { IDebugProvider } from "./IDebugProvider";
+import { Language } from ".";
 
 export class RubyDebugProvider extends IDebugProvider {
-  name: string = "ruby";
+  name: Language = "ruby";
   requireExtensions: string[] = ["rebornix.Ruby"];
 
   downloadUrl: string = "https://www.ruby-lang.org/en/downloads/";

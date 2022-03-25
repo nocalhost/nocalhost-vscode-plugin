@@ -1,0 +1,11 @@
+{
+  // "nocalhost.nhctl.checkVersion": false,
+  "window.titleBarStyle": "custom",
+  "workbench.editor.enablePreview": false,
+  // "window.restoreFullscreen": true,
+  "telemetry.telemetryLevel": "off",
+  "extensions.autoUpdate": false,
+  "files.simpleDialog.enable": true,
+  "window.dialogStyle": "custom"
+  // "window.newWindowDimensions": "maximized"
+}

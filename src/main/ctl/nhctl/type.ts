@@ -7,12 +7,14 @@ export namespace Associate {
       svc_type: string;
       svc: string;
       container: string;
+      nid: string;
     };
     sha: string;
     server: string;
     syncthing_status: {
       msg: string;
       status: SyncStatusType;
+      gui: string;
     };
   };
 }
@@ -43,4 +45,9 @@ export interface IPortForward {
   sudo: boolean;
   svcName: string;
   updated: string;
+}
+
+export interface IKubeconfig {
+  contexts: Array<{ name: string; context: { namespace: string } }>;
+  "current-context": string;
 }

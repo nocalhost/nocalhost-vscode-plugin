@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 jobs:
   release-plugin:
@@ -12,13 +13,33 @@ jobs:
     environment:
       name: release
     steps:
-      - name: Set up Node 1.x
-        uses: actions/setup-node@v2.1.3
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12.x
+          node-version: ^14
+
+      - uses: pnpm/action-setup@v2.1.0
+        with:
+          version: 6
+          run_install: false
 
       - name: Check out code into the project's root directory
         uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        id: pnpm-cache
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-build-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-build
+
+      - uses: pnpm/action-setup@v2.1.0
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        with:
+          version: 6
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile]
+            - args: [--no-optional]
 
       - name: Get tag
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -27,10 +48,7 @@ jobs:
         env:
           VERSION: ${{ env.RELEASE_VERSION }}
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-        run: |
-          yarn install
-          yarn build
-          mv nocalhost-*.vsix nocalhost.vsix
+        run:  pnpm build
 
       - name: Create nocalhost-vscode-plugin Release
         id: create_release
@@ -54,7 +72,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Publish To VS Code Extension Marketplace
-        run: yarn run vsce publish -p ${{ secrets.VSCE_TOKEN }}
+        run: pnpm vsce publish -p ${{ secrets.VSCE_TOKEN }} --no-dependencies
 
       - name: Publish openVSX
-        run: yarn run ovsx publish nocalhost.vsix -p ${{ secrets.OPEN_VSX_ACCESS_TOKEN }}
+        run: pnpm dlx ovsx publish nocalhost.vsix -p ${{ secrets.OPEN_VSX_ACCESS_TOKEN }}

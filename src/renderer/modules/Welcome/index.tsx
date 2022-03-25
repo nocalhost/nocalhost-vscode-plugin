@@ -1,73 +1,86 @@
 import React from "react";
-import { createStyles, makeStyles } from "@material-ui/core";
-import { CustomThemeOptions } from "../../themes";
 import { postMessage } from "../../utils";
 import { MessageActionType, Commands } from "../../constants";
 
-const useStyles = makeStyles((theme: CustomThemeOptions) =>
-  createStyles({
-    root: {
-      padding: 15,
-    },
-    divider: {
-      height: 1,
-      marginTop: 10,
-      marginBottom: 10,
-      backgroundColor: theme?.palette?.divider,
-    },
-    paragraph: {
-      marginTop: 10,
-      marginBottom: 10,
-    },
-    button: {
-      cursor: "pointer",
-      color: "var(--vscode-textLink-foreground)",
-    },
-  })
-);
-
 const Welcome: React.FC = () => {
-  const classes = useStyles();
-  const onSignIn = () => {
-    postMessage(
-      {
-        type: MessageActionType.executeCommand,
-        payload: {
-          command: Commands.signin,
-        },
+  const onSignIn = (data: string) => {
+    postMessage({
+      type: MessageActionType.executeCommand,
+      payload: {
+        command: Commands.homeWebView,
+        data: { command: Commands.connect, data },
       },
-      "*"
-    );
+    });
   };
-
   return (
-    <div className={classes.root} data-testid="welcome">
-      <h1>Welcome to Nocalhost</h1>
-      <div className={classes.divider}></div>
-      <p className={classes.paragraph}>
-        Nocalhost is a CloudNative Development Enviroment. You can coding in
-        VSCode on Kubernetes with no friction.
-      </p>
-      <dl>
-        <dt>Before you start, please make sure:</dt>
-        <li>git is installed</li>
-        <li>kubectl is installed</li>
-        <li>helm is installed if you develop helm apps</li>
-        <li>nhctl is installed</li>
-        <li>One or more DevSpaces created by nocalhost-web administrator.</li>
-      </dl>
-      <p className={classes.paragraph}>then,</p>
-      <p className={classes.paragraph}>
-        click{" "}
-        <span className={classes.button} onClick={onSignIn}>
-          sign in
-        </span>{" "}
-        to list your DevSpaces.
-      </p>
-      <p className={classes.paragraph}>
-        <a href="https://nocalhost.dev/">Click here</a> for more details.
-      </p>
-    </div>
+    <>
+      <article className="markdown-body">
+        <h2 className="atx" id="welcome-to-nocalhost">
+          Welcome to Nocalhost
+        </h2>
+        <p>
+          Nocalhost is an open-source IDE plugin for cloud-native applications
+          development:
+        </p>
+        <p>
+          Build, test and debug applications directly inside Kubernetes IDE
+          Support : providing the same debugging and developing experience
+          you're used in the IDE even in the remote Kubernetes cluster.
+        </p>
+        <p>
+          Developing with instant file synchronization: instantly sync your code
+          change to remote container without rebuilding images or restarting
+          containers.
+        </p>
+        <h3 className="atx" id="how-to-use">
+          How to use
+        </h3>
+        <p>You can use Nocalhost in two ways:</p>
+        <ul>
+          <li>
+            One is to provide a kubeconfig of a K8s cluster. Our minimum
+            requirement for RBAC is the&nbsp;
+            <a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">
+              edit
+            </a>
+            &nbsp; of a namespace. After adding a kubeconfig, you can experience
+            the functions of nocalhost through&nbsp;
+            <a href="https://nocalhost.dev/docs/quick-start">quick start</a>.
+          </li>
+        </ul>
+        <p>
+          <strong onClick={onSignIn.bind(null, "local")}>
+            <a href="javascript;">Experience through kubeconfig</a>
+          </strong>
+        </p>
+        <ul>
+          <li>
+            The second is to log in through the Nocalhost Server account
+            provided by the Nocalhost Server administrator of the privatized
+            deployment. After logging in, you can still experience the functions
+            of nocalhost through&nbsp;
+            <a href="https://nocalhost.dev/docs/quick-start/#2-connect-to-kubernetes-cluster">
+              quick start
+            </a>
+          </li>
+        </ul>
+        <p>
+          <strong onClick={onSignIn.bind(null, "server")}>
+            <a href="javascript;">
+              Experience through Nocalhost Server account
+            </a>
+          </strong>
+        </p>
+        <p>
+          Nocalhost Server can help you better manage your K8s cluster,
+          applications, personnel and permissions. To learn how to deploy
+          Nocalhost Server, you can click&nbsp;
+          <a href="https://nocalhost.dev/docs/server/server-overview">
+            Nocalhost Server Overview
+          </a>
+        </p>
+      </article>
+    </>
   );
 };
 

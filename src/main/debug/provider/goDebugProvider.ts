@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert = require("assert");
 import * as net from "net";
 import * as path from "path";
 import * as semver from "semver";
@@ -12,13 +12,14 @@ import { getPromiseWithAbort } from "../../utils";
 import host from "../../host";
 import { IDebugProvider } from "./IDebugProvider";
 import { exec } from "../../ctl/shell";
+import { Language } from "../../service/configService";
 
 export class GoDebugProvider extends IDebugProvider {
-  name: string = "golang";
+  name: Language = "go";
   requireExtensions: string[] = ["golang.go"];
 
   downloadUrl: string = "https://go.dev/dl/";
-  commandName: string = "go";
+  commandName: string = this.name;
 
   socket: net.Socket;
 
@@ -54,30 +55,15 @@ export class GoDebugProvider extends IDebugProvider {
   }
 
   async checkExtensionDependency(): Promise<void> {
-    type GoENV = { [key: string]: string };
-
-    const env: GoENV = await exec({ command: "go env" })
+    const env = await exec({
+      command: "go",
+      args: ["env", "-json", "GOPATH"],
+    })
       .promise.then((res) => {
-        return res.stdout
-          .split("\n")
-          .map((str) => {
-            if (host.isWindow()) {
-              str = str.substring(4);
-            } else {
-              str = str.replaceAll(`"`, "");
-            }
-
-            return str.split("=");
-          })
-          .reduce<GoENV>((obj, [key, value]) => {
-            if (key) {
-              obj[key] = value;
-            }
-
-            return obj;
-          }, {});
+        return JSON.parse(res.stdout) as { GOPATH: string };
       })
-      .catch(() => {
+      .catch((err) => {
+        logger.error("checkExtensionDependency", err);
         return Promise.reject(Error(`Failed to run "go env"`));
       });
 
@@ -165,7 +151,11 @@ export class GoDebugProvider extends IDebugProvider {
       }
 
       this.socket.once("data", (data) => {
-        const { id: rid, error, result } = JSON.parse(data.toString()) as {
+        const {
+          id: rid,
+          error,
+          result,
+        } = JSON.parse(data.toString()) as {
           id: string;
           result: T;
           error?: string;

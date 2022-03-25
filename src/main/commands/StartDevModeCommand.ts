@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as os from "os";
 import { get as _get } from "lodash";
 import { existsSync } from "fs";
-import { INhCtlGetResult, IDescribeConfig } from "../domain";
 import ICommand from "./ICommand";
 import { START_DEV_MODE, SYNC_SERVICE } from "./constants";
 import registerCommand from "./register";
@@ -36,7 +35,7 @@ import { appTreeView } from "../extension";
 import messageBus from "../utils/messageBus";
 import logger from "../utils/logger";
 import { getContainer } from "../utils/getContainer";
-import SyncServiceCommand from "./SyncServiceCommand";
+import SyncServiceCommand from "./sync/SyncServiceCommand";
 import { getContainers } from "../ctl/nhctl";
 
 export interface ControllerNodeApi {
@@ -69,6 +68,8 @@ export default class StartDevModeCommand implements ICommand {
 
   private info?: StartDevModeInfoType;
   private node: ControllerNodeApi;
+  private containerName: string;
+
   async execCommand(node: ControllerNodeApi, info?: StartDevModeInfoType) {
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
@@ -109,17 +110,6 @@ export default class StartDevModeCommand implements ICommand {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
     host.log("[start dev] Initializing..", true);
-    const resource: INhCtlGetResult = await nhctl.NhctlCommand.get({
-      kubeConfigPath,
-      namespace,
-    })
-      .addArgumentStrict(node.resourceType, node.name)
-      .addArgument("-a", node.getAppName())
-      .addArgument("-o", "json")
-      .exec();
-
-    const description: IDescribeConfig =
-      resource.description || Object.create(null);
 
     // get container name from storage
 
@@ -137,6 +127,8 @@ export default class StartDevModeCommand implements ICommand {
 
     host.log(`[start dev] Container: ${containerName}`, true);
 
+    this.containerName = containerName;
+
     if (containerName === "nocalhost-dev") {
       let r = await host.showInformationMessage(
         `This container is developing. You may have problem after enter DevMode at the same time. Do you want to continue?`,
@@ -150,8 +142,7 @@ export default class StartDevModeCommand implements ICommand {
     const destDir = await this.cloneOrGetFolderDir(
       appName,
       node,
-      containerName,
-      description.associate
+      containerName
     );
     if (!destDir) {
       return;
@@ -422,31 +413,32 @@ export default class StartDevModeCommand implements ICommand {
   }
 
   private async getAssociateDirectory(): Promise<string> {
-    const node = this.node;
-    const profile = await nhctl.getServiceConfig(
+    const { containerName, node } = this;
+
+    const associateDir = await nhctl.associateInfo(
       node.getKubeConfigPath(),
       node.getNameSpace(),
       node.getAppName(),
+      node.resourceType,
       node.name,
-      node.resourceType
+      containerName
     );
 
-    return profile.associate;
+    return associateDir;
   }
 
   private async cloneOrGetFolderDir(
     appName: string,
     node: ControllerNodeApi,
-    containerName: string,
-    associateDir: string
+    containerName: string
   ) {
-    let destDir: string | undefined | boolean = associateDir;
-
+    let destDir: string | undefined | boolean;
+    const associateDir = await this.getAssociateDirectory();
     const currentUri = host.getCurrentRootPath();
 
-    if (!(await this.getAssociateDirectory())) {
+    if (!associateDir) {
       destDir = await this.firstOpen(appName, node, containerName);
-    } else if (currentUri !== (await this.getAssociateDirectory())) {
+    } else if (currentUri !== associateDir) {
       destDir = await this.getTargetDirectory();
     } else {
       destDir = true;

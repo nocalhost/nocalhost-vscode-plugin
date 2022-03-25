@@ -12,9 +12,6 @@ export const SHOW_CONTEXT_GLOBAL = "Nocalhost.showContextGlobal";
 export const RESET_PLUGIN = "Nocalhost.resetPlugin";
 
 export const EDIT_SERVICE_CONFIG = "Nocalhost.editServiceConfig";
-export const WRITE_SERVICE_CONFIG = "Nocalhost.writeServiceConfig";
-
-export const EDIT_APP_CONFIG = "Nocalhost.EditAppConfig";
 
 export const START_DEV_MODE = "Nocalhost.startDevMode";
 export const START_COPY_DEV_MODE = "Nocalhost.startCopyDevMode";
@@ -36,7 +33,6 @@ export const UNINSTALL_APP = "Nocalhost.uninstallApp";
 export const RESET_DEVSPACE = "Nocalhost.resetDevspace";
 export const UPGRADE_APP = "Nocalhost.upgradeApp";
 
-export const LOAD_RESOURCE = "Nocalhost.loadResource";
 export const EDIT_MANIFEST = "Nocalhost.editManifest";
 export const LOG = "Nocalhost.log";
 export const EXEC = "Nocalhost.exec";
@@ -45,15 +41,17 @@ export const COPY_TERMINAL = "Nocalhost.copyTerminal";
 export const PORT_FORWARD = "Nocalhost.portForward";
 
 export const CLEAN_PVC = "Nocalhost.cleanPvc";
-export const LOAD_WORKLOADS = "Nocalhost.loadWorkloads";
 export const VIEW_KUBECONFIG = "Nocalhost.viewKubeConfig";
 export const ASSOCIATE_LOCAL_DIRECTORY = "Nocalhost.associateLocalDirectory";
 
 export const APPLY_KUBERNETES_OBJECT = "Nocalhost.applyKubernetesObject";
 export const DELETE_KUBERNETES_OBJECT = "Nocalhost.deleteKubernetesObject";
+
 export const SYNC_SERVICE = "Nocalhost.syncService";
 export const OVERRIDE_SYNC = "Nocalhost.overrideSync";
 export const RECONNECT_SYNC = "Nocalhost.reconnectSync";
+export const OPEN_SYNC_COMMAND = "Nocalhost.openSyncCommand";
+export const OPEN_SYNC_DASHBOARD = "Nocalhost.openSyncDashboard";
 
 // debug
 export const DEBUG = "Nocalhost.debug";

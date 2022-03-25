@@ -1,19 +1,22 @@
 const { waitForMessage } = require("./index");
 const path = require("path");
 const { homedir } = require("os");
-const shell = require("shelljs");
+const shellWhich = require("which");
 
 /**
  * @param {puppeteer.Page} page
  */
-async function download(page) {
-  const result = shell.which(path.resolve(homedir(), ".nh", "bin", "nhctl"));
+async function download() {
+  const result = !!shellWhich.sync(
+    path.resolve(homedir(), ".nh", "bin", "nhctl"),
+    { nothrow: true }
+  );
   if (result && result.code === 0) {
     return;
   }
 
-  await waitForMessage(page, "Downloading nhctl");
+  await waitForMessage("Downloading nhctl");
 
-  await waitForMessage(page, "Download completed", 10 * 60 * 1000);
+  await waitForMessage("Download completed", 10 * 60 * 1000);
 }
 module.exports = { download };

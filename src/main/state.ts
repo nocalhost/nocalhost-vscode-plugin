@@ -51,8 +51,6 @@ class State {
       this.queueRender.push(id);
 
       this.startRender();
-
-      logger.info("render node id: " + id);
     }
   }
 
@@ -67,15 +65,18 @@ class State {
       clearTimeout(this.autoRefreshTimeId);
     }
 
-    if (force && this.cancellationToken) {
-      this.queueRender.length = 0;
+    if (force) {
+      if (!this.cancellationToken) {
+        return;
+      }
+
       this.cancellationToken.cancel();
       this.cancellationToken = null;
     }
   }
 
   cancellationToken: vscode.CancellationTokenSource;
-  private autoRefresh() {
+  private async autoRefresh() {
     if (this.cancellationToken) {
       return;
     }
@@ -87,7 +88,6 @@ class State {
 
     const refresh = async () => {
       const { token } = action;
-
       try {
         const rootNode = this.getNode("Nocalhost") as BaseNocalhostNode;
         if (rootNode) {
@@ -252,23 +252,21 @@ class State {
   ) {
     const stateId = node.getNodeStateId();
 
-    for (let key of this.stateMap.keys()) {
-      if (key.startsWith(stateId)) {
-        logger.debug("stateMap", key);
-        this.stateMap.delete(key);
-      }
-    }
+    const deleteMap = (map: Map<string, any>) => {
+      Array.from(map.keys())
+        .filter((key) => key.startsWith(stateId))
+        .forEach((key) => map.delete(key));
+    };
+
+    deleteMap(this.stateMap);
+
+    deleteMap(this.dataMap);
 
     if (!deleteRefresh) {
       return;
     }
 
-    for (let key of this.refreshFolderMap.keys()) {
-      if (key.startsWith(stateId)) {
-        logger.debug("cleanAutoRefresh", key);
-        this.refreshFolderMap.delete(key);
-      }
-    }
+    deleteMap(this.refreshFolderMap);
   }
 }
 

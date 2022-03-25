@@ -38,7 +38,6 @@ import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
 import NocalhostWebviewPanel from "./webview/NocalhostWebviewPanel";
-import TextDocumentContentProvider from "./textDocumentContentProvider";
 import { checkVersion } from "./ctl/nhctl";
 import logger from "./utils/logger";
 import * as fileUtil from "./utils/fileUtil";
@@ -51,13 +50,12 @@ import { HomeWebViewProvider } from "./webview/HomePage";
 import { unlock } from "./utils/download";
 // import DataCenter from "./common/DataCenter/index";
 import * as nls from "vscode-nls";
-import SyncServiceCommand from "./commands/SyncServiceCommand";
+import SyncServiceCommand from "./commands/sync/SyncServiceCommand";
 import { ShellExecError } from "./ctl/shell";
 import { createSyncManage } from "./component/syncManage";
 import { activateNocalhostDebug } from "./debug/nocalhost";
-
 // The example uses the file message format.
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export let appTreeView: vscode.TreeView<BaseNocalhostNode> | null | undefined;
 
@@ -69,10 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // TODO: DO NOT DELETE, FOR: [webview integration]
   // const dataCenter: DataCenter = DataCenter.getInstance();
   // dataCenter.addListener(() => appTreeProvider.refresh());
-  let homeWebViewProvider = new HomeWebViewProvider(
-    context.extensionUri,
-    appTreeProvider
-  );
+  let homeWebViewProvider = new HomeWebViewProvider(context.extensionUri);
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -108,16 +103,25 @@ export async function activate(context: vscode.ExtensionContext) {
     });
   });
 
-  const textDocumentContentProvider = TextDocumentContentProvider.getInstance();
+  if (!host.getGlobalState(WELCOME_DID_SHOW)) {
+    NocalhostWebviewPanel.open({
+      url: "/welcome",
+      title: "Welcome to Nocalhost",
+    });
+    host.setGlobalState(WELCOME_DID_SHOW, true);
+  }
 
-  let isSetVisible = false;
+  let isSetVisible =
+    host.getGlobalState(TMP_WORKLOAD_PATH) === host.getCurrentRootPath();
 
   let subs = [
     host,
     appTreeView.onDidChangeVisibility((event) => {
-      if (!isSetVisible && event.visible) {
-        isSetVisible = true;
-        host.getOutputChannel().show(true);
+      if (event.visible) {
+        if (!isSetVisible) {
+          isSetVisible = true;
+          host.getOutputChannel().show(true);
+        }
       }
     }),
     appTreeView,
@@ -129,10 +133,6 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.registerFileSystemProvider(
       "NocalhostRW",
       nocalhostFileSystemProvider
-    ),
-    vscode.workspace.registerTextDocumentContentProvider(
-      "nhtext",
-      textDocumentContentProvider
     ),
   ];
 
@@ -348,7 +348,7 @@ export async function updateServerConfigStatus() {
 }
 
 async function init(context: vscode.ExtensionContext) {
-  host.setContext(context);
+  await host.setContext(context);
   fileUtil.mkdir(NH_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_CONFIG_DIR);
   fileUtil.mkdir(PLUGIN_TEMP_DIR);
@@ -362,14 +362,6 @@ async function init(context: vscode.ExtensionContext) {
   await messageBus.init();
   await checkVersion();
   LocalClusterService.verifyLocalCluster();
-
-  const welcomeDidShow: boolean | undefined = host.getGlobalState(
-    WELCOME_DID_SHOW
-  );
-  if (!welcomeDidShow) {
-    NocalhostWebviewPanel.open({ url: "/welcome", title: "Welcome" });
-    host.setGlobalState(WELCOME_DID_SHOW, true);
-  }
 }
 
 process.on("exit", function (code) {

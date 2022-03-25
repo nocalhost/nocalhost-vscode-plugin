@@ -1,180 +1,184 @@
 const puppeteer = require("puppeteer-core");
-const {
-  getTreeView,
-  unInstall,
-  isInstallSucceed,
-  getInstallApp,
-  setInputBox,
-  quickPick,
-  checkPort,
-} = require("./index");
 const assert = require("assert");
+const retry = require("async-retry");
+
+const {
+  setInputBox,
+  selectQuickPickItem,
+  checkPort,
+  initialize,
+} = require("./index");
+
+const { dialog, file, tree, notification } = require("../lib/components");
 const logger = require("../lib/log");
 
 /**
  *
- * @param {puppeteer.Page} page
+ * @param {puppeteer.ElementHandle<Element>} node
  */
-async function install(page) {
-  let treeView = await getTreeView(page);
+async function unInstall(node, waitTime) {
+  await node.hover();
+  await page.click(".codicon-trash");
 
-  if (treeView.length === 1) {
-    await treeView[0].click();
-    await page.waitForTimeout(3000);
+  await dialog.selectAction("OK");
+
+  await page.waitForFunction(
+    `!document.querySelector(".monaco-list-rows").innerText.includes("bookinfo")`,
+    { timeout: 1 * 60 * 1000 }
+  );
+
+  await page.waitForTimeout(waitTime);
+}
+
+/**
+ * @param {string} name
+ */
+async function isInstallSucceed() {
+  await page.waitForTimeout(2_000);
+
+  await retry(
+    async () => {
+      const notice = await notification.getNotification({
+        message: "Installing application: bookinfo",
+      });
+      assert(!notice);
+    },
+    { retries: 6 }
+  );
+
+  const notice = await notification.getNotification({
+    message: "Installing application: bookinfo fail",
+  });
+
+  if (notice) {
+    await notice.dismiss();
+
+    assert(!notice);
   }
 
-  treeView = await getTreeView(page);
+  await retry(
+    async () => {
+      const bookinfo = await tree.getItem("", "default", "bookinfo");
 
-  const defaultView = await Promise.all(
-    treeView.map((item) =>
-      item.evaluate(
-        (el) =>
-          el.getAttribute("aria-level") === "2" && el.innerText === "default"
-      )
-    )
-  ).then((results) => treeView.find((_, index) => results[index]));
+      assert(bookinfo);
 
-  const className = await (
-    await defaultView.$(".monaco-tl-twistie")
-  ).evaluate((el) => el.getAttribute("class"));
+      const icon = await bookinfo.$(
+        `.custom-view-tree-node-item-icon[style$='app_connected.svg");']`
+      );
 
-  if (className.includes("collapsed")) {
-    await defaultView.click();
-    await page.waitForTimeout(3000);
+      assert(icon);
+    },
+    { retries: 6 }
+  );
+}
+
+async function install(waitTime) {
+  const bookinfo = await tree.getItem("", "default", "bookinfo");
+
+  if (bookinfo) {
+    await unInstall(bookinfo, waitTime);
   }
 
-  const app = await getInstallApp(page, "bookinfo");
+  const treeItem = await tree.getItem("", "default");
 
-  if (app) {
-    await unInstall(page, app, "bookinfo");
+  const install = await treeItem.$(".codicon-rocket");
+
+  await install.click();
+}
+
+async function checkInstall() {
+  await isInstallSucceed();
+
+  try {
+    await checkPort("39080");
+  } catch (error) {
+    logger.error("checkPort", error);
   }
-
-  const install = await defaultView.$(".codicon-rocket");
-
-  await install.evaluate((el) => el.click());
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function checkInstall(page) {
-  assert(await (await isInstallSucceed(page, "bookinfo")).jsonValue());
-  await checkPort("39080");
+async function cloneFromGit(waitTime) {
+  await install(waitTime);
+
+  await dialog.selectAction("Deploy From Git Repo");
+
+  await setInputBox("https://github.com/nocalhost/bookinfo.git");
+
+  await dialog.selectAction("Default Branch");
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function cloneFromGit(page) {
-  await install(page);
+async function installKustomizeGit() {
+  await cloneFromGit();
 
-  await setInputBox(page, "Deploy From Git Repo");
+  await selectQuickPickItem("config.kustomize.yaml");
 
-  await setInputBox(page, "https://github.com/nocalhost/bookinfo.git");
+  await dialog.selectAction("Use Default");
 
-  await setInputBox(page, "Default Branch");
-}
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installKustomizeGit(page) {
-  await cloneFromGit(page);
-
-  await quickPick(page, "config.kustomize.yaml");
-
-  await setInputBox(page, "Use Default");
-
-  await checkInstall(page);
+  await checkInstall();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installHelmGit(page) {
-  await cloneFromGit(page);
+async function installHelmGit() {
+  await cloneFromGit(15_000);
 
-  await quickPick(page, "config.helm.yaml");
+  await selectQuickPickItem("config.helm.yaml");
 
-  await setInputBox(page, "Use Default");
+  await dialog.selectAction("Use Default values");
 
-  await checkInstall(page);
+  await checkInstall();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- */
-async function installManifestGit(page) {
-  await cloneFromGit(page);
+async function installManifestGit() {
+  await cloneFromGit();
 
-  await quickPick(page, "config.manifest.git.yaml");
+  await selectQuickPickItem("config.manifest.git.yaml");
 
-  await setInputBox(page, "Use Default");
-
-  await checkInstall(page);
-}
-/**
- *
- * @param {puppeteer.Page} page
- * @param {string} path
- */
-async function installFromLocal(page, path) {
-  await install(page);
-
-  await setInputBox(page, "Deploy From Local Directory");
-
-  await setInputBox(page, path);
+  await checkInstall();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- * @param {string} path
- */
-async function installHelmLocal(page, path) {
-  await installFromLocal(page, path);
+async function installFromLocal(waitTime = 0) {
+  await install(waitTime);
 
-  await quickPick(page, "config.helm.local.yaml");
+  await dialog.selectAction("Deploy From Local Directory");
 
-  await setInputBox(page, "Use Default");
+  await file.selectPath(process.env.tmpDir);
 
-  await checkInstall(page);
+  await page.waitForTimeout(5_00);
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- * @param {string} path
- */
-async function installManifestLocal(page, path) {
-  await installFromLocal(page, path);
+async function installHelmLocal() {
+  await installFromLocal(15_000);
 
-  await quickPick(page, "config.manifest.local.yaml");
+  await selectQuickPickItem("config.helm.local.yaml");
 
-  await setInputBox(page, "Use Default");
+  await dialog.selectAction("Use Default values");
 
-  await checkInstall(page);
+  await checkInstall();
 }
 
-/**
- *
- * @param {puppeteer.Page} page
- * @param {string} path
- */
-async function installKustomizeLocal(page, path) {
-  await installFromLocal(page, path);
+async function installManifestLocal() {
+  await installFromLocal();
 
-  await quickPick(page, "config.kustomize.local.yaml");
+  await selectQuickPickItem("config.manifest.local.yaml");
 
-  await setInputBox(page, "Use Default");
-
-  await checkInstall(page);
+  await checkInstall();
 }
 
+async function installKustomizeLocal() {
+  await installFromLocal();
+
+  await selectQuickPickItem("config.kustomize.local.yaml");
+
+  await dialog.selectAction("Use Default");
+
+  await checkInstall();
+}
+
+async function installDemo() {
+  await install(0);
+
+  await dialog.selectAction("Deploy Demo");
+
+  return checkInstall();
+}
 module.exports = {
   installHelmGit,
   installManifestGit,
@@ -182,4 +186,13 @@ module.exports = {
   installHelmLocal,
   installManifestLocal,
   installKustomizeLocal,
+  installDemo,
 };
+
+(async () => {
+  if (require.main === module) {
+    process.env.tmpDir = "/Volumes/Data/project/nocalhost/bookinfo/git";
+
+    await initialize(null, installKustomizeLocal);
+  }
+})();

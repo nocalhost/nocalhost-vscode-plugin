@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ES2018",
+    "outDir": "../out",
+    "rootDir": "./",
+    "typeRoots": ["./typings"],
+    "experimentalDecorators": true,
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "strictNullChecks": false,
+    "jsx": "react",
+    "lib": ["dom", "esnext"],
+    "types": ["@types/jest", "highlight.js/types"],
+    "esModuleInterop": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["./"],
+  "exclude": ["node_modules"]
+}

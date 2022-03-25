@@ -15,17 +15,16 @@ import { PhpDebugProvider } from "./phpDebugProvider";
 import { RubyDebugProvider } from "./rubyDebugProvider";
 import { IDebugProvider } from "./IDebugProvider";
 import { which } from "../../ctl/shell";
+import { Language } from "../../service/configService";
 
-export const supportLanguage = {
+export const supportLanguage: Record<Language, new () => IDebugProvider> = {
   node: NodeDebugProvider,
   java: JavaDebugProvider,
-  golang: GoDebugProvider,
   python: PythonDebugProvider,
   php: PhpDebugProvider,
   ruby: RubyDebugProvider,
+  go: GoDebugProvider,
 };
-
-type Language = keyof typeof supportLanguage;
 
 async function chooseDebugProvider(type?: Language): Promise<IDebugProvider> {
   const supportType = Object.keys(supportLanguage) as Array<Language>;

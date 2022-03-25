@@ -12,33 +12,41 @@ jobs:
     name: build test plugin
     runs-on: macos-10.15
     steps:
-      - name: Set up Node 1.x
-        uses: actions/setup-node@v2.1.3
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12.x
+          node-version: ^14
+
+      - uses: pnpm/action-setup@v2.1.0
+        with:
+          version: 6
+          run_install: false
 
       - name: Check out code into the project's root directory
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - uses: actions/cache@v2
-        id: yarn-cache
+        id: pnpm-cache
         with:
           path: "**/node_modules"
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          key: ${{ runner.os }}-build-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-build
 
-      - name: Install project dependencies
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: yarn
+      - uses: pnpm/action-setup@v2.1.0
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        with:
+          version: 6
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile]
+            - args: [--no-optional]
 
       - name: Build
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-        run: |
-          yarn build
-          mv nocalhost-*.vsix nocalhost.vsix
-
+        run: pnpm build
+          
       - name: Push to Coding Artifacts
         if: ${{ github.ref != 'refs/heads/dev' }}
         run: |

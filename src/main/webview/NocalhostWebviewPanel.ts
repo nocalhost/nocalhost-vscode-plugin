@@ -8,6 +8,7 @@ import MessageManager, {
 import Stack from "../common/Stack";
 import CallableStack from "../common/Stack/CallableStack";
 import host from "../host";
+import { resolveExtensionFilePath } from "../utils/fileUtil";
 
 interface IWebviewOpenProps {
   url: string;
@@ -22,10 +23,8 @@ export default class NocalhostWebviewPanel {
   public static readonly viewType: string = "nocalhostWebview";
   public static currentPanel: NocalhostWebviewPanel | null = null;
   private static id: number = 0;
-  private static readonly panels: Map<
-    number,
-    NocalhostWebviewPanel
-  > = new Map();
+  private static readonly panels: Map<number, NocalhostWebviewPanel> =
+    new Map();
   private static readonly messageManager: MessageManager = new MessageManager();
 
   private id: number = 0;
@@ -49,9 +48,8 @@ export default class NocalhostWebviewPanel {
     if (Object.keys(query).length > 0) {
       url = `${url}?${qs.stringify(query)}`;
     }
-    const panel:
-      | NocalhostWebviewPanel
-      | undefined = NocalhostWebviewPanel.getPanelByURL(url);
+    const panel: NocalhostWebviewPanel =
+      NocalhostWebviewPanel.getPanelByURL(url);
     if (panel) {
       NocalhostWebviewPanel.openOnExistPanel(panel, url, title, column);
     } else {
@@ -79,9 +77,8 @@ export default class NocalhostWebviewPanel {
       );
       return;
     }
-    const targetPanel:
-      | NocalhostWebviewPanel
-      | undefined = NocalhostWebviewPanel.panels.get(id);
+    const targetPanel: NocalhostWebviewPanel | undefined =
+      NocalhostWebviewPanel.panels.get(id);
     if (targetPanel) {
       targetPanel.panel?.webview.postMessage(message);
       targetPanel.postMessageStack.push(message);
@@ -144,6 +141,9 @@ export default class NocalhostWebviewPanel {
         enableScripts: true,
       }
     );
+
+    webviewPanel.iconPath = resolveExtensionFilePath("images", "logo.svg");
+
     const panel: NocalhostWebviewPanel = new NocalhostWebviewPanel(
       id,
       url,
@@ -214,7 +214,20 @@ export default class NocalhostWebviewPanel {
       null,
       this.disposables
     );
+
     process.nextTick(this.update.bind(this));
+
+    NocalhostWebviewPanel.addMessageListener(({ type }, id) => {
+      if (type === "init" && id === this.id) {
+        NocalhostWebviewPanel.postMessage(
+          {
+            type: "location/redirect",
+            payload: { url },
+          },
+          this.id
+        );
+      }
+    });
   }
 
   private didDispose(): void {
@@ -241,7 +254,11 @@ export default class NocalhostWebviewPanel {
       this.inactiveHandlerStack.exec();
     }
   }
-
+  private getAppStatic(name: string) {
+    return this.panel.webview.asWebviewUri(
+      resolveExtensionFilePath("dist", "static", "app", name)
+    );
+  }
   private getHtml(): string {
     if (!this.panel) {
       return "";
@@ -251,19 +268,23 @@ export default class NocalhostWebviewPanel {
     if (!webview || !extensionPath) {
       return "";
     }
+
     const bundlePath: vscode.Uri = webview.asWebviewUri(
       vscode.Uri.file(path.join(extensionPath, "dist", `renderer_v1.js`))
     );
-    const syntaxThemeLight: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", `atom-one-light.css`))
-    );
-    const syntaxThemeDark: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", `vs2015.css`))
-    );
-    const fontPath: vscode.Uri = webview.asWebviewUri(
-      vscode.Uri.file(path.join(extensionPath, "dist", `DroidSansMono_v1.ttf`))
-    );
-    const lang = vscode.env.language;
+
+    const lightCss = this.getAppStatic("atom-one-light.css");
+    const darkCss = this.getAppStatic("vs2015.css");
+    const font = this.getAppStatic("DroidSansMono_v1.ttf");
+
+    let markdownLinkBlock = "";
+
+    if (this.url === "/welcome") {
+      markdownLinkBlock = `<link href="${this.getAppStatic(
+        "markdown.css"
+      )}" rel="stylesheet">`;
+    }
+
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -271,28 +292,20 @@ export default class NocalhostWebviewPanel {
           <title>Nocalhost</title>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link id="syntax-theme" type="text/css" rel="stylesheet" data-light="${syntaxThemeLight}" data-dark="${syntaxThemeDark}" href="${syntaxThemeDark}" />
+          <link id="syntax-theme" type="text/css" rel="stylesheet" data-light="${lightCss}" data-dark="${darkCss}" href="${darkCss}" />
+          ${markdownLinkBlock}
           <style type="text/css">
             @font-face {
               font-family: 'droidsansmono';
-              src: url(${fontPath}) format("truetype");
+              src: url(${font}) format("truetype");
               font-weight: normal;
               font-style: normal;
             }
           </style>
-          <script>
-            window.process = {
-              env: {
-                NODE_ENV: "production",
-                
-              },
-              lang: ${lang}
-            }
-          </script>
         </head>
         <body>
           <div id="root"></div>
-          <script src="${bundlePath}"></script>
+          <script type="module" src="${bundlePath}"></script>
         </body>
       </html>
     `;

@@ -1,4 +1,5 @@
 .vscode/**
+.screenshot
 .vscode-test/**
 out/**
 src/**
@@ -19,3 +20,5 @@ yarn-error.log
 .prettierignore
 jest.config.js
 jest.setup.js
+pnpm-lock.yaml
+static

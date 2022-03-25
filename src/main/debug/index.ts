@@ -1,9 +1,11 @@
-import * as assert from "assert";
+import assert = require("assert");
 import * as vscode from "vscode";
-import * as AsyncRetry from "async-retry";
-import * as getPort from "get-port";
+import AsyncRetry = require("async-retry");
+import getPort = require("get-port");
 
-import SyncServiceCommand, { SyncMsg } from "../commands/SyncServiceCommand";
+import SyncServiceCommand, {
+  SyncMsg,
+} from "../commands/sync/SyncServiceCommand";
 import {
   associate,
   getServiceConfig,
@@ -140,17 +142,14 @@ export async function waitForSync(node: ControllerResourceNode, name: string) {
 }
 
 export async function getContainer(node: ControllerResourceNode) {
-  let serviceConfig = await node.config;
+  let serviceConfig = await ConfigService.getAppConfig<NocalhostServiceConfig>(
+    node.getKubeConfigPath(),
+    node.getNameSpace(),
+    node.getAppName(),
+    node.name,
+    node.resourceType
+  );
 
-  if (!serviceConfig) {
-    serviceConfig = (await ConfigService.getAppConfig(
-      node.getKubeConfigPath(),
-      node.getNameSpace(),
-      node.getAppName(),
-      node.name,
-      node.resourceType
-    )) as NocalhostServiceConfig;
-  }
   const containers = (serviceConfig && serviceConfig.containers) || [];
   let container: ContainerConfig;
 
