@@ -34,13 +34,17 @@ async function loginServer() {
 }
 
 async function getIframe() {
-  const parentHandle = await page
-    .waitForSelector("#webview-webviewview-nocalhost-home .webview.ready")
+  await page
+    .waitForSelector(".webview.ready", {
+      timeout: 60_000,
+    })
     .catch(() => {
-      process.kill();
+      process.kill(process.pid);
     });
 
-  const parent = await parentHandle.contentFrame();
+  const parentHandle = await page.$$(".webview.ready");
+
+  const parent = await parentHandle[1].contentFrame();
 
   assert.ok(parent);
 
