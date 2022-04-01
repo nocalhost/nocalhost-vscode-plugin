@@ -37,7 +37,7 @@ async function getIframe() {
   const parentHandle = await page
     .waitForSelector("#webview-webviewview-nocalhost-home .webview.ready")
     .catch(() => {
-      process.exit(-1);
+      process.kill();
     });
 
   const parent = await parentHandle.contentFrame();
