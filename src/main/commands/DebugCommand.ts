@@ -50,6 +50,8 @@ export default class DebugCommand implements ICommand {
     this.node = node;
     this.container = await getContainer(node);
 
+    const debugProvider = await this.getDebugProvider();
+
     this.validateDebugConfig(this.container);
 
     if (!param?.command) {
@@ -63,8 +65,6 @@ export default class DebugCommand implements ICommand {
         return;
       }
     }
-
-    const debugProvider = await this.getDebugProvider();
 
     await waitForSync(node, DEBUG);
 
