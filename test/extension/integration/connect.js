@@ -34,21 +34,22 @@ async function loginServer() {
 }
 
 async function getIframe() {
-  await page
-    .waitForSelector(".webview.ready", {
+  const parentHandle = await page.waitForSelector(
+    `.webview.ready[src$="purpose=webviewView"]`,
+    {
       timeout: 60_000,
-    })
-    .catch(() => {
-      process.kill(process.pid);
-    });
+    }
+  );
 
-  const parentHandle = await page.$$(".webview.ready");
-
-  const parent = await parentHandle[1].contentFrame();
+  const parent = await parentHandle.contentFrame();
 
   assert.ok(parent);
 
   const iframeHandle = await parent.waitForSelector("#active-frame");
+
+  assert.ok(parent);
+  assert.ok(iframeHandle);
+
   const iframe = await iframeHandle.contentFrame();
 
   await iframe.waitForSelector(".nocalhost-tab");
