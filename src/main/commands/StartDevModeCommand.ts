@@ -21,6 +21,7 @@ import {
   TMP_STORAGE_CLASS,
   TMP_WORKLOAD,
   TMP_WORKLOAD_PATH,
+  TMP_HEADER,
 } from "../constants";
 import host, { Host } from "../host";
 import * as path from "path";
@@ -56,6 +57,7 @@ export interface ControllerNodeApi {
 type StartDevModeInfoType = {
   image?: string;
   mode?: "replace" | "copy";
+  header?: string;
   command?: string;
 };
 export default class StartDevModeCommand implements ICommand {
@@ -78,6 +80,7 @@ export default class StartDevModeCommand implements ICommand {
 
     let image = info?.image;
     const mode = info?.mode || "replace";
+    const header = info?.header;
     this.node = node;
     this.info = info;
 
@@ -168,7 +171,15 @@ export default class StartDevModeCommand implements ICommand {
       destDir === true ||
       (destDir && destDir === host.getCurrentRootPath())
     ) {
-      await this.startDevMode(host, appName, node, containerName, mode, image);
+      await this.startDevMode(
+        host,
+        appName,
+        node,
+        containerName,
+        mode,
+        image,
+        header
+      );
     } else if (destDir) {
       this.saveAndOpenFolder(
         appName,
@@ -176,7 +187,8 @@ export default class StartDevModeCommand implements ICommand {
         destDir,
         containerName,
         mode,
-        image
+        image,
+        header
       );
       messageBus.emit("devStart", {
         name: appName,
@@ -237,7 +249,8 @@ export default class StartDevModeCommand implements ICommand {
     destDir: string,
     containerName: string,
     mode: string,
-    image: string
+    image: string,
+    header: string
   ) {
     const currentUri = host.getCurrentRootPath();
 
@@ -250,7 +263,8 @@ export default class StartDevModeCommand implements ICommand {
         node as ControllerResourceNode,
         containerName,
         mode,
-        image
+        image,
+        header
       );
     }
   }
@@ -469,7 +483,8 @@ export default class StartDevModeCommand implements ICommand {
     node: ControllerNodeApi,
     containerName: string,
     mode: "replace" | "copy",
-    image: string
+    image: string,
+    header?: string
   ) {
     const currentUri = host.getCurrentRootPath() || os.homedir();
 
@@ -499,7 +514,8 @@ export default class StartDevModeCommand implements ICommand {
         containerName,
         node.getStorageClass(),
         node.getDevStartAppendCommand(),
-        image
+        image,
+        header
       );
       host.log("dev start end", true);
       host.log("", true);
@@ -568,7 +584,8 @@ export default class StartDevModeCommand implements ICommand {
     node: ControllerResourceNode,
     containerName: string,
     mode: string,
-    image: string
+    image: string,
+    header: string
   ) {
     const appNode = node.getAppNode();
     host.setGlobalState(TMP_ID, node.getNodeStateId());
@@ -587,6 +604,7 @@ export default class StartDevModeCommand implements ICommand {
     }
 
     host.setGlobalState(TMP_MODE, mode);
+    host.setGlobalState(TMP_HEADER, header);
     host.setGlobalState(TMP_DEV_START_IMAGE, image);
     const storageClass = node.getStorageClass();
     if (storageClass) {

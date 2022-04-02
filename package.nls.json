@@ -39,6 +39,7 @@
   "viewDevConfig": "View Dev Configs",
   "resetPod": "Reset Pod",
   "startCopyDevMode": "Start DevMode(Duplicate)",
+  "startMeshDevMode": "Start Mesh(Duplicate)",
 
   "switchAssociate": "Switch This Service as Current Service",
   "disassociateAssociate": "Disassociate from Current Directory",

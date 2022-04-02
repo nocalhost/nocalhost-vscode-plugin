@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.16-alpha.f0d3f86",
+  "version": "0.6.16-alpha.82f3148",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -205,6 +205,11 @@
         },
         {
           "command": "Nocalhost.startCopyDevMode",
+          "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
+          "group": "navigation"
+        },
+        {
+          "command": "Nocalhost.startMeshDevMode",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
           "group": "navigation"
         },
@@ -471,6 +476,11 @@
       {
         "command": "Nocalhost.startCopyDevMode",
         "title": "%startCopyDevMode%",
+        "icon": "images/icon/dev_copy.svg"
+      },
+      {
+        "command": "Nocalhost.startMeshDevMode",
+        "title": "%startMeshDevMode%",
         "icon": "images/icon/dev_copy.svg"
       },
       {
