@@ -28,12 +28,16 @@ jobs:
         with:
           version: 6
           run_install: false
+      - run: |
+          BRANCH=${GITHUB_HEAD_REF:-$(git rev-parse --abbrev-ref HEAD)}
+          BRANCH=${BRANCH/\//-}
+          echo "BRANCH=$BRANCH">>$GITHUB_ENV
 
       - uses: actions/cache@v2
         id: pnpm-cache
         with:
           path: "**/node_modules"
-          key: ${{ runner.os }}-ui-test-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${BRANCH}-${{ runner.os }}-ui-test-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-ui-test
 
       - uses: pnpm/action-setup@v2.1.0
