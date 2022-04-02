@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.16-alpha.b187299",
+  "version": "0.6.16-alpha.0bc690b",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -51,15 +51,6 @@
             ],
             "default": "on",
             "description": "%nocalhost.nhctl.checkVersion%"
-          },
-          "nocalhost.showWelcome": {
-            "type": "string",
-            "enum": [
-              "on",
-              "off"
-            ],
-            "default": "on",
-            "description": "%nocalhost.showWelcome%"
           }
         }
       }
@@ -160,7 +151,7 @@
         {
           "command": "Nocalhost.run",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
-          "group": "developing@3"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.debug",
@@ -190,7 +181,7 @@
         {
           "command": "Nocalhost.applyKubernetesObject",
           "when": "viewItem =~ /^application-(.*)-installed/i",
-          "group": "application@2"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.upgradeApp",
@@ -215,7 +206,7 @@
         {
           "command": "Nocalhost.startCopyDevMode",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
-          "group": "navigation"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.endDevMode",
@@ -250,7 +241,7 @@
         {
           "command": "Nocalhost.log",
           "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(?!vpn_)/i",
-          "group": "1"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.editManifest",
@@ -261,7 +252,7 @@
         {
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(?!vpn_)/i",
-          "group": "1"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.portForward",

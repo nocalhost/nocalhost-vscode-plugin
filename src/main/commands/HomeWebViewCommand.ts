@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import host from "../host";
-import { getConfiguration, Switch, updateConfiguration } from "../utils/config";
 import { ADD_KUBECONFIG } from "./constants";
 
 import ICommand from "./ICommand";
@@ -11,13 +10,8 @@ export default class HomeWebViewCommand implements ICommand {
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
-  async execCommand(args?: any) {
-    const { command, data } = args;
-
-    if (data === "startup") {
-      this.setWelCome();
-      return;
-    }
+  async execCommand(params?: any) {
+    const { command, data } = params;
 
     try {
       // Because of https://github.com/microsoft/vscode/issues/105774, run the command twice which seems to fix things
@@ -37,11 +31,5 @@ export default class HomeWebViewCommand implements ICommand {
     await host.delay(100);
 
     vscode.commands.executeCommand(command, data);
-  }
-  setWelCome() {
-    let showWelcome: Switch =
-      getConfiguration("showWelcome") === "off" ? "on" : "off";
-
-    updateConfiguration("showWelcome", showWelcome);
   }
 }

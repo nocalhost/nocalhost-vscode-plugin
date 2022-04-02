@@ -35,7 +35,10 @@ async function loginServer() {
 
 async function getIframe() {
   const parentHandle = await page.waitForSelector(
-    "#webview-webviewview-nocalhost-home .webview.ready"
+    `.webview.ready[src$="purpose=webviewView"]`,
+    {
+      timeout: 60_000,
+    }
   );
 
   const parent = await parentHandle.contentFrame();
@@ -43,6 +46,10 @@ async function getIframe() {
   assert.ok(parent);
 
   const iframeHandle = await parent.waitForSelector("#active-frame");
+
+  assert.ok(parent);
+  assert.ok(iframeHandle);
+
   const iframe = await iframeHandle.contentFrame();
 
   await iframe.waitForSelector(".nocalhost-tab");
@@ -55,9 +62,9 @@ async function pasteAsText() {
   const tabs = await (await iframe.$(".nocalhost-tab")).$$(":scope > *");
   await tabs[0].click();
 
-  const buttons = await (await iframe.$(".MuiTabs-flexContainer")).$$(
-    ":scope > *"
-  );
+  const buttons = await (
+    await iframe.$(".MuiTabs-flexContainer")
+  ).$$(":scope > *");
   await buttons[1].click();
 
   await iframe.focus('[placeholder="KubeConfig"]');

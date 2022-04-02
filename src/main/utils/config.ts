@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 
-type ConfigName = "checkNhctlVersion" | "showWelcome";
+type ConfigName = "checkNhctlVersion";
 
 export type Switch = "on" | "off";
 
-export function getConfiguration<T>(name: ConfigName) {
+export function getConfiguration<T = any>(name: ConfigName) {
   return (vscode.workspace.getConfiguration().get(`nocalhost.${name}`) ||
     null) as T;
 }
