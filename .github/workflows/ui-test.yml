@@ -37,7 +37,7 @@ jobs:
         id: pnpm-cache
         with:
           path: "**/node_modules"
-          key: ${BRANCH}-${{ runner.os }}-ui-test-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ BRANCH }}-${{ runner.os }}-ui-test-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-ui-test
 
       - uses: pnpm/action-setup@v2.1.0
