@@ -9,7 +9,14 @@ const { editConfigTests } = require("../integration/editConfig.test");
 const { remoteRunTests } = require("../integration/remoteRun.test");
 const { applyManifestTests } = require("../integration/applyManifest.test");
 
-it("install manifest", installManifestLocal);
+it("install manifest", () => {
+  return installManifestLocal().catch(() => {
+    setTimeout(() => {
+      process.kill(process.pid);
+    }, 1_000);
+    throw err;
+  });
+});
 
 describe("portForward", portForwardTests);
 describe("devMode", devModeTests);

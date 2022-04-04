@@ -8,7 +8,8 @@ const puppeteer = require("puppeteer-core");
  */
 async function getTreeItem(level, name) {
   await page.waitForSelector(
-    `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`
+    `#workbench\\.parts\\.sidebar .monaco-list-row[aria-level='${level}']`,
+    30_000
   );
 
   const treeView = await page.$$(
