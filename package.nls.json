@@ -47,7 +47,7 @@
   "resumeSync": "Resume File Sync",
   "sync.openDashboard": "Open Sync Dashboard",
 
-  "startProxyMode": "Start ProxyMode(Beta)",
+  "startProxyMode": "Start ProxyMode",
   "resumeProxyMode": "Resume ProxyMode",
   "endProxyMode": "Stop ProxyMode"
 }
