@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.16-alpha.47e8bb4",
+  "version": "0.6.16-alpha.da5d0ea",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -426,7 +426,10 @@
       {
         "command": "Nocalhost.LocateWorkNode",
         "title": "Locate Current Service",
-        "icon": "images/icon/locate.svg"
+        "icon": {
+          "dark": "images/icon/locate.svg",
+          "light": "images/icon/locate_light.svg"
+        }
       },
       {
         "command": "Nocalhost.installAppSource",
