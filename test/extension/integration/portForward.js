@@ -39,7 +39,6 @@ async function checkReady() {
 
 async function add() {
   const treeItem = await tree.getItem(...treeItemPath);
-
   const portForward = await treeItem.$(".action-label[title='Port Forward']");
   await portForward.click();
 
