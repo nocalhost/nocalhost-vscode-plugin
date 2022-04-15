@@ -15,6 +15,7 @@ export const EDIT_SERVICE_CONFIG = "Nocalhost.editServiceConfig";
 
 export const START_DEV_MODE = "Nocalhost.startDevMode";
 export const START_COPY_DEV_MODE = "Nocalhost.startCopyDevMode";
+export const START_MESH_DEV_MODE = "Nocalhost.startMeshDevMode";
 export const END_DEV_MODE = "Nocalhost.endDevMode";
 export const RESET = "Nocalhost.reset";
 

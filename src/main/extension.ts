@@ -24,6 +24,7 @@ import {
   TMP_ID,
   TMP_CONTAINER,
   TMP_MODE,
+  TMP_HEADER,
   TMP_DEVSPACE,
   TMP_NAMESPACE,
   NH_BIN,
@@ -237,6 +238,7 @@ function launchDevSpace() {
   );
   const tmpContainer = host.getGlobalState(TMP_CONTAINER);
   const tmpMode = host.getGlobalState(TMP_MODE);
+  const tmpHeader = host.getGlobalState(TMP_HEADER);
   const tmpImage = host.getGlobalState(TMP_DEV_START_IMAGE);
 
   if (tmpApp && tmpWorkload && tmpStatusId && tmpResourceType) {
@@ -300,6 +302,7 @@ function launchDevSpace() {
       mode: tmpMode,
       image: tmpImage,
       command: tmpCommand,
+      header: tmpHeader,
     });
   }
 }

@@ -81,8 +81,6 @@ export default class RunCommand implements ICommand {
         this.isReload = true;
 
         await this.terminal.restart();
-
-        this.isReload = false;
       });
 
       this.disposable.push(liveReload);
@@ -119,7 +117,10 @@ export default class RunCommand implements ICommand {
       spawn: {
         command,
         close: () => {
-          this.dispose(false);
+          if (!this.isReload) {
+            this.dispose();
+          }
+          this.isReload = false;
         },
       },
     });
@@ -128,11 +129,11 @@ export default class RunCommand implements ICommand {
     this.terminal = terminal;
   }
 
-  async dispose(closeTerminal: boolean = true) {
+  async dispose() {
     this.disposable.forEach((d) => d.dispose());
     this.disposable.length = 0;
 
-    if (closeTerminal && this.terminal) {
+    if (this.terminal) {
       this.terminal.dispose();
     }
   }

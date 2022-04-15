@@ -39,6 +39,7 @@
   "viewDevConfig": "View Dev Configs",
   "resetPod": "Reset Pod",
   "startCopyDevMode": "Start DevMode(Duplicate)",
+  "startMeshDevMode": "Start Mesh(Duplicate)",
 
   "switchAssociate": "Switch This Service as Current Service",
   "disassociateAssociate": "Disassociate from Current Directory",
@@ -46,7 +47,7 @@
   "resumeSync": "Resume File Sync",
   "sync.openDashboard": "Open Sync Dashboard",
 
-  "startProxyMode": "Start ProxyMode(Beta)",
+  "startProxyMode": "Start ProxyMode",
   "resumeProxyMode": "Resume ProxyMode",
   "endProxyMode": "Stop ProxyMode"
 }

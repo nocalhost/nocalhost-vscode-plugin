@@ -47,6 +47,7 @@ import StartProxyModeCommand from "./proxy/StartProxyModeCommand";
 import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
 import EndProxyModeCommand from "./proxy/EndProxyModeCommand";
 import HomeWebViewCommand from "./HomeWebViewCommand";
+import StartMeshDevModeCommand from "./StartMeshDevModeCommand";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -107,6 +108,7 @@ export default function initCommands(
 
   new ResetPluginCommand(context);
   new StartCopyDevModeCommand(context);
+  new StartMeshDevModeCommand(context);
 
   new StartProxyModeCommand(context);
   new ResumeProxyModeCommand(context);
