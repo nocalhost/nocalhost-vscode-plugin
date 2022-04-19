@@ -67,7 +67,7 @@ jobs:
           action: devSpace.create
 
       - name: Run tests
-        timeout-minutes: 20
+        timeout-minutes: 40
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
           VIDEO_CAPTURE: 1
