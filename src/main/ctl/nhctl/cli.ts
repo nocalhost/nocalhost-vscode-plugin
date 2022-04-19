@@ -733,7 +733,8 @@ export async function devStart(
   container?: string,
   storageClass?: string,
   devStartAppendCommand?: string,
-  image?: string
+  image?: string,
+  header?: string
 ) {
   let options = "";
   if (sync.isOld && sync.dirs && sync.dirs.length > 0) {
@@ -756,7 +757,7 @@ export async function devStart(
       mode === "copy" ? "-m duplicate" : ""
     } --without-terminal  ${options} ${
       devStartAppendCommand ? devStartAppendCommand : ""
-    } ${image ? `-i ${image}` : ""}`
+    } ${image ? `-i ${image}` : ""} ${header ? `--header ${header}` : ""}`
   );
 
   return execWithProgress({
