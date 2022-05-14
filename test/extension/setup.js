@@ -4,8 +4,10 @@ const os = require("os");
 const path = require("path");
 const mkdirp = require("mkdirp");
 const retry = require("async-retry");
+const logger = require("./lib/log");
 const { start } = require(".");
 const { getWebSocketDebuggerUrl } = require(".");
+const { checkPort } = require("./integration");
 
 const DIR = path.join(
   os.tmpdir(),
@@ -29,6 +31,12 @@ async function setup() {
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
     retries: 3,
   });
+
+  logger.debug(
+    `setup pid:${pid} port:${port} checkPort:${checkPort(
+      pid
+    )} browserWSEndpoint:${browserWSEndpoint}`
+  );
 
   const browser = await puppeteer.connect({
     browserWSEndpoint,
