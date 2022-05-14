@@ -32,12 +32,6 @@ async function setup() {
     retries: 3,
   });
 
-  logger.debug(
-    `setup pid:${pid} port:${port} checkPort:${await checkPort(
-      pid
-    )} browserWSEndpoint:${browserWSEndpoint}`
-  );
-
   const browser = await puppeteer.connect({
     browserWSEndpoint,
     defaultViewport: null,
