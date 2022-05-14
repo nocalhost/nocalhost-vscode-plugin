@@ -34,15 +34,15 @@ afterEach(async () => {
 });
 
 describe("nhctl", nhctlTests);
-describe("connect", connectTests);
-describe("install", installTests);
-describe("portForward", portForwardTests);
-describe("devMode", devModeTests);
-describe("viewLog", viewLogTests);
-describe("editConfig", editConfigTests);
+// describe("connect", connectTests);
+// describe("install", installTests);
+// describe("portForward", portForwardTests);
+// describe("devMode", devModeTests);
+// describe("viewLog", viewLogTests);
+// describe("editConfig", editConfigTests);
 // remote run after edit config hotreload
-describe("remoteRun", remoteRunTests);
-describe("applyManifest", applyManifestTests);
+// describe("remoteRun", remoteRunTests);
+// describe("applyManifest", applyManifestTests);
 
 module.exports = {
   screenshotPath,

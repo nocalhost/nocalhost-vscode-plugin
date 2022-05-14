@@ -3,22 +3,16 @@ on:
   pull_request:
     branches: [dev, main]
   push:
-    branches: [test/vcluster]
+    branches: [test/ubuntu-test]
 jobs:
   test:
     strategy:
       matrix:
-        os: [macos-10.15]
-        # [ubuntu-latest]
-        # [windows-latest]
-        # [windows-latest,ubuntu-latest]
-        # [windows-latest,ubuntu-latest,macos-latest]
+        os: [ubuntu-latest]
     name: Run UI Tests
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v2
         with:
@@ -43,63 +37,62 @@ jobs:
           run_install: |
             - args: [--frozen-lockfile]
 
-      # - name: Run tests
-      #   uses: GabrielBB/xvfb-action@v1.0
+      - uses: GabrielBB/xvfb-action@v1.0
+      
+      - name: 'build'
+        run: |
+           -  pnpm run build:test
+
+      # - name: Build ext
       #   env:
-      #     KUBECONFIG_PATH: ~/config
+      #     MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
+      #     NHCTL_VERSION: dev
+      #   run: |
+      #     pnpm run build:test
+      #     rm -rf .vscode-test
+
+      # - name: Create cluster
+      #   uses: zhangjian10/nocalhost-server-cli@latest
       #   with:
-      # run: yarn run test:ext
+      #     host: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
+      #     email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
+      #     password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
+      #     action: devSpace.create
 
-      - name: Build ext
-        env:
-          MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-          NHCTL_VERSION: dev
-        run: |
-          pnpm run build:test
-          rm -rf .vscode-test
+      # - name: Run tests
+      #   timeout-minutes: 20
+      #   env:
+      #     CYPRESS_EVERY_NTH_FRAME: 1
+      #     VIDEO_CAPTURE: 1
+      #   run: pnpm run test:ext
 
-      - name: Create cluster
-        uses: zhangjian10/nocalhost-server-cli@latest
-        with:
-          host: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
-          email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
-          password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
-          action: devSpace.create
+      # - name: Artifact screenshot
+      #   if: ${{ always() }}
+      #   run: |
+      #     mkdir -p ~/.nh/screenshot
+      #     mv .screenshot/*.jpeg ~/.nh/screenshot
+      #     cp ~/.kube/config  ~/.nh
 
-      - name: Run tests
-        timeout-minutes: 20
-        env:
-          CYPRESS_EVERY_NTH_FRAME: 1
-          VIDEO_CAPTURE: 1
-        run: pnpm run test:ext
+      # - uses: actions/upload-artifact@v2
+      #   if: ${{ always() }}
+      #   with:
+      #     name: artifact-${{ runner.os }}-${{ github.run_id }}
+      #     path: |
+      #       ~/.nh/screenshot
+      #       ~/.nh/nhctl/ns
+      #       ~/.nh/nhctl/logs/nhctl.log
+      #       ~/.nh/vscode-plugin/vsc_log
 
-      - name: Artifact screenshot
-        if: ${{ always() }}
-        run: |
-          mkdir -p ~/.nh/screenshot
-          mv .screenshot/*.jpeg ~/.nh/screenshot
-          cp ~/.kube/config  ~/.nh
+      # - name: Artifact dependency
+      #   if: ${{ failure() }}
+      #   run: |
+      #     mkdir .dependency
+      #     mv .screenshot/*.mp4 .dependency/
+      #     cp ~/.nh/bin/nhctl .dependency/
+      #     cp nocalhost.vsix .dependency/
 
-      - uses: actions/upload-artifact@v2
-        if: ${{ always() }}
-        with:
-          name: artifact-${{ runner.os }}-${{ github.run_id }}
-          path: |
-            ~/.nh/screenshot
-            ~/.nh/nhctl/ns
-            ~/.nh/nhctl/logs/nhctl.log
-            ~/.nh/vscode-plugin/vsc_log
-
-      - name: Artifact dependency
-        if: ${{ failure() }}
-        run: |
-          mkdir .dependency
-          mv .screenshot/*.mp4 .dependency/
-          cp ~/.nh/bin/nhctl .dependency/
-          cp nocalhost.vsix .dependency/
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
-        with:
-          name: artifact-${{ runner.os }}-${{ github.run_id }}-dependency
-          path: .dependency
+      # - uses: actions/upload-artifact@v2
+      #   if: ${{ failure() }}
+      #   with:
+      #     name: artifact-${{ runner.os }}-${{ github.run_id }}-dependency
+      #     path: .dependency
