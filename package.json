@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.16-alpha.da5d0ea",
+  "version": "0.6.16-alpha.bc46cfb",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -151,7 +151,7 @@
         {
           "command": "Nocalhost.run",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!vpn_)/i",
-          "group": "developing@3"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.debug",
@@ -181,7 +181,7 @@
         {
           "command": "Nocalhost.applyKubernetesObject",
           "when": "viewItem =~ /^application-(.*)-installed/i",
-          "group": "application@2"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.upgradeApp",
@@ -206,7 +206,7 @@
         {
           "command": "Nocalhost.startCopyDevMode",
           "when": "viewItem =~ /^workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|crd-resources)-dev-(?!(developing-duplicate|developing-replace-self|starting|vpn_healthy|vpn_unhealthy))/i",
-          "group": "navigation"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.startMeshDevMode",
@@ -246,7 +246,7 @@
         {
           "command": "Nocalhost.log",
           "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|daemonSet|job|cronJob|pod|crd-resources)-dev-(?!vpn_)/i",
-          "group": "1"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.editManifest",
@@ -257,7 +257,7 @@
         {
           "command": "Nocalhost.portForward",
           "when": "viewItem =~ /^(viewer:|)workload-(deployment|statefulSet|job|daemonSet|cronjob|pod|pod-Running|crd-resources)-dev-(?!vpn_)/i",
-          "group": "1"
+          "group": "inline"
         },
         {
           "command": "Nocalhost.portForward",
