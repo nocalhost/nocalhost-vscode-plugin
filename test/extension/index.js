@@ -198,6 +198,10 @@ const getWebSocketDebuggerUrl = async (port) => {
     .get(`http://127.0.0.1:${port}/json/version`)
     .then((json) => {
       return json.data.webSocketDebuggerUrl;
+    })
+    .catch((err) => {
+      logger.err("getWebSocketDebuggerUrl", port);
+      throw err;
     });
 };
 
