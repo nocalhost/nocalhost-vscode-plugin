@@ -16,9 +16,10 @@ function log(str1, ...args) {
 }
 // const logger = log4js.getLogger();
 const logger = {
-  debug: log,
-  warn: log,
-  info: process.stderr.write,
+  debug: log.bind(process.stdout),
+  warn: log.bind(process.stdout),
+  info: log.bind(process.stdout),
+  err: log.bind(process.stdout),
 };
 
 module.exports = logger;
