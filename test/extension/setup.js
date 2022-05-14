@@ -33,7 +33,7 @@ async function setup() {
   });
 
   logger.debug(
-    `setup pid:${pid} port:${port} checkPort:${checkPort(
+    `setup pid:${pid} port:${port} checkPort:${await checkPort(
       pid
     )} browserWSEndpoint:${browserWSEndpoint}`
   );
