@@ -39,17 +39,13 @@ jobs:
 
       # - uses: GabrielBB/xvfb-action@v1.0
       
-      # - name: 'build'
-      #   run: |
-      #      -  pnpm run build:test
-
-      # - name: Build ext
-      #   env:
-      #     MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
-      #     NHCTL_VERSION: dev
-      #   run: |
-      #     pnpm run build:test
-      #     rm -rf .vscode-test
+      - name: Build ext
+        env:
+          MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
+          NHCTL_VERSION: dev
+        run: |
+          pnpm run build:test
+          rm -rf .vscode-test
 
       # - name: Create cluster
       #   uses: zhangjian10/nocalhost-server-cli@latest
@@ -59,12 +55,12 @@ jobs:
       #     password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
       #     action: devSpace.create
 
-      # - name: Run tests
-      #   timeout-minutes: 20
-      #   env:
-      #     CYPRESS_EVERY_NTH_FRAME: 1
-      #     VIDEO_CAPTURE: 1
-      #   run: pnpm run test:ext
+      - name: Run tests
+        timeout-minutes: 20
+        env:
+          CYPRESS_EVERY_NTH_FRAME: 1
+          VIDEO_CAPTURE: 1
+        run: pnpm run test:ext
 
       # - name: Artifact screenshot
       #   if: ${{ always() }}
