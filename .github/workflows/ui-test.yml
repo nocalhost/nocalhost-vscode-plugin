@@ -37,11 +37,11 @@ jobs:
           run_install: |
             - args: [--frozen-lockfile]
 
-      - uses: GabrielBB/xvfb-action@v1.0
+      # - uses: GabrielBB/xvfb-action@v1.0
       
-      - name: 'build'
-        run: |
-           -  pnpm run build:test
+      # - name: 'build'
+      #   run: |
+      #      -  pnpm run build:test
 
       # - name: Build ext
       #   env:
