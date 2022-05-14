@@ -7,7 +7,6 @@ const retry = require("async-retry");
 const logger = require("./lib/log");
 const { start } = require(".");
 const { getWebSocketDebuggerUrl } = require(".");
-const { checkPort } = require("./integration");
 
 const DIR = path.join(
   os.tmpdir(),
@@ -29,7 +28,7 @@ async function setup() {
   });
 
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
-    retries: 3,
+    retries: 10,
   });
 
   const browser = await puppeteer.connect({

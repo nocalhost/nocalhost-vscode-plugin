@@ -8,7 +8,7 @@ log4js.configure({
 });
 
 function log(str1, ...args) {
-  const str = `${str1} ${args.join(" ")}`;
+  const str = `${str1} ${args.join(" ")}\n`;
 
   const write = process.stdout.write.bind(process.stdout);
 
