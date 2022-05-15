@@ -2,10 +2,12 @@ const assert = require("assert");
 const { default: Axios } = require("axios");
 const retry = require("async-retry");
 
-const { tree, terminal, dialog, file } = require("../lib/components");
+const { tree, terminal, dialog, file, keyboard } = require("../lib/components");
 const logger = require("../lib/log");
-const { initialize, enterShortcutKeys, setInputBox } = require("./index");
+const { initialize, setInputBox } = require("./index");
 const { add, stop, getPortForwardPort } = require("./portForward");
+
+const { enterShortcutKeys } = keyboard;
 
 const treeItemPath = [
   "",
@@ -65,9 +67,9 @@ async function checkSyncCompletion() {
 
   await retry(
     async () => {
-      const className = await (await statusBar.$(".codicon")).evaluate(
-        (el) => el.className
-      );
+      const className = await (
+        await statusBar.$(".codicon")
+      ).evaluate((el) => el.className);
 
       assert(className.includes("codicon-check"));
     },
@@ -159,10 +161,9 @@ async function codeSync() {
 
   await checkSyncCompletion();
 
-  // await terminal.sendText("\x03");
-  await terminal.typeCtrlC();
+  // await terminal.typeCtrlC();
 
-  await terminal.sendText("./run.sh \n");
+  // await terminal.sendText("./run.sh \n");
 
   await retry(
     async () => {

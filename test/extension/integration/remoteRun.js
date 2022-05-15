@@ -1,13 +1,14 @@
 const assert = require("assert");
-const { tree } = require("../lib/components");
-const logger = require("../lib/log");
-
 const retry = require("async-retry");
 const { default: Axios } = require("axios");
+const { tree, keyboard } = require("../lib/components");
+const logger = require("../lib/log");
 
 const { add, stop, getPortForwardPort } = require("./portForward");
 const { checkSyncCompletion } = require("./devMode");
-const { enterShortcutKeys, setInputBox } = require("./index");
+const { setInputBox } = require("./index");
+
+const { enterShortcutKeys } = keyboard;
 
 const treeItemPath = [
   "",

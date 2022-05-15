@@ -12,6 +12,7 @@ const {
   startDuplicateComplete,
   stop,
 } = require("./duplicateDevMode");
+const { editConfig } = require("./editConfig");
 
 const { checkReady } = require("./portForward");
 
@@ -21,6 +22,7 @@ const devModeTests = () => {
   });
 
   describe("replace mode", () => {
+    it("editConfig", editConfig);
     it("start", start);
     it("startComplete", checkStartComplete);
     it("syncCompletion", checkSyncCompletion);

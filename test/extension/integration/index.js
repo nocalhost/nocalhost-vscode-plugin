@@ -60,7 +60,9 @@ function getQuickPick() {
    */
   async function getItemTexts() {
     return await Promise.all(
-      (await this.items).map((item) =>
+      (
+        await this.items
+      ).map((item) =>
         item.evaluate((el) => el.querySelector(".label-name").textContent)
       )
     );
@@ -237,42 +239,6 @@ async function checkPort(
     assert(data.condition(connect), data.error);
   }, data.retryOptions);
 }
-/**
- *
- * @param {Array<puppeteer.KeyInput>} key
- */
-function getSystemKeys(key) {
-  if (process.platform === "darwin") {
-    switch (key) {
-      case "ControlLeft":
-        return "MetaLeft";
-      default:
-        return key;
-    }
-  } else {
-    switch (key) {
-      case "MetaLeft":
-        return "ControlLeft";
-      default:
-        return key;
-    }
-  }
-}
-/**
- *
- * @param  {Array<puppeteer.KeyInput>} keys
- */
-async function enterShortcutKeys(...keys) {
-  for await (const key of keys) {
-    await page.keyboard.down(key);
-  }
-
-  for await (const key of keys) {
-    await page.keyboard.up(key);
-  }
-
-  await page.waitForTimeout(5_00);
-}
 
 module.exports = {
   openNocalhost,
@@ -284,5 +250,4 @@ module.exports = {
   getQuickPick,
   checkPort,
   getItemMenu,
-  enterShortcutKeys,
 };

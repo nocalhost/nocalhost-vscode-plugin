@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer-core");
+const logger = require("../log");
 
 /**
  *
@@ -6,6 +7,10 @@ const puppeteer = require("puppeteer-core");
  * @param {string} path
  */
 async function selectPath(path) {
+  logger.debug("selectPath", path);
+
+  await page.waitForTimeout(1_00);
+
   const input = await page.waitForSelector(".quick-input-widget .input");
 
   await input.evaluate((input, path) => (input.value = path), path);

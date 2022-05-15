@@ -1,3 +1,5 @@
+const { enterShortcutKeys } = require("./keyboard");
+
 async function getTerminal() {
   await page.waitForSelector(".terminal-wrapper.active .xterm-screen");
 
@@ -20,10 +22,8 @@ async function sendText(text) {
 
 async function typeCtrlC() {
   await getTerminal();
-  await page.keyboard.down("ControlLeft");
-  await page.keyboard.down("C");
-  await page.keyboard.up("C");
-  await page.keyboard.up("ControlLeft");
+
+  await enterShortcutKeys("ControlLeft", "C");
 }
 
 module.exports = { sendText, getTerminal, typeCtrlC };

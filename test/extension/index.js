@@ -134,11 +134,6 @@ const getUserDataDir = async () => {
 
   await fse.copy(path.join(__dirname, "./config/vscode"), userDataDir);
 
-  // copy test config file
-  await fse.copy(
-    path.join(__dirname, "./config/yaml"),
-    path.join(os.tmpdir(), "./config/yaml")
-  );
   return userDataDir;
 };
 
