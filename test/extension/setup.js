@@ -28,7 +28,7 @@ async function setup() {
   });
 
   const browserWSEndpoint = await retry(() => getWebSocketDebuggerUrl(port), {
-    retries: 10,
+    retries: 3,
   });
 
   const browser = await puppeteer.connect({
