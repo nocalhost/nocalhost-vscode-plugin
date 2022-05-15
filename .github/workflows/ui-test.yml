@@ -52,9 +52,8 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          apt update -y
-          apt install 
-          apt-get install -y xclip
+          sudo apt-get update -y
+          sudo apt-get install -y xclip
 
       - name: Start minikube
         uses: medyagh/setup-minikube@master
