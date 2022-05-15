@@ -27,7 +27,7 @@ const devModeTests = () => {
     it("startComplete", checkStartComplete);
     it("syncCompletion", checkSyncCompletion);
     it("runCommand", runCommand);
-    it("codeSync", codeSync);
+    // it("codeSync", codeSync);
     it("end", endDevMode);
   });
 

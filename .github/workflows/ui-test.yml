@@ -39,7 +39,6 @@ jobs:
           run_install: |
             - args: [--frozen-lockfile]
 
-      # - uses: GabrielBB/xvfb-action@v1.0
       - name: Build ext
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
