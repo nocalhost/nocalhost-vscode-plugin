@@ -58,7 +58,7 @@ jobs:
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
           VIDEO_CAPTURE: 1
-          LOGGER_LEVEL: DEUBG
+          LOGGER_LEVEL: ALL
           DISPLAY: :99.0
         run: pnpm run test:ext
 
