@@ -49,19 +49,17 @@ jobs:
           pnpm run build:test
           rm -rf .vscode-test
 
-      # - name: Create cluster
-      #   uses: zhangjian10/nocalhost-server-cli@latest
-      #   with:
-      #     host: ${{ secrets.NOCALHOST_VCLUSTER_HOST_FOR_TEST }}
-      #     email: ${{ secrets.NOCALHOST_VCLUSTER_EMAIL_FOR_TEST }}
-      #     password: ${{ secrets.NOCALHOST_VCLUSTER_PASSWORD_FOR_TEST }}
-      #     action: devSpace.create
+      - name: Start xvfb
+        if: startsWith(matrix.os, 'ubuntu')
+        run: /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Run tests
         timeout-minutes: 20
         env:
           CYPRESS_EVERY_NTH_FRAME: 1
           VIDEO_CAPTURE: 1
+          LOGGER_LEVEL: DEUBG
+          DISPLAY: :99.0
         run: pnpm run test:ext
 
       # - name: Artifact screenshot
