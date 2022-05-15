@@ -40,7 +40,6 @@ jobs:
             - args: [--frozen-lockfile]
 
       # - uses: GabrielBB/xvfb-action@v1.0
-      
       - name: Build ext
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
@@ -51,7 +50,11 @@ jobs:
 
       - name: Start xvfb
         if: startsWith(matrix.os, 'ubuntu')
-        run: /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        run: |
+          /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          apt update -y
+          apt install 
+          apt-get install -y xclip
 
       - name: Start minikube
         uses: medyagh/setup-minikube@master
