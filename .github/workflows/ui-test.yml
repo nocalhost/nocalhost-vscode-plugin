@@ -67,14 +67,12 @@ jobs:
         run: pnpm run test:ext
 
       - name: Artifact screenshot
-        if: ${{ always() }}
+        if: ${{ failure() }}
         run: |
-          mkdir -p ~/.nh/screenshot
-          mv .screenshot/*.jpeg ~/.nh/screenshot
-          cp ~/.kube/config  ~/.nh
+          mv .screenshot ~/.nh
 
       - uses: actions/upload-artifact@v2
-        if: ${{ always() }}
+        if: ${{ failure() }}
         with:
           name: artifact-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -82,17 +80,3 @@ jobs:
             ~/.nh/nhctl/ns
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
-
-      - name: Artifact dependency
-        if: ${{ failure() }}
-        run: |
-          mkdir .dependency
-          mv .screenshot/*.mp4 .dependency/
-          cp ~/.nh/bin/nhctl .dependency/
-          cp nocalhost.vsix .dependency/
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ failure() }}
-        with:
-          name: artifact-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}-dependency
-          path: .dependency
