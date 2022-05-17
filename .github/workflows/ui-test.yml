@@ -69,7 +69,8 @@ jobs:
       - name: Artifact screenshot
         if: ${{ failure() }}
         run: |
-          mv .screenshot ~/.nh
+          mkdir -p ~/.nh/screenshot
+          mv .screenshot/* ~/.nh/screenshot
 
       - uses: actions/upload-artifact@v2
         if: ${{ failure() }}
