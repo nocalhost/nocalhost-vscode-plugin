@@ -7,6 +7,7 @@ const logger = require("../lib/log");
 const { add, stop, getPortForwardPort } = require("./portForward");
 const { checkSyncCompletion } = require("./devMode");
 const { setInputBox } = require("./index");
+const { getSystemKeys } = require("../lib/components/keyboard");
 
 const { enterShortcutKeys } = keyboard;
 
@@ -37,11 +38,19 @@ const start = async () => {
 const checkHotReload = async () => {
   const port = await add();
 
-  await enterShortcutKeys("MetaLeft", "p");
+  await page.keyboard.down(getSystemKeys("MetaLeft"));
+
+  await page.keyboard.down("p");
+
+  await page.keyboard.up(getSystemKeys("MetaLeft"));
 
   await setInputBox("ratings.js");
 
-  await enterShortcutKeys("ControlLeft", "g");
+  await page.keyboard.down(getSystemKeys("MetaLeft"));
+
+  await page.keyboard.down("g");
+
+  await page.keyboard.up(getSystemKeys("MetaLeft"));
 
   await setInputBox("207:9");
 
