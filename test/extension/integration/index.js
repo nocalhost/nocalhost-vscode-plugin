@@ -41,6 +41,8 @@ async function setInputBox(text, clean = false) {
   await input.type(text, { delay: 1 });
 
   await page.keyboard.press("Enter");
+
+  await page.waitForTimeout(5_00);
 }
 
 /**

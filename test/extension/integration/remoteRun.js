@@ -40,7 +40,6 @@ const checkHotReload = async () => {
   await enterShortcutKeys("MetaLeft", "p");
   await setInputBox("ratings.js");
 
-  await page.waitForTimeout(5_00);
   await enterShortcutKeys("ControlLeft", "g");
 
   await setInputBox("207:9");
@@ -54,16 +53,15 @@ const checkHotReload = async () => {
 
   await enterShortcutKeys("MetaLeft", "s");
 
-  await page.waitForTimeout(10_000);
+  await page.waitForTimeout(5_000);
 
   await checkSyncCompletion();
 
   await retry(
     async () => {
-      const data = await Axios.get(
-        `http://127.0.0.1:${getPortForwardPort()}/health`
-      );
+      const data = await Axios.get(`http://127.0.0.1:${port}/health`);
 
+      logger.debug("check Port", data.data);
       assert(
         "status" in data.data &&
           data.data.status === "Ratings is checking for hotreload"

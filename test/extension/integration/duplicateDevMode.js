@@ -19,13 +19,6 @@ async function startDev() {
   await duplicateDev.click();
 
   logger.info("duplicate start");
-  // if ((await dialog.getActionTexts()).includes("Open another directory")) {
-  //   await dialog.selectAction("Open another directory");
-  // } else {
-  //   await dialog.selectAction("Open associated directory");
-  // }
-
-  // await file.selectPath(process.env.currentPath);
 }
 
 async function startDuplicateComplete() {
