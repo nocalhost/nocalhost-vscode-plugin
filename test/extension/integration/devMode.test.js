@@ -33,7 +33,7 @@ const devModeTests = () => {
 
   describe("duplicate mode", () => {
     it("start", startDev);
-    it("start  complete", startDuplicateComplete);
+    it("start complete", startDuplicateComplete);
     it("end", stop);
   });
 };

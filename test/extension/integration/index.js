@@ -223,22 +223,25 @@ const getPage = async (browser) => {
  * @param {string} port
  * @param {object} data
  */
-async function checkPort(
-  port,
-  data = {
-    timeout: 1_000,
-    error: "checkPort Error",
-    condition: (connect) => connect,
-    retryOptions: { randomize: false, retries: 6 },
-  }
-) {
+async function checkPort(port, data = {}) {
   await retry(async () => {
     const connect = await isPortReachable(port, {
       host: "127.0.0.1",
       timeout: data.timeout,
     });
 
-    assert(data.condition(connect), data.error);
+    assert(
+      Object.assign(
+        {
+          timeout: 1_000,
+          error: "checkPort Error",
+          condition: (connect) => connect,
+          retryOptions: { randomize: false, retries: 6 },
+        },
+        data
+      ).condition(connect),
+      data.error
+    );
   }, data.retryOptions);
 }
 

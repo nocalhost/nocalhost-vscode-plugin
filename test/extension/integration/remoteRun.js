@@ -38,6 +38,7 @@ const checkHotReload = async () => {
   const port = await add();
 
   await enterShortcutKeys("MetaLeft", "p");
+
   await setInputBox("ratings.js");
 
   await enterShortcutKeys("ControlLeft", "g");

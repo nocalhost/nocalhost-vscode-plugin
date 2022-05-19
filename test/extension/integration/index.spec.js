@@ -37,9 +37,9 @@ describe("connect", connectTests);
 describe("install", installTests);
 describe("portForward", portForwardTests);
 describe("devMode", devModeTests);
-describe("viewLog", viewLogTests);
 // remote run after edit config hotreload
 describe("remoteRun", remoteRunTests);
+describe("viewLog", viewLogTests);
 describe("applyManifest", applyManifestTests);
 
 module.exports = {
