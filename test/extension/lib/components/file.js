@@ -7,7 +7,7 @@ const logger = require("../log");
  * @param {string} path
  */
 async function selectPath(path) {
-  logger.debug("selectPath", path);
+  // logger.debug("selectPath", path);
 
   await page.waitForTimeout(1_00);
 

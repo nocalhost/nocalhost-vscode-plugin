@@ -73,7 +73,7 @@ async function checkSyncCompletion() {
 
       assert(className.includes("codicon-check"));
     },
-    { retries: 3 }
+    { retries: 4 }
   );
 
   logger.debug("sync icon");

@@ -1,14 +1,12 @@
 const assert = require("assert");
 const retry = require("async-retry");
 const { default: Axios } = require("axios");
-const { tree, keyboard } = require("../lib/components");
-const logger = require("../lib/log");
 
+const { tree, keyboard, dialog, file } = require("../lib/components");
+const logger = require("../lib/log");
 const { add, stop, getPortForwardPort } = require("./portForward");
 const { checkSyncCompletion } = require("./devMode");
 const { setInputBox } = require("./index");
-const { getSystemKeys } = require("../lib/components/keyboard");
-
 const { enterShortcutKeys } = keyboard;
 
 const treeItemPath = [
@@ -36,34 +34,24 @@ const start = async () => {
 };
 
 const checkHotReload = async () => {
+
   const port = await add();
 
-  await page.keyboard.down(getSystemKeys("MetaLeft"));
-
-  await page.keyboard.down("p");
-
-  await page.keyboard.up(getSystemKeys("MetaLeft"));
+  await enterShortcutKeys("MetaLeft", "p");
 
   await setInputBox("ratings.js");
 
-  await page.keyboard.down(getSystemKeys("MetaLeft"));
-
-  await page.keyboard.down("g");
-
-  await page.keyboard.up(getSystemKeys("MetaLeft"));
-
+  await enterShortcutKeys("MetaLeft", "g");
+  
   await setInputBox("207:9");
 
   await enterShortcutKeys("MetaLeft", "x");
 
-  await page.keyboard.press("Backspace");
   await page.keyboard.type(
     `\n\tres.end(JSON.stringify({status: 'Ratings is checking for hotreload'}))\n`
   );
 
   await enterShortcutKeys("MetaLeft", "s");
-
-  await page.waitForTimeout(5_000);
 
   await checkSyncCompletion();
 

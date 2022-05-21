@@ -185,6 +185,8 @@ const run = async (executable, args, testsEnv) => {
 
   logger.debug("pid", pid);
 
+  process.on("exit", cmd.kill);
+
   return pid;
 };
 
