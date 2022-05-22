@@ -29,7 +29,7 @@ async function sendKeyCombinations(...keys) {
 
   // //https://github.com/puppeteer/puppeteer/issues/1313#issuecomment-456506730
 
-  // await page.click(".monaco-grid-branch-node");
+  await page.focus(".monaco-grid-branch-node");
 
   // await page.keyboard.press(next);
 
