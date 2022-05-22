@@ -40,11 +40,14 @@ async function setInputBox(text, clean = false) {
   await input.click();
   await input.type(text, { delay: 1 });
 
+  await page.waitForTimeout(1_000);
+
   await input.focus();
 
   await page.keyboard.press("Enter");
+  
+  await page.waitForTimeout(1_000);
 
-  await page.waitForTimeout(5_00);
 }
 
 /**
