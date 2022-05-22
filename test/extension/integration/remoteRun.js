@@ -36,7 +36,10 @@ const start = async () => {
 };
 
 const checkHotReload = async () => {
-  const port = await getPort();
+  
+  await page.waitForTimeout(3_000);
+
+  const port = await add();
 
   // spawnSync("")
 
