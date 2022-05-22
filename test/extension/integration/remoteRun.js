@@ -7,6 +7,8 @@ const logger = require("../lib/log");
 const { add, stop, getPortForwardPort } = require("./portForward");
 const { checkSyncCompletion } = require("./devMode");
 const { setInputBox } = require("./index");
+const getPort = require("get-port");
+const { spawnSync } = require("child_process");
 const { sendKeyCombinations } = keyboard;
 
 const treeItemPath = [
@@ -34,7 +36,9 @@ const start = async () => {
 };
 
 const checkHotReload = async () => {
-  const port = await add();
+  const port = await getPort();
+
+  // spawnSync("")
 
   await tree.getItem(...treeItemPath);
 
