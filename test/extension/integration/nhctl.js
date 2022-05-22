@@ -17,6 +17,6 @@ async function download() {
 
   await waitForMessage("Downloading nhctl");
 
-  await waitForMessage("Download completed", 10 * 60 * 1000);
+  await waitForMessage("Download completed", 2 * 60 * 1000);
 }
 module.exports = { download };
