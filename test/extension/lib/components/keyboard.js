@@ -28,7 +28,8 @@ async function sendKeyCombinations(...keys) {
   // await page.keyboard.down(getKeyCode(prev));
 
   // //https://github.com/puppeteer/puppeteer/issues/1313#issuecomment-456506730
-  // await page.click("a");
+
+  await page.click(".monaco-grid-branch-node");
 
   // await page.keyboard.press(next);
 
