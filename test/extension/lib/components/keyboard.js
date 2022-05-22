@@ -2,7 +2,7 @@
  *
  * @param {Array<puppeteer.KeyInput>} key
  */
-function getSystemKeys(key) {
+function getKeyCode(key) {
   if (process.platform === "darwin") {
     switch (key) {
       case "ControlLeft":
@@ -21,15 +21,30 @@ function getSystemKeys(key) {
 }
 /**
  *
- * @param  {[puppeteer.KeyInput,puppeteer.KeyInput]} keys
+ * @param  {Array<puppeteer.KeyInput>} keys
  */
-async function enterShortcutKeys(...keys) {
-  let [prev, next] = keys;
-  await page.keyboard.down(getSystemKeys(prev));
+async function sendKeyCombinations(...keys) {
+  // let [prev, next] = keys;
+  // await page.keyboard.down(getKeyCode(prev));
 
-  await page.keyboard.press(next);
+  // //https://github.com/puppeteer/puppeteer/issues/1313#issuecomment-456506730
+  // await page.click("a");
 
-  await page.keyboard.up(getSystemKeys(prev));
+  // await page.keyboard.press(next);
+
+  // await page.keyboard.up(getKeyCode(prev));
+
+  const handle = page.keyboard;
+  for (const key of keys) {
+    const keyCode = getKeyCode(key);
+    await handle.down(keyCode);
+  }
+
+  for (const key of keys.reverse()) {
+    const keyCode = getKeyCode(key);
+    await handle.up(keyCode);
+  }
+
   // for await (const key of keys) {
   //   await page.keyboard.down(getSystemKeys(key));
   // }
@@ -61,4 +76,4 @@ async function enterShortcutKeys(...keys) {
 //   }
 // }
 
-module.exports = { enterShortcutKeys, getSystemKeys };
+module.exports = { sendKeyCombinations, getKeyCode };

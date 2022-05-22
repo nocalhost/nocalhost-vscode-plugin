@@ -1,4 +1,4 @@
-const { enterShortcutKeys } = require("./keyboard");
+const { sendKeyCombinations: enterShortcutKeys } = require("./keyboard");
 
 async function getTerminal() {
   await page.waitForSelector(".terminal-wrapper.active .xterm-screen");

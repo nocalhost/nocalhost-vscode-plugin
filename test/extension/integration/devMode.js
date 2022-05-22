@@ -7,7 +7,7 @@ const logger = require("../lib/log");
 const { initialize, setInputBox } = require("./index");
 const { add, stop, getPortForwardPort } = require("./portForward");
 
-const { enterShortcutKeys } = keyboard;
+const { sendKeyCombinations: enterShortcutKeys } = keyboard;
 
 const treeItemPath = [
   "",

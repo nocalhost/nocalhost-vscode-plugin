@@ -3,7 +3,9 @@ const yaml = require("yaml");
 const { tree } = require("../lib/components");
 const assert = require("assert");
 const retry = require("async-retry");
-const { enterShortcutKeys } = require("../lib/components/keyboard");
+const {
+  sendKeyCombinations: enterShortcutKeys,
+} = require("../lib/components/keyboard");
 
 const treeItemPath = [
   "",
