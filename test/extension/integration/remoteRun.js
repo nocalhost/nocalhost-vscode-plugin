@@ -36,6 +36,8 @@ const start = async () => {
 const checkHotReload = async () => {
   const port = await add();
 
+  await tree.getItem(...treeItemPath);
+
   await sendKeyCombinations("MetaLeft", "p");
 
   await setInputBox("ratings.js");
