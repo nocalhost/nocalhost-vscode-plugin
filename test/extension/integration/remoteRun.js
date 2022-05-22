@@ -46,6 +46,8 @@ const checkHotReload = async () => {
 
   await setInputBox("207:9");
 
+  await page.keyboard.press("Enter");
+
   await sendKeyCombinations("MetaLeft", "x");
 
   await page.keyboard.type(
