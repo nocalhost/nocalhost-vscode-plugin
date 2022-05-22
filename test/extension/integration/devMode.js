@@ -7,7 +7,7 @@ const logger = require("../lib/log");
 const { initialize, setInputBox } = require("./index");
 const { add, stop, getPortForwardPort } = require("./portForward");
 
-const { sendKeyCombinations: enterShortcutKeys } = keyboard;
+const { sendKeyCombinations } = keyboard;
 
 const treeItemPath = [
   "",
@@ -139,23 +139,23 @@ async function start() {
  * @description
  */
 async function codeSync() {
-  await enterShortcutKeys("MetaLeft", "p");
+  await sendKeyCombinations("MetaLeft", "p");
 
   await setInputBox("ratings.js");
 
   await page.waitForTimeout(5_00);
-  await enterShortcutKeys("ControlLeft", "g");
+  await sendKeyCombinations("ControlLeft", "g");
 
   await setInputBox("207:9");
 
-  await enterShortcutKeys("MetaLeft", "x");
+  await sendKeyCombinations("MetaLeft", "x");
 
   await page.keyboard.press("Backspace");
   await page.keyboard.type(
     `\n\tres.end(JSON.stringify({status: 'Ratings is healthy2'}))\n`
   );
 
-  await enterShortcutKeys("MetaLeft", "s");
+  await sendKeyCombinations("MetaLeft", "s");
 
   await page.waitForTimeout(10_000);
 

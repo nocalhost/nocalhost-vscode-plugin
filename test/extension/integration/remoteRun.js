@@ -7,7 +7,7 @@ const logger = require("../lib/log");
 const { add, stop, getPortForwardPort } = require("./portForward");
 const { checkSyncCompletion } = require("./devMode");
 const { setInputBox } = require("./index");
-const { sendKeyCombinations: enterShortcutKeys } = keyboard;
+const { sendKeyCombinations } = keyboard;
 
 const treeItemPath = [
   "",
@@ -36,21 +36,21 @@ const start = async () => {
 const checkHotReload = async () => {
   const port = await add();
 
-  await enterShortcutKeys("MetaLeft", "p");
+  await sendKeyCombinations("MetaLeft", "p");
 
   await setInputBox("ratings.js");
 
-  await enterShortcutKeys("MetaLeft", "g");
+  await sendKeyCombinations("MetaLeft", "g");
 
   await setInputBox("207:9");
 
-  await enterShortcutKeys("MetaLeft", "x");
+  await sendKeyCombinations("MetaLeft", "x");
 
   await page.keyboard.type(
     `\n\tres.end(JSON.stringify({status: 'Ratings is checking for hotreload'}))\n`
   );
 
-  await enterShortcutKeys("MetaLeft", "s");
+  await sendKeyCombinations("MetaLeft", "s");
 
   await checkSyncCompletion();
 

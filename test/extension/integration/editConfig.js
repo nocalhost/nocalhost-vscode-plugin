@@ -3,9 +3,7 @@ const yaml = require("yaml");
 const { tree } = require("../lib/components");
 const assert = require("assert");
 const retry = require("async-retry");
-const {
-  sendKeyCombinations: enterShortcutKeys,
-} = require("../lib/components/keyboard");
+const { sendKeyCombinations } = require("../lib/components/keyboard");
 
 const treeItemPath = [
   "",
@@ -25,9 +23,9 @@ async function editConfig() {
 
   await page.keyboard.press("Escape");
 
-  await enterShortcutKeys("ControlLeft", "A");
+  await sendKeyCombinations("ControlLeft", "A");
 
-  await enterShortcutKeys("ControlLeft", "C");
+  await sendKeyCombinations("ControlLeft", "C");
 
   const content = ncp.paste();
   const obj = yaml.parse(content);
@@ -36,13 +34,13 @@ async function editConfig() {
   const str = yaml.stringify(obj);
   ncp.copy(str);
 
-  await enterShortcutKeys("ControlLeft", "A");
+  await sendKeyCombinations("ControlLeft", "A");
 
   await page.keyboard.press("Backspace");
 
-  await enterShortcutKeys("ControlLeft", "V");
+  await sendKeyCombinations("ControlLeft", "V");
 
-  await enterShortcutKeys("ControlLeft", "S");
+  await sendKeyCombinations("ControlLeft", "S");
 
   retry(
     async () => {
