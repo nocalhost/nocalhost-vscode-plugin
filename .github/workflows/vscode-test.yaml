@@ -1,0 +1,126 @@
+name: Vscode Test
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [test/ubuntu-test]
+jobs:
+  prebuild:
+    name: Pre build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js v14
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
+      - name: Fetch dependencies from cache
+        id: cache-pnpm
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: ${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            yarn-pnpm-
+
+      - uses: pnpm/action-setup@v2.1.0
+        if: steps.cache-pnpm.outputs.cache-hit != 'true'
+        with:
+          version: 6
+          run_install: |
+            - args: [--frozen-lockfile]
+
+      - name: Build ext
+        env:
+          MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
+          NHCTL_VERSION: dev
+        run: |
+          pnpm run build:test
+
+      - name: Upload vsix
+        uses: actions/upload-artifact@v3
+        with:
+          name: nocalhost.vsix
+          path: nocalhost.vsix
+  
+  install:
+    needs: prebuild
+    name: Install test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js v14
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
+      - name: Fetch dependencies from cache
+        id: cache-pnpm
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: ${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            yarn-pnpm-
+
+      - uses: pnpm/action-setup@v2.1.0
+        if: steps.cache-pnpm.outputs.cache-hit != 'true'
+        with:
+          version: 6
+          run_install: |
+            - args: [--frozen-lockfile]
+      
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+          name: "nocalhost.vsix"
+  
+  Index:
+    needs: prebuild
+    name: Index test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js v14
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
+      - name: Fetch dependencies from cache
+        id: cache-pnpm
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: ${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            yarn-pnpm-
+
+      - uses: pnpm/action-setup@v2.1.0
+        if: steps.cache-pnpm.outputs.cache-hit != 'true'
+        with:
+          version: 6
+          run_install: |
+            - args: [--frozen-lockfile]
+      
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+          name: "nocalhost.vsix"
