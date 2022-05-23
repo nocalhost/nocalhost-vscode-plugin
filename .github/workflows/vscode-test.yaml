@@ -32,7 +32,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            cache-pnpm-
+            cache-pnpm-${{ GITHUB_REF }}
 
       - uses: pnpm/action-setup@v2.1.0
         if: steps.cache-pnpm.outputs.cache-hit != 'true'
@@ -41,18 +41,22 @@ jobs:
           run_install: |
             - args: [--frozen-lockfile]
 
+      - name: Fetch extension from cache
+        id: cache-extension
+        uses: actions/cache@v3
+        with:
+          path: nocalhost.vsix
+          key: ${{ github.run_id }}
+          restore-keys: |
+            cache-nocalhost.vsix-${{ github.run_id }}
+
       - name: Build ext
+        if: steps.cache-extension.outputs.cache-hit != 'true'
         env:
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
           NHCTL_VERSION: dev
         run: |
           pnpm run build:test
-
-      - name: Upload vsix
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ github.run_id }}-nocalhost.vsix
-          path: nocalhost.vsix
 
   install:
     needs: prebuild
@@ -82,7 +86,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            cache-pnpm-
+            cache-pnpm-${{ GITHUB_REF }}
 
       - uses: pnpm/action-setup@v2.1.0
         if: steps.cache-pnpm.outputs.cache-hit != 'true'
@@ -91,10 +95,14 @@ jobs:
           run_install: |
             - args: [--frozen-lockfile]
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+      - name: Fetch extension from cache
+        id: cache-extension
+        uses: actions/cache@v3
         with:
-          name: ${{ github.run_id }}-nocalhost.vsix
+          path: nocalhost.vsix
+          key: ${{ github.run_id }}
+          restore-keys: |
+            cache-nocalhost.vsix-${{ github.run_id }}
 
       - name: Start xvfb
         run: |
@@ -121,7 +129,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
-          name: index
+          name: install-artifact
           path: |
             ~/.nh/screenshot
             ~/.nh/nhctl/ns
@@ -156,7 +164,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            cache-pnpm-
+            cache-pnpm-${{ GITHUB_REF }}
 
       - uses: pnpm/action-setup@v2.1.0
         if: steps.cache-pnpm.outputs.cache-hit != 'true'
@@ -165,10 +173,14 @@ jobs:
           run_install: |
             - args: [--frozen-lockfile]
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+      - name: Fetch extension from cache
+        id: cache-extension
+        uses: actions/cache@v3
         with:
-          name: ${{ github.run_id }}-nocalhost.vsix
+          path: nocalhost.vsix
+          key: ${{ github.run_id }}
+          restore-keys: |
+            cache-nocalhost.vsix-${{ github.run_id }}
 
       - name: Start xvfb
         run: |
@@ -197,7 +209,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
-          name: index
+          name: others-artifact
           path: |
             ~/.nh/screenshot
             ~/.nh/nhctl/ns
