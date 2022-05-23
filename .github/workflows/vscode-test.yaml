@@ -20,6 +20,11 @@ jobs:
         with:
           node-version: "14"
 
+      - uses: pnpm/action-setup@v2.1.0
+        with:
+          version: 6
+          run_install: false
+
       - name: Fetch dependencies from cache
         id: cache-pnpm
         uses: actions/cache@v3
@@ -64,6 +69,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "14"
+
+      - uses: pnpm/action-setup@v2.1.0
+        with:
+          version: 6
+          run_install: false
 
       - name: Fetch dependencies from cache
         id: cache-pnpm
@@ -137,6 +147,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "14"
+
+      - uses: pnpm/action-setup@v2.1.0
+        with:
+          version: 6
+          run_install: false
 
       - name: Fetch dependencies from cache
         id: cache-pnpm
