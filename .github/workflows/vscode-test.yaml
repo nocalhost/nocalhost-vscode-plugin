@@ -8,7 +8,7 @@ jobs:
   prebuild:
     name: Pre Build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -32,7 +32,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            yarn-pnpm-
+            cache-pnpm-
 
       - uses: pnpm/action-setup@v2.1.0
         if: steps.cache-pnpm.outputs.cache-hit != 'true'
@@ -51,12 +51,12 @@ jobs:
       - name: Upload vsix
         uses: actions/upload-artifact@v3
         with:
-          name: nocalhost.vsix
+          name: ${{ github.run_id }}-nocalhost.vsix
           path: nocalhost.vsix
 
   install:
     needs: prebuild
-    name: Install Test
+    name: Test Install
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -82,7 +82,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            yarn-pnpm-
+            cache-pnpm-
 
       - uses: pnpm/action-setup@v2.1.0
         if: steps.cache-pnpm.outputs.cache-hit != 'true'
@@ -93,15 +93,12 @@ jobs:
 
       - name: Download artifact
         uses: actions/download-artifact@v3
-        id: download
         with:
-          name: "nocalhost.vsix"
+          name: ${{ github.run_id }}-nocalhost.vsix
 
       - name: Start xvfb
         run: |
           /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          sudo apt-get update -y
-          sudo apt-get install -y xclip
 
       - name: Start minikube
         uses: medyagh/setup-minikube@master
@@ -131,9 +128,9 @@ jobs:
             ~/.nh/nhctl/logs/nhctl.log
             ~/.nh/vscode-plugin/vsc_log
             
-  Index:
+  others:
     needs: prebuild
-    name: Index Test
+    name: Test Others
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -159,7 +156,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            yarn-pnpm-
+            cache-pnpm-
 
       - uses: pnpm/action-setup@v2.1.0
         if: steps.cache-pnpm.outputs.cache-hit != 'true'
@@ -170,9 +167,8 @@ jobs:
 
       - name: Download artifact
         uses: actions/download-artifact@v3
-        id: download
         with:
-          name: "nocalhost.vsix"
+          name: ${{ github.run_id }}-nocalhost.vsix
 
       - name: Start xvfb
         run: |
