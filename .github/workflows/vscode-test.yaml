@@ -6,7 +6,7 @@ on:
     branches: [test/ubuntu-test]
 jobs:
   prebuild:
-    name: Pre build
+    name: Pre Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -48,10 +48,10 @@ jobs:
         with:
           name: nocalhost.vsix
           path: nocalhost.vsix
-  
+
   install:
     needs: prebuild
-    name: Install test
+    name: Install Test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -80,16 +80,51 @@ jobs:
           version: 6
           run_install: |
             - args: [--frozen-lockfile]
-      
+
       - name: Download artifact
         uses: actions/download-artifact@v3
         id: download
         with:
           name: "nocalhost.vsix"
-  
+
+      - name: Start xvfb
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          sudo apt-get update -y
+          sudo apt-get install -y xclip
+
+      - name: Start minikube
+        uses: medyagh/setup-minikube@master
+
+      - name: Run tests
+        timeout-minutes: 20
+        env:
+          CYPRESS_EVERY_NTH_FRAME: 1
+          VIDEO_CAPTURE: 1
+          LOGGER_LEVEL: ALL
+          DISPLAY: :99.0
+        run: pnpm run test-install
+
+      - name: Artifact screenshot
+        if: ${{ failure() }}
+        run: |
+          mkdir -p ~/.nh/screenshot
+          mv .screenshot/* ~/.nh/screenshot
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: index
+          path: |
+            ~/.nh/screenshot
+            ~/.nh/nhctl/ns
+            ~/.nh/nhctl/logs/nhctl.log
+            ~/.nh/vscode-plugin/vsc_log
+            
   Index:
     needs: prebuild
-    name: Index test
+    name: Index Test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -118,9 +153,44 @@ jobs:
           version: 6
           run_install: |
             - args: [--frozen-lockfile]
-      
+
       - name: Download artifact
         uses: actions/download-artifact@v3
         id: download
         with:
           name: "nocalhost.vsix"
+
+      - name: Start xvfb
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          sudo apt-get update -y
+          sudo apt-get install -y xclip
+
+      - name: Start minikube
+        uses: medyagh/setup-minikube@master
+
+      - name: Run tests
+        timeout-minutes: 20
+        env:
+          CYPRESS_EVERY_NTH_FRAME: 1
+          VIDEO_CAPTURE: 1
+          LOGGER_LEVEL: ALL
+          DISPLAY: :99.0
+        run: pnpm run test-index
+
+      - name: Artifact screenshot
+        if: ${{ failure() }}
+        run: |
+          mkdir -p ~/.nh/screenshot
+          mv .screenshot/* ~/.nh/screenshot
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: index
+          path: |
+            ~/.nh/screenshot
+            ~/.nh/nhctl/ns
+            ~/.nh/nhctl/logs/nhctl.log
+            ~/.nh/vscode-plugin/vsc_log
