@@ -1,4 +1,4 @@
-name: Vscode Test
+name: Extension Test
 on:
   pull_request:
     branches: [dev, main]
