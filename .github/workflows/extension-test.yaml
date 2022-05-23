@@ -4,6 +4,7 @@ on:
     branches: [dev, main]
   push:
     branches: [test/ubuntu-test]
+  workflow_dispatch:
 jobs:
   prebuild:
     name: Pre Build
