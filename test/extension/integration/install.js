@@ -90,9 +90,11 @@ async function checkInstall() {
   await isInstallSucceed();
 
   try {
-    await checkPort("39080");
+    await checkPort("39080", {
+      retryOptions: { randomize: false, retries: 3 },
+    });
   } catch (error) {
-    logger.error("checkPort", error);
+    logger.warn("checkPort fail", error);
   }
 }
 

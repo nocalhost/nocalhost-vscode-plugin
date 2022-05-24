@@ -11,12 +11,12 @@ async function download() {
     path.resolve(homedir(), ".nh", "bin", "nhctl"),
     { nothrow: true }
   );
-  if (result && result.code === 0) {
+  if (result) {
     return;
   }
 
   await waitForMessage("Downloading nhctl");
 
-  await waitForMessage("Download completed", 10 * 60 * 1000);
+  await waitForMessage("Download completed", 2 * 60 * 1000);
 }
 module.exports = { download };

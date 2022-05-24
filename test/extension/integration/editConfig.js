@@ -3,6 +3,7 @@ const yaml = require("yaml");
 const { tree } = require("../lib/components");
 const assert = require("assert");
 const retry = require("async-retry");
+const { sendKeyCombinations } = require("../lib/components/keyboard");
 
 const treeItemPath = [
   "",
@@ -13,22 +14,19 @@ const treeItemPath = [
   "ratings",
 ];
 
-async function editConfig(page) {
+async function editConfig() {
   const authors = await tree.getItem(...treeItemPath);
   const setting = await authors.$(".action-label[title='View Dev Configs']");
   await setting.click();
-  // copy config
-  await page.waitForTimeout(5000);
-  await page.keyboard.down("Escape");
-  await page.keyboard.up("Escape");
 
-  await page.keyboard.down("Meta");
-  await page.keyboard.down("A");
-  await page.keyboard.up("A");
-  await page.keyboard.down("C");
-  await page.keyboard.up("C");
-  await page.keyboard.up("Meta");
-  // const content = await navigator.clipboard.readText();
+  await page.waitForTimeout(1000);
+
+  await page.keyboard.press("Escape");
+
+  await sendKeyCombinations("ControlLeft", "A");
+
+  await sendKeyCombinations("ControlLeft", "C");
+
   const content = ncp.paste();
   const obj = yaml.parse(content);
   obj.containers[0].dev.hotReload = true;
@@ -36,23 +34,13 @@ async function editConfig(page) {
   const str = yaml.stringify(obj);
   ncp.copy(str);
 
-  await page.waitForTimeout(1000);
+  await sendKeyCombinations("ControlLeft", "A");
 
-  await page.keyboard.down("Meta");
-  await page.keyboard.press("A");
-  await page.keyboard.up("Meta");
   await page.keyboard.press("Backspace");
 
-  await page.waitForTimeout(1000);
+  await sendKeyCombinations("ControlLeft", "V");
 
-  await page.keyboard.down("Meta");
-  await page.keyboard.press("V");
-
-  await page.keyboard.press("S");
-
-  await page.keyboard.up("Meta");
-
-  await page.waitForTimeout(5000);
+  await sendKeyCombinations("ControlLeft", "S");
 
   retry(
     async () => {

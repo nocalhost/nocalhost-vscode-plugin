@@ -134,11 +134,6 @@ const getUserDataDir = async () => {
 
   await fse.copy(path.join(__dirname, "./config/vscode"), userDataDir);
 
-  // copy test config file
-  await fse.copy(
-    path.join(__dirname, "./config/yaml"),
-    path.join(os.tmpdir(), "./config/yaml")
-  );
   return userDataDir;
 };
 
@@ -190,6 +185,8 @@ const run = async (executable, args, testsEnv) => {
 
   logger.debug("pid", pid);
 
+  process.on("exit", cmd.kill);
+
   return pid;
 };
 
@@ -198,6 +195,10 @@ const getWebSocketDebuggerUrl = async (port) => {
     .get(`http://127.0.0.1:${port}/json/version`)
     .then((json) => {
       return json.data.webSocketDebuggerUrl;
+    })
+    .catch((err) => {
+      logger.err("getWebSocketDebuggerUrl", port);
+      throw err;
     });
 };
 
