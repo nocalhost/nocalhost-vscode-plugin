@@ -59,10 +59,12 @@ type StartDevModeInfoType = {
   mode?: "replace" | "copy";
   header?: string;
   command?: string;
+  isAutoMode?: boolean;
 };
 export default class StartDevModeCommand implements ICommand {
   command: string = START_DEV_MODE;
   context: vscode.ExtensionContext;
+
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
     registerCommand(context, this.command, true, this.execCommand.bind(this));
@@ -109,9 +111,11 @@ export default class StartDevModeCommand implements ICommand {
       }).exec();
     }
 
+    // Show the node in tree view.
     if (node instanceof ControllerResourceNode && appTreeView) {
       await appTreeView.reveal(node, { select: true, focus: true });
     }
+
     host.log("[start dev] Initializing..", true);
 
     // get container name from storage
@@ -293,6 +297,9 @@ export default class StartDevModeCommand implements ICommand {
       });
     }
     if (gitUrl) {
+      vscode.window.showInformationMessage(
+        "Please select directory to clone your code"
+      );
       const saveUris = await host.showOpenDialog({
         canSelectFiles: false,
         canSelectFolders: true,
@@ -399,12 +406,18 @@ export default class StartDevModeCommand implements ICommand {
       }
     };
 
-    const result = await host.showInformationMessage(
-      nls["tips.open"],
-      { modal: true },
-      nls["bt.open.dir"],
-      nls["bt.open.other"]
-    );
+    let result = null;
+    if (this.info?.isAutoMode) {
+      result = nls["bt.open.dir"];
+    } else {
+      result = await host.showInformationMessage(
+        nls["tips.open"],
+        { modal: true },
+        nls["bt.open.dir"],
+        nls["bt.open.other"]
+      );
+    }
+
     if (result === nls["bt.open.other"]) {
       await getUrl();
     } else if (result === nls["bt.open.dir"]) {
@@ -451,7 +464,19 @@ export default class StartDevModeCommand implements ICommand {
     const currentUri = host.getCurrentRootPath();
 
     if (!associateDir) {
-      destDir = await this.firstOpen(appName, node, containerName);
+      if (this.info?.isAutoMode) {
+        destDir = await this.cloneCode(
+          host,
+          node.getKubeConfigPath(),
+          node.getNameSpace(),
+          appName,
+          node.name,
+          node.resourceType,
+          containerName
+        );
+      } else {
+        destDir = await this.firstOpen(appName, node, containerName);
+      }
     } else if (currentUri !== associateDir) {
       destDir = await this.getTargetDirectory();
     } else {

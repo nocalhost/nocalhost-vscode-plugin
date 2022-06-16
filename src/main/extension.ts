@@ -34,7 +34,7 @@ import {
 import host from "./host";
 import NocalhostFileSystemProvider from "./fileSystemProvider";
 import state from "./state";
-import { START_DEV_MODE } from "./commands/constants";
+import { START_DEV_MODE, AUTO_START_DEV_MODE } from "./commands/constants";
 import initCommands from "./commands";
 import { ControllerNodeApi } from "./commands/StartDevModeCommand";
 import { BaseNocalhostNode, DeploymentStatus } from "./nodes/types/nodeType";
@@ -76,6 +76,25 @@ export async function activate(context: vscode.ExtensionContext) {
       homeWebViewProvider
     )
   );
+
+  // Enter dev modes automatically.
+  const handleUri = async (uri: vscode.Uri) => {
+    const queryParams = new URLSearchParams(uri.query);
+    vscode.commands.executeCommand(
+      AUTO_START_DEV_MODE,
+      {
+        connectionInfo: {
+          strKubeconfig: queryParams.get("kubeconfig"),
+          namespace: queryParams.get("namespace"),
+        },
+        application: queryParams.get("application"),
+        workloadType: queryParams.get("workload_type"),
+        workload: queryParams.get("workload"),
+        action: queryParams.get("action"),
+      },
+      appTreeProvider
+    );
+  };
 
   let nocalhostFileSystemProvider = new NocalhostFileSystemProvider();
   appTreeView = vscode.window.createTreeView("Nocalhost", {
@@ -135,6 +154,7 @@ export async function activate(context: vscode.ExtensionContext) {
       "NocalhostRW",
       nocalhostFileSystemProvider
     ),
+    vscode.window.registerUriHandler({ handleUri }),
   ];
 
   context.subscriptions.push(...subs);
@@ -154,6 +174,7 @@ export async function activate(context: vscode.ExtensionContext) {
   createSyncManage(context);
   activateNocalhostDebug(context);
 }
+
 function bindEvent() {
   messageBus.on("refreshTree", (value) => {
     if (value.isCurrentWorkspace) {
@@ -213,6 +234,7 @@ function bindEvent() {
     execCommand(commandData);
   }
 }
+
 function launchDevSpace() {
   SyncServiceCommand.checkSync();
 

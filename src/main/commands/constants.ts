@@ -65,3 +65,6 @@ export const ADD_KUBECONFIG = "Nocalhost.addKubeconfig";
 export const CLUSTERS_VIEW = "Nocalhost.ClustersView";
 
 export const CONFIG_URI_QUERY = "_configURIQuery";
+
+// Enter dev-modes(run | debug) automatically
+export const AUTO_START_DEV_MODE = "Nocalhost.autoStartDevMode";
