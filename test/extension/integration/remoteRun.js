@@ -1,13 +1,15 @@
 const assert = require("assert");
-const { tree } = require("../lib/components");
-const logger = require("../lib/log");
-
 const retry = require("async-retry");
 const { default: Axios } = require("axios");
 
+const { tree, keyboard, dialog, file } = require("../lib/components");
+const logger = require("../lib/log");
 const { add, stop, getPortForwardPort } = require("./portForward");
 const { checkSyncCompletion } = require("./devMode");
-const { enterShortcutKeys, setInputBox } = require("./index");
+const { setInputBox } = require("./index");
+const getPort = require("get-port");
+const { spawnSync } = require("child_process");
+const { sendKeyCombinations } = keyboard;
 
 const treeItemPath = [
   "",
@@ -34,35 +36,42 @@ const start = async () => {
 };
 
 const checkHotReload = async () => {
+  
+  await page.waitForTimeout(3_000);
+
   const port = await add();
 
-  await enterShortcutKeys("MetaLeft", "p");
+  // spawnSync("")
+
+  await tree.getItem(...treeItemPath);
+
+  await sendKeyCombinations("MetaLeft", "p");
+
   await setInputBox("ratings.js");
 
-  await page.waitForTimeout(5_00);
-  await enterShortcutKeys("ControlLeft", "g");
+  await page.waitForTimeout(3_000);
+
+  await sendKeyCombinations("MetaLeft", "g");
 
   await setInputBox("207:9");
 
-  await enterShortcutKeys("MetaLeft", "x");
+  await page.waitForTimeout(3_000);
 
-  await page.keyboard.press("Backspace");
+  await sendKeyCombinations("MetaLeft", "x");
+
   await page.keyboard.type(
     `\n\tres.end(JSON.stringify({status: 'Ratings is checking for hotreload'}))\n`
   );
 
-  await enterShortcutKeys("MetaLeft", "s");
-
-  await page.waitForTimeout(10_000);
+  await sendKeyCombinations("MetaLeft", "s");
 
   await checkSyncCompletion();
 
   await retry(
     async () => {
-      const data = await Axios.get(
-        `http://127.0.0.1:${getPortForwardPort()}/health`
-      );
+      const data = await Axios.get(`http://127.0.0.1:${port}/health`);
 
+      logger.debug("check Port", data.data);
       assert(
         "status" in data.data &&
           data.data.status === "Ratings is checking for hotreload"

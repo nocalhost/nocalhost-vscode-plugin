@@ -1,5 +1,5 @@
 module.exports = {
-  testMatch: ["**/*.spec.js"],
+  testMatch: [],
   globalSetup: "./setup.js",
   maxWorkers: 1,
   verbose: true,

@@ -2,10 +2,12 @@ const assert = require("assert");
 const { default: Axios } = require("axios");
 const retry = require("async-retry");
 
-const { tree, terminal, dialog, file } = require("../lib/components");
+const { tree, terminal, dialog, file, keyboard } = require("../lib/components");
 const logger = require("../lib/log");
-const { initialize, enterShortcutKeys, setInputBox } = require("./index");
+const { initialize, setInputBox } = require("./index");
 const { add, stop, getPortForwardPort } = require("./portForward");
+
+const { sendKeyCombinations } = keyboard;
 
 const treeItemPath = [
   "",
@@ -65,13 +67,13 @@ async function checkSyncCompletion() {
 
   await retry(
     async () => {
-      const className = await (await statusBar.$(".codicon")).evaluate(
-        (el) => el.className
-      );
+      const className = await (
+        await statusBar.$(".codicon")
+      ).evaluate((el) => el.className);
 
       assert(className.includes("codicon-check"));
     },
-    { retries: 3 }
+    { retries: 4 }
   );
 
   logger.debug("sync icon");
@@ -137,32 +139,31 @@ async function start() {
  * @description
  */
 async function codeSync() {
-  await enterShortcutKeys("MetaLeft", "p");
+  await sendKeyCombinations("MetaLeft", "p");
 
   await setInputBox("ratings.js");
 
   await page.waitForTimeout(5_00);
-  await enterShortcutKeys("ControlLeft", "g");
+  await sendKeyCombinations("ControlLeft", "g");
 
   await setInputBox("207:9");
 
-  await enterShortcutKeys("MetaLeft", "x");
+  await sendKeyCombinations("MetaLeft", "x");
 
   await page.keyboard.press("Backspace");
   await page.keyboard.type(
     `\n\tres.end(JSON.stringify({status: 'Ratings is healthy2'}))\n`
   );
 
-  await enterShortcutKeys("MetaLeft", "s");
+  await sendKeyCombinations("MetaLeft", "s");
 
   await page.waitForTimeout(10_000);
 
   await checkSyncCompletion();
 
-  // await terminal.sendText("\x03");
-  await terminal.typeCtrlC();
+  // await terminal.typeCtrlC();
 
-  await terminal.sendText("./run.sh \n");
+  // await terminal.sendText("./run.sh \n");
 
   await retry(
     async () => {

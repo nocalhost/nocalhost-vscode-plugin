@@ -4,6 +4,7 @@ const os = require("os");
 const path = require("path");
 const mkdirp = require("mkdirp");
 const retry = require("async-retry");
+const logger = require("./lib/log");
 const { start } = require(".");
 const { getWebSocketDebuggerUrl } = require(".");
 

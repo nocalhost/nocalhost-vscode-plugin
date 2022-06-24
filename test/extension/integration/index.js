@@ -40,7 +40,14 @@ async function setInputBox(text, clean = false) {
   await input.click();
   await input.type(text, { delay: 1 });
 
+  await page.waitForTimeout(1_000);
+
+  await input.focus();
+
   await page.keyboard.press("Enter");
+  
+  await page.waitForTimeout(1_000);
+
 }
 
 /**
@@ -60,7 +67,9 @@ function getQuickPick() {
    */
   async function getItemTexts() {
     return await Promise.all(
-      (await this.items).map((item) =>
+      (
+        await this.items
+      ).map((item) =>
         item.evaluate((el) => el.querySelector(".label-name").textContent)
       )
     );
@@ -219,59 +228,26 @@ const getPage = async (browser) => {
  * @param {string} port
  * @param {object} data
  */
-async function checkPort(
-  port,
-  data = {
-    timeout: 1_000,
-    error: "checkPort Error",
-    condition: (connect) => connect,
-    retryOptions: { randomize: false, retries: 6 },
-  }
-) {
+async function checkPort(port, data = {}) {
   await retry(async () => {
     const connect = await isPortReachable(port, {
       host: "127.0.0.1",
       timeout: data.timeout,
     });
 
-    assert(data.condition(connect), data.error);
+    assert(
+      Object.assign(
+        {
+          timeout: 1_000,
+          error: "checkPort Error",
+          condition: (connect) => connect,
+          retryOptions: { randomize: false, retries: 6 },
+        },
+        data
+      ).condition(connect),
+      data.error
+    );
   }, data.retryOptions);
-}
-/**
- *
- * @param {Array<puppeteer.KeyInput>} key
- */
-function getSystemKeys(key) {
-  if (process.platform === "darwin") {
-    switch (key) {
-      case "ControlLeft":
-        return "MetaLeft";
-      default:
-        return key;
-    }
-  } else {
-    switch (key) {
-      case "MetaLeft":
-        return "ControlLeft";
-      default:
-        return key;
-    }
-  }
-}
-/**
- *
- * @param  {Array<puppeteer.KeyInput>} keys
- */
-async function enterShortcutKeys(...keys) {
-  for await (const key of keys) {
-    await page.keyboard.down(key);
-  }
-
-  for await (const key of keys) {
-    await page.keyboard.up(key);
-  }
-
-  await page.waitForTimeout(5_00);
 }
 
 module.exports = {
@@ -284,5 +260,4 @@ module.exports = {
   getQuickPick,
   checkPort,
   getItemMenu,
-  enterShortcutKeys,
 };
