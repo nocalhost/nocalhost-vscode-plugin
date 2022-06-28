@@ -23,7 +23,7 @@
     "debugger"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "*"
   ],
   "extensionKind": [
     "workspace"
@@ -361,6 +361,10 @@
       {
         "command": "Nocalhost.clearServerCluster",
         "title": "Clear server cluster"
+      },
+      {
+        "command": "Nocalhost.autoStartDevMode",
+        "title": "Auto Start Dev"
       },
       {
         "command": "Nocalhost.run",

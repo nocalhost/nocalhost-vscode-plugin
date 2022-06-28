@@ -33,13 +33,22 @@ export default class DebugCommand implements ICommand {
   node: ControllerResourceNode;
   container: ContainerConfig;
   configuration: vscode.DebugConfiguration;
+  isAutoMode: boolean;
+
   constructor(context: vscode.ExtensionContext) {
     registerCommand(context, this.command, false, this.execCommand.bind(this));
   }
   async execCommand(...rest: any[]) {
     const [node, param] = rest as [
       ControllerResourceNode,
-      { command: string; configuration: vscode.DebugConfiguration } | undefined
+      (
+        | {
+            command: string;
+            configuration: vscode.DebugConfiguration;
+            isAutoMode: boolean;
+          }
+        | undefined
+      )
     ];
     if (!node) {
       host.showWarnMessage("Failed to get node configs, please try again.");
@@ -47,6 +56,7 @@ export default class DebugCommand implements ICommand {
     }
 
     this.configuration = param?.configuration;
+    this.isAutoMode = param?.isAutoMode || false;
     this.node = node;
     this.container = await getContainer(node);
 
@@ -59,6 +69,7 @@ export default class DebugCommand implements ICommand {
         vscode.commands.executeCommand(START_DEV_MODE, node, {
           command: DEBUG,
           configuration: this.configuration,
+          isAutoMode: this.isAutoMode,
         });
         return;
       }

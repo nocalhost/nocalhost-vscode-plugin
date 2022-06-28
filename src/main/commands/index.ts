@@ -48,6 +48,7 @@ import ResumeProxyModeCommand from "./proxy/ResumeProxyModeCommand";
 import EndProxyModeCommand from "./proxy/EndProxyModeCommand";
 import HomeWebViewCommand from "./HomeWebViewCommand";
 import StartMeshDevModeCommand from "./StartMeshDevModeCommand";
+import AutoStartDevModeCommand from "./AutoStartDevMode";
 
 export default function initCommands(
   context: vscode.ExtensionContext,
@@ -115,4 +116,6 @@ export default function initCommands(
   new EndProxyModeCommand(context);
 
   new HomeWebViewCommand(context);
+
+  new AutoStartDevModeCommand(context);
 }

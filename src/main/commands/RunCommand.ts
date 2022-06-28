@@ -30,6 +30,7 @@ export default class RunCommand implements ICommand {
   container: ContainerConfig;
   isReload: boolean = false;
   terminal: RemoteTerminal;
+  isAutoMode: boolean;
 
   disposable: Array<{ dispose(): any }> = [];
 
@@ -40,7 +41,7 @@ export default class RunCommand implements ICommand {
   async execCommand(...rest: any[]) {
     const [node, param] = rest as [
       ControllerResourceNode,
-      { command: string } | undefined
+      { command: string; isAutoMode?: boolean } | undefined
     ];
 
     if (!node) {
@@ -50,6 +51,7 @@ export default class RunCommand implements ICommand {
 
     this.node = node;
     this.container = await getContainer(node);
+    this.isAutoMode = param?.isAutoMode || false;
 
     this.validateRunConfig(this.container);
 
@@ -59,6 +61,7 @@ export default class RunCommand implements ICommand {
       if (status !== "developing") {
         vscode.commands.executeCommand(START_DEV_MODE, node, {
           command: RUN,
+          isAutoMode: this.isAutoMode,
         });
         return;
       }
