@@ -97,7 +97,7 @@ async function getEntryArray(source) {
 
   return (await Promise.all(array)).flat(1);
 }
-
+const fontPath = "static/app/DroidSansMono_v1.ttf";
 async function assets() {
   const entryArray = (await getEntryArray("static")).map((file) => {
     if (file.endsWith(".css")) {
@@ -105,12 +105,16 @@ async function assets() {
     }
     return "";
   });
-
-  await startBuild("css", [...entryArray, "--target=chrome89"]);
-
-  fs.createReadStream("static/app/DroidSansMono_v1.ttf").pipe(
-    fs.createWriteStream("dist/static/app/DroidSansMono_v1.ttf")
-  );
+  // build like `npx esbuild --target=chrome89 --outdir=dist --bundle --sourcemap` will block the process of build
+  if (entryArray.length > 0) {
+    await startBuild("css", [...entryArray, "--target=chrome89"]);
+  }
+  // pre check fontPath
+  if(fs.existsSync(fontPath)) {
+    fs.createReadStream(fontPath).pipe(
+      fs.createWriteStream(`dist/${fontPath}`)
+    );
+  }
 }
 
 async function html() {
