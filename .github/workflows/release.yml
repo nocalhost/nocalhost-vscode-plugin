@@ -8,7 +8,7 @@ on:
     inputs:
       version:
         type: string
-        description:  release version
+        description: release version
 
 jobs:
   release-plugin:
