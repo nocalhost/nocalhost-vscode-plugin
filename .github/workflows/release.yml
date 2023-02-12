@@ -49,13 +49,9 @@ jobs:
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
         if: inputs.version != ''
 
-      - name: Get Input tag
-        run: echo "RELEASE_VERSION=${inputs.version}" >> $GITHUB_ENV
-        if: inputs.version
-
       - name: build
         env:
-          VERSION: ${{ env.RELEASE_VERSION }}
+          VERSION: ${{ inputs.version || env.RELEASE_VERSION }}
           MINIMUNM_VERSION_REQUIREMENT: ${{ secrets.MINIMUNM_VERSION_REQUIREMENT }}
         run:  pnpm build
 
