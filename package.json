@@ -1,6 +1,6 @@
 {
   "name": "nocalhost",
-  "version": "0.6.16-alpha.da5d0ea",
+  "version": "0.6.29",
   "displayName": "Nocalhost",
   "description": "Makes developing with Kubernetes feel like on local. IDE tool for cloud-native development",
   "license": "Apache-2.0",
@@ -36,7 +36,7 @@
   "main": "./dist/extension.js",
   "nhctl": {
     "serverVersion": "0.4.7",
-    "version": "0.6.15"
+    "version": "0.6.29"
   },
   "contributes": {
     "configuration": [
@@ -681,8 +681,7 @@
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
     "tree-kill": "^1.2.2",
-    "typescript": "4.0.2",
-    "vsce": "^1.81.1"
+    "typescript": "4.0.2"
   },
   "optionalDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
@@ -725,6 +724,7 @@
     "semver": "^7.3.4",
     "tempy": "^1.0.0",
     "uuid": "^8.3.2",
+    "vsce": "^2.15.0",
     "vscode-nls": "^5.0.0",
     "which": "^2.0.2",
     "yaml": "^1.10.0"
